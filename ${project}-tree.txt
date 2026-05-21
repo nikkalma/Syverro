@@ -1,0 +1,163 @@
+everbrary
+├── .expo
+│   ├── web
+│   │   └── cache
+│   │       └── production
+│   │           └── images
+│   │               └── favicon
+│   │                   └── favicon-75eb840c6b06d76238cf51a28019f72a4c9b582411f8b5cbe1d2d5a0ee1ec23a-contain-transparent
+│   │                       └── favicon-48.png
+│   ├── devices.json
+│   └── README.md
+├── android
+│   ├── app
+│   │   ├── src
+│   │   │   ├── debug
+│   │   │   │   └── AndroidManifest.xml
+│   │   │   ├── debugOptimized
+│   │   │   │   └── AndroidManifest.xml
+│   │   │   └── main
+│   │   │       ├── java
+│   │   │       │   └── com
+│   │   │       │       └── nikkalma
+│   │   │       │           └── everbrary
+│   │   │       │               ├── MainActivity.kt
+│   │   │       │               └── MainApplication.kt
+│   │   │       ├── res
+│   │   │       │   ├── drawable
+│   │   │       │   │   ├── ic_launcher_background.xml
+│   │   │       │   │   └── rn_edit_text_material.xml
+│   │   │       │   ├── drawable-hdpi
+│   │   │       │   │   └── splashscreen_logo.png
+│   │   │       │   ├── drawable-mdpi
+│   │   │       │   │   └── splashscreen_logo.png
+│   │   │       │   ├── drawable-xhdpi
+│   │   │       │   │   └── splashscreen_logo.png
+│   │   │       │   ├── drawable-xxhdpi
+│   │   │       │   │   └── splashscreen_logo.png
+│   │   │       │   ├── drawable-xxxhdpi
+│   │   │       │   │   └── splashscreen_logo.png
+│   │   │       │   ├── mipmap-anydpi-v26
+│   │   │       │   │   ├── ic_launcher.xml
+│   │   │       │   │   └── ic_launcher_round.xml
+│   │   │       │   ├── mipmap-hdpi
+│   │   │       │   │   ├── ic_launcher.webp
+│   │   │       │   │   ├── ic_launcher_foreground.webp
+│   │   │       │   │   └── ic_launcher_round.webp
+│   │   │       │   ├── mipmap-mdpi
+│   │   │       │   │   ├── ic_launcher.webp
+│   │   │       │   │   ├── ic_launcher_foreground.webp
+│   │   │       │   │   └── ic_launcher_round.webp
+│   │   │       │   ├── mipmap-xhdpi
+│   │   │       │   │   ├── ic_launcher.webp
+│   │   │       │   │   ├── ic_launcher_foreground.webp
+│   │   │       │   │   └── ic_launcher_round.webp
+│   │   │       │   ├── mipmap-xxhdpi
+│   │   │       │   │   ├── ic_launcher.webp
+│   │   │       │   │   ├── ic_launcher_foreground.webp
+│   │   │       │   │   └── ic_launcher_round.webp
+│   │   │       │   ├── mipmap-xxxhdpi
+│   │   │       │   │   ├── ic_launcher.webp
+│   │   │       │   │   ├── ic_launcher_foreground.webp
+│   │   │       │   │   └── ic_launcher_round.webp
+│   │   │       │   ├── values
+│   │   │       │   │   ├── colors.xml
+│   │   │       │   │   ├── strings.xml
+│   │   │       │   │   └── styles.xml
+│   │   │       │   └── values-night
+│   │   │       │       └── colors.xml
+│   │   │       └── AndroidManifest.xml
+│   │   ├── build.gradle
+│   │   ├── debug.keystore
+│   │   └── proguard-rules.pro
+│   ├── gradle
+│   │   └── wrapper
+│   │       ├── gradle-wrapper.jar
+│   │       └── gradle-wrapper.properties
+│   ├── .gitignore
+│   ├── build.gradle
+│   ├── gradle.properties
+│   ├── gradlew
+│   ├── gradlew.bat
+│   └── settings.gradle
+├── assets
+│   ├── adaptive-icon.png
+│   ├── favicon.png
+│   ├── icon.png
+│   └── splash-icon.png
+├── components
+│   ├── charts
+│   │   ├── DonutChart.js
+│   │   ├── ProgressRing.js
+│   │   └── TopGenresBar.js
+│   ├── AuthorSelector.js
+│   ├── BookCover.js
+│   ├── CompactThemeSwitcher.js
+│   ├── GenreSelector.js
+│   ├── LanguageSelector.js
+│   └── StatCard.js
+├── constants
+│   └── Colors.js
+├── context
+│   └── ThemeContext.js
+├── locales
+│   ├── be.js
+│   ├── de.js
+│   ├── en.js
+│   ├── fr.js
+│   ├── index.js
+│   ├── it.js
+│   ├── ja.js
+│   ├── ko.js
+│   ├── pl.js
+│   ├── ru.js
+│   └── ua.js
+├── screens
+│   ├── BookDetailsScreen
+│   │   ├── EditMode.js
+│   │   ├── index.js
+│   │   ├── RatingStars.js
+│   │   ├── StatusPicker.js
+│   │   └── ViewMode.js
+│   ├── HomeScreen
+│   │   ├── ActionButtons.js
+│   │   ├── AddBookForm.js
+│   │   ├── BookCard.js
+│   │   ├── EmptyState.js
+│   │   ├── Header.js
+│   │   ├── index.js
+│   │   ├── SearchInput.js
+│   │   ├── SortModal.js
+│   │   └── StatusFilters.js
+│   ├── ProfileScreen
+│   │   ├── AvatarModal.js
+│   │   ├── index.js
+│   │   ├── ProfileHeader.js
+│   │   ├── ProfileStats.js
+│   │   └── ReaderLevel.js
+│   ├── StatsScreen
+│   │   ├── index.js
+│   │   ├── MotivationCard.js
+│   │   ├── ProgressBar.js
+│   │   ├── StatCards.js
+│   │   └── TopGenres.js
+│   ├── AboutScreen.js
+│   ├── CustomDrawerContent.js
+│   └── FavoriteBooksScreen.js
+├── ${project}-tree.txt
+├── .gitignore
+├── App.js
+├── app.json
+├── ARCHITECTURE.md
+├── babel.config.js
+├── context.txt
+├── DEBUG.md
+├── eas.json
+├── export.js
+├── FUTURE_TASKS.md
+├── index.js
+├── metro.config.js
+├── package-lock.json
+├── package.json
+├── store.js
+└── test.js

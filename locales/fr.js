@@ -1,0 +1,36 @@
+export default {
+  app: { title: 'Evebrary' },
+  buttons: { addBook: '+ Ajouter un livre', save: 'Enregistrer', cancel: 'Annuler' },
+  theme: { title: 'Thème', light: 'Clair', dark: 'Sombre', system: 'Système' },
+  language: { title: 'Langue' },
+  import: { button: '📥 Importer', alertTitle: 'Importer', alertLoading: 'Chargement...', alertSuccess: 'Terminé', alertError: 'Erreur' },
+  books: { count: 'livres' },
+  screens: { details: 'Détails du livre', back: 'Retour' },
+  placeholders: {
+    title: 'Titre', author: 'Auteur', section: 'Section (Pays, siècle)', genres: 'Genres (virgules)',
+    pages: 'Nombre de pages', startDate: 'Date début (DD.MM.YYYY)', endDate: 'Date fin (DD.MM.YYYY)',
+    notes: 'Notes / Critique', search: 'Rechercher par titre, auteur, genre...'
+  },
+  fields: { author: 'Auteur', status: 'Statut', rating: 'Note', section: 'Section', genres: 'Genres',
+    pages: 'Pages', startDate: 'Date début', endDate: 'Date fin', notes: 'Notes', languages: 'Langue de lecture' },
+  status: { planned: 'prévu', reading: 'en cours', finished: 'terminé', postponed: 'reporté', abandoned: 'abandonné', rereading: 'relecture' },
+  errors: { emptyFields: 'Veuillez remplir les champs obligatoires' },
+  filters: { all: 'Tous', finished: 'Terminé', reading: 'En cours', planned: 'Prévu' },
+  sort: { button: 'Trier', title: 'Trier par', byTitle: 'Titre', byAuthor: 'Auteur', byRating: 'Note' },
+  empty: { title: '📭 Aucun livre', subtitle: 'Appuyez sur ➕ pour ajouter' },
+  counters: { total: 'Total', finished: 'Terminé', reading: 'En cours', planned: 'Prévu' },
+  actions: { deleteTitle: 'Supprimer le livre', deleteConfirm: 'Supprimer ?', delete: 'Supprimer', cancel: 'Annuler' },
+  stats: {
+    title: 'Statistiques', progress: 'Progrès de lecture', finished: 'Terminé', total: 'Total', topGenres: 'Top 3 genres',
+    noGenreData: 'Aucune donnée', books: 'livres', addFirstBook: 'Ajoutez votre premier livre', justStarted: 'Vous commencez !',
+    goodStart: 'Bon début !', bookworm: 'Vous êtes un vrai rat de bibliothèque !', bookKing: 'Roi/Reine des livres !'
+  },
+  sort: {
+  button: 'Trier',
+  title: 'Trier par',
+  byDate: 'Par date d\'ajout',
+  byTitle: 'Par titre',
+  byAuthor: 'Par auteur',
+  byRating: 'Par note',
+},
+};

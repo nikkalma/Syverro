@@ -47,7 +47,7 @@ export default function CustomDrawerContent({ navigation, lang, setLocale, local
   
   return (
     <View style={{ flex: 1, backgroundColor: theme.background, paddingTop: 50, paddingHorizontal: 16 }}>
-      <Text style={{ color: theme.textPrimary, fontSize: 24, fontWeight: 'bold', marginBottom: 24 }}>📚 Evebrary</Text>
+      <Text style={{ color: theme.textPrimary, fontSize: 24, fontWeight: 'bold', marginBottom: 24 }}>📚 Syverro</Text>
       
       <TouchableOpacity 
         onPress={() => {
@@ -65,7 +65,7 @@ export default function CustomDrawerContent({ navigation, lang, setLocale, local
         }}
         activeOpacity={0.7}
       >
-        <Text style={{ color: theme.textPrimary, fontSize: 15 }}>👤 Мой профиль</Text>
+        <Text style={{ color: theme.textPrimary, fontSize: 15 }}>👤 {lang.menu.profile}</Text>
       </TouchableOpacity>
 
       <TouchableOpacity 
@@ -80,13 +80,31 @@ export default function CustomDrawerContent({ navigation, lang, setLocale, local
           borderRadius: 12,
           borderWidth: 1,
           borderColor: theme.border,
-          marginBottom: 24,
+          marginBottom: 12,
         }}
         activeOpacity={0.7}
       >
-        <Text style={{ color: theme.textPrimary, fontSize: 15 }}>📊 Статистика</Text>
+        <Text style={{ color: theme.textPrimary, fontSize: 15 }}>📊 {lang.menu.stats}</Text>
       </TouchableOpacity>
       
+            <TouchableOpacity 
+        onPress={() => {
+          navigation.closeDrawer();
+          navigation.navigate('Achievements');
+        }}
+        style={{ 
+          paddingVertical: 8,
+          paddingHorizontal: 12,
+          backgroundColor: theme.surface, 
+          borderRadius: 12,
+          borderWidth: 1,
+          borderColor: theme.border,
+          marginBottom: 24,
+        }}
+      >
+        <Text style={{ color: theme.textPrimary, fontSize: 15 }}>🏆 {lang.menu.achievements}</Text>
+      </TouchableOpacity>
+
       <View style={{ flex: 1 }} />
       
       <CompactThemeSwitcher lang={lang} />
@@ -147,7 +165,7 @@ export default function CustomDrawerContent({ navigation, lang, setLocale, local
         }}
         activeOpacity={0.7}
       >
-        <Text style={{ color: theme.textPrimary, fontSize: 13 }}>ℹ️ О приложении</Text>
+        <Text style={{ color: theme.textPrimary, fontSize: 13 }}>ℹ️ {lang.menu.about}</Text>
       </TouchableOpacity>
       
       <Modal visible={langModalVisible} animationType="fade" transparent>

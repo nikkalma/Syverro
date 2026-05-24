@@ -1,80 +1,88 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { checkAchievements } from './achievements';
 
 const useStore = create(
   persist(
     (set, get) => ({
       books: [],
-      
-      setBooks: (books) => set({ books }),
-      
-     addBook: async (book) => {
-  set((state) => ({
-    books: [...state.books, { 
-      ...book, 
-      cover: book.cover || null,
-      createdAt: Date.now(),
-      review: book.review || '',
-      favorite: false,
-    }]
-  }));
-},
-      toggleFavorite: (id) => set((state) => ({
-  books: state.books.map((b) => 
-    b.id === id ? { ...b, favorite: !b.favorite } : b
-  )
-})),
-
-      updateBook: (id, updatedBook) => set((state) => ({
-        books: state.books.map((b) => b.id === id ? updatedBook : b)
-      })),
-      
-      deleteBook: (id) => set((state) => ({
-        books: state.books.filter((b) => b.id !== id)
-      })),
-      
-      
-      // ===== МИГРАЦИЯ ОЦЕНОК =====
-      migrateOldRatings: () => {
-        const books = get().books;
-        let hasChanges = false;
-        
-        const updatedBooks = books.map(book => {
-          if (book.rating && book.rating > 5) {
-            hasChanges = true;
-            const newRating = Math.round(book.rating / 2);
-            return { ...book, rating: newRating === 0 ? 1 : newRating };
-          }
-          if (book.rating && typeof book.rating !== 'number') {
-            hasChanges = true;
-            return { ...book, rating: null };
-          }
-          return book;
-        });
-        
-        if (hasChanges) {
-          set({ books: updatedBooks });
-          console.log('✅ Миграция оценок выполнена');
-        }
-        return hasChanges;
+      achievements: {
+        unlocked: [],
+        progress: {},
+        newlyUnlocked: null,
       },
-      
-      // ===== ИМПОРТ ИЗ GOOGLE SHEETS =====
+
+      _updateAchievements: () => {
+        const { books, achievements } = get();
+        const { unlocked, progress, newlyUnlocked } = checkAchievements(
+          books,
+          achievements.unlocked,
+          achievements.progress,
+          achievements.newlyUnlocked
+        );
+        set({ achievements: { unlocked, progress, newlyUnlocked } });
+      },
+
+      setBooks: (books) => {
+        set({ books });
+        get()._updateAchievements();
+      },
+
+      addBook: async (book) => {
+        set((state) => ({
+          books: [...state.books, {
+            ...book,
+            cover: book.cover || null,
+            createdAt: Date.now(),
+            review: book.review || '',
+            favorite: false,
+            authorCountry: book.authorCountry || '',
+            series: book.series || '',
+            seriesPosition: book.seriesPosition || null,
+            originalYear: book.originalYear || null,
+          }]
+        }));
+        get()._updateAchievements();
+      },
+
+      updateBook: (id, updatedBook) => {
+        set((state) => ({
+          books: state.books.map((b) => b.id === id ? updatedBook : b)
+        }));
+        get()._updateAchievements();
+      },
+
+      deleteBook: (id) => {
+        set((state) => ({
+          books: state.books.filter((b) => b.id !== id)
+        }));
+        get()._updateAchievements();
+      },
+
+      toggleFavorite: (id) => {
+        set((state) => ({
+          books: state.books.map((b) =>
+            b.id === id ? { ...b, favorite: !b.favorite } : b
+          )
+        }));
+        get()._updateAchievements();
+      },
+
       importBooksFromSheets: async () => {
         const sheetId = '2PACX-1vSE7IbtXRMUG7GjTLv3ja9SpOeESudQeXcNjm4BRNVT1EBKQNBHYN_NnGthlYWojVPG8zx5b0FXnU0f';
         const url = `https://docs.google.com/spreadsheets/d/e/${sheetId}/pub?output=csv`;
-        
+
         try {
           console.log('Начинаю импорт...');
           const response = await fetch(url);
           const csvText = await response.text();
-          
+
           const rows = [];
           let currentRow = [];
           let currentField = '';
           let inQuotes = false;
-          
+
           for (let i = 0; i < csvText.length; i++) {
             const char = csvText[i];
             if (char === '"') {
@@ -95,12 +103,12 @@ const useStore = create(
             currentRow.push(currentField.trim());
             if (currentRow.length > 0) rows.push(currentRow);
           }
-          
+
           if (rows.length < 2) return { success: false, error: 'Нет данных в таблице' };
-          
+
           const headers = rows[0].map(h => h.toLowerCase().trim());
           const importedBooks = [];
-          
+
           const statusMap = {
             'прочитано': 'finished',
             'читаю': 'reading',
@@ -110,16 +118,20 @@ const useStore = create(
             'брошено': 'abandoned',
             'перечитываю': 'rereading'
           };
-          
+
           for (let i = 1; i < rows.length; i++) {
             const row = rows[i];
             if (row.length < 2) continue;
-            
-                        const book = {
+
+            const book = {
               id: Date.now() + i + Math.random().toString(),
-              cover: 'https://picsum.photos/200/300',
+              cover: null,
               status: 'planned',
               rating: null,
+              authorCountry: '',
+              series: '',
+              seriesPosition: null,
+              originalYear: null,
               genres: [],
               languages: [],
               pages: null,
@@ -131,13 +143,13 @@ const useStore = create(
               section: '',
               title: '',
               author: ''
-};
-            
+            };
+
             headers.forEach((header, idx) => {
               let value = row[idx] || '';
               if (value === '') return;
-              
-              switch(header) {
+
+              switch (header) {
                 case 'title':
                   book.title = value;
                   break;
@@ -157,11 +169,37 @@ const useStore = create(
                   const lowerStatus = value.toLowerCase().trim();
                   book.status = statusMap[lowerStatus] || 'planned';
                   break;
+                case 'authorcountry':
+                  book.authorCountry = value;
+                  break;
+                case 'series':
+                  book.series = value;
+                  break;
+                case 'seriesposition':
+                  book.seriesPosition = Number(value) || null;
+                  break;
+                case 'originalyear':
+                  book.originalYear = Number(value) || null;
+                  break;
                 case 'rating':
-                  book.rating = Number(value) || null;
+                  let ratingNum = Number(value);
+                  if (!isNaN(ratingNum) && ratingNum !== '') {
+                    // Конвертируем из 10-балльной в 5-балльную шкалу
+                    ratingNum = Math.round(ratingNum / 2);
+                    if (ratingNum < 0) ratingNum = 0;
+                    if (ratingNum > 5) ratingNum = 5;
+                    book.rating = ratingNum;
+                  } else {
+                    book.rating = null;
+                  }
                   break;
                 case 'pages':
-                  book.pages = Number(value) || null;
+                  let pagesNum = Number(value);
+                  if (!isNaN(pagesNum) && pagesNum > 0) {
+                    book.pages = pagesNum;
+                  } else {
+                    book.pages = null;
+                  }
                   break;
                 case 'startdate':
                   if (value.includes(' - ')) {
@@ -177,28 +215,59 @@ const useStore = create(
                   break;
               }
             });
-            
+
             if (book.title && book.author) {
               importedBooks.push(book);
             }
           }
-          
+
           if (importedBooks.length === 0) {
             return { success: false, error: 'Не найдено книг с заголовками' };
           }
-          
+
           set({ books: importedBooks });
+          get()._updateAchievements();
           return { success: true, count: importedBooks.length };
-          
+
         } catch (error) {
           console.error('Import error:', error);
           return { success: false, error: error.message };
         }
-      }
+      },
+
+      migrateOldRatings: () => {
+        const books = get().books;
+        let hasChanges = false;
+
+        const updatedBooks = books.map(book => {
+          if (book.rating && book.rating > 5) {
+            hasChanges = true;
+            const newRating = Math.round(book.rating / 2);
+            return { ...book, rating: newRating === 0 ? 1 : newRating };
+          }
+          if (book.rating && typeof book.rating !== 'number') {
+            hasChanges = true;
+            return { ...book, rating: null };
+          }
+          return book;
+        });
+
+        if (hasChanges) {
+          set({ books: updatedBooks });
+          get()._updateAchievements();
+          console.log('✅ Миграция оценок выполнена');
+        }
+        return hasChanges;
+      },
     }),
     {
-      name: 'everbrary-storage',
+      name: 'syverro-storage',
       storage: createJSONStorage(() => AsyncStorage),
+      onRehydrateStorage: () => (state) => {
+        if (state) {
+          state._updateAchievements();
+        }
+      },
     }
   )
 );

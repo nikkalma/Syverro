@@ -29,6 +29,14 @@ export default function EditMode({
   setEditNotes,
   editReview,
   setEditReview,
+  editAuthorCountry,
+  setEditAuthorCountry,
+  editSeries,
+  setEditSeries,
+  editSeriesPosition,
+  setEditSeriesPosition,
+  editOriginalYear,
+  setEditOriginalYear,
   saveChanges,
   setIsEditing,
   setKeyboardHeight,
@@ -36,7 +44,11 @@ export default function EditMode({
   lang,
   theme,
 }) {
-  // fallback на случай, если lang или lang.fields отсутствуют
+  console.log('🔍 lang?.fields:', lang?.fields);
+console.log('🔍 authorCountry:', lang?.fields?.authorCountry);
+console.log('🔍 series:', lang?.fields?.series);
+console.log('🔍 seriesPosition:', lang?.fields?.seriesPosition);
+console.log('🔍 originalYear:', lang?.fields?.originalYear);
   const fields = lang?.fields || {
     pages: 'Страницы',
     startDate: 'Дата начала',
@@ -44,6 +56,10 @@ export default function EditMode({
     rating: 'Оценка',
     review: 'Отзыв (будет виден всем)',
     notes: 'Заметки',
+    authorCountry: 'Страна автора',
+    series: 'Серия',
+    seriesPosition: 'Номер в серии',
+    originalYear: 'Год оригинала',
   };
   
   const buttons = lang?.buttons || { save: 'Сохранить', cancel: 'Отмена' };
@@ -71,6 +87,96 @@ export default function EditMode({
         authorsList={[...new Set(books.map(b => b.author).filter(Boolean))]}
         lang={lang}
         theme={theme}
+      />
+
+      <Text style={{ color: theme.textSecondary, marginBottom: 5 }}>
+        {fields.authorCountry}
+      </Text>
+      <TextInput
+        value={editAuthorCountry}
+        onChangeText={setEditAuthorCountry}
+        placeholder="Например: Россия, Япония"
+        placeholderTextColor={theme.textSecondary}
+        returnKeyType="done"
+        onSubmitEditing={Keyboard.dismiss}
+        onFocus={() => {
+          setTimeout(() => scrollViewRef.current?.scrollToEnd({ animated: true }), 100);
+        }}
+        style={{
+          padding: 12,
+          borderRadius: 12,
+          marginBottom: 15,
+          backgroundColor: theme.surface,
+          color: theme.textPrimary,
+        }}
+      />
+
+      <Text style={{ color: theme.textSecondary, marginBottom: 5 }}>
+        {fields.series}
+      </Text>
+      <TextInput
+        value={editSeries}
+        onChangeText={setEditSeries}
+        placeholder="Название серии"
+        placeholderTextColor={theme.textSecondary}
+        returnKeyType="done"
+        onSubmitEditing={Keyboard.dismiss}
+        onFocus={() => {
+          setTimeout(() => scrollViewRef.current?.scrollToEnd({ animated: true }), 100);
+        }}
+        style={{
+          padding: 12,
+          borderRadius: 12,
+          marginBottom: 15,
+          backgroundColor: theme.surface,
+          color: theme.textPrimary,
+        }}
+      />
+
+      <Text style={{ color: theme.textSecondary, marginBottom: 5 }}>
+        {fields.seriesPosition}
+      </Text>
+      <TextInput
+        value={editSeriesPosition}
+        onChangeText={setEditSeriesPosition}
+        keyboardType="numeric"
+        placeholder="1, 2, 3..."
+        placeholderTextColor={theme.textSecondary}
+        returnKeyType="done"
+        onSubmitEditing={Keyboard.dismiss}
+        onFocus={() => {
+          setTimeout(() => scrollViewRef.current?.scrollToEnd({ animated: true }), 100);
+        }}
+        style={{
+          padding: 12,
+          borderRadius: 12,
+          marginBottom: 15,
+          backgroundColor: theme.surface,
+          color: theme.textPrimary,
+        }}
+      />
+
+      <Text style={{ color: theme.textSecondary, marginBottom: 5 }}>
+        {fields.originalYear}
+      </Text>
+      <TextInput
+        value={editOriginalYear}
+        onChangeText={setEditOriginalYear}
+        keyboardType="numeric"
+        placeholder="1999, 1854..."
+        placeholderTextColor={theme.textSecondary}
+        returnKeyType="done"
+        onSubmitEditing={Keyboard.dismiss}
+        onFocus={() => {
+          setTimeout(() => scrollViewRef.current?.scrollToEnd({ animated: true }), 100);
+        }}
+        style={{
+          padding: 12,
+          borderRadius: 12,
+          marginBottom: 15,
+          backgroundColor: theme.surface,
+          color: theme.textPrimary,
+        }}
       />
 
       <LanguageSelector

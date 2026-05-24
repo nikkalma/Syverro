@@ -1,53 +1,105 @@
+// export.js
 const fs = require('fs');
 const path = require('path');
 
-const targetDir = __dirname;
-const outputFile = path.join(targetDir, 'context.txt');
+// Папки и файлы, которые нужно исключить (мусор)
+const EXCLUDED_DIRS = [
+  'node_modules',
+  '.expo',
+  'android',
+  'ios',
+  'web-build',
+  '.git',
+  '.vscode',
+  'assets', // обычно там только картинки, они не нужны в текстовом контексте
+];
+const EXCLUDED_FILES = [
+  '.gitignore',
+  'package-lock.json',
+  'yarn.lock',
+  'context.txt', // чтобы не читать сам себя
+  'export.js',   // себя тоже пропускаем
+  'metro.config.js',
+  'babel.config.js',
+  'eas.json',
+  'app.json',
+];
 
-const ignoreDirs = ['node_modules', '.expo', '.git', 'assets', '.vscode', 'expo-plugins'];
-const ignoreExtensions = ['.png', '.jpg', '.jpeg', '.gif', '.ttf', '.otf', '.woff', '.map', '.lock'];
-const ignoreFiles = ['package-lock.json', 'yarn.lock', '.DS_Store', 'context.txt', 'export-structure.js'];
+// Расширения файлов, которые мы включаем (весь код)
+const INCLUDED_EXTENSIONS = ['.js', '.jsx', '.ts', '.tsx', '.json', '.md', '.txt'];
 
-function shouldIgnore(filePath) {
-  const parts = filePath.split(path.sep);
-  for (const ignore of ignoreDirs) {
-    if (parts.includes(ignore)) return true;
-  }
-  const ext = path.extname(filePath);
-  if (ignoreExtensions.includes(ext)) return true;
-  const base = path.basename(filePath);
-  if (ignoreFiles.includes(base)) return true;
-  return false;
+function shouldExcludeDir(dirName) {
+  return EXCLUDED_DIRS.includes(dirName);
 }
 
-function getAllFiles(dir, fileList = []) {
-  const files = fs.readdirSync(dir);
-  files.forEach(file => {
-    const filePath = path.join(dir, file);
-    const stat = fs.statSync(filePath);
+function shouldExcludeFile(fileName) {
+  return EXCLUDED_FILES.includes(fileName);
+}
+
+function getFileExtension(fileName) {
+  return path.extname(fileName).toLowerCase();
+}
+
+function readDirectory(directory, outputStream, basePath = '') {
+  const items = fs.readdirSync(directory);
+
+  for (const item of items) {
+    const itemPath = path.join(directory, item);
+    const stat = fs.statSync(itemPath);
+    const relativePath = path.join(basePath, item);
+
     if (stat.isDirectory()) {
-      getAllFiles(filePath, fileList);
-    } else if (!shouldIgnore(filePath)) {
-      fileList.push(filePath);
+      if (!shouldExcludeDir(item)) {
+        readDirectory(itemPath, outputStream, relativePath);
+      }
+    } else {
+      if (shouldExcludeFile(item)) continue;
+
+      const ext = getFileExtension(item);
+      if (INCLUDED_EXTENSIONS.includes(ext)) {
+        try {
+          const content = fs.readFileSync(itemPath, 'utf8');
+          
+          // Записываем заголовок файла
+          outputStream.write(`\n\n// ===== ФАЙЛ: ${relativePath} =====\n`);
+          
+          // Оборачиваем содержимое маркером для читаемости (опционально)
+          outputStream.write(`[file content begin]\n`);
+          outputStream.write(content);
+          outputStream.write(`\n[file content end]\n`);
+          
+          console.log(`✅ Добавлен: ${relativePath}`);
+        } catch (err) {
+          console.error(`❌ Ошибка чтения ${relativePath}:`, err.message);
+          outputStream.write(`\n// ===== ОШИБКА ЧТЕНИЯ: ${relativePath} =====\n`);
+        }
+      }
     }
-  });
-  return fileList;
-}
-
-function generateContext() {
-  const allFiles = getAllFiles(targetDir);
-  const sortedFiles = allFiles.sort();
-  
-  let output = '';
-  for (const file of sortedFiles) {
-    output += `// ===== ФАЙЛ: ${file.replace(targetDir + path.sep, '')} =====\n`;
-    const content = fs.readFileSync(file, 'utf8');
-    output += content + '\n\n';
   }
-  
-  fs.writeFileSync(outputFile, output);
-  console.log(`✅ Контекст сохранён в ${outputFile}`);
-  console.log(`📁 Всего файлов: ${sortedFiles.length}`);
 }
 
-generateContext();
+function exportProject() {
+  const projectRoot = __dirname; // текущая папка (корень проекта)
+  const outputFilePath = path.join(projectRoot, 'context.txt');
+  
+  console.log(`🚀 Начинаем экспорт проекта из ${projectRoot}`);
+  console.log(`📄 Результат будет сохранён в ${outputFilePath}`);
+  
+  const writeStream = fs.createWriteStream(outputFilePath);
+  
+  // Заголовок файла с метаданными
+  writeStream.write(`# Контекст проекта Syverro\n`);
+  writeStream.write(`# Дата генерации: ${new Date().toISOString()}\n`);
+  writeStream.write(`# Корневая папка: ${projectRoot}\n`);
+  writeStream.write(`# Все пути относительные\n\n`);
+  
+  readDirectory(projectRoot, writeStream);
+  
+  writeStream.end(() => {
+    console.log(`\n🎉 Готово! Файл context.txt создан.`);
+    console.log(`📂 Размер: ${(fs.statSync(outputFilePath).size / 1024 / 1024).toFixed(2)} MB`);
+  });
+}
+
+// Запускаем экспорт
+exportProject();

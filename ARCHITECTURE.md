@@ -1,15 +1,12 @@
-# Архитектура Evebrary
+# Архитектура SYVERRO
 
 ## 📁 Структура папок
-everbrary/
+syverro/
 ├── .expo/ # Служебные файлы Expo (не трогать)
 ├── android/ # Нативные файлы Android (сборка)
 ├── assets/ # Статические ресурсы (иконки, splash)
 ├── components/ # Переиспользуемые UI-компоненты
-│ ├── charts/ # Компоненты для графиков
-│ │ ├── DonutChart.js
-│ │ ├── ProgressRing.js
-│ │ └── TopGenresBar.js
+│ ├── charts/ # Компоненты для графиков (отложено)
 │ ├── AuthorSelector.js
 │ ├── BookCover.js
 │ ├── CompactThemeSwitcher.js
@@ -19,18 +16,19 @@ everbrary/
 ├── constants/
 │ └── Colors.js # Светлая и тёмная темы
 ├── context/
-│ └── ThemeContext.js # Провайдер темы, переключение, сохранение
+│ └── ThemeContext.js # Провайдер темы
 ├── locales/ # Интернационализация (10 языков)
 │ ├── index.js
 │ ├── ru.js, en.js, be.js, ua.js, ko.js, ja.js, it.js, fr.js, de.js, pl.js
-├── screens/ # Экраны приложения (разбиты на компоненты)
-│ ├── BookDetailsScreen/ # Детали книги + редактирование
-│ │ ├── index.js # Главный компонент (переключает режимы)
-│ │ ├── EditMode.js # Режим редактирования
-│ │ ├── ViewMode.js # Режим просмотра
-│ │ ├── RatingStars.js # Выбор и отображение звёзд
-│ │ └── StatusPicker.js # Выбор статуса (planned/reading/finished...)
-│ ├── HomeScreen/ # Главный экран (список книг)
+├── screens/
+│ ├── AchievementsScreen.js # Достижения
+│ ├── BookDetailsScreen/ # Детали + редактирование
+│ │ ├── index.js
+│ │ ├── EditMode.js
+│ │ ├── ViewMode.js
+│ │ ├── RatingStars.js
+│ │ └── StatusPicker.js
+│ ├── HomeScreen/ # Главный экран
 │ │ ├── index.js
 │ │ ├── Header.js
 │ │ ├── ActionButtons.js
@@ -40,75 +38,72 @@ everbrary/
 │ │ ├── StatusFilters.js
 │ │ ├── BookCard.js
 │ │ └── EmptyState.js
-│ ├── ProfileScreen/ # Профиль, уровень, аватар
+│ ├── ProfileScreen/ # Профиль
 │ │ ├── index.js
 │ │ ├── ProfileHeader.js
 │ │ ├── ProfileStats.js
 │ │ ├── ReaderLevel.js
 │ │ └── AvatarModal.js
-│ ├── StatsScreen/ # Статистика (графики, прогресс)
+│ ├── StatsScreen/ # Статистика
 │ │ ├── index.js
 │ │ ├── StatCards.js
 │ │ ├── ProgressBar.js
 │ │ ├── TopGenres.js
 │ │ └── MotivationCard.js
-│ ├── AboutScreen.js # О приложении, шаринг, ссылки
-│ ├── CustomDrawerContent.js # Кастомное боковое меню
-│ └── FavoriteBooksScreen.js # Список любимых книг
-├── utils/ # Утилиты (если есть)
+│ ├── AboutScreen.js
+│ ├── CustomDrawerContent.js
+│ └── FavoriteBooksScreen.js
+├── store/
+│ ├── index.js # Zustand store (основной)
+│ └── achievements.js # Логика ачивок
+├── utils/ # Утилиты
 ├── .gitignore
-├── App.js # Точка входа, навигация
-├── app.json # Конфиг Expo
+├── App.js
+├── app.json
 ├── babel.config.js
-├── index.js # Точка входа React Native
+├── index.js
 ├── metro.config.js
 ├── package.json
-├── store.js # Zustand store (данные, импорт, миграции)
-└── eas.json # Конфиг EAS Build (если используется)
+└── store.js # (устаревший, используется store/index.js)
 
 
 
-## 🔧 Ключевые файлы и их назначение
+## 🔧 Ключевые файлы
 
 | Файл | Назначение |
 |------|------------|
-| `App.js` | Корень приложения. SplashScreen, загрузка языка, миграция данных. Два навигатора: Stack (экраны) и Drawer (меню). |
-| `store.js` | Zustand + persist (AsyncStorage). Хранит `books[]`, методы: `addBook`, `updateBook`, `deleteBook`, `toggleFavorite`, `importBooksFromSheets`. |
-| `ThemeContext.js` | Контекст темы. Режимы: light / dark / system. Сохраняется в AsyncStorage. |
-| `Colors.js` | Две темы: светлая (`#F3E9DD` — кремовая) и тёмная (`#0A1116` — сине-чёрная). |
-| `screens/BookDetailsScreen/index.js` | Детальная страница книги. Переключает `ViewMode` и `EditMode`. |
-| `screens/HomeScreen/index.js` | Главный список книг. Фильтры, поиск, сортировка. |
-| `screens/ProfileScreen/index.js` | Профиль пользователя. Аватар, имя, уровень, статистика. |
-| `screens/StatsScreen/index.js` | Статистика. Прогресс, топ жанров, мотивация. |
-| `components/charts/*` | Графики для статистики (Victory Native). |
-| `locales/*.js` | Все строки интерфейса. Ключи: `app`, `buttons`, `status`, `fields`, `stats`, `sort`. |
+| `store/index.js` | Zustand + persist. Книги, ачивки, CRUD, импорт. |
+| `store/achievements.js` | Список ачивок, функция `checkAchievements()`. |
+| `screens/AchievementsScreen.js` | Экран достижений (прогресс, разблокировка). |
+| `screens/StatsScreen/index.js` | Статистика (прогресс, жанры, карточки). |
+| `screens/BookDetailsScreen/` | Детали + редактирование книги. |
+| `screens/HomeScreen/` | Главный экран (список, фильтры, поиск). |
+| `ThemeContext.js` | Тёмная/светлая/системная тема. |
+| `Colors.js` | Цветовые схемы. |
+| `locales/*.js` | Все строки интерфейса. |
 
 ## 📦 Технологический стек
 
 | Категория | Библиотеки |
-|-----------|------------|
+|-----------|-----------|
 | Фреймворк | React Native (Expo SDK 54) |
 | Навигация | `@react-navigation/native`, `stack`, `drawer` |
 | Состояние | Zustand + persist + AsyncStorage |
 | UI | `react-native-gesture-handler`, `react-native-reanimated` |
-| Графики | Victory Native |
 | Экспорт | `expo-file-system`, `expo-sharing` |
-| Интернационализация | ручной (объекты с ключами) |
+| Интернационализация | ручная (объекты с ключами) |
 
-## 🧭 Схема навигации
+## 🧭 Навигация
 
 App.js
-│
-├── Stack.Navigator (headerShown: false)
-│ │
-│ ├── Main → Drawer.Navigator
-│ │ └── Home → HomeScreen/index.js
-│ │
-│ ├── Details → BookDetailsScreen/index.js (принимает bookId)
+├── Stack.Navigator
+│ ├── Main → Drawer.Navigator → HomeScreen
+│ ├── Details → BookDetailsScreen
 │ ├── About → AboutScreen
-│ ├── Stats → StatsScreen/index.js
-│ ├── Profile → ProfileScreen/index.js
-│ └── FavoriteBooks → FavoriteBooksScreen
+│ ├── Stats → StatsScreen
+│ ├── Profile → ProfileScreen
+│ ├── FavoriteBooks → FavoriteBooksScreen
+│ └── Achievements → AchievementsScreen
 │
 └── (Drawer открывается через dispatch(DrawerActions.openDrawer()))
 
@@ -132,6 +127,11 @@ App.js
 
 - Экспо Go не используется (выход за лимиты). Работаем через **dev build** (`expo run:android` / `expo run:ios`).
 - Все изменения — через горячую перезагрузку, без `eas build`.
+
+## 🧩 Особенности
+
+- **Ачивки** — 17 достижений с ироничными названиями, прогресс-бары, авто-проверка
+- **Темы** — через контекст, сохранение в AsyncStorage
 
 ## 🗃️ Важно для разработчика
 

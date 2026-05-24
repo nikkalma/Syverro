@@ -1,3 +1,4 @@
+import AchievementsScreen from './screens/AchievementsScreen';
 import * as SplashScreen from 'expo-splash-screen';
 import { useCallback } from 'react';
 import 'react-native-gesture-handler';
@@ -18,6 +19,8 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { View } from 'react-native';
 import ProfileScreen from './screens/ProfileScreen';
 import FavoriteBooksScreen from './screens/FavoriteBooksScreen';
+import { LogBox } from 'react-native';
+LogBox.ignoreLogs(['Text strings must be rendered within a <Text> component']);
 
 const Stack = createStackNavigator();
 const Drawer = createDrawerNavigator();
@@ -91,6 +94,9 @@ export default function App() {
               <Stack.Screen name="About">
                 {props => <AboutScreen {...props} lang={lang} />}
               </Stack.Screen>
+              <Stack.Screen name="Achievements">
+                {props => <AchievementsScreen {...props} lang={lang} />}
+            </Stack.Screen>
               <Stack.Screen name="Stats">
                 {props => <StatsScreen {...props} lang={lang} />}
               </Stack.Screen>

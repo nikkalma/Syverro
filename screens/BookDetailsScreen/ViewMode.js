@@ -2,7 +2,6 @@ import React from 'react';
 import { View, Text } from 'react-native';
 
 export default function ViewMode({ book, lang, theme }) {
-  // Защита от undefined lang / fields
   const fields = lang?.fields || {
     author: 'Автор',
     languages: 'Язык прочтения',
@@ -14,6 +13,10 @@ export default function ViewMode({ book, lang, theme }) {
     endDate: 'Дата окончания',
     notes: 'Заметки',
     review: 'Отзыв',
+    authorCountry: 'Страна автора',
+    series: 'Серия',
+    seriesPosition: 'Номер в серии',
+    originalYear: 'Год оригинала',
   };
 
   const statusText = lang?.status?.[book.status] || book.status;
@@ -28,6 +31,35 @@ export default function ViewMode({ book, lang, theme }) {
           {book.author || '—'}
         </Text>
       </View>
+
+      {book.authorCountry ? (
+        <View style={{ marginBottom: 16 }}>
+          <Text style={{ color: theme.textSecondary, fontSize: 14, marginBottom: 4 }}>
+            {fields.authorCountry}
+          </Text>
+          <Text style={{ color: theme.textPrimary, fontSize: 16 }}>{book.authorCountry}</Text>
+        </View>
+      ) : null}
+
+      {book.series ? (
+        <View style={{ marginBottom: 16 }}>
+          <Text style={{ color: theme.textSecondary, fontSize: 14, marginBottom: 4 }}>
+            {fields.series}
+          </Text>
+          <Text style={{ color: theme.textPrimary, fontSize: 16 }}>
+            {book.series} {book.seriesPosition ? `(#${book.seriesPosition})` : ''}
+          </Text>
+        </View>
+      ) : null}
+
+      {book.originalYear ? (
+        <View style={{ marginBottom: 16 }}>
+          <Text style={{ color: theme.textSecondary, fontSize: 14, marginBottom: 4 }}>
+            {fields.originalYear}
+          </Text>
+          <Text style={{ color: theme.textPrimary, fontSize: 16 }}>{book.originalYear}</Text>
+        </View>
+      ) : null}
 
       {book.languages && book.languages.length > 0 && (
         <View style={{ marginBottom: 16 }}>
@@ -53,16 +85,24 @@ export default function ViewMode({ book, lang, theme }) {
         </Text>
       </View>
 
-      {book.rating && book.rating > 0 && (
-        <View style={{ marginBottom: 16 }}>
-          <Text style={{ color: theme.textSecondary, fontSize: 14, marginBottom: 4 }}>
-            {fields.rating}
-          </Text>
-          <Text style={{ color: theme.textPrimary, fontSize: 16 }}>
-            {'⭐'.repeat(book.rating)}{'☆'.repeat(5 - book.rating)}
-          </Text>
-        </View>
-      )}
+       {book.rating && (() => {
+  const ratingNum = Number(book.rating);
+  console.log(`📊 Книга: ${book.title}, рейтинг: ${book.rating} (тип: ${typeof book.rating}), после Number: ${ratingNum}`);
+  if (isNaN(ratingNum) || ratingNum < 0 || ratingNum > 5) {
+    console.log(`❌ Ошибка: рейтинг вне диапазона 0-5: ${ratingNum}`);
+    return null;
+  }
+  return (
+    <View style={{ marginBottom: 16 }}>
+      <Text style={{ color: theme.textSecondary, fontSize: 14, marginBottom: 4 }}>
+        {fields.rating}
+      </Text>
+      <Text style={{ color: theme.textPrimary, fontSize: 16 }}>
+        {'⭐'.repeat(ratingNum)}{'☆'.repeat(5 - ratingNum)}
+      </Text>
+    </View>
+  );
+})()}
 
       <View style={{ marginBottom: 16 }}>
         <Text style={{ color: theme.textSecondary, fontSize: 14, marginBottom: 4 }}>

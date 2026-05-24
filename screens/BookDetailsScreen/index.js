@@ -21,7 +21,10 @@ export default function BookDetailsScreen({ route, navigation }) {
   const book = route.params.book || books?.find(b => b.id === bookId);
   const scrollViewRef = useRef(null);
   const [keyboardHeight, setKeyboardHeight] = useState(0);
-
+  const [editAuthorCountry, setEditAuthorCountry] = useState(book?.authorCountry || '');
+  const [editSeries, setEditSeries] = useState(book?.series || '');
+  const [editSeriesPosition, setEditSeriesPosition] = useState(book?.seriesPosition?.toString() || '');
+  const [editOriginalYear, setEditOriginalYear] = useState(book?.originalYear?.toString() || '');
   const [isEditing, setIsEditing] = useState(false);
   const [editLanguages, setEditLanguages] = useState(book?.languages || []);
   const [editStatus, setEditStatus] = useState(book?.status || 'planned');
@@ -67,7 +70,11 @@ export default function BookDetailsScreen({ route, navigation }) {
       notes: editNotes,
       review: editReview,
       languages: editLanguages,
-    };
+      authorCountry: editAuthorCountry,
+      authorCountry: editAuthorCountry,
+      series: editSeries,
+      seriesPosition: editSeriesPosition ? parseInt(editSeriesPosition) : null,
+      originalYear: editOriginalYear ? parseInt(editOriginalYear) : null,    };
 
     updateBook(bookId, updatedBook);
     navigation.setParams({ book: updatedBook });
@@ -153,6 +160,15 @@ export default function BookDetailsScreen({ route, navigation }) {
                 scrollViewRef={scrollViewRef}
                 lang={lang}
                 theme={theme}
+                editAuthorCountry={editAuthorCountry}
+                setEditAuthorCountry={setEditAuthorCountry}
+                editSeries={editSeries}
+                setEditSeries={setEditSeries}
+                editSeriesPosition={editSeriesPosition}
+                setEditSeriesPosition={setEditSeriesPosition}
+                editOriginalYear={editOriginalYear}
+                setEditOriginalYear={setEditOriginalYear}
+                
               />
             )}
           </ScrollView>

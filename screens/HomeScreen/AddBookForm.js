@@ -15,22 +15,29 @@ export default function AddBookForm({ visible, onClose, lang }) {
       return;
     }
     
-    const newBook = { 
-      id: Date.now().toString() + '-' + Math.random().toString(36).substr(2, 6),
-      title, 
-      author, 
-      status: 'planned', 
-      rating: 0, 
-      cover: 'https://picsum.photos/200/300', 
-      section: '', 
-      genres: [], 
-      pages: null, 
-      startDate: '', 
-      endDate: '', 
-      notes: '',
-      languages: [],
-      createdAt: Date.now(),  // ← ДОБАВИТЬ ЭТУ СТРОКУ
-    };
+  const newBook = { 
+    id: Date.now().toString() + '-' + Math.random().toString(36).substr(2, 6),
+    title, 
+    author, 
+    status: 'planned', 
+    rating: null,
+    cover: null,
+    section: '', 
+    genres: [], 
+    pages: null, 
+    startDate: '', 
+    endDate: '', 
+    notes: '',
+    languages: [],
+    review: '',
+    createdAt: Date.now(),
+    favorite: false,
+    // НОВЫЕ ПОЛЯ
+    authorCountry: '',
+    series: '',
+    seriesPosition: null,
+    originalYear: null,
+  };
     
     await addBook(newBook);
     setTitle('');

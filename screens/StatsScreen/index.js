@@ -1,3 +1,4 @@
+// SYVERRO-STATS-SCREEN-FINAL-001
 import React, { useMemo } from 'react';
 import { View, Text, ScrollView, TouchableOpacity } from 'react-native';
 import { useTheme } from '../../context/ThemeContext';
@@ -61,6 +62,8 @@ export default function StatsScreen({ navigation, lang }) {
       <TopGenres stats={stats} lang={lang} theme={theme} />
       <StatCards stats={stats} lang={lang} theme={theme} />
       <MotivationCard stats={stats} lang={lang} theme={theme} />
+      
+      <View style={{ height: 40 }} />
     </ScrollView>
   );
 }

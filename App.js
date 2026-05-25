@@ -1,3 +1,5 @@
+import InsightsScreen from './screens/InsightsScreen';
+import ChallengesScreen from './screens/ChallengesScreen';
 import AchievementsScreen from './screens/AchievementsScreen';
 import * as SplashScreen from 'expo-splash-screen';
 import { useCallback } from 'react';
@@ -105,6 +107,12 @@ export default function App() {
               </Stack.Screen>
               <Stack.Screen name="FavoriteBooks">
                 {props => <FavoriteBooksScreen {...props} lang={lang} />}
+              </Stack.Screen>
+              <Stack.Screen name="Insights">
+                {props => <InsightsScreen {...props} lang={lang} />}
+              </Stack.Screen>
+              <Stack.Screen name="Challenges">
+                {props => <ChallengesScreen {...props} lang={lang} />}
               </Stack.Screen>
             </Stack.Navigator>
           </NavigationContainer>

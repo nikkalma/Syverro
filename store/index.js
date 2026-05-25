@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { checkAchievements } from './achievements';
+import { CHALLENGES_LIST, checkChallenges } from './challenges';
 
 const useStore = create(
   persist(
@@ -12,6 +13,12 @@ const useStore = create(
         progress: {},
         newlyUnlocked: null,
       },
+      challenges: CHALLENGES_LIST.map(ch => ({
+        ...ch,
+        progress: 0,
+        status: 'active',
+        completedAt: null,
+      })),
 
       _updateAchievements: () => {
         const { books, achievements } = get();
@@ -22,6 +29,13 @@ const useStore = create(
           achievements.newlyUnlocked
         );
         set({ achievements: { unlocked, progress, newlyUnlocked } });
+        get()._updateChallenges();
+      },
+
+      _updateChallenges: () => {
+        const { books, challenges } = get();
+        const updatedChallenges = checkChallenges(books, challenges);
+        set({ challenges: updatedChallenges });
       },
 
       setBooks: (books) => {
@@ -184,7 +198,6 @@ const useStore = create(
                 case 'rating':
                   let ratingNum = Number(value);
                   if (!isNaN(ratingNum) && ratingNum !== '') {
-                    // Конвертируем из 10-балльной в 5-балльную шкалу
                     ratingNum = Math.round(ratingNum / 2);
                     if (ratingNum < 0) ratingNum = 0;
                     if (ratingNum > 5) ratingNum = 5;
@@ -194,12 +207,7 @@ const useStore = create(
                   }
                   break;
                 case 'pages':
-                  let pagesNum = Number(value);
-                  if (!isNaN(pagesNum) && pagesNum > 0) {
-                    book.pages = pagesNum;
-                  } else {
-                    book.pages = null;
-                  }
+                  book.pages = Number(value) || null;
                   break;
                 case 'startdate':
                   if (value.includes(' - ')) {

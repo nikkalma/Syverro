@@ -6,9 +6,9 @@ export default function TopGenres({ stats, lang, theme }) {
     return (
       <View style={{ marginBottom: 28 }}>
         <Text style={{ color: theme.textPrimary, fontSize: 16, fontWeight: 'bold', marginBottom: 12, textAlign: 'center' }}>
-          🏆 {lang.stats?.topGenres || 'Топ-3 жанра (прочитанные)'}
+          🏆 {lang.insights?.topGenres || 'Топ-3 жанра (прочитанные)'}
         </Text>
-        <Text style={{ color: theme.textSecondary, textAlign: 'center' }}>{lang.stats?.noGenreData || 'Нет данных о жанрах в прочитанных книгах'}</Text>
+        <Text style={{ color: theme.textSecondary, textAlign: 'center' }}>{lang.insights?.noGenreData || 'Нет данных о жанрах в прочитанных книгах'}</Text>
       </View>
     );
   }
@@ -18,7 +18,7 @@ export default function TopGenres({ stats, lang, theme }) {
   return (
     <View style={{ marginBottom: 28 }}>
       <Text style={{ color: theme.textPrimary, fontSize: 16, fontWeight: 'bold', marginBottom: 12, textAlign: 'center' }}>
-        🏆 {lang.stats?.topGenres || 'Топ-3 жанра (прочитанные)'}
+        🏆 {lang.insights?.topGenres || 'Топ-3 жанра (прочитанные)'}
       </Text>
       {stats.topGenres.map((genre, idx) => {
         const percent = (genre.count / maxCount) * 100;
@@ -28,7 +28,7 @@ export default function TopGenres({ stats, lang, theme }) {
               <Text style={{ color: theme.textPrimary, fontSize: 12, flex: 1 }} numberOfLines={1}>
                 {genre.name}
               </Text>
-              <Text style={{ color: theme.textSecondary, fontSize: 11 }}>{genre.count} {lang.stats?.books || 'кн.'}</Text>
+              <Text style={{ color: theme.textSecondary, fontSize: 11 }}>{genre.count} {lang.insights?.books || 'кн.'}</Text>
             </View>
             <View style={{ 
               height: 24, 

@@ -68,24 +68,24 @@ export default function CustomDrawerContent({ navigation, lang, setLocale, local
         <Text style={{ color: theme.textPrimary, fontSize: 15 }}>👤 {lang.menu.profile}</Text>
       </TouchableOpacity>
 
-      <TouchableOpacity 
-        onPress={() => {
-          navigation.closeDrawer();
-          navigation.navigate('Stats');
-        }}
-        style={{ 
-          paddingVertical: 8,
-          paddingHorizontal: 12,
-          backgroundColor: theme.surface, 
-          borderRadius: 12,
-          borderWidth: 1,
-          borderColor: theme.border,
-          marginBottom: 12,
-        }}
-        activeOpacity={0.7}
-      >
-        <Text style={{ color: theme.textPrimary, fontSize: 15 }}>📊 {lang.menu.stats}</Text>
-      </TouchableOpacity>
+                <TouchableOpacity 
+            onPress={() => {
+              navigation.closeDrawer();
+              navigation.navigate('Insights');
+            }}
+            style={{ 
+              paddingVertical: 8,
+              paddingHorizontal: 12,
+              backgroundColor: theme.surface, 
+              borderRadius: 12,
+              borderWidth: 1,
+              borderColor: theme.border,
+              marginBottom: 12,
+            }}
+            activeOpacity={0.7}
+          >
+            <Text style={{ color: theme.textPrimary, fontSize: 15 }}>📊 Инсайты</Text>
+          </TouchableOpacity>
       
             <TouchableOpacity 
         onPress={() => {
@@ -99,11 +99,30 @@ export default function CustomDrawerContent({ navigation, lang, setLocale, local
           borderRadius: 12,
           borderWidth: 1,
           borderColor: theme.border,
-          marginBottom: 24,
+          marginBottom: 12,
         }}
       >
         <Text style={{ color: theme.textPrimary, fontSize: 15 }}>🏆 {lang.menu.achievements}</Text>
       </TouchableOpacity>
+
+              <TouchableOpacity 
+          onPress={() => {
+            navigation.closeDrawer();
+            navigation.navigate('Challenges');
+          }}
+          style={{ 
+            paddingVertical: 8,
+            paddingHorizontal: 12,
+            backgroundColor: theme.surface, 
+            borderRadius: 12,
+            borderWidth: 1,
+            borderColor: theme.border,
+            marginBottom: 24,
+          }}
+          activeOpacity={0.7}
+        >
+          <Text style={{ color: theme.textPrimary, fontSize: 15 }}>🏆 Челленджи</Text>
+        </TouchableOpacity>
 
       <View style={{ flex: 1 }} />
       

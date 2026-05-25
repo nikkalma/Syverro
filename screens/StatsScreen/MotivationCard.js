@@ -5,15 +5,15 @@ export default function MotivationCard({ stats, lang, theme }) {
   let message = '';
   
   if (stats.totalBooks === 0) {
-    message = '✨ ' + (lang.stats?.addFirstBook || 'Добавьте первую книгу, чтобы увидеть статистику');
+    message = '✨ ' + (lang.insights?.addFirstBook || 'Добавьте первую книгу, чтобы увидеть статистику');
   } else if (stats.finishedCount === 0) {
-    message = '🔥 ' + (lang.stats?.justStarted || 'Вы только начали. Первая прочитанная книга уже близко!');
+    message = '🔥 ' + (lang.insights?.justStarted || 'Вы только начали. Первая прочитанная книга уже близко!');
   } else if (stats.finishedCount < 10) {
-    message = '📖 ' + (lang.stats?.goodStart || 'Отличный старт! Продолжайте в том же духе.');
+    message = '📖 ' + (lang.insights?.goodStart || 'Отличный старт! Продолжайте в том же духе.');
   } else if (stats.finishedCount < 30) {
-    message = '🏆 ' + (lang.stats?.bookworm || 'Вы настоящий книжный червь!');
+    message = '🏆 ' + (lang.insights?.bookworm || 'Вы настоящий книжный червь!');
   } else {
-    message = '👑 ' + (lang.stats?.bookKing || 'Книжный король / королева! Браво!');
+    message = '👑 ' + (lang.insights?.bookKing || 'Книжный король / королева! Браво!');
   }
 
   return (

@@ -1,14 +1,14 @@
-// SYVERRO-STATS-SCREEN-FINAL-001
+// EVEBRARY-INSIGHTS-SCREEN-001
 import React, { useMemo } from 'react';
 import { View, Text, ScrollView, TouchableOpacity } from 'react-native';
-import { useTheme } from '../../context/ThemeContext';
-import useStore from '../../store';
-import ProgressBar from './ProgressBar';
-import TopGenres from './TopGenres';
-import StatCards from './StatCards';
-import MotivationCard from './MotivationCard';
+import { useTheme } from '../context/ThemeContext';
+import useStore from '../store';
+import ProgressBar from './StatsScreen/ProgressBar';
+import TopGenres from './StatsScreen/TopGenres';
+import StatCards from './StatsScreen/StatCards';
+import MotivationCard from './StatsScreen/MotivationCard';
 
-export default function StatsScreen({ navigation, lang }) {
+export default function InsightsScreen({ navigation, lang }) {
   const { theme } = useTheme();
   const { books } = useStore();
 
@@ -55,7 +55,9 @@ export default function StatsScreen({ navigation, lang }) {
         <TouchableOpacity onPress={() => navigation.goBack()} style={{ marginRight: 15 }} activeOpacity={0.7}>
           <Text style={{ color: theme.textPrimary, fontSize: 28 }}>←</Text>
         </TouchableOpacity>
-        <Text style={{ color: theme.textPrimary, fontSize: 28, fontWeight: 'bold' }}>{lang.insights?.title || 'Статистика'}</Text>
+        <Text style={{ color: theme.textPrimary, fontSize: 28, fontWeight: 'bold' }}>
+          {lang.insights?.title || 'Инсайты'}
+        </Text>
       </View>
 
       <ProgressBar stats={stats} lang={lang} theme={theme} />

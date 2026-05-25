@@ -5,7 +5,7 @@ export default function ProgressBar({ stats, lang, theme }) {
   return (
     <View style={{ marginBottom: 28 }}>
       <Text style={{ color: theme.textPrimary, fontSize: 16, fontWeight: 'bold', marginBottom: 12, textAlign: 'center' }}>
-        📖 {lang.stats?.progress || 'Прогресс чтения'}
+        📖 {lang.insights?.progress || 'Прогресс чтения'}
       </Text>
       <View style={{ 
         height: 32, 
@@ -29,8 +29,8 @@ export default function ProgressBar({ stats, lang, theme }) {
         </View>
       </View>
       <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 8 }}>
-        <Text style={{ color: theme.textSecondary, fontSize: 11 }}>✅ {lang.stats?.finished || 'Прочитано'}: {stats.finishedCount}</Text>
-        <Text style={{ color: theme.textSecondary, fontSize: 11 }}>📚 {lang.stats?.total || 'Всего'}: {stats.totalBooks}</Text>
+        <Text style={{ color: theme.textSecondary, fontSize: 11 }}>✅ {lang.insights?.finished || 'Прочитано'}: {stats.finishedCount}</Text>
+        <Text style={{ color: theme.textSecondary, fontSize: 11 }}>📚 {lang.insights?.total || 'Всего'}: {stats.totalBooks}</Text>
       </View>
     </View>
   );

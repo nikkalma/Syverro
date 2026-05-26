@@ -1,0 +1,18 @@
+{
+  "builds": [
+    {
+      "src": "syverro-landing/**",
+      "use": "@vercel/static"
+    }
+  ],
+  "routes": [
+    {
+      "src": "/",
+      "dest": "/syverro-landing/index.html"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/syverro-landing/$1"
+    }
+  ]
+}

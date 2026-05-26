@@ -3,6 +3,10 @@
 # dependencies
 node_modules/
 
+node_modules/
+**/node_modules/
+mobile-app/node_modules/
+
 # Expo
 .expo/
 dist/
@@ -47,3 +51,19 @@ node_modules/
 *.log
 .DS_Store
 .vercel
+
+# Документация (теперь в Obsidian)
+ARCHITECTURE.md
+BACKLOG.md
+DEBUG.md
+ROADMAP.md
+context.txt
+
+# Obsidian
+.obsidian/
+00 Dashboard/
+01 Daily Notes/
+02 Docs/
+04 Ideas/
+*.md
+!README.md   # если README оставишь на GitHub

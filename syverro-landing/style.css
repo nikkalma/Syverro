@@ -16,7 +16,6 @@ body {
     overflow: hidden;
 }
 
-/* Атмосферная анимация */
 .orb {
     position: absolute;
     width: 70vmax;
@@ -29,6 +28,7 @@ body {
     filter: blur(40px);
     animation: pulse 8s ease-in-out infinite;
     z-index: 0;
+    pointer-events: none;
 }
 
 @keyframes pulse {
@@ -43,6 +43,7 @@ body {
     text-align: center;
     position: relative;
     z-index: 2;
+    pointer-events: auto;
     backdrop-filter: blur(2px);
 }
 

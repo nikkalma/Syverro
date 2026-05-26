@@ -1,13 +1,12 @@
-# Syverro — книжный трекер
+**
 
-Мобильное приложение для отслеживания прочитанных книг, статистики и аналитики.
+Syverro
 
-## Технологии
-- React Native / Expo
-- Zustand (state management)
-- Навигация (Drawer + Stack)
-- Мультиязычность (ru/en/by/ua)
-- Светлая / тёмная тема
+Reading Intelligence System (RIS).
+  
+An attempt to rethink reading not as a list of books but as a continuous cognitive process.
 
-## Статус
-Рабочий прототип, собран в APK.
+
+Early stage concept.
+
+**

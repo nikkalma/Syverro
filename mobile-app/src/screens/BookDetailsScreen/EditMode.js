@@ -1,10 +1,11 @@
+// mobile-app/src/screens/BookDetailsScreen/EditMode.js
 import React from 'react';
-import { View, Text, TextInput, TouchableOpacity, ScrollView, Platform, Keyboard } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, ScrollView, Platform, Keyboard, Switch } from 'react-native';
 import GenreSelector from '../../components/GenreSelector';
 import AuthorSelector from '../../components/AuthorSelector';
 import LanguageSelector from '../../components/LanguageSelector';
 import StatusPicker from './StatusPicker';
-import RatingStars from './RatingStars';
+import { spacing, radii } from '../../theme/spacing';
 
 export default function EditMode({
   book,
@@ -37,6 +38,8 @@ export default function EditMode({
   setEditSeriesPosition,
   editOriginalYear,
   setEditOriginalYear,
+  editIsActive,
+  setEditIsActive,
   saveChanges,
   setIsEditing,
   setKeyboardHeight,
@@ -44,17 +47,12 @@ export default function EditMode({
   lang,
   theme,
 }) {
-  console.log('🔍 lang?.fields:', lang?.fields);
-console.log('🔍 authorCountry:', lang?.fields?.authorCountry);
-console.log('🔍 series:', lang?.fields?.series);
-console.log('🔍 seriesPosition:', lang?.fields?.seriesPosition);
-console.log('🔍 originalYear:', lang?.fields?.originalYear);
   const fields = lang?.fields || {
     pages: 'Страницы',
     startDate: 'Дата начала',
     endDate: 'Дата окончания',
     rating: 'Оценка',
-    review: 'Отзыв (будет виден всем)',
+    review: 'Отзыв',
     notes: 'Заметки',
     authorCountry: 'Страна автора',
     series: 'Серия',
@@ -70,16 +68,9 @@ console.log('🔍 originalYear:', lang?.fields?.originalYear);
       showsVerticalScrollIndicator={true}
       keyboardShouldPersistTaps="handled"
       keyboardDismissMode="on-drag"
-      contentContainerStyle={{
-        paddingBottom: Platform.OS === 'ios' ? 40 : 30,
-      }}
+      contentContainerStyle={{ paddingBottom: Platform.OS === 'ios' ? 40 : 30 }}
     >
-      <StatusPicker
-        selectedStatus={editStatus}
-        onStatusChange={setEditStatus}
-        lang={lang}
-        theme={theme}
-      />
+      <StatusPicker selectedStatus={editStatus} onStatusChange={setEditStatus} lang={lang} theme={theme} />
 
       <AuthorSelector
         selectedAuthor={editAuthor}
@@ -89,91 +80,71 @@ console.log('🔍 originalYear:', lang?.fields?.originalYear);
         theme={theme}
       />
 
-      <Text style={{ color: theme.textSecondary, marginBottom: 5 }}>
-        {fields.authorCountry}
-      </Text>
+      <Text style={{ color: theme.textSecondary, marginBottom: 5 }}>{fields.authorCountry}</Text>
       <TextInput
         value={editAuthorCountry}
         onChangeText={setEditAuthorCountry}
         placeholder="Например: Россия, Япония"
-        placeholderTextColor={theme.textSecondary}
+        placeholderTextColor={theme.textMuted}
         returnKeyType="done"
         onSubmitEditing={Keyboard.dismiss}
-        onFocus={() => {
-          setTimeout(() => scrollViewRef.current?.scrollToEnd({ animated: true }), 100);
-        }}
         style={{
-          padding: 12,
-          borderRadius: 12,
-          marginBottom: 15,
+          padding: spacing.md,
+          borderRadius: radii.md,
+          marginBottom: spacing.md,
           backgroundColor: theme.surface,
           color: theme.textPrimary,
         }}
       />
 
-      <Text style={{ color: theme.textSecondary, marginBottom: 5 }}>
-        {fields.series}
-      </Text>
+      <Text style={{ color: theme.textSecondary, marginBottom: 5 }}>{fields.series}</Text>
       <TextInput
         value={editSeries}
         onChangeText={setEditSeries}
         placeholder="Название серии"
-        placeholderTextColor={theme.textSecondary}
+        placeholderTextColor={theme.textMuted}
         returnKeyType="done"
         onSubmitEditing={Keyboard.dismiss}
-        onFocus={() => {
-          setTimeout(() => scrollViewRef.current?.scrollToEnd({ animated: true }), 100);
-        }}
         style={{
-          padding: 12,
-          borderRadius: 12,
-          marginBottom: 15,
+          padding: spacing.md,
+          borderRadius: radii.md,
+          marginBottom: spacing.md,
           backgroundColor: theme.surface,
           color: theme.textPrimary,
         }}
       />
 
-      <Text style={{ color: theme.textSecondary, marginBottom: 5 }}>
-        {fields.seriesPosition}
-      </Text>
+      <Text style={{ color: theme.textSecondary, marginBottom: 5 }}>{fields.seriesPosition}</Text>
       <TextInput
         value={editSeriesPosition}
         onChangeText={setEditSeriesPosition}
         keyboardType="numeric"
         placeholder="1, 2, 3..."
-        placeholderTextColor={theme.textSecondary}
+        placeholderTextColor={theme.textMuted}
         returnKeyType="done"
         onSubmitEditing={Keyboard.dismiss}
-        onFocus={() => {
-          setTimeout(() => scrollViewRef.current?.scrollToEnd({ animated: true }), 100);
-        }}
         style={{
-          padding: 12,
-          borderRadius: 12,
-          marginBottom: 15,
+          padding: spacing.md,
+          borderRadius: radii.md,
+          marginBottom: spacing.md,
           backgroundColor: theme.surface,
           color: theme.textPrimary,
         }}
       />
 
-      <Text style={{ color: theme.textSecondary, marginBottom: 5 }}>
-        {fields.originalYear}
-      </Text>
+      <Text style={{ color: theme.textSecondary, marginBottom: 5 }}>{fields.originalYear}</Text>
       <TextInput
         value={editOriginalYear}
         onChangeText={setEditOriginalYear}
         keyboardType="numeric"
         placeholder="1999, 1854..."
-        placeholderTextColor={theme.textSecondary}
+        placeholderTextColor={theme.textMuted}
         returnKeyType="done"
         onSubmitEditing={Keyboard.dismiss}
-        onFocus={() => {
-          setTimeout(() => scrollViewRef.current?.scrollToEnd({ animated: true }), 100);
-        }}
         style={{
-          padding: 12,
-          borderRadius: 12,
-          marginBottom: 15,
+          padding: spacing.md,
+          borderRadius: radii.md,
+          marginBottom: spacing.md,
           backgroundColor: theme.surface,
           color: theme.textPrimary,
         }}
@@ -193,84 +164,98 @@ console.log('🔍 originalYear:', lang?.fields?.originalYear);
         theme={theme}
       />
 
-      <Text style={{ color: theme.textSecondary, marginBottom: 5, marginTop: 8 }}>
-        {fields.pages}
-      </Text>
+      <Text style={{ color: theme.textSecondary, marginBottom: 5, marginTop: 8 }}>{fields.pages}</Text>
       <TextInput
         value={editPages}
         onChangeText={setEditPages}
         keyboardType="numeric"
         returnKeyType="done"
         onSubmitEditing={Keyboard.dismiss}
-        onFocus={() => {
-          setTimeout(() => scrollViewRef.current?.scrollToEnd({ animated: true }), 100);
-        }}
         style={{
-          padding: 12,
-          borderRadius: 12,
-          marginBottom: 15,
+          padding: spacing.md,
+          borderRadius: radii.md,
+          marginBottom: spacing.md,
           backgroundColor: theme.surface,
           color: theme.textPrimary,
         }}
       />
 
-      <Text style={{ color: theme.textSecondary, marginBottom: 5 }}>
-        {fields.startDate}
-      </Text>
+      <Text style={{ color: theme.textSecondary, marginBottom: 5 }}>{fields.startDate}</Text>
       <TextInput
         value={editStartDate}
         onChangeText={setEditStartDate}
         placeholder="ДД.ММ.ГГГГ"
-        placeholderTextColor={theme.textSecondary}
+        placeholderTextColor={theme.textMuted}
         returnKeyType="done"
         onSubmitEditing={Keyboard.dismiss}
-        onFocus={() => {
-          setTimeout(() => scrollViewRef.current?.scrollToEnd({ animated: true }), 100);
-        }}
         style={{
-          padding: 12,
-          borderRadius: 12,
-          marginBottom: 15,
+          padding: spacing.md,
+          borderRadius: radii.md,
+          marginBottom: spacing.md,
           backgroundColor: theme.surface,
           color: theme.textPrimary,
         }}
       />
 
-      <Text style={{ color: theme.textSecondary, marginBottom: 5 }}>
-        {fields.endDate}
-      </Text>
+      <Text style={{ color: theme.textSecondary, marginBottom: 5 }}>{fields.endDate}</Text>
       <TextInput
         value={editEndDate}
         onChangeText={setEditEndDate}
         placeholder="ДД.ММ.ГГГГ"
-        placeholderTextColor={theme.textSecondary}
+        placeholderTextColor={theme.textMuted}
         returnKeyType="done"
         onSubmitEditing={Keyboard.dismiss}
-        onFocus={() => {
-          setTimeout(() => scrollViewRef.current?.scrollToEnd({ animated: true }), 100);
-        }}
         style={{
-          padding: 12,
-          borderRadius: 12,
-          marginBottom: 15,
+          padding: spacing.md,
+          borderRadius: radii.md,
+          marginBottom: spacing.md,
           backgroundColor: theme.surface,
           color: theme.textPrimary,
         }}
       />
 
-      <Text style={{ color: theme.textSecondary, marginBottom: 8 }}>
-        {fields.rating}
-      </Text>
-      <RatingStars
-        rating={editRating}
-        onRatingChange={setEditRating}
-        theme={theme}
-        lang={lang}
-      />
+      <Text style={{ color: theme.textSecondary, marginBottom: 8 }}>{fields.rating}</Text>
+      <View style={{ flexDirection: 'row', gap: 12, marginBottom: 15 }}>
+        {[1, 2, 3, 4, 5].map((star) => (
+          <TouchableOpacity
+            key={star}
+            onPress={() => setEditRating(star)}
+            style={{
+              width: 50,
+              height: 50,
+              borderRadius: 25,
+              backgroundColor: editRating === star ? theme.primary : theme.surface,
+              borderWidth: editRating === star ? 0 : 1,
+              borderColor: theme.border,
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+            activeOpacity={0.7}
+          >
+            <Text
+              style={{
+                color: editRating === star ? '#FFF' : theme.textPrimary,
+                fontSize: 18,
+                fontWeight: editRating === star ? 'bold' : 'normal',
+              }}
+            >
+              {star}
+            </Text>
+          </TouchableOpacity>
+        ))}
+      </View>
 
-      <Text style={{ color: theme.textSecondary, marginBottom: 5, marginTop: 8 }}>
-        {fields.review}
-      </Text>
+      <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 15, marginTop: 8 }}>
+        <Text style={{ color: theme.textSecondary }}>Сделать основной книгой</Text>
+        <Switch
+          value={editIsActive}
+          onValueChange={setEditIsActive}
+          trackColor={{ false: theme.border, true: theme.primary }}
+          thumbColor={'#FFF'}
+        />
+      </View>
+
+      <Text style={{ color: theme.textSecondary, marginBottom: 5, marginTop: 8 }}>{fields.review}</Text>
       <TextInput
         value={editReview}
         onChangeText={setEditReview}
@@ -278,38 +263,30 @@ console.log('🔍 originalYear:', lang?.fields?.originalYear);
         numberOfLines={4}
         returnKeyType="done"
         onSubmitEditing={Keyboard.dismiss}
-        onFocus={() => {
-          setTimeout(() => scrollViewRef.current?.scrollToEnd({ animated: true }), 100);
-        }}
         style={{
-          padding: 12,
-          borderRadius: 12,
-          marginBottom: 15,
+          padding: spacing.md,
+          borderRadius: radii.md,
+          marginBottom: spacing.md,
           backgroundColor: theme.surface,
           color: theme.textPrimary,
           minHeight: 100,
           textAlignVertical: 'top',
         }}
         placeholder="Поделитесь впечатлениями о книге..."
-        placeholderTextColor={theme.textSecondary}
+        placeholderTextColor={theme.textMuted}
       />
 
-      <Text style={{ color: theme.textSecondary, marginBottom: 5 }}>
-        {fields.notes}
-      </Text>
+      <Text style={{ color: theme.textSecondary, marginBottom: 5 }}>{fields.notes}</Text>
       <TextInput
         value={editNotes}
         onChangeText={setEditNotes}
         multiline
         returnKeyType="done"
         onSubmitEditing={Keyboard.dismiss}
-        onFocus={() => {
-          setTimeout(() => scrollViewRef.current?.scrollToEnd({ animated: true }), 100);
-        }}
         style={{
-          padding: 12,
-          borderRadius: 12,
-          marginBottom: 15,
+          padding: spacing.md,
+          borderRadius: radii.md,
+          marginBottom: spacing.md,
           backgroundColor: theme.surface,
           color: theme.textPrimary,
           minHeight: 80,
@@ -321,16 +298,14 @@ console.log('🔍 originalYear:', lang?.fields?.originalYear);
           onPress={saveChanges}
           style={{
             padding: 14,
-            borderRadius: 12,
+            borderRadius: radii.lg,
             backgroundColor: theme.primary,
             flex: 1,
             alignItems: 'center',
           }}
-          activeOpacity={0.4}
+          activeOpacity={0.7}
         >
-          <Text style={{ color: '#FFF', fontWeight: 'bold' }}>
-            💾 {buttons.save}
-          </Text>
+          <Text style={{ color: '#FFF', fontWeight: 'bold' }}>💾 {buttons.save}</Text>
         </TouchableOpacity>
         <TouchableOpacity
           onPress={() => {
@@ -341,16 +316,14 @@ console.log('🔍 originalYear:', lang?.fields?.originalYear);
           }}
           style={{
             padding: 14,
-            borderRadius: 12,
-            backgroundColor: '#ff4444',
+            borderRadius: radii.lg,
+            backgroundColor: theme.error,
             flex: 1,
             alignItems: 'center',
           }}
-          activeOpacity={0.4}
+          activeOpacity={0.7}
         >
-          <Text style={{ color: '#FFF', fontWeight: 'bold' }}>
-            ✖️ {buttons.cancel}
-          </Text>
+          <Text style={{ color: '#FFF', fontWeight: 'bold' }}>✖️ {buttons.cancel}</Text>
         </TouchableOpacity>
       </View>
     </ScrollView>

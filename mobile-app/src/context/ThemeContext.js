@@ -1,7 +1,7 @@
 import React, { createContext, useState, useContext, useEffect } from 'react';
 import { useColorScheme } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { lightColors, darkColors } from '../theme/colors';
+import { lightTheme, darkTheme } from '../theme/colors';
 
 const ThemeContext = createContext();
 
@@ -37,9 +37,9 @@ export const ThemeProvider = ({ children }) => {
  
 const getTheme = () => {
   if (mode === 'system') {
-    return systemScheme === 'dark' ? darkColors : lightColors;
+    return systemScheme === 'dark' ? darkTheme : lightTheme;
   }
-  return mode === 'dark' ? darkColors : lightColors;
+  return mode === 'dark' ? darkTheme : lightTheme;
 };
 
   const toggleTheme = (newMode) => setMode(newMode);

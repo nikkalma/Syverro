@@ -24,6 +24,7 @@ import ProfileScreen from './src/screens/ProfileScreen';
 import FavoriteBooksScreen from './src/screens/FavoriteBooksScreen';
 import { LogBox } from 'react-native';
 import { useFonts } from 'expo-font';
+import LibraryScreen from './src/screens/LibraryScreen';
 
 
 const Stack = createStackNavigator();
@@ -104,7 +105,9 @@ export default function App() {
           <ThemeProvider>
             <NavigationContainer>
               <Stack.Navigator screenOptions={{ headerShown: false }}>
-                <Stack.Screen name="Main">
+                
+              
+                <Stack.Screen name="Main"> 
                   {props => <AppNavigator {...props} key={locale} lang={lang} locale={locale} setLocale={setLocale} />}
                 </Stack.Screen>
                 <Stack.Screen name="Details">
@@ -121,6 +124,9 @@ export default function App() {
                 </Stack.Screen>
                 <Stack.Screen name="Profile">
                   {props => <ProfileScreen {...props} lang={lang} />}
+                </Stack.Screen>
+                <Stack.Screen name="Library">
+                  {props => <LibraryScreen {...props} lang={lang} />}
                 </Stack.Screen>
                 <Stack.Screen name="FavoriteBooks">
                   {props => <FavoriteBooksScreen {...props} lang={lang} />}

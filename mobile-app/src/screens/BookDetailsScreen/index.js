@@ -1,179 +1,126 @@
-import React, { useState, useRef, useEffect } from 'react';
-import {
-  View,
-  Text,
-  TouchableOpacity,
-  ScrollView,
-  Platform,
-  Keyboard,
-  TouchableWithoutFeedback,
-  KeyboardAvoidingView,
-} from 'react-native';
+import React from 'react';
+import { View, FlatList, Dimensions, ScrollView, TouchableOpacity } from 'react-native';
 import { useTheme } from '../../context/ThemeContext';
 import useStore from '../../store';
-import ViewMode from './ViewMode';
-import EditMode from './EditMode';
+import BookCover from '../../components/BookCover';
+import { Text } from '../../components/Text';
+import { spacing } from '../../theme/spacing';
+import OrbBackground from '../../components/OrbBackground';
 
-export default function BookDetailsScreen({ route, navigation }) {
+const { width } = Dimensions.get('window');
+const CARD_WIDTH = (width - 48 - 16) / 3;
+const ACTIVE_COVER_WIDTH = width * 0.4;
+
+export default function HomeScreen({ navigation, lang }) {
   const { theme } = useTheme();
-  const { books, updateBook } = useStore();
-  const { bookId, lang } = route.params;
-  const book = route.params.book || books?.find(b => b.id === bookId);
-  const scrollViewRef = useRef(null);
-  const [keyboardHeight, setKeyboardHeight] = useState(0);
-  const [editAuthorCountry, setEditAuthorCountry] = useState(book?.authorCountry || '');
-  const [editSeries, setEditSeries] = useState(book?.series || '');
-  const [editSeriesPosition, setEditSeriesPosition] = useState(book?.seriesPosition?.toString() || '');
-  const [editOriginalYear, setEditOriginalYear] = useState(book?.originalYear?.toString() || '');
-  const [isEditing, setIsEditing] = useState(false);
-  const [editLanguages, setEditLanguages] = useState(book?.languages || []);
-  const [editStatus, setEditStatus] = useState(book?.status || 'planned');
-  const [editRating, setEditRating] = useState(book?.rating || '');
-  const [editAuthor, setEditAuthor] = useState(book?.author || '');
-  const [editGenresArray, setEditGenresArray] = useState(book?.genres || []);
-  const [editPages, setEditPages] = useState(book?.pages?.toString() || '');
-  const [editStartDate, setEditStartDate] = useState(book?.startDate || '');
-  const [editEndDate, setEditEndDate] = useState(book?.endDate || '');
-  const [editNotes, setEditNotes] = useState(book?.notes || '');
-  const [editReview, setEditReview] = useState(book?.review || '');
+  const { books } = useStore();
 
-  useEffect(() => {
-    const keyboardWillShow = Keyboard.addListener(
-      Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow',
-      (e) => {
-        setKeyboardHeight(e.endCoordinates.height);
-      }
-    );
-    const keyboardWillHide = Keyboard.addListener(
-      Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide',
-      () => {
-        setKeyboardHeight(0);
-      }
-    );
+  const activeBook = books.find(b => b.isActive === true) || books.find(b => b.status === 'reading');
+  const readingBooks = books.filter(b => b.status === 'reading' && b.id !== activeBook?.id);
 
-    return () => {
-      keyboardWillShow.remove();
-      keyboardWillHide.remove();
-    };
-  }, []);
-
-  const saveChanges = () => {
-    const updatedBook = {
-      ...book,
-      author: editAuthor,
-      status: editStatus,
-      rating: editRating ? Number(editRating) : null,
-      genres: editGenresArray,
-      pages: editPages ? parseInt(editPages) : null,
-      startDate: editStartDate,
-      endDate: editEndDate,
-      notes: editNotes,
-      review: editReview,
-      languages: editLanguages,
-      authorCountry: editAuthorCountry,
-      authorCountry: editAuthorCountry,
-      series: editSeries,
-      seriesPosition: editSeriesPosition ? parseInt(editSeriesPosition) : null,
-      originalYear: editOriginalYear ? parseInt(editOriginalYear) : null,    };
-
-    updateBook(bookId, updatedBook);
-    navigation.setParams({ book: updatedBook });
-    setIsEditing(false);
-    Keyboard.dismiss();
-    setKeyboardHeight(0);
-    setTimeout(() => scrollViewRef.current?.scrollTo({ y: 0, animated: true }), 100);
-  };
-
-  if (!book || !theme) {
-    return (
-      <View style={{ flex: 1, backgroundColor: '#121C24', justifyContent: 'center', alignItems: 'center' }}>
-        <Text style={{ color: '#FFF' }}>Загрузка...</Text>
-      </View>
-    );
-  }
+  const renderReadingCard = ({ item }) => (
+    <TouchableOpacity 
+      onPress={() => navigation.navigate('Details', { bookId: item.id, lang: lang })} 
+      style={{ width: CARD_WIDTH, marginBottom: spacing.md }}
+      activeOpacity={0.7}
+    >
+      <BookCover 
+        coverUrl={item.cover} 
+        title={item.title} 
+        width={CARD_WIDTH} 
+        height={CARD_WIDTH * 1.4} 
+      />
+      <Text variant="secondary" numberOfLines={1} style={{ marginTop: spacing.xs }}>
+        {item.title}
+      </Text>
+      <Text variant="caption" numberOfLines={1}>{item.author}</Text>
+    </TouchableOpacity>
+  );
 
   return (
     <View style={{ flex: 1, backgroundColor: theme.background }}>
-      <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        style={{ flex: 1 }}
-        keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
-      >
-        <TouchableWithoutFeedback onPress={() => Keyboard.dismiss()}>
-          <ScrollView
-          keyboardDismissMode="on-drag"
-            ref={scrollViewRef}
-            style={{ flex: 1 }}
-            contentContainerStyle={{
-              paddingHorizontal: 20,
-              paddingTop: Platform.OS === 'android' ? 50 : 30,
-              paddingBottom: isEditing ? (keyboardHeight > 0 ? keyboardHeight + 0 : 0) : 40,
-            }}
-            showsVerticalScrollIndicator={true}
-            keyboardShouldPersistTaps="handled"
-            keyboardDismissMode="on-drag"
-          >
-            {/* Шапка */}
-            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
-              <TouchableOpacity onPress={() => navigation.goBack()} activeOpacity={0.4}>
-                <Text style={{ color: theme.textPrimary, fontSize: 28 }}>←</Text>
-              </TouchableOpacity>
-              <Text style={{ color: theme.textPrimary, fontSize: 22, flex: 1, marginLeft: 10, fontWeight: 'bold' }} numberOfLines={2}>
-                {book.title}
-              </Text>
-              {!isEditing && (
-                <TouchableOpacity onPress={() => setIsEditing(true)} style={{ padding: 8 }} activeOpacity={0.4}>
-                  <Text style={{ color: theme.primary, fontSize: 24 }}>✏️</Text>
-                </TouchableOpacity>
-              )}
-            </View>
+      <OrbBackground size={350} />
+      
+      <ScrollView style={{ flex: 1, backgroundColor: 'transparent' }}>
+        <Header navigation={navigation} lang={lang} booksCount={books.length} />
 
-            {!isEditing ? (
-              <ViewMode book={book} lang={lang} theme={theme} />
-            ) : (
-              <EditMode
-                book={book}
-                books={books}
-                editAuthor={editAuthor}
-                setEditAuthor={setEditAuthor}
-                editStatus={editStatus}
-                setEditStatus={setEditStatus}
-                editRating={editRating}
-                setEditRating={setEditRating}
-                editGenresArray={editGenresArray}
-                setEditGenresArray={setEditGenresArray}
-                editLanguages={editLanguages}
-                setEditLanguages={setEditLanguages}
-                editPages={editPages}
-                setEditPages={setEditPages}
-                editStartDate={editStartDate}
-                setEditStartDate={setEditStartDate}
-                editEndDate={editEndDate}
-                setEditEndDate={setEditEndDate}
-                editNotes={editNotes}
-                setEditNotes={setEditNotes}
-                editReview={editReview}
-                setEditReview={setEditReview}
-                saveChanges={saveChanges}
-                setIsEditing={setIsEditing}
-                setKeyboardHeight={setKeyboardHeight}
-                scrollViewRef={scrollViewRef}
-                lang={lang}
-                theme={theme}
-                editAuthorCountry={editAuthorCountry}
-                setEditAuthorCountry={setEditAuthorCountry}
-                editSeries={editSeries}
-                setEditSeries={setEditSeries}
-                editSeriesPosition={editSeriesPosition}
-                setEditSeriesPosition={setEditSeriesPosition}
-                editOriginalYear={editOriginalYear}
-                setEditOriginalYear={setEditOriginalYear}
+        <View style={{ paddingHorizontal: spacing.lg }}>
+
+          {activeBook && (
+            <View style={{ marginBottom: spacing.xl }}>
+              <Text variant="h3" style={{ marginBottom: spacing.md, color: theme.primary }}>
+                📖 Текущая книга
+              </Text>
+              
+              <TouchableOpacity 
+                onPress={() => navigation.navigate('Details', { bookId: activeBook.id, lang: lang })}
+                style={{ flexDirection: 'row', gap: spacing.md }}
+                activeOpacity={0.7}
+              >
+                <View style={{
+                  borderRadius: 12,
+                  borderWidth: 3,
+                  borderColor: theme.currentBookGlow || theme.primary,
+                  shadowColor: theme.currentBookGlow || theme.primary,
+                  shadowOffset: { width: 0, height: 4 },
+                  shadowOpacity: 0.4,
+                  shadowRadius: 8,
+                  elevation: 6,
+                }}>
+                  <BookCover 
+                    coverUrl={activeBook.cover} 
+                    title={activeBook.title} 
+                    width={ACTIVE_COVER_WIDTH} 
+                    height={ACTIVE_COVER_WIDTH * 1.4} 
+                  />
+                </View>
                 
+                <View style={{ flex: 1, justifyContent: 'flex-start' }}>
+                  <Text variant="body" style={{ marginBottom: spacing.xs }}>
+                    Оценка: {activeBook.rating ? `${activeBook.rating}/5` : 'Нет'}
+                  </Text>
+                  <Text variant="h2" numberOfLines={2}>{activeBook.title}</Text>
+                  <Text variant="body" style={{ marginTop: spacing.xs }}>{activeBook.author}</Text>
+                  <Text variant="caption" style={{ marginTop: spacing.xs }}>
+                    Жанры: {activeBook.genres?.join(', ') || '—'}
+                  </Text>
+                  <Text variant="caption">Начато: {activeBook.startDate || '—'}</Text>
+                </View>
+              </TouchableOpacity>
+              
+              {activeBook.notes ? (
+                <View style={{ marginTop: spacing.md, padding: spacing.sm, backgroundColor: theme.surface, borderRadius: 12 }}>
+                  <Text variant="caption">📝 {activeBook.notes}</Text>
+                </View>
+              ) : null}
+            </View>
+          )}
+
+          {readingBooks.length > 0 && (
+            <View>
+              <Text variant="h3" style={{ marginBottom: spacing.md }}>
+                📚 В процессе чтения ({readingBooks.length})
+              </Text>
+              <FlatList 
+                data={readingBooks}
+                keyExtractor={item => item.id}
+                numColumns={3}
+                renderItem={renderReadingCard}
+                scrollEnabled={false}
+                columnWrapperStyle={{ justifyContent: 'space-between', gap: 8 }}
               />
-            )}
-          </ScrollView>
-        </TouchableWithoutFeedback>
-      </KeyboardAvoidingView>
+            </View>
+          )}
+
+          {readingBooks.length === 0 && !activeBook && (
+            <View style={{ padding: spacing.xl, alignItems: 'center' }}>
+              <Text variant="body">Нет книг в процессе чтения</Text>
+            </View>
+          )}
+          
+          <View style={{ height: spacing.xl }} />
+        </View>
+      </ScrollView>
     </View>
   );
 }

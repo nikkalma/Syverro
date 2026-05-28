@@ -51,6 +51,7 @@ const useStore = create(
             createdAt: Date.now(),
             review: book.review || '',
             favorite: false,
+            isActive: false,      
             authorCountry: book.authorCountry || '',
             series: book.series || '',
             seriesPosition: book.seriesPosition || null,
@@ -82,6 +83,13 @@ const useStore = create(
         }));
         get()._updateAchievements();
       },
+
+            setActiveBook: (id) => set((state) => ({
+        books: state.books.map(book => ({
+          ...book,
+          isActive: book.id === id,
+        })),
+      })),
 
       importBooksFromSheets: async () => {
         const sheetId = '2PACX-1vSE7IbtXRMUG7GjTLv3ja9SpOeESudQeXcNjm4BRNVT1EBKQNBHYN_NnGthlYWojVPG8zx5b0FXnU0f';

@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Text, TouchableOpacity } from 'react-native';
 import { DrawerActions } from '@react-navigation/native';
-import { useTheme } from '../../context/ThemeContext';
+import { useTheme } from '../context/ThemeContext';
 
 export default function Header({ navigation, lang, booksCount }) {
   const { theme } = useTheme();

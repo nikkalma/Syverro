@@ -1,12 +1,19 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, ScrollView, TouchableOpacity } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, TextInput } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useTheme } from '../../context/ThemeContext';
 import useStore from '../../store';
 
+const formatDuration = (seconds) => {
+  const mins = Math.floor(seconds / 60);
+  const secs = seconds % 60;
+  return `${mins} мин ${secs} сек`;
+};
+
 export default function ProfileScreen({ navigation, lang }) {
   const { theme } = useTheme();
-  const { books } = useStore();
+  const { books, getTotalStats } = useStore();
+  const stats = getTotalStats();
   
   const [userName, setUserName] = useState('Читатель');
   const [avatarEmoji, setAvatarEmoji] = useState('📚');
@@ -38,10 +45,10 @@ export default function ProfileScreen({ navigation, lang }) {
     loadProfile();
   }, []);
 
-  const finishedBooks = books.filter(b => b.status === 'finished').length;
+  const finishedBooks = books.filter(b => b.status === 'completed').length;
   const totalPages = books.reduce((sum, b) => sum + (b.pages || 0), 0);
   const avgRating = finishedBooks > 0 
-    ? (books.filter(b => b.status === 'finished').reduce((sum, b) => sum + (b.rating || 0), 0) / finishedBooks).toFixed(1)
+    ? (books.filter(b => b.status === 'completed').reduce((sum, b) => sum + (b.rating || 0), 0) / finishedBooks).toFixed(1)
     : 0;
   
   const favoriteBooks = books.filter(b => b.favorite === true);
@@ -68,10 +75,7 @@ export default function ProfileScreen({ navigation, lang }) {
   return (
     <ScrollView style={{ flex: 1, backgroundColor: theme.background, paddingHorizontal: 16 }}>
       <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 50, marginBottom: 20 }}>
-        <TouchableOpacity onPress={() => navigation.goBack()} style={{ marginRight: 15 }} activeOpacity={0.4}>
-          <Text style={{ color: theme.textPrimary, fontSize: 28 }}>←</Text>
-        </TouchableOpacity>
-        <Text style={{ color: theme.textPrimary, fontSize: 28, fontWeight: 'bold' }}>Мой профиль</Text>
+        <Text style={{ color: theme.textPrimary, fontSize: 28, fontWeight: 'bold' }}>👤 Профиль</Text>
       </View>
 
       <View style={{ alignItems: 'center', marginBottom: 24 }}>
@@ -105,6 +109,25 @@ export default function ProfileScreen({ navigation, lang }) {
         )}
         
         <Text style={{ color: theme.textSecondary, fontSize: 12, marginTop: 4 }}>Читатель с {registerDate}</Text>
+      </View>
+
+      {/* Статистика СЕССИЙ (новая) */}
+      <View style={{ backgroundColor: theme.surface, borderRadius: 12, padding: 16, marginBottom: 20, borderWidth: 1, borderColor: theme.border }}>
+        <Text style={{ color: theme.textPrimary, fontSize: 16, fontWeight: 'bold', marginBottom: 12, textAlign: 'center' }}>📊 Статистика чтения</Text>
+        <View style={{ flexDirection: 'row', justifyContent: 'space-around' }}>
+          <View style={{ alignItems: 'center' }}>
+            <Text style={{ color: theme.textSecondary, fontSize: 12 }}>Сессий</Text>
+            <Text style={{ color: theme.textPrimary, fontSize: 20, fontWeight: 'bold' }}>{stats.totalSessions}</Text>
+          </View>
+          <View style={{ alignItems: 'center' }}>
+            <Text style={{ color: theme.textSecondary, fontSize: 12 }}>Страниц</Text>
+            <Text style={{ color: theme.textPrimary, fontSize: 20, fontWeight: 'bold' }}>{stats.totalPagesRead}</Text>
+          </View>
+          <View style={{ alignItems: 'center' }}>
+            <Text style={{ color: theme.textSecondary, fontSize: 12 }}>Время</Text>
+            <Text style={{ color: theme.textPrimary, fontSize: 16, fontWeight: 'bold' }}>{formatDuration(stats.totalTimeSeconds)}</Text>
+          </View>
+        </View>
       </View>
 
       <View style={{ backgroundColor: theme.surface, borderRadius: 12, padding: 16, marginBottom: 20, borderWidth: 1, borderColor: theme.border, alignItems: 'center' }}>
@@ -146,10 +169,19 @@ export default function ProfileScreen({ navigation, lang }) {
 
       <TouchableOpacity 
         onPress={() => navigation.navigate('FavoriteBooks')}
-        style={{ backgroundColor: theme.primary, padding: 14, borderRadius: 12, alignItems: 'center', marginBottom: 30 }}
+        style={{ backgroundColor: theme.primary, padding: 14, borderRadius: 12, alignItems: 'center', marginBottom: 16 }}
         activeOpacity={0.4}
       >
         <Text style={{ color: '#FFF', fontWeight: 'bold' }}>❤️ Мои любимые книги</Text>
+      </TouchableOpacity>
+
+      {/* Кнопка ИНСАЙТЫ */}
+      <TouchableOpacity 
+        onPress={() => navigation.navigate('Insights')}
+        style={{ backgroundColor: theme.primary, padding: 14, borderRadius: 12, alignItems: 'center', marginBottom: 30 }}
+        activeOpacity={0.4}
+      >
+        <Text style={{ color: '#FFF', fontWeight: 'bold' }}>📈 Инсайты</Text>
       </TouchableOpacity>
     </ScrollView>
   );

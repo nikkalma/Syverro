@@ -9,7 +9,6 @@ export default {
   menu: {
     profile: 'Mon profil',
     stats: 'Statistiques',
-    achievements: 'Succès',
     theme: 'Sombre',
     language: 'Français',
     about: 'À propos',
@@ -42,24 +41,5 @@ export default {
     addFirstBook: 'Ajoutez votre premier livre', justStarted: 'Vous commencez !',
     goodStart: 'Bon début !', bookworm: 'Vous êtes un vrai rat de bibliothèque !', bookKing: 'Roi/Reine des livres !',
   },
-  achievements: {
-    title: 'Succès',
-    first_book: 'C\'est parti',
-    first_finished: 'Lecteur',
-    gold_star: 'Étoile d\'or',
-    first_review: 'Critique de canapé',
-    bookworm_10: 'On ne peut plus arrêter',
-    bookworm_50: 'Il est temps de se soigner',
-    bookworm_100: 'Bibliothécaire autodidacte',
-    pages_500: 'Échauffement',
-    pages_1000: 'Tourneur de pages',
-    polyglot: 'Mi-poliglotte',
-    genre_mess: 'Chaos de genres',
-    devoted_reader: 'Lecteur dévoué',
-    world_trip: 'Tour du monde en un an',
-    graphomaniac: 'Graphomane',
-    gave_up: 'Abandonné en chemin',
-    old_school: 'Vieille école',
-    zoomer: 'Zoomer',
-  },
+
 };

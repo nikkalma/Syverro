@@ -44,7 +44,7 @@ export default function LibraryScreen({ navigation, lang }) {
 
   const renderBookCard = ({ item }) => (
     <TouchableOpacity 
-      onPress={() => navigation.navigate('Details', { bookId: item.id, lang: lang })} 
+      onPress={() => navigation.navigate('BookDetails', { bookId: item.id, lang: lang })} 
       style={{ width: CARD_WIDTH, marginBottom: spacing.md }}
       activeOpacity={0.7}
     >

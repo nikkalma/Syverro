@@ -1,9 +1,7 @@
-// mobile-app/src/screens/BookDetailsScreen/EditMode.js
 import React from 'react';
 import { View, Text, TextInput, TouchableOpacity, ScrollView, Platform, Keyboard, Switch } from 'react-native';
 import GenreSelector from '../../components/GenreSelector';
 import AuthorSelector from '../../components/AuthorSelector';
-import LanguageSelector from '../../components/LanguageSelector';
 import StatusPicker from './StatusPicker';
 import { spacing, radii } from '../../theme/spacing';
 
@@ -38,8 +36,8 @@ export default function EditMode({
   setEditSeriesPosition,
   editOriginalYear,
   setEditOriginalYear,
-  editIsActive,
-  setEditIsActive,
+  editactiveBookId,
+  setEditactiveBookId,
   saveChanges,
   setIsEditing,
   setKeyboardHeight,
@@ -150,13 +148,6 @@ export default function EditMode({
         }}
       />
 
-      <LanguageSelector
-        selectedLanguages={editLanguages}
-        onLanguagesChange={setEditLanguages}
-        lang={lang}
-        theme={theme}
-      />
-
       <GenreSelector
         selectedGenres={editGenresArray}
         onGenresChange={setEditGenresArray}
@@ -248,8 +239,8 @@ export default function EditMode({
       <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 15, marginTop: 8 }}>
         <Text style={{ color: theme.textSecondary }}>Сделать основной книгой</Text>
         <Switch
-          value={editIsActive}
-          onValueChange={setEditIsActive}
+          value={editactiveBookId}
+          onValueChange={setEditactiveBookId}
           trackColor={{ false: theme.border, true: theme.primary }}
           thumbColor={'#FFF'}
         />
@@ -325,6 +316,24 @@ export default function EditMode({
         >
           <Text style={{ color: '#FFF', fontWeight: 'bold' }}>✖️ {buttons.cancel}</Text>
         </TouchableOpacity>
+        {/* Кнопка для цитат */}
+<TouchableOpacity
+  onPress={() => {
+    setIsEditing(false); // выходим из режима редактирования
+    navigation.navigate('QuotesModal', { bookId: book.id });
+  }}
+  style={{
+    padding: 14,
+    borderRadius: radii.lg,
+    backgroundColor: theme.accent || theme.primary,
+    flex: 1,
+    alignItems: 'center',
+    marginBottom: 12,
+  }}
+  activeOpacity={0.7}
+>
+  <Text style={{ color: '#FFF', fontWeight: 'bold' }}>📝 Цитаты</Text>
+</TouchableOpacity>
       </View>
     </ScrollView>
   );

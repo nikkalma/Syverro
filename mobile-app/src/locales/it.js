@@ -9,7 +9,6 @@ export default {
   menu: {
     profile: 'Il mio profilo',
     stats: 'Statistiche',
-    achievements: 'Trofei',
     theme: 'Scuro',
     language: 'Italiano',
     about: 'Informazioni',
@@ -42,24 +41,5 @@ export default {
     addFirstBook: 'Aggiungi il primo libro', justStarted: 'Appena iniziato!',
     goodStart: 'Ottimo inizio!', bookworm: 'Sei un vero topo di biblioteca!', bookKing: 'Re/Regina dei libri!',
   },
-  achievements: {
-    title: 'Trofei',
-    first_book: 'Ecco, iniziamo',
-    first_finished: 'Lettore',
-    gold_star: 'Stella d\'oro',
-    first_review: 'Critico da divano',
-    bookworm_10: 'Ora non mi fermo più',
-    bookworm_50: 'Ora di curarsi',
-    bookworm_100: 'Bibliotecario self-made',
-    pages_500: 'Riscaldamento',
-    pages_1000: 'Sfogliatore di pagine',
-    polyglot: 'Mezzo poliglotta',
-    genre_mess: 'Caos di generi',
-    devoted_reader: 'Lettore devoto',
-    world_trip: 'Giro del mondo in un anno',
-    graphomaniac: 'Grafomane',
-    gave_up: 'Lasciato a metà',
-    old_school: 'Vecchia scuola',
-    zoomer: 'Zommer',
-  },
+  
 };

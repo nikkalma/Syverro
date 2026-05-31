@@ -9,7 +9,6 @@ export default {
   menu: {
     profile: 'My profile',
     stats: 'Statistics',
-    achievements: 'Achievements',
     theme: 'Dark',
     language: 'English',
     about: 'About',
@@ -42,24 +41,5 @@ export default {
     addFirstBook: 'Add your first book', justStarted: "You've just started",
     goodStart: 'Great start!', bookworm: 'You are a true bookworm!', bookKing: 'Book King/Queen!',
   },
-  achievements: {
-    title: 'Achievements',
-    first_book: 'Here We Go',
-    first_finished: 'Reader',
-    gold_star: 'Gold Star',
-    first_review: 'Couch Critic',
-    bookworm_10: 'Can\'t Stop Now',
-    bookworm_50: 'Time for Rehab',
-    bookworm_100: 'Self-Taught Librarian',
-    pages_500: 'Warm-Up',
-    pages_1000: 'Page Turner',
-    polyglot: 'Wannabe Polyglot',
-    genre_mess: 'Genre Chaos',
-    devoted_reader: 'Devoted Reader',
-    world_trip: 'Trip Around the World',
-    graphomaniac: 'Graphomaniac',
-    gave_up: 'Quit Halfway',
-    old_school: 'Old School',
-    zoomer: 'Zoomer',
-  },
+
 };

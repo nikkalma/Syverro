@@ -9,7 +9,6 @@ export default {
   menu: {
     profile: 'Mein Profil',
     stats: 'Statistiken',
-    achievements: 'Errungenschaften',
     theme: 'Dunkel',
     language: 'Deutsch',
     about: 'Über diese App',
@@ -42,24 +41,5 @@ export default {
     addFirstBook: 'Füge dein erstes Buch hinzu', justStarted: 'Du hast gerade angefangen!',
     goodStart: 'Guter Start!', bookworm: 'Du bist ein echter Bücherwurm!', bookKing: 'Bücherkönig / -königin!',
   },
-  achievements: {
-    title: 'Errungenschaften',
-    first_book: 'Los geht\'s',
-    first_finished: 'Leser',
-    gold_star: 'Goldener Stern',
-    first_review: 'Couch-Kritiker',
-    bookworm_10: 'Jetzt nicht mehr aufzuhalten',
-    bookworm_50: 'Zeit für eine Therapie',
-    bookworm_100: 'Selbsternannter Bibliothekar',
-    pages_500: 'Aufwärmen',
-    pages_1000: 'Vielseitiger Leser',
-    polyglot: 'Halb-Polyglott',
-    genre_mess: 'Genre-Chaos',
-    devoted_reader: 'Hingebungsvoller Leser',
-    world_trip: 'Weltreise in einem Jahr',
-    graphomaniac: 'Graphomane',
-    gave_up: 'Auf halbem Weg aufgegeben',
-    old_school: 'Old School',
-    zoomer: 'Zoomer',
-  },
+  
 };

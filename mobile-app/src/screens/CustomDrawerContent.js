@@ -57,22 +57,31 @@ export default function CustomDrawerContent({ navigation, lang, setLocale, local
       paddingBottom: spacing.xxxl,
     }}>
       <Text style={{ color: theme.textPrimary, fontSize: 24, fontWeight: 'bold', marginBottom: spacing.xl }}>📚 Syverro</Text>
-      
+    
+            <MenuItem 
+        icon="👤" 
+        title={lang.menu.profile} 
+        onPress={() => {
+          navigation.closeDrawer();
+          navigation.navigate('Profile');
+        }}
+      />
+
+              <MenuItem 
+          icon="⏱️" 
+          title="Сессия чтения" 
+          onPress={() => {
+            navigation.closeDrawer();
+            navigation.navigate('Session');
+          }}
+        />
+
       <MenuItem 
         icon="📚" 
         title="Библиотека" 
         onPress={() => {
           navigation.closeDrawer();
           navigation.navigate('Library');
-        }}
-      />
-
-      <MenuItem 
-        icon="👤" 
-        title={lang.menu.profile} 
-        onPress={() => {
-          navigation.closeDrawer();
-          navigation.navigate('Profile');
         }}
       />
 
@@ -84,50 +93,7 @@ export default function CustomDrawerContent({ navigation, lang, setLocale, local
           navigation.navigate('Insights');
         }}
       />
-      
-      <MenuItem 
-        icon="🏆" 
-        title={lang.menu.achievements} 
-        onPress={() => {
-          navigation.closeDrawer();
-          navigation.navigate('Achievements');
-        }}
-      />
 
-      <MenuItem 
-        icon="🏆" 
-        title="Челленджи" 
-        onPress={() => {
-          navigation.closeDrawer();
-          navigation.navigate('Challenges');
-        }}
-        isLast={true}
-      />
-
-      <View style={{ flex: 1 }} />
-      
-      <CompactThemeSwitcher lang={lang} />
-      
-      <TouchableOpacity 
-        onPress={() => setLangModalVisible(true)}
-        style={{ 
-          flexDirection: 'row', 
-          justifyContent: 'space-between', 
-          alignItems: 'center',
-          paddingVertical: spacing.sm,
-          paddingHorizontal: spacing.md,
-          backgroundColor: theme.surface, 
-          borderRadius: radii.lg,
-          borderWidth: 1,
-          borderColor: theme.border,
-          marginTop: spacing.md,
-        }}
-        activeOpacity={0.4}
-      >
-        <Text style={{ color: theme.textPrimary, fontSize: 13 }}>🌐 {languageNames[locale] || locale}</Text>
-        <Text style={{ color: theme.textSecondary, fontSize: 10 }}>▼</Text>
-      </TouchableOpacity>
-      
       {__DEV__ && (
         <TouchableOpacity 
           onPress={handleImport}

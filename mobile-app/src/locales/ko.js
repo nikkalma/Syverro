@@ -9,7 +9,6 @@ export default {
   menu: {
     profile: '내 프로필',
     stats: '통계',
-    achievements: '업적',
     theme: '다크',
     language: '한국어',
     about: '정보',
@@ -42,24 +41,5 @@ export default {
     addFirstBook: '첫 책을 추가하세요', justStarted: '시작했습니다!',
     goodStart: '훌륭한 시작!', bookworm: '진정한 책벌레!', bookKing: '책의 왕/여왕!',
   },
-  achievements: {
-    title: '업적',
-    first_book: '자, 시작이다',
-    first_finished: '독자',
-    gold_star: '금별',
-    first_review: '소파 비평가',
-    bookworm_10: '이제 못 멈춰',
-    bookworm_50: '치료받을 시간',
-    bookworm_100: '독학 사서',
-    pages_500: '워밍업',
-    pages_1000: '페이지 터너',
-    polyglot: '하프 폴리글롯',
-    genre_mess: '장르 혼란',
-    devoted_reader: '헌신적 독자',
-    world_trip: '일년간 세계일주',
-    graphomaniac: '필사광',
-    gave_up: '중도 포기',
-    old_school: '올드스쿨',
-    zoomer: '주머',
-  },
+
 };

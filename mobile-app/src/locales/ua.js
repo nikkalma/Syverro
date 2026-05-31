@@ -9,7 +9,6 @@ export default {
   menu: {
     profile: 'Мій профіль',
     stats: 'Статистика',
-    achievements: 'Досягнення',
     theme: 'Темна',
     language: 'Українська',
     about: 'Про застосунок',
@@ -42,24 +41,5 @@ export default {
     addFirstBook: 'Додайте першу книгу', justStarted: 'Ви тільки почали',
     goodStart: 'Чудовий старт', bookworm: 'Книжковий черв\'як', bookKing: 'Книжковий король',
   },
-  achievements: {
-    title: 'Досягнення',
-    first_book: 'Ну, почалося',
-    first_finished: 'Читач',
-    gold_star: 'Золота зірка',
-    first_review: 'Критик з дивана',
-    bookworm_10: 'Вже не зупинити',
-    bookworm_50: 'Час лікуватися',
-    bookworm_100: 'Бібліотекар-самоук',
-    pages_500: 'Розігрів',
-    pages_1000: 'Багатосторінковий',
-    polyglot: 'Напівполіглот',
-    genre_mess: 'Жанровий хаос',
-    devoted_reader: 'Відданий читач',
-    world_trip: 'Навколо світу за рік',
-    graphomaniac: 'Графоман',
-    gave_up: 'Кинув на півдорозі',
-    old_school: 'Олдскул',
-    zoomer: 'Зумер',
-  },
+  
 };

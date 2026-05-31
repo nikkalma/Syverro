@@ -4,7 +4,7 @@ import { useTheme } from '../context/ThemeContext';
 
 const PREDEFINED_LANGUAGES = ['Русский', 'English', 'Беларуская', 'Українська', 'Français', 'Deutsch', 'Español', 'Italiano', 'Polski', 'Čeština'];
 
-export default function LanguageSelector({ selectedLanguages = [], onLanguagesChange, lang }) {
+export default function LanguageSelectorNew({ selectedLanguages = [], onLanguagesChange, lang }) {
   const { theme } = useTheme();
   const [modalVisible, setModalVisible] = useState(false);
   const [customLanguages, setCustomLanguages] = useState([]);

@@ -9,7 +9,6 @@ export default {
   menu: {
     profile: 'マイプロフィール',
     stats: '統計',
-    achievements: '実績',
     theme: 'ダーク',
     language: '日本語',
     about: 'このアプリについて',
@@ -42,24 +41,5 @@ export default {
     addFirstBook: '最初の本を追加', justStarted: '始めたばかり！',
     goodStart: '素晴らしいスタート！', bookworm: '本の虫ですね！', bookKing: '本の王様！',
   },
-  achievements: {
-    title: '実績',
-    first_book: 'さあ、始まった',
-    first_finished: '読者',
-    gold_star: '金の星',
-    first_review: 'ソファ批評家',
-    bookworm_10: 'もう止まらない',
-    bookworm_50: '治療の時間',
-    bookworm_100: '独学の司書',
-    pages_500: 'ウォームアップ',
-    pages_1000: 'ページターナー',
-    polyglot: 'ハーフポリグロット',
-    genre_mess: 'ジャンルカオス',
-    devoted_reader: '献身的な読者',
-    world_trip: '一年で世界一周',
-    graphomaniac: 'グラフォマニア',
-    gave_up: '途中で諦めた',
-    old_school: 'オールドスクール',
-    zoomer: 'ズーマー',
-  },
+  
 };

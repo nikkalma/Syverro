@@ -9,7 +9,6 @@ export default {
   menu: {
     profile: 'Мой профиль',
     stats: 'Статистика',
-    achievements: 'Достижения',
     insights: 'Инсайты',
     theme: 'Тёмная',
     language: 'Русский',
@@ -51,24 +50,5 @@ export default {
     bookworm: 'Книжный червь',
     bookKing: 'Книжный король',
   },
-  achievements: {
-    title: 'Достижения',
-    first_book: 'Ну, началось',
-    first_finished: 'Читатель',
-    gold_star: 'Золотая звезда',
-    first_review: 'Критик с дивана',
-    bookworm_10: 'Уже не остановить',
-    bookworm_50: 'Пора лечиться',
-    bookworm_100: 'Библиотекарь-самоучка',
-    pages_500: 'Разогрев',
-    pages_1000: 'Многостраничник',
-    polyglot: 'Полиглот-недоучка',
-    genre_mess: 'Жанровый хаос',
-    devoted_reader: 'Преданный читатель',
-    world_trip: 'Кругосветка за год',
-    graphomaniac: 'Графоман',
-    gave_up: 'Бросил на середине',
-    old_school: 'Олдскул',
-    zoomer: 'Зумер',
-  },
+  
 };

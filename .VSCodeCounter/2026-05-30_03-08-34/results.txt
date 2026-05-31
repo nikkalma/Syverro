@@ -1,0 +1,142 @@
+Date : 2026-05-30 03:08:34
+Directory : c:\Users\kleme\Syverro
+Total : 90 files,  20692 codes, 144 comments, 551 blanks, all 21387 lines
+
+Languages
++--------------------+------------+------------+------------+------------+------------+
+| language           | files      | code       | comment    | blank      | total      |
++--------------------+------------+------------+------------+------------+------------+
+| JSON               |          4 |     14,963 |          0 |          4 |     14,967 |
+| JavaScript         |         81 |      5,480 |        144 |        526 |      6,150 |
+| PostCSS            |          1 |        148 |          0 |         19 |        167 |
+| JSON with Comments |          2 |         59 |          0 |          2 |         61 |
+| HTML               |          1 |         34 |          0 |          0 |         34 |
+| XML                |          1 |          8 |          0 |          0 |          8 |
++--------------------+------------+------------+------------+------------+------------+
+
+Directories
++---------------------------------------------------------------------------------+------------+------------+------------+------------+------------+
+| path                                                                            | files      | code       | comment    | blank      | total      |
++---------------------------------------------------------------------------------+------------+------------+------------+------------+------------+
+| .                                                                               |         90 |     20,692 |        144 |        551 |     21,387 |
+| . (Files)                                                                       |          4 |      4,431 |          7 |         22 |      4,460 |
+| mobile-app                                                                      |         82 |     16,035 |        136 |        503 |     16,674 |
+| mobile-app (Files)                                                              |          7 |     10,803 |          9 |         24 |     10,836 |
+| mobile-app\src                                                                  |         75 |      5,232 |        127 |        479 |      5,838 |
+| mobile-app\src\components                                                       |         15 |        742 |          7 |         73 |        822 |
+| mobile-app\src\components (Files)                                               |         12 |        597 |          5 |         62 |        664 |
+| mobile-app\src\components\charts                                                |          3 |        145 |          2 |         11 |        158 |
+| mobile-app\src\context                                                          |          3 |        108 |          7 |         21 |        136 |
+| mobile-app\src\locales                                                          |         11 |        670 |          0 |          1 |        671 |
+| mobile-app\src\navigation                                                       |          1 |         73 |          4 |          6 |         83 |
+| mobile-app\src\screens                                                          |         32 |      2,848 |         15 |        255 |      3,118 |
+| mobile-app\src\screens (Files)                                                  |          9 |      1,131 |         11 |        117 |      1,259 |
+| mobile-app\src\screens\BookDetailsScreen                                        |          5 |        714 |          1 |         47 |        762 |
+| mobile-app\src\screens\HomeScreen                                               |          8 |        418 |          2 |         42 |        462 |
+| mobile-app\src\screens\ProfileScreen                                            |          5 |        382 |          0 |         31 |        413 |
+| mobile-app\src\screens\StatsScreen                                              |          5 |        203 |          1 |         18 |        222 |
+| mobile-app\src\store                                                            |          7 |        621 |         76 |         98 |        795 |
+| mobile-app\src\store (Files)                                                    |          3 |        446 |         46 |         75 |        567 |
+| mobile-app\src\store\slices                                                     |          4 |        175 |         30 |         23 |        228 |
+| mobile-app\src\theme                                                            |          6 |        170 |         18 |         25 |        213 |
+| syverro-landing                                                                 |          4 |        226 |          1 |         26 |        253 |
+| syverro-landing (Files)                                                         |          3 |        218 |          1 |         26 |        245 |
+| syverro-landing\public                                                          |          1 |          8 |          0 |          0 |          8 |
++---------------------------------------------------------------------------------+------------+------------+------------+------------+------------+
+
+Files
++---------------------------------------------------------------------------------+--------------------+------------+------------+------------+------------+
+| filename                                                                        | language           | code       | comment    | blank      | total      |
++---------------------------------------------------------------------------------+--------------------+------------+------------+------------+------------+
+| c:\Users\kleme\Syverro\eas.json                                                 | JSON with Comments |         21 |          0 |          1 |         22 |
+| c:\Users\kleme\Syverro\export.js                                                | JavaScript         |         79 |          7 |         19 |        105 |
+| c:\Users\kleme\Syverro\mobile-app\App.js                                        | JavaScript         |        106 |          5 |         13 |        124 |
+| c:\Users\kleme\Syverro\mobile-app\app.json                                      | JSON with Comments |         38 |          0 |          1 |         39 |
+| c:\Users\kleme\Syverro\mobile-app\babel.config.js                               | JavaScript         |          7 |          0 |          0 |          7 |
+| c:\Users\kleme\Syverro\mobile-app\index.js                                      | JavaScript         |          3 |          3 |          3 |          9 |
+| c:\Users\kleme\Syverro\mobile-app\metro.config.js                               | JavaScript         |         17 |          1 |          5 |         23 |
+| c:\Users\kleme\Syverro\mobile-app\package-lock.json                             | JSON               |     10,591 |          0 |          1 |     10,592 |
+| c:\Users\kleme\Syverro\mobile-app\package.json                                  | JSON               |         41 |          0 |          1 |         42 |
+| c:\Users\kleme\Syverro\mobile-app\src\components\AuthorSelector.js              | JavaScript         |         84 |          0 |          9 |         93 |
+| c:\Users\kleme\Syverro\mobile-app\src\components\BookCover.js                   | JavaScript         |         45 |          0 |          4 |         49 |
+| c:\Users\kleme\Syverro\mobile-app\src\components\Button.js                      | JavaScript         |         67 |          1 |          4 |         72 |
+| c:\Users\kleme\Syverro\mobile-app\src\components\CompactThemeSwitcher.js        | JavaScript         |         63 |          0 |          8 |         71 |
+| c:\Users\kleme\Syverro\mobile-app\src\components\Container.js                   | JavaScript         |         14 |          0 |          2 |         16 |
+| c:\Users\kleme\Syverro\mobile-app\src\components\GenreSelector.js               | JavaScript         |         91 |          0 |         13 |        104 |
+| c:\Users\kleme\Syverro\mobile-app\src\components\GlassCard.js                   | JavaScript         |         48 |          1 |          6 |         55 |
+| c:\Users\kleme\Syverro\mobile-app\src\components\Header.js                      | JavaScript         |         28 |          0 |          4 |         32 |
+| c:\Users\kleme\Syverro\mobile-app\src\components\MenuItem.js                    | JavaScript         |         25 |          1 |          2 |         28 |
+| c:\Users\kleme\Syverro\mobile-app\src\components\OrbBackground.js               | JavaScript         |         51 |          1 |          4 |         56 |
+| c:\Users\kleme\Syverro\mobile-app\src\components\StatCard.js                    | JavaScript         |         38 |          0 |          2 |         40 |
+| c:\Users\kleme\Syverro\mobile-app\src\components\Text.js                        | JavaScript         |         43 |          1 |          4 |         48 |
+| c:\Users\kleme\Syverro\mobile-app\src\components\charts\DonutChart.js           | JavaScript         |         43 |          1 |          3 |         47 |
+| c:\Users\kleme\Syverro\mobile-app\src\components\charts\ProgressRing.js         | JavaScript         |         52 |          0 |          3 |         55 |
+| c:\Users\kleme\Syverro\mobile-app\src\components\charts\TopGenresBar.js         | JavaScript         |         50 |          1 |          5 |         56 |
+| c:\Users\kleme\Syverro\mobile-app\src\context\LanguageContext.js                | JavaScript         |         11 |          0 |          3 |         14 |
+| c:\Users\kleme\Syverro\mobile-app\src\context\LightingContext.js                | JavaScript         |         51 |          4 |          8 |         63 |
+| c:\Users\kleme\Syverro\mobile-app\src\context\ThemeContext.js                   | JavaScript         |         46 |          3 |         10 |         59 |
+| c:\Users\kleme\Syverro\mobile-app\src\locales\be.js                             | JavaScript         |         65 |          0 |          0 |         65 |
+| c:\Users\kleme\Syverro\mobile-app\src\locales\de.js                             | JavaScript         |         65 |          0 |          0 |         65 |
+| c:\Users\kleme\Syverro\mobile-app\src\locales\en.js                             | JavaScript         |         65 |          0 |          0 |         65 |
+| c:\Users\kleme\Syverro\mobile-app\src\locales\fr.js                             | JavaScript         |         65 |          0 |          0 |         65 |
+| c:\Users\kleme\Syverro\mobile-app\src\locales\index.js                          | JavaScript         |         11 |          0 |          1 |         12 |
+| c:\Users\kleme\Syverro\mobile-app\src\locales\it.js                             | JavaScript         |         65 |          0 |          0 |         65 |
+| c:\Users\kleme\Syverro\mobile-app\src\locales\ja.js                             | JavaScript         |         65 |          0 |          0 |         65 |
+| c:\Users\kleme\Syverro\mobile-app\src\locales\ko.js                             | JavaScript         |         65 |          0 |          0 |         65 |
+| c:\Users\kleme\Syverro\mobile-app\src\locales\pl.js                             | JavaScript         |         65 |          0 |          0 |         65 |
+| c:\Users\kleme\Syverro\mobile-app\src\locales\ru.js                             | JavaScript         |         74 |          0 |          0 |         74 |
+| c:\Users\kleme\Syverro\mobile-app\src\locales\ua.js                             | JavaScript         |         65 |          0 |          0 |         65 |
+| c:\Users\kleme\Syverro\mobile-app\src\navigation\AppNavigator.js                | JavaScript         |         73 |          4 |          6 |         83 |
+| c:\Users\kleme\Syverro\mobile-app\src\screens\AboutScreen.js                    | JavaScript         |         92 |          0 |         13 |        105 |
+| c:\Users\kleme\Syverro\mobile-app\src\screens\AchievementsScreen.js             | JavaScript         |        149 |          3 |         12 |        164 |
+| c:\Users\kleme\Syverro\mobile-app\src\screens\BookDetailsScreen\EditMode.js     | JavaScript         |        305 |          0 |         17 |        322 |
+| c:\Users\kleme\Syverro\mobile-app\src\screens\BookDetailsScreen\RatingStars.js  | JavaScript         |         36 |          1 |          2 |         39 |
+| c:\Users\kleme\Syverro\mobile-app\src\screens\BookDetailsScreen\StatusPicker.js | JavaScript         |         67 |          0 |          5 |         72 |
+| c:\Users\kleme\Syverro\mobile-app\src\screens\BookDetailsScreen\ViewMode.js     | JavaScript         |        132 |          0 |         15 |        147 |
+| c:\Users\kleme\Syverro\mobile-app\src\screens\BookDetailsScreen\index.js        | JavaScript         |        174 |          0 |          8 |        182 |
+| c:\Users\kleme\Syverro\mobile-app\src\screens\ChallengesScreen.js               | JavaScript         |         65 |          1 |          7 |         73 |
+| c:\Users\kleme\Syverro\mobile-app\src\screens\CustomDrawerContent.js            | JavaScript         |        210 |          1 |         17 |        228 |
+| c:\Users\kleme\Syverro\mobile-app\src\screens\FavoriteBooksScreen.js            | JavaScript         |         44 |          0 |          5 |         49 |
+| c:\Users\kleme\Syverro\mobile-app\src\screens\HomeScreen\ActionButtons.js       | JavaScript         |         32 |          0 |          4 |         36 |
+| c:\Users\kleme\Syverro\mobile-app\src\screens\HomeScreen\AddBookForm.js         | JavaScript         |         69 |          1 |          6 |         76 |
+| c:\Users\kleme\Syverro\mobile-app\src\screens\HomeScreen\BookCard.js            | JavaScript         |         47 |          0 |          4 |         51 |
+| c:\Users\kleme\Syverro\mobile-app\src\screens\HomeScreen\EmptyState.js          | JavaScript         |         12 |          0 |          2 |         14 |
+| c:\Users\kleme\Syverro\mobile-app\src\screens\HomeScreen\SearchInput.js         | JavaScript         |         22 |          0 |          3 |         25 |
+| c:\Users\kleme\Syverro\mobile-app\src\screens\HomeScreen\SortModal.js           | JavaScript         |         60 |          0 |          3 |         63 |
+| c:\Users\kleme\Syverro\mobile-app\src\screens\HomeScreen\StatusFilters.js       | JavaScript         |         62 |          0 |          6 |         68 |
+| c:\Users\kleme\Syverro\mobile-app\src\screens\HomeScreen\index.js               | JavaScript         |        114 |          1 |         14 |        129 |
+| c:\Users\kleme\Syverro\mobile-app\src\screens\InsightsScreen.js                 | JavaScript         |         60 |          1 |         10 |         71 |
+| c:\Users\kleme\Syverro\mobile-app\src\screens\LibraryScreen.js                  | JavaScript         |        159 |          1 |         18 |        178 |
+| c:\Users\kleme\Syverro\mobile-app\src\screens\ProfileScreen\AvatarModal.js      | JavaScript         |         47 |          0 |          2 |         49 |
+| c:\Users\kleme\Syverro\mobile-app\src\screens\ProfileScreen\ProfileHeader.js    | JavaScript         |         71 |          0 |          3 |         74 |
+| c:\Users\kleme\Syverro\mobile-app\src\screens\ProfileScreen\ProfileStats.js     | JavaScript         |         55 |          0 |          3 |         58 |
+| c:\Users\kleme\Syverro\mobile-app\src\screens\ProfileScreen\ReaderLevel.js      | JavaScript         |         41 |          0 |          3 |         44 |
+| c:\Users\kleme\Syverro\mobile-app\src\screens\ProfileScreen\index.js            | JavaScript         |        168 |          0 |         20 |        188 |
+| c:\Users\kleme\Syverro\mobile-app\src\screens\SessionScreen.js                  | JavaScript         |        223 |          4 |         24 |        251 |
+| c:\Users\kleme\Syverro\mobile-app\src\screens\SettingsScreen.js                 | JavaScript         |        129 |          0 |         11 |        140 |
+| c:\Users\kleme\Syverro\mobile-app\src\screens\StatsScreen\MotivationCard.js     | JavaScript         |         30 |          0 |          3 |         33 |
+| c:\Users\kleme\Syverro\mobile-app\src\screens\StatsScreen\ProgressBar.js        | JavaScript         |         36 |          0 |          1 |         37 |
+| c:\Users\kleme\Syverro\mobile-app\src\screens\StatsScreen\StatCards.js          | JavaScript         |         29 |          0 |          1 |         30 |
+| c:\Users\kleme\Syverro\mobile-app\src\screens\StatsScreen\TopGenres.js          | JavaScript         |         50 |          0 |          3 |         53 |
+| c:\Users\kleme\Syverro\mobile-app\src\screens\StatsScreen\index.js              | JavaScript         |         58 |          1 |         10 |         69 |
+| c:\Users\kleme\Syverro\mobile-app\src\store\achievements.js                     | JavaScript         |         78 |          4 |         11 |         93 |
+| c:\Users\kleme\Syverro\mobile-app\src\store\challenges.js                       | JavaScript         |        109 |         11 |         13 |        133 |
+| c:\Users\kleme\Syverro\mobile-app\src\store\index.js                            | JavaScript         |        259 |         31 |         51 |        341 |
+| c:\Users\kleme\Syverro\mobile-app\src\store\slices\achievementsSlice.js         | JavaScript         |          9 |          2 |          0 |         11 |
+| c:\Users\kleme\Syverro\mobile-app\src\store\slices\booksSlice.js                | JavaScript         |         70 |         25 |          9 |        104 |
+| c:\Users\kleme\Syverro\mobile-app\src\store\slices\challengesSlice.js           | JavaScript         |         11 |          2 |          1 |         14 |
+| c:\Users\kleme\Syverro\mobile-app\src\store\slices\sessionsSlice.js             | JavaScript         |         85 |          1 |         13 |         99 |
+| c:\Users\kleme\Syverro\mobile-app\src\theme\colors.js                           | JavaScript         |         60 |         17 |         17 |         94 |
+| c:\Users\kleme\Syverro\mobile-app\src\theme\fonts.js                            | JavaScript         |         12 |          0 |          1 |         13 |
+| c:\Users\kleme\Syverro\mobile-app\src\theme\glass.js                            | JavaScript         |         11 |          0 |          1 |         12 |
+| c:\Users\kleme\Syverro\mobile-app\src\theme\index.js                            | JavaScript         |          5 |          0 |          0 |          5 |
+| c:\Users\kleme\Syverro\mobile-app\src\theme\spacing.js                          | JavaScript         |         22 |          1 |          3 |         26 |
+| c:\Users\kleme\Syverro\mobile-app\src\theme\typography.js                       | JavaScript         |         60 |          0 |          3 |         63 |
+| c:\Users\kleme\Syverro\package-lock.json                                        | JSON               |      4,326 |          0 |          1 |      4,327 |
+| c:\Users\kleme\Syverro\package.json                                             | JSON               |          5 |          0 |          1 |          6 |
+| c:\Users\kleme\Syverro\syverro-landing\index.html                               | HTML               |         34 |          0 |          0 |         34 |
+| c:\Users\kleme\Syverro\syverro-landing\public\sitemap.xml                       | XML                |          8 |          0 |          0 |          8 |
+| c:\Users\kleme\Syverro\syverro-landing\script.js                                | JavaScript         |         36 |          1 |          7 |         44 |
+| c:\Users\kleme\Syverro\syverro-landing\style.css                                | PostCSS            |        148 |          0 |         19 |        167 |
+| Total                                                                           |                    |     20,692 |        144 |        551 |     21,387 |
++---------------------------------------------------------------------------------+--------------------+------------+------------+------------+------------+

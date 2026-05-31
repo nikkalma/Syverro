@@ -13,8 +13,8 @@ export default function StatusFilters({ activeFilter, setActiveFilter, counts, l
     { key: 'planned', label: lang.counters?.planned || 'В планах', emoji: '📅', count: counts.planned },
   ];
 
-  const getStyle = (isActive) => {
-    if (isActive) {
+  const getStyle = (activeBookId) => {
+    if (activeBookId) {
       return {
         flex: 1,
         backgroundColor: theme.primary,
@@ -34,30 +34,30 @@ export default function StatusFilters({ activeFilter, setActiveFilter, counts, l
     };
   };
 
-  const getTextStyle = (isActive) => ({
-    color: isActive ? '#FFF' : theme.textPrimary,
+  const getTextStyle = (activeBookId) => ({
+    color: activeBookId ? '#FFF' : theme.textPrimary,
     fontSize: 16,
     fontWeight: 'bold',
   });
 
-  const getLabelStyle = (isActive) => ({
-    color: isActive ? '#FFF' : theme.textSecondary,
+  const getLabelStyle = (activeBookId) => ({
+    color: activeBookId ? '#FFF' : theme.textSecondary,
     fontSize: 8,
   });
 
   return (
     <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 12, gap: 8 }}>
       {filters.map(filter => {
-        const isActive = activeFilter === filter.key;
+        const activeBookId = activeFilter === filter.key;
         return (
           <TouchableOpacity 
             key={filter.key} 
             onPress={() => setActiveFilter(filter.key)} 
-            style={getStyle(isActive)}
+            style={getStyle(activeBookId)}
           activeOpacity={0.4}
           >
-            <Text style={getTextStyle(isActive)}>{filter.count}</Text>
-            <Text style={getLabelStyle(isActive)}>
+            <Text style={getTextStyle(activeBookId)}>{filter.count}</Text>
+            <Text style={getLabelStyle(activeBookId)}>
               {filter.emoji} {filter.label}
             </Text>
           </TouchableOpacity>

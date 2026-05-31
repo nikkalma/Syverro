@@ -1,9 +1,14 @@
-// mobile-app/src/screens/BookDetailsScreen/ViewMode.js
+// src/screens/BookDetailsScreen/ViewMode.js
 import React from 'react';
 import { View, Text } from 'react-native';
 import { spacing, radii } from '../../theme/spacing';
+import useStore from '../../store';
+import StartPageInput from '../../components/StartPageInput';
 
 export default function ViewMode({ book, lang, theme }) {
+  const { updateBook, getQuotesByBook } = useStore();
+  const bookQuotes = getQuotesByBook(book.id);
+
   const fields = lang?.fields || {
     author: 'Автор',
     languages: 'Язык прочтения',
@@ -112,6 +117,15 @@ export default function ViewMode({ book, lang, theme }) {
         <Text style={{ color: theme.textPrimary, fontSize: 16, opacity: 0.9 }}>{book.pages || '—'}</Text>
       </View>
 
+      {/* Компонент для указания начальной страницы */}
+      <StartPageInput
+        book={book}
+        onSave={(page) => {
+          updateBook(book.id, { ...book, manualStartPage: page, pagesRead: page - 1 });
+        }}
+        theme={theme}
+      />
+
       <View style={{ marginBottom: spacing.lg }}>
         <Text style={{ color: theme.textSecondary, fontSize: 14, marginBottom: 4, opacity: 0.7 }}>
           {fields.startDate}
@@ -141,6 +155,22 @@ export default function ViewMode({ book, lang, theme }) {
           <Text style={{ color: theme.textPrimary, fontSize: 15, lineHeight: 22, opacity: 0.9 }}>
             {book.review}
           </Text>
+        </View>
+      )}
+
+      {/* Цитаты */}
+      {bookQuotes.length > 0 && (
+        <View style={{ marginTop: spacing.xl }}>
+          <Text style={{ color: theme.textPrimary, fontSize: 18, fontWeight: 'bold', marginBottom: spacing.md }}>
+            📝 Цитаты
+          </Text>
+          {bookQuotes.map(quote => (
+            <View key={quote.id} style={{ marginBottom: spacing.md, padding: spacing.md, backgroundColor: theme.surface, borderRadius: radii.lg }}>
+              <Text style={{ color: theme.textPrimary, fontSize: 15, lineHeight: 22, fontStyle: 'italic' }}>
+                ❝ {quote.text} ❞
+              </Text>
+            </View>
+          ))}
         </View>
       )}
     </>

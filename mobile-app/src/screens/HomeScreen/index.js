@@ -3,7 +3,7 @@ import React from 'react';
 import { View, FlatList, Dimensions, ScrollView, TouchableOpacity } from 'react-native';
 import { useTheme } from '../../context/ThemeContext';
 import useStore from '../../store';
-import Header from './Header';
+import Header from '../../components/Header';
 import BookCover from '../../components/BookCover';
 import { Text } from '../../components/Text';
 import { spacing, radii } from '../../theme/spacing';
@@ -17,12 +17,12 @@ export default function HomeScreen({ navigation, lang }) {
   const { theme } = useTheme();
   const { books } = useStore();
 
-  const activeBook = books.find(b => b.isActive === true) || books.find(b => b.status === 'reading');
+  const activeBook = books.find(b => b.activeBookId === true) || books.find(b => b.status === 'reading');
   const readingBooks = books.filter(b => b.status === 'reading' && b.id !== activeBook?.id);
 
   const renderReadingCard = ({ item }) => (
     <TouchableOpacity 
-      onPress={() => navigation.navigate('Details', { bookId: item.id, lang: lang })} 
+      onPress={() => navigation.navigate('BookDetails', { bookId: item.id, lang: lang })} 
       style={{ width: CARD_WIDTH, marginBottom: spacing.md }}
       activeOpacity={0.7}
     >
@@ -55,7 +55,7 @@ export default function HomeScreen({ navigation, lang }) {
               </Text>
               
               <TouchableOpacity 
-                onPress={() => navigation.navigate('Details', { bookId: activeBook.id, lang: lang })}
+                onPress={() => navigation.navigate('BookDetails', { bookId: activeBook.id, lang: lang })}
                 style={{ flexDirection: 'row', gap: spacing.md }}
                 activeOpacity={0.7}
               >

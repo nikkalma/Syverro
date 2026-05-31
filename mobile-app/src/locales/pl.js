@@ -9,7 +9,6 @@ export default {
   menu: {
     profile: 'Mój profil',
     stats: 'Statystyki',
-    achievements: 'Osiągnięcia',
     theme: 'Ciemny',
     language: 'Polski',
     about: 'O aplikacji',
@@ -42,24 +41,5 @@ export default {
     addFirstBook: 'Dodaj pierwszą książkę', justStarted: 'Właśnie zacząłeś!',
     goodStart: 'Świetny start!', bookworm: 'Jesteś prawdziwym molem książkowym!', bookKing: 'Królowa / Król książek!',
   },
-  achievements: {
-    title: 'Osiągnięcia',
-    first_book: 'No to jedziemy',
-    first_finished: 'Czytelnik',
-    gold_star: 'Złota gwiazda',
-    first_review: 'Krytyk z kanapy',
-    bookworm_10: 'Już nie do zatrzymania',
-    bookworm_50: 'Czas na leczenie',
-    bookworm_100: 'Samouk-bibliotekarz',
-    pages_500: 'Rozgrzewka',
-    pages_1000: 'Pożeracz stron',
-    polyglot: 'Pół-poliglota',
-    genre_mess: 'Gatunkowy chaos',
-    devoted_reader: 'Oddany czytelnik',
-    world_trip: 'Podróż dookoła świata',
-    graphomaniac: 'Grafoman',
-    gave_up: 'Rzucone w połowie',
-    old_school: 'Stara szkoła',
-    zoomer: 'Zoomer',
-  },
+
 };

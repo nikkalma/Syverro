@@ -25,14 +25,14 @@
       "favicon": "./assets/favicon.png",
       "output": "single"
     },
-    "extra": {
-      "eas": {
-        "projectId": "d4c24915-67ae-4922-8238-6e53088b1f01"
-      }
-    },
     "plugins": [
       "@react-native-community/datetimepicker",
       "expo-font"
-    ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "838f8e39-7990-4bf4-8cdb-b94f3aa1768e"
+      }
+    }
   }
 }

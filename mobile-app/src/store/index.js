@@ -6,6 +6,28 @@ import { createSessionsSlice } from './slices/sessionsSlice';
 import { createQuotesSlice } from './slices/quotesSlice';
 import { createProfileSlice } from './slices/profileSlice';
 
+// Функция миграции: конвертирует старый isActive в новый activeBookId
+const migrateFromIsActive = (persistedState) => {
+  if (!persistedState) return persistedState;
+  
+  const state = { ...persistedState };
+  
+  // Если есть книги с isActive, конвертируем в activeBookId
+  if (state.books && Array.isArray(state.books)) {
+    const activeBook = state.books.find(book => book.isActive === true);
+    if (activeBook && !state.activeBookId) {
+      state.activeBookId = activeBook.id;
+      // Удаляем isActive из всех книг
+      state.books = state.books.map(book => {
+        const { isActive, ...rest } = book;
+        return rest;
+      });
+      console.log('✅ Миграция: isActive → activeBookId, активная книга:', state.activeBookId);
+    }
+  }
+  
+  return state;
+};
 
 const useStore = create(
   persist(
@@ -18,27 +40,34 @@ const useStore = create(
     {
       name: 'syverro-storage',
       storage: createJSONStorage(() => AsyncStorage),
+      version: 2,
+      migrate: (persistedState, version) => {
+        console.log('🔄 Миграция с версии', version);
+        if (version === 1) {
+          return migrateFromIsActive(persistedState);
+        }
+        return persistedState;
+      },
+      // 🔥 ДОБАВЛЯЕМ partialize — явно указываем, что сохранять
+      partialize: (state) => ({
+        books: state.books,
+        activeBookId: state.activeBookId,  // ← КЛЮЧЕВАЯ СТРОКА
+        sessions: state.sessions,
+        quotes: state.quotes,
+        profile: state.profile,
+      }),
       onRehydrateStorage: () => (state) => {
-        console.log('🔄 1. Регидратация началась');
+        console.log('🔄 Регидратация началась');
         if (state) {
-          console.log('🔄 2. State загружен:', {
-            books: state.books?.length,
-            sessions: state.sessions?.length,
-            quotes: state.quotes?.length,
-            profile: state.profile?.name,
-          });
-          setTimeout(() => {
-            if (state.migrateFromactiveBookId) {
-              console.log('🔄 3. Запускаем миграцию');
-              state.migrateFromactiveBookId();
-            }
-          }, 0);
-        } else {
-          console.log('🔄 2. State пустой');
+          console.log('📚 Книг:', state.books?.length);
+          console.log('📖 Сессий:', state.sessions?.length);
+          console.log('💬 Цитат:', state.quotes?.length);
+          console.log('👤 Профиль:', state.profile?.name);
+          console.log('🎯 Активная книга:', state.activeBookId);
         }
       },
     }
   )
 );
 
-export default useStore;
+export { useStore };

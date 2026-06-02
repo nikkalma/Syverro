@@ -1,43 +1,46 @@
-// src/navigation/AppNavigator.js
 import React from 'react';
-import { Text } from 'react-native';
+import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../context/ThemeContext';
 
-// Экраны для TabBar
+// Tab экраны
 import ProfileScreen from '../screens/ProfileScreen';
 import SessionScreen from '../screens/SessionScreen';
 import LibraryScreen from '../screens/LibraryScreen';
 import SettingsScreen from '../screens/SettingsScreen';
 
-// Экран деталей (не в табах)
+// Stack экраны
 import BookDetailsScreen from '../screens/BookDetailsScreen';
-
-// Дополнительные экраны (не в табах)
-import InsightsScreen from '../screens/InsightsScreen';
+// ❌ УДАЛИТЬ: import InsightsScreen from '../screens/InsightsScreen';
 import FavoriteBooksScreen from '../screens/FavoriteBooksScreen';
 import AboutScreen from '../screens/AboutScreen';
 
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
 
-const TabIcon = ({ name, color, size }) => {
-  const icons = {
-    Profile: '👤',
-    Session: '📖',
-    Library: '📚',
-    Settings: '⚙️',
-  };
-  return <Text style={{ fontSize: size, color }}>{icons[name]}</Text>;
-};
-
 function MainTabs() {
   const { theme } = useTheme();
 
   return (
     <Tab.Navigator
-      screenOptions={{
+      screenOptions={({ route }) => ({
+        tabBarIcon: ({ focused, color, size }) => {
+          let iconName;
+          if (route.name === 'Profile') {
+            iconName = focused ? 'person' : 'person-outline';
+          } else if (route.name === 'Session') {
+            iconName = focused ? 'book' : 'book-outline';
+          } else if (route.name === 'Library') {
+            iconName = focused ? 'library' : 'library-outline';
+          } else if (route.name === 'Settings') {
+            iconName = focused ? 'settings' : 'settings-outline';
+          }
+          return <Ionicons name={iconName} size={size} color={color} />;
+        },
+        tabBarActiveTintColor: theme.primary,
+        tabBarInactiveTintColor: theme.textMuted,
         headerShown: false,
         tabBarStyle: {
           backgroundColor: theme.surface,
@@ -45,67 +48,47 @@ function MainTabs() {
           height: 60,
           paddingBottom: 8,
         },
-        tabBarActiveTintColor: theme.primary,
-        tabBarInactiveTintColor: theme.textMuted,
         tabBarLabelStyle: {
           fontSize: 12,
           marginBottom: 4,
         },
-      }}
+      })}
     >
-      <Tab.Screen 
-        name="Profile" 
-        component={ProfileScreen}
-        options={{
-          tabBarIcon: ({ color, size }) => <TabIcon name="Profile" color={color} size={size} />,
-          tabBarLabel: 'Профиль',
-        }}
-      />
-      <Tab.Screen 
-        name="Session" 
-        component={SessionScreen}
-        options={{
-          tabBarIcon: ({ color, size }) => <TabIcon name="Session" color={color} size={size} />,
-          tabBarLabel: 'Сессии',
-        }}
-      />
-      <Tab.Screen 
-        name="Library" 
-        component={LibraryScreen}
-        options={{
-          tabBarIcon: ({ color, size }) => <TabIcon name="Library" color={color} size={size} />,
-          tabBarLabel: 'Библиотека',
-        }}
-      />
-      <Tab.Screen 
-        name="Settings" 
-        component={SettingsScreen}
-        options={{
-          tabBarIcon: ({ color, size }) => <TabIcon name="Settings" color={color} size={size} />,
-          tabBarLabel: 'Настройки',
-        }}
-      />
+      <Tab.Screen name="Profile" component={ProfileScreen} options={{ title: 'Профиль' }} />
+      <Tab.Screen name="Session" component={SessionScreen} options={{ title: 'Сессии' }} />
+      <Tab.Screen name="Library" component={LibraryScreen} options={{ title: 'Библиотека' }} />
+      <Tab.Screen name="Settings" component={SettingsScreen} options={{ title: 'Настройки' }} />
     </Tab.Navigator>
   );
 }
 
-export default function AppNavigator({ lang, locale, setLocale }) {
+function MainStack() {
   const { theme } = useTheme();
-
+  
   return (
     <Stack.Navigator
       screenOptions={{
-        headerShown: false,
+        headerStyle: { backgroundColor: theme.surface },
+        headerTintColor: theme.textPrimary,
+        headerTitleStyle: { fontWeight: '600' },
         contentStyle: { backgroundColor: theme.background },
       }}
     >
-      <Stack.Screen name="MainTabs" component={MainTabs} />
-      <Stack.Screen name="BookDetails" component={BookDetailsScreen} />
-     <Stack.Screen name="Insights">
-  {props => <InsightsScreen {...props} lang={lang} />}
-</Stack.Screen>
-      <Stack.Screen name="FavoriteBooks" component={FavoriteBooksScreen} />
-      <Stack.Screen name="About" component={AboutScreen} />
+      <Stack.Screen name="MainTabs" component={MainTabs} options={{ headerShown: false }} />
+      <Stack.Screen name="BookDetails" component={BookDetailsScreen} options={{ title: 'Детали книги' }} />
+      {/* ❌ УДАЛИТЬ ЭТУ СТРОКУ: <Stack.Screen name="Insights" component={InsightsScreen} options={{ title: 'Аналитика' }} /> */}
+      <Stack.Screen name="FavoriteBooks" component={FavoriteBooksScreen} options={{ title: 'Избранное' }} />
+      <Stack.Screen name="About" component={AboutScreen} options={{ title: 'О приложении' }} />
     </Stack.Navigator>
+  );
+}
+
+export default function AppNavigator() {
+  const { theme } = useTheme();
+  
+  return (
+    <NavigationContainer>
+      <MainStack />
+    </NavigationContainer>
   );
 }

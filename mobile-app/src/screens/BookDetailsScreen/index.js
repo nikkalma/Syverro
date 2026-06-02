@@ -1,197 +1,158 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
-  TouchableOpacity,
+  StyleSheet,
   ScrollView,
-  Platform,
-  Keyboard,
-  TouchableWithoutFeedback,
-  KeyboardAvoidingView,
+  TouchableOpacity,
+  Alert,
 } from 'react-native';
+import { useStore } from '../../store';
 import { useTheme } from '../../context/ThemeContext';
-import useStore from '../../store';
+import { useLanguage } from '../../context/LanguageContext';
+import { Ionicons } from '@expo/vector-icons';
 import ViewMode from './ViewMode';
 import EditMode from './EditMode';
-import { spacing } from '../../theme/spacing';
-import QuoteModal from './QuoteModal';
 
 export default function BookDetailsScreen({ route, navigation }) {
+  const { bookId } = route.params || {};
+  const { books, updateBook, deleteBook, setActiveBook, activeBookId } = useStore();
   const { theme } = useTheme();
-  console.log('🔍 useStore:', typeof useStore);
-const store = useStore();
-console.log('🔍 store keys:', Object.keys(store));
-console.log('🔍 books:', typeof store.books);
-console.log('🔍 updateBook:', typeof store.updateBook);
-console.log('🔍 activeBookId:', typeof store.activeBookId);
-  const { books, updateBook, activeBookId } = useStore();  // ← добавить activeBookId
-  const { bookId, lang } = route.params;
-  const book = route.params.book || books?.find(b => b.id === bookId);
-  const scrollViewRef = useRef(null);
-  const [keyboardHeight, setKeyboardHeight] = useState(0);
-  const [editAuthorCountry, setEditAuthorCountry] = useState(book?.authorCountry || '');
-  const [editSeries, setEditSeries] = useState(book?.series || '');
-  const [editSeriesPosition, setEditSeriesPosition] = useState(book?.seriesPosition?.toString() || '');
-  const [editOriginalYear, setEditOriginalYear] = useState(book?.originalYear?.toString() || '');
-  const [isEditing, setIsEditing] = useState(false);
-  const [editLanguages, setEditLanguages] = useState(book?.languages || []);
-  const [editStatus, setEditStatus] = useState(book?.status || 'planned');
-  const [editRating, setEditRating] = useState(book?.rating || '');
-  const [editAuthor, setEditAuthor] = useState(book?.author || '');
-  const [editGenresArray, setEditGenresArray] = useState(book?.genres || []);
-  const [editPages, setEditPages] = useState(book?.pages?.toString() || '');
-  const [editStartDate, setEditStartDate] = useState(book?.startDate || '');
-  const [editEndDate, setEditEndDate] = useState(book?.endDate || '');
-  const [editNotes, setEditNotes] = useState(book?.notes || '');
-  const [editReview, setEditReview] = useState(book?.review || '');
-  const [editactiveBookId, setEditactiveBookId] = useState(book?.id === activeBookId);  // ← исправлено
-  const [quotesModalVisible, setQuotesModalVisible] = useState(false);
+  const { t } = useLanguage();
   
-  useEffect(() => {
-    const keyboardWillShow = Keyboard.addListener(
-      Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow',
-      (e) => {
-        setKeyboardHeight(e.endCoordinates.height);
-      }
-    );
-    const keyboardWillHide = Keyboard.addListener(
-      Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide',
-      () => {
-        setKeyboardHeight(0);
-      }
-    );
-
-    return () => {
-      keyboardWillShow.remove();
-      keyboardWillHide.remove();
-    };
-  }, []);
-
-  const saveChanges = () => {
-    const updatedBook = {
-      ...book,
-      author: editAuthor,
-      status: editStatus,
-      rating: editRating ? Number(editRating) : null,
-      genres: editGenresArray,
-      pages: editPages ? parseInt(editPages) : null,
-      startDate: editStartDate,
-      endDate: editEndDate,
-      notes: editNotes,
-      review: editReview,
-      languages: editLanguages,
-      authorCountry: editAuthorCountry,
-      series: editSeries,
-      seriesPosition: editSeriesPosition ? parseInt(editSeriesPosition) : null,
-      originalYear: editOriginalYear ? parseInt(editOriginalYear) : null,
-      activeBookId: editactiveBookId,
-    };
-
-    updateBook(bookId, updatedBook);
-    navigation.setParams({ book: updatedBook });
-    setIsEditing(false);
-    Keyboard.dismiss();
-    setKeyboardHeight(0);
-    setTimeout(() => scrollViewRef.current?.scrollTo({ y: 0, animated: true }), 100);
-  };
-
-  if (!book || !theme) {
+  const [isEditing, setIsEditing] = useState(false);
+  const [editData, setEditData] = useState(null);
+  
+  const book = books.find(b => b.id === bookId);
+  
+  if (!book) {
     return (
-      <View style={{ flex: 1, backgroundColor: '#121C24', justifyContent: 'center', alignItems: 'center' }}>
-        <Text style={{ color: '#FFF' }}>Загрузка...</Text>
+      <View style={[styles.container, { backgroundColor: theme.background }]}>
+        <Text style={{ color: theme.text, textAlign: 'center', marginTop: 50 }}>
+          {t('bookDetails.notFound') || 'Книга не найдена'}
+        </Text>
       </View>
     );
   }
-
+  
+  const isActiveBook = activeBookId === book.id;
+  
+  const initializeEditData = () => ({
+    author: book.author || '',
+    status: book.status || 'planned',
+    rating: book.rating || 0,
+    genres: book.genres || [],
+    languages: book.languages || [],
+    pages: book.totalPages?.toString() || '',
+    startDate: book.startDate || '',
+    endDate: book.endDate || '',
+    notes: book.notes || '',
+    review: book.review || '',
+    authorCountry: book.authorCountry || '',
+    series: book.series || '',
+    seriesPosition: book.seriesPosition?.toString() || '',
+    originalYear: book.originalYear?.toString() || '',
+    activeBookId: isActiveBook,
+  });
+  
+  const handleSave = async (updatedBook) => {
+    await updateBook(book.id, updatedBook);
+    
+    if (updatedBook.activeBookId && !isActiveBook) {
+      setActiveBook(book.id);
+    } else if (!updatedBook.activeBookId && isActiveBook) {
+      setActiveBook(null);
+    }
+    
+    setIsEditing(false);
+  };
+  
+  const handleDelete = () => {
+    Alert.alert(
+      t('common.confirm') || 'Подтверждение',
+      t('bookDetails.deleteConfirm') || 'Вы уверены, что хотите удалить эту книгу?',
+      [
+        { text: t('common.cancel') || 'Отмена', style: 'cancel' },
+        {
+          text: t('common.delete') || 'Удалить',
+          style: 'destructive',
+          onPress: async () => {
+            await deleteBook(book.id);
+            navigation.goBack();
+          }
+        }
+      ]
+    );
+  };
+  
+  const handleSetActive = () => {
+    if (isActiveBook) {
+      setActiveBook(null);
+    } else {
+      setActiveBook(book.id);
+    }
+  };
+  
   return (
-    <View style={{ flex: 1, backgroundColor: theme.background }}>
-      <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        style={{ flex: 1 }}
-        keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
-      >
-        <TouchableWithoutFeedback onPress={() => Keyboard.dismiss()}>
-          <ScrollView
-            ref={scrollViewRef}
-            style={{ flex: 1 }}
-            contentContainerStyle={{
-              paddingHorizontal: spacing.lg,
-              paddingTop: Platform.OS === 'android' ? 50 : 30,
-              paddingBottom: isEditing ? (keyboardHeight > 0 ? keyboardHeight + 20 : 40) : 80,
-            }}
-            showsVerticalScrollIndicator={true}
-            keyboardShouldPersistTaps="handled"
-            keyboardDismissMode="on-drag"
-          >
-            {/* Шапка */}
-            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
-              <TouchableOpacity onPress={() => navigation.goBack()} activeOpacity={0.4}>
-                <Text style={{ color: theme.textPrimary, fontSize: 28 }}>←</Text>
-              </TouchableOpacity>
-              <Text style={{ color: theme.textPrimary, fontSize: 22, flex: 1, marginLeft: 10, fontWeight: 'bold' }} numberOfLines={2}>
-                {book.title}
-              </Text>
-              {!isEditing && (
-                <TouchableOpacity onPress={() => setIsEditing(true)} style={{ padding: 8 }} activeOpacity={0.4}>
-                  <Text style={{ color: theme.primary, fontSize: 24 }}>✏️</Text>
-                </TouchableOpacity>
-              )}
-            </View>
-
-            {!isEditing ? (
-              <ViewMode book={book} lang={lang} theme={theme} />
-            ) : (
-              <EditMode
-                navigation={navigation} 
-                book={book}
-                books={books}
-                editAuthor={editAuthor}
-                setEditAuthor={setEditAuthor}
-                editStatus={editStatus}
-                setEditStatus={setEditStatus}
-                editRating={editRating}
-                setEditRating={setEditRating}
-                editGenresArray={editGenresArray}
-                setEditGenresArray={setEditGenresArray}
-                editLanguages={editLanguages}
-                setEditLanguages={setEditLanguages}
-                editPages={editPages}
-                setEditPages={setEditPages}
-                editStartDate={editStartDate}
-                setEditStartDate={setEditStartDate}
-                editEndDate={editEndDate}
-                setEditEndDate={setEditEndDate}
-                editNotes={editNotes}
-                setEditNotes={setEditNotes}
-                editReview={editReview}
-                setEditReview={setEditReview}
-                saveChanges={saveChanges}
-                setIsEditing={setIsEditing}
-                setKeyboardHeight={setKeyboardHeight}
-                scrollViewRef={scrollViewRef}
-                lang={lang}
-                theme={theme}
-                editAuthorCountry={editAuthorCountry}
-                setEditAuthorCountry={setEditAuthorCountry}
-                editSeries={editSeries}
-                setEditSeries={setEditSeries}
-                editSeriesPosition={editSeriesPosition}
-                setEditSeriesPosition={setEditSeriesPosition}
-                editOriginalYear={editOriginalYear}
-                setEditOriginalYear={setEditOriginalYear}
-                editactiveBookId={editactiveBookId}
-                setEditactiveBookId={setEditactiveBookId}
+    <ScrollView style={[styles.container, { backgroundColor: theme.background }]}>
+      {/* ❌ УДАЛИЛИ КАСТОМНУЮ КНОПКУ НАЗАД, ОСТАВИЛИ ТОЛЬКО СИСТЕМНУЮ */}
+      <View style={styles.headerActions}>
+        {!isEditing && (
+          <>
+            <TouchableOpacity onPress={() => {
+              setEditData(initializeEditData());
+              setIsEditing(true);
+            }} style={styles.actionButton}>
+              <Ionicons name="pencil" size={22} color={theme.primary} />
+            </TouchableOpacity>
+            
+            <TouchableOpacity onPress={handleSetActive} style={styles.actionButton}>
+              <Ionicons 
+                name={isActiveBook ? "bookmark" : "bookmark-outline"} 
+                size={22} 
+                color={isActiveBook ? theme.primary : theme.text} 
               />
-              
-            )}
-            <QuoteModal
-  visible={quotesModalVisible}
-  bookId={book.id}
-  onClose={() => setQuotesModalVisible(false)}
-/>
-          </ScrollView>
-        </TouchableWithoutFeedback>
-      </KeyboardAvoidingView>
-    </View>
+            </TouchableOpacity>
+            
+            <TouchableOpacity onPress={handleDelete} style={styles.actionButton}>
+              <Ionicons name="trash-outline" size={22} color="#f44336" />
+            </TouchableOpacity>
+          </>
+        )}
+      </View>
+      
+      {!isEditing ? (
+        <ViewMode bookId={book.id} onEdit={() => {
+          setEditData(initializeEditData());
+          setIsEditing(true);
+        }} />
+      ) : (
+        <EditMode 
+          book={book}
+          books={books}
+          editData={editData}
+          setEditData={setEditData}
+          onSave={handleSave}
+          onCancel={() => setIsEditing(false)}
+        />
+      )}
+    </ScrollView>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+  },
+  headerActions: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    paddingHorizontal: 16,
+    paddingTop: 12,
+    paddingBottom: 8,
+  },
+  actionButton: {
+    padding: 8,
+    marginLeft: 12,
+  },
+});

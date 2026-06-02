@@ -1,178 +1,80 @@
-// src/screens/BookDetailsScreen/ViewMode.js
 import React from 'react';
-import { View, Text } from 'react-native';
-import { spacing, radii } from '../../theme/spacing';
-import useStore from '../../store';
-import StartPageInput from '../../components/StartPageInput';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
+import { useStore } from '../../store';
+import { useTheme } from '../../context/ThemeContext';
+import { useLanguage } from '../../context/LanguageContext';
 
-export default function ViewMode({ book, lang, theme }) {
-  const { updateBook, getQuotesByBook } = useStore();
-  const bookQuotes = getQuotesByBook(book.id);
-
-  const fields = lang?.fields || {
-    author: 'Автор',
-    languages: 'Язык прочтения',
-    status: 'Статус',
-    rating: 'Оценка',
-    genres: 'Жанры',
-    pages: 'Страницы',
-    startDate: 'Дата начала',
-    endDate: 'Дата окончания',
-    notes: 'Заметки',
-    review: 'Отзыв',
-    authorCountry: 'Страна автора',
-    series: 'Серия',
-    seriesPosition: 'Номер в серии',
-    originalYear: 'Год оригинала',
-  };
-
-  const statusText = lang?.status?.[book.status] || book.status;
-
+export default function ViewMode({ bookId, onEdit }) {
+  const { books } = useStore();
+  const { theme } = useTheme();
+  const { t } = useLanguage();
+  
+  const book = books.find(b => b.id === bookId);
+  
+  if (!book) {
+    return (
+      <View style={[styles.container, { backgroundColor: theme.background }]}>
+        <Text style={{ color: theme.text }}>Книга не найдена</Text>
+      </View>
+    );
+  }
+  
+  // Преобразование рейтинга (если 10-балльный -> в 5-балльный для отображения)
+  const displayRating = book.rating ? (book.rating / 2).toFixed(1) : 0;
+  const ratingOutOf = book.rating ? 5 : 0;
+  
   return (
-    <>
-      <View style={{ marginBottom: spacing.lg }}>
-        <Text style={{ color: theme.textSecondary, fontSize: 14, marginBottom: 4, opacity: 0.7 }}>
-          {fields.author}
-        </Text>
-        <Text style={{ color: theme.textPrimary, fontSize: 16, opacity: 0.9 }}>
-          {book.author || '—'}
-        </Text>
+    <ScrollView style={[styles.container, { backgroundColor: theme.background }]}>
+      <View style={styles.header}>
+        <Text style={[styles.title, { color: theme.text }]}>{book.title}</Text>
+        <Text style={[styles.author, { color: theme.secondaryText }]}>{book.author}</Text>
       </View>
-
-      {book.authorCountry ? (
-        <View style={{ marginBottom: spacing.lg }}>
-          <Text style={{ color: theme.textSecondary, fontSize: 14, marginBottom: 4, opacity: 0.7 }}>
-            {fields.authorCountry}
+      
+      <View style={styles.infoCard}>
+        <View style={styles.infoRow}>
+          <Text style={[styles.infoLabel, { color: theme.secondaryText }]}>
+            {t('bookDetails.status') || 'Статус'}:
           </Text>
-          <Text style={{ color: theme.textPrimary, fontSize: 16, opacity: 0.9 }}>{book.authorCountry}</Text>
+          <Text style={[styles.infoValue, { color: theme.text }]}>{book.status}</Text>
         </View>
-      ) : null}
-
-      {book.series ? (
-        <View style={{ marginBottom: spacing.lg }}>
-          <Text style={{ color: theme.textSecondary, fontSize: 14, marginBottom: 4, opacity: 0.7 }}>
-            {fields.series}
+        
+        <View style={styles.infoRow}>
+          <Text style={[styles.infoLabel, { color: theme.secondaryText }]}>
+            {t('bookDetails.progress') || 'Прогресс'}:
           </Text>
-          <Text style={{ color: theme.textPrimary, fontSize: 16, opacity: 0.9 }}>
-            {book.series} {book.seriesPosition ? `(#${book.seriesPosition})` : ''}
+          <Text style={[styles.infoValue, { color: theme.text }]}>
+            {book.currentPage || 0} / {book.totalPages || 0} {t('bookDetails.pages') || 'стр.'}
           </Text>
         </View>
-      ) : null}
-
-      {book.originalYear ? (
-        <View style={{ marginBottom: spacing.lg }}>
-          <Text style={{ color: theme.textSecondary, fontSize: 14, marginBottom: 4, opacity: 0.7 }}>
-            {fields.originalYear}
-          </Text>
-          <Text style={{ color: theme.textPrimary, fontSize: 16, opacity: 0.9 }}>{book.originalYear}</Text>
-        </View>
-      ) : null}
-
-      {book.languages && book.languages.length > 0 && (
-        <View style={{ marginBottom: spacing.lg }}>
-          <Text style={{ color: theme.textSecondary, fontSize: 14, marginBottom: 4, opacity: 0.7 }}>
-            {fields.languages}
-          </Text>
-          <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
-            {book.languages.filter(Boolean).map(language => (
-              <View key={language} style={{ paddingHorizontal: spacing.md, paddingVertical: 6, borderRadius: radii.md, backgroundColor: theme.primary }}>
-                <Text style={{ color: '#FFF', opacity: 0.9 }}>{language}</Text>
-              </View>
-            ))}
+        
+        {book.rating > 0 && (
+          <View style={styles.infoRow}>
+            <Text style={[styles.infoLabel, { color: theme.secondaryText }]}>
+              {t('bookDetails.rating') || 'Оценка'}:
+            </Text>
+            <Text style={[styles.infoValue, { color: theme.primary }]}>
+              {displayRating} / {ratingOutOf}
+            </Text>
           </View>
-        </View>
-      )}
-
-      <View style={{ marginBottom: spacing.lg }}>
-        <Text style={{ color: theme.textSecondary, fontSize: 14, marginBottom: 4, opacity: 0.7 }}>
-          {fields.status}
-        </Text>
-        <Text style={{ color: theme.status, fontSize: 16, opacity: 0.9 }}>
-          {statusText}
-        </Text>
+        )}
       </View>
-
-      <View style={{ marginBottom: spacing.lg }}>
-        <Text style={{ color: theme.textSecondary, fontSize: 14, marginBottom: 4, opacity: 0.7 }}>
-          {fields.rating}
-        </Text>
-        <Text style={{ color: theme.textPrimary, fontSize: 16, opacity: 0.9 }}>
-          {book.rating ? `${book.rating}/5` : 'Нет оценки'}
-        </Text>
-      </View>
-
-      <View style={{ marginBottom: spacing.lg }}>
-        <Text style={{ color: theme.textSecondary, fontSize: 14, marginBottom: 4, opacity: 0.7 }}>
-          {fields.genres}
-        </Text>
-        <Text style={{ color: theme.textPrimary, fontSize: 16, opacity: 0.9 }}>
-          {Array.isArray(book.genres) && book.genres.length > 0 ? book.genres.join(', ') : '—'}
-        </Text>
-      </View>
-
-      <View style={{ marginBottom: spacing.lg }}>
-        <Text style={{ color: theme.textSecondary, fontSize: 14, marginBottom: 4, opacity: 0.7 }}>
-          {fields.pages}
-        </Text>
-        <Text style={{ color: theme.textPrimary, fontSize: 16, opacity: 0.9 }}>{book.pages || '—'}</Text>
-      </View>
-
-      {/* Компонент для указания начальной страницы */}
-      <StartPageInput
-        book={book}
-        onSave={(page) => {
-          updateBook(book.id, { ...book, manualStartPage: page, pagesRead: page - 1 });
-        }}
-        theme={theme}
-      />
-
-      <View style={{ marginBottom: spacing.lg }}>
-        <Text style={{ color: theme.textSecondary, fontSize: 14, marginBottom: 4, opacity: 0.7 }}>
-          {fields.startDate}
-        </Text>
-        <Text style={{ color: theme.textPrimary, fontSize: 16, opacity: 0.9 }}>{book.startDate || '—'}</Text>
-      </View>
-
-      <View style={{ marginBottom: spacing.lg }}>
-        <Text style={{ color: theme.textSecondary, fontSize: 14, marginBottom: 4, opacity: 0.7 }}>
-          {fields.endDate}
-        </Text>
-        <Text style={{ color: theme.textPrimary, fontSize: 16, opacity: 0.9 }}>{book.endDate || '—'}</Text>
-      </View>
-
-      <View style={{ marginBottom: spacing.lg }}>
-        <Text style={{ color: theme.textSecondary, fontSize: 14, marginBottom: 4, opacity: 0.7 }}>
-          {fields.notes}
-        </Text>
-        <Text style={{ color: theme.textPrimary, fontSize: 16, opacity: 0.9 }}>{book.notes || '—'}</Text>
-      </View>
-
-      {book.review && book.review.length > 0 && (
-        <View style={{ marginBottom: spacing.lg }}>
-          <Text style={{ color: theme.textSecondary, fontSize: 14, marginBottom: 4, opacity: 0.7 }}>
-            📝 {fields.review}
-          </Text>
-          <Text style={{ color: theme.textPrimary, fontSize: 15, lineHeight: 22, opacity: 0.9 }}>
-            {book.review}
-          </Text>
-        </View>
-      )}
-
-      {/* Цитаты */}
-      {bookQuotes.length > 0 && (
-        <View style={{ marginTop: spacing.xl }}>
-          <Text style={{ color: theme.textPrimary, fontSize: 18, fontWeight: 'bold', marginBottom: spacing.md }}>
-            📝 Цитаты
-          </Text>
-          {bookQuotes.map(quote => (
-            <View key={quote.id} style={{ marginBottom: spacing.md, padding: spacing.md, backgroundColor: theme.surface, borderRadius: radii.lg }}>
-              <Text style={{ color: theme.textPrimary, fontSize: 15, lineHeight: 22, fontStyle: 'italic' }}>
-                ❝ {quote.text} ❞
-              </Text>
-            </View>
-          ))}
-        </View>
-      )}
-    </>
+      
+      <TouchableOpacity style={[styles.editButton, { backgroundColor: theme.primary }]} onPress={onEdit}>
+        <Text style={styles.editButtonText}>{t('common.edit') || 'Редактировать'}</Text>
+      </TouchableOpacity>
+    </ScrollView>
   );
 }
+
+const styles = StyleSheet.create({
+  container: { flex: 1, padding: 20 },
+  header: { alignItems: 'center', marginBottom: 30 },
+  title: { fontSize: 24, fontWeight: 'bold', textAlign: 'center' },
+  author: { fontSize: 16, marginTop: 5 },
+  infoCard: { backgroundColor: 'rgba(0,0,0,0.05)', borderRadius: 12, padding: 16, marginBottom: 20 },
+  infoRow: { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 8 },
+  infoLabel: { fontSize: 14 },
+  infoValue: { fontSize: 14, fontWeight: '500' },
+  editButton: { padding: 14, borderRadius: 10, alignItems: 'center', marginTop: 20 },
+  editButtonText: { color: '#fff', fontSize: 16, fontWeight: 'bold' }
+});

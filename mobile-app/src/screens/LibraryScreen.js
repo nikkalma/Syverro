@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { View, FlatList, Dimensions, TouchableOpacity, ScrollView, Modal } from 'react-native';
 import { useTheme } from '../context/ThemeContext';
-import useStore from '../store';
+import { useStore } from '../store';  // ← ИСПРАВЛЕНО
 import BookCover from '../components/BookCover';
 import { Text } from '../components/Text';
 import { spacing, radii } from '../theme/spacing';
@@ -12,7 +12,7 @@ import GlassCard from '../components/GlassCard';
 const { width } = Dimensions.get('window');
 const CARD_WIDTH = (width - 48 - 32) / 3;
 
-export default function LibraryScreen({ navigation, lang }) {
+export default function LibraryScreen({ navigation }) {
   const { theme } = useTheme();
   const { books } = useStore();
 
@@ -35,16 +35,29 @@ export default function LibraryScreen({ navigation, lang }) {
     return book.status === selectedStatus;
   });
 
+  // 🔥 ИСПРАВЛЕНО: защита от undefined
   const sortedBooks = [...filteredBooks].sort((a, b) => {
-    if (sortBy === 'title') return a.title.localeCompare(b.title);
-    if (sortBy === 'rating') return (b.rating || 0) - (a.rating || 0);
-    if (sortBy === 'date') return (b.createdAt || 0) - (a.createdAt || 0);
+    if (sortBy === 'title') {
+      const titleA = a?.title || '';
+      const titleB = b?.title || '';
+      return titleA.localeCompare(titleB);
+    }
+    if (sortBy === 'rating') {
+      const ratingA = a?.rating || 0;
+      const ratingB = b?.rating || 0;
+      return ratingB - ratingA;
+    }
+    if (sortBy === 'date') {
+      const dateA = a?.createdAt || 0;
+      const dateB = b?.createdAt || 0;
+      return dateB - dateA;
+    }
     return 0;
   });
 
   const renderBookCard = ({ item }) => (
     <TouchableOpacity 
-      onPress={() => navigation.navigate('BookDetails', { bookId: item.id, lang: lang })} 
+      onPress={() => navigation.navigate('BookDetails', { bookId: item.id })} 
       style={{ width: CARD_WIDTH, marginBottom: spacing.md }}
       activeOpacity={0.7}
     >
@@ -55,14 +68,14 @@ export default function LibraryScreen({ navigation, lang }) {
         height={CARD_WIDTH * 1.4} 
       />
       <Text variant="secondary" numberOfLines={1} style={{ marginTop: spacing.xs }}>
-        {item.title}
+        {item.title || 'Без названия'}
       </Text>
-      <Text variant="caption" numberOfLines={1}>{item.author}</Text>
+      <Text variant="caption" numberOfLines={1}>{item.author || 'Неизвестный автор'}</Text>
       {item.rating ? (
-        <Text variant="caption" style={{ color: theme.warning, marginTop: 2 }}>
-          ★ {item.rating}/5
-        </Text>
-      ) : null}
+  <Text variant="caption" style={{ color: theme.warning, marginTop: 2 }}>
+     {(item.rating / 2).toFixed(1)}/5
+  </Text>
+) : null}
     </TouchableOpacity>
   );
 
@@ -106,7 +119,7 @@ export default function LibraryScreen({ navigation, lang }) {
               style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm }}
             >
               <Text style={{ color: theme.primary, fontSize: 13 }}>📊 {getSortLabel()}</Text>
-              <Text style={{ color: theme.textSecondary, fontSize: 10 }}>⟳</Text>
+              <Text style={{ color: theme.textSecondary, fontSize: 10 }}>⤴</Text>
             </TouchableOpacity>
           </View>
           

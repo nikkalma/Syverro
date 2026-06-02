@@ -1,3 +1,5 @@
+// src/store/slices/sessionsSlice.js
+
 export const createSessionsSlice = (set, get) => ({
   sessions: [],
   activeSession: null,
@@ -5,6 +7,7 @@ export const createSessionsSlice = (set, get) => ({
   startSession: (bookId, startPage = 0) => {
     const { activeSession, books } = get();
     if (activeSession) return null;
+    
     const book = books.find(b => b.id === bookId);
     if (!book) return null;
 
@@ -14,7 +17,7 @@ export const createSessionsSlice = (set, get) => ({
       bookTitle: book.title,
       bookAuthor: book.author,
       startTime: Date.now(),
-      startPage: startPage || 0,
+      startPage: startPage || book.currentPage || 0,
       endPage: null,
       pagesRead: 0,
       duration: 0,
@@ -59,17 +62,25 @@ export const createSessionsSlice = (set, get) => ({
       sessions: [completedSession, ...sessions],
     });
 
-    const { books, updateBook } = get();
+    // Обновляем прогресс книги
+    const { books, updateBookProgress } = get();
     const book = books.find(b => b.id === activeSession.bookId);
     if (book && pagesRead > 0) {
-      const currentPages = book.pagesRead || 0;
-      updateBook(activeSession.bookId, {
-        ...book,
-        pagesRead: currentPages + pagesRead,
-        lastSessionDate: now,
-      });
+      const currentPages = (book.currentPage || 0) + pagesRead;
+      if (updateBookProgress) {
+        updateBookProgress(activeSession.bookId, {
+          currentPage: currentPages,
+          lastRead: now,
+        });
+      }
     }
     return completedSession;
+  },
+
+  cancelSession: () => {
+    const { activeSession } = get();
+    if (!activeSession) return;
+    set({ activeSession: null });
   },
 
   getBookSessions: (bookId) => {
@@ -84,12 +95,10 @@ export const createSessionsSlice = (set, get) => ({
   getBookStats: (bookId) => {
     const sessions = get().getBookSessions(bookId);
     const completedSessions = sessions.filter(s => s.status === 'completed');
-    const totalSeconds = completedSessions.reduce((sum, s) => sum + (s.duration || 0), 0);
     return {
       totalSessions: completedSessions.length,
       totalPagesRead: completedSessions.reduce((sum, s) => sum + (s.pagesRead || 0), 0),
-      totalTimeSeconds: totalSeconds,
-      totalTimeMinutes: Math.floor(totalSeconds / 60),
+      totalTimeSeconds: completedSessions.reduce((sum, s) => sum + (s.duration || 0), 0),
       lastSession: completedSessions[0]?.endTime || null,
     };
   },
@@ -102,5 +111,11 @@ export const createSessionsSlice = (set, get) => ({
       totalPagesRead: completedSessions.reduce((sum, s) => sum + (s.pagesRead || 0), 0),
       totalTimeSeconds: completedSessions.reduce((sum, s) => sum + (s.duration || 0), 0),
     };
+  },
+
+  deleteSession: (sessionId) => {
+    set((state) => ({
+      sessions: state.sessions.filter(s => s.id !== sessionId)
+    }));
   },
 });

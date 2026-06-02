@@ -2,19 +2,12 @@ import React, { useState } from 'react';
 import { View, Text, TouchableOpacity, ScrollView, Modal, Alert } from 'react-native';
 import { useTheme } from '../context/ThemeContext';
 import CompactThemeSwitcher from '../components/CompactThemeSwitcher';
-import useStore from '../store';
+import { useStore } from '../store';  // ← ИСПРАВЛЕНО
 import { spacing, radii } from '../theme/spacing';
-import STRINGS from '../locales';
 
-export default function SettingsScreen({ navigation, lang, setLocale, locale }) {
+export default function SettingsScreen({ navigation }) {
   const { theme } = useTheme();
   const { importBooksFromSheets } = useStore();
-  const [langModalVisible, setLangModalVisible] = useState(false);
-
-  const languageNames = {
-    be: 'Беларуская', de: 'Deutsch', en: 'English', fr: 'Français',
-    it: 'Italiano', ja: '日本語', ko: '한국어', pl: 'Polski', ru: 'Русский', ua: 'Українська',
-  };
 
   const handleImport = () => {
     Alert.alert(
@@ -27,10 +20,10 @@ export default function SettingsScreen({ navigation, lang, setLocale, locale }) 
           onPress: async () => {
             Alert.alert('Импорт', 'Загружаю книги...');
             const result = await importBooksFromSheets();
-            if (result.success) {
+            if (result?.success) {
               Alert.alert('Готово!', `Импортировано ${result.count} книг`);
             } else {
-              Alert.alert('Ошибка', result.error);
+              Alert.alert('Ошибка', result?.error || 'Не удалось импортировать');
             }
           }
         }
@@ -70,17 +63,7 @@ export default function SettingsScreen({ navigation, lang, setLocale, locale }) 
 
       <View style={{ marginBottom: spacing.xl }}>
         <Text style={{ color: theme.textPrimary, fontSize: 18, marginBottom: spacing.md }}>🌙 Тема</Text>
-        <CompactThemeSwitcher lang={lang} />
-      </View>
-
-      <View style={{ marginBottom: spacing.xl }}>
-        <Text style={{ color: theme.textPrimary, fontSize: 18, marginBottom: spacing.md }}>🌐 Язык</Text>
-        <TouchableOpacity
-          onPress={() => setLangModalVisible(true)}
-          style={{ padding: spacing.md, backgroundColor: theme.surface, borderRadius: radii.lg }}
-        >
-          <Text style={{ color: theme.textPrimary }}>{languageNames[locale] || locale}</Text>
-        </TouchableOpacity>
+        <CompactThemeSwitcher />
       </View>
 
       <View style={{ marginBottom: spacing.xl }}>
@@ -93,7 +76,6 @@ export default function SettingsScreen({ navigation, lang, setLocale, locale }) 
         </TouchableOpacity>
       </View>
 
-      {/* КНОПКА СБРОСА СТАТИСТИКИ */}
       <View style={{ marginBottom: spacing.xl }}>
         <Text style={{ color: theme.textPrimary, fontSize: 18, marginBottom: spacing.md }}>🗑️ Очистка</Text>
         <TouchableOpacity
@@ -113,28 +95,6 @@ export default function SettingsScreen({ navigation, lang, setLocale, locale }) 
       >
         <Text style={{ color: theme.textPrimary }}>ℹ️ О приложении</Text>
       </TouchableOpacity>
-
-      <Modal visible={langModalVisible} animationType="fade" transparent>
-        <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.7)', justifyContent: 'center', padding: spacing.lg }}>
-          <View style={{ backgroundColor: theme.surface, borderRadius: radii.xl, padding: spacing.lg }}>
-            <Text style={{ color: theme.textPrimary, fontSize: 18, marginBottom: spacing.lg, textAlign: 'center' }}>
-              Выберите язык
-            </Text>
-            {Object.keys(STRINGS).map(loc => (
-              <TouchableOpacity
-                key={loc}
-                onPress={() => { setLocale(loc); setLangModalVisible(false); }}
-                style={{ paddingVertical: spacing.md, paddingHorizontal: spacing.md, backgroundColor: locale === loc ? theme.primary : theme.surface, borderRadius: radii.md, marginBottom: spacing.sm }}
-              >
-                <Text style={{ color: locale === loc ? '#FFF' : theme.textPrimary }}>{languageNames[loc]}</Text>
-              </TouchableOpacity>
-            ))}
-            <TouchableOpacity onPress={() => setLangModalVisible(false)} style={{ marginTop: spacing.lg, padding: spacing.md, borderRadius: radii.md, borderWidth: 1, borderColor: theme.border }}>
-              <Text style={{ color: theme.textPrimary, textAlign: 'center' }}>Отмена</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      </Modal>
     </ScrollView>
   );
 }

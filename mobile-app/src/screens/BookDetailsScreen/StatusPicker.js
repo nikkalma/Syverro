@@ -5,13 +5,16 @@ import { spacing, radii } from '../../theme/spacing';
 export default function StatusPicker({ selectedStatus, onStatusChange, lang, theme }) {
   const [modalVisible, setModalVisible] = useState(false);
 
+  // Защита от undefined
+  const statusLabels = lang || {};
+  
   const statuses = [
-    { key: 'reading', label: lang?.status?.reading || 'Читаю' },
-    { key: 'finished', label: lang?.status?.finished || 'Прочитано' },
-    { key: 'planned', label: lang?.status?.planned || 'В планах' },
-    { key: 'rereading', label: lang?.status?.rereading || 'Перечитываю' },
-    { key: 'postponed', label: lang?.status?.postponed || 'Отложено' },
-    { key: 'abandoned', label: lang?.status?.abandoned || 'Брошено' },
+    { key: 'reading', label: statusLabels.reading || 'Читаю' },
+    { key: 'finished', label: statusLabels.finished || 'Прочитано' },
+    { key: 'planned', label: statusLabels.planned || 'В планах' },
+    { key: 'rereading', label: statusLabels.rereading || 'Перечитываю' },
+    { key: 'postponed', label: statusLabels.postponed || 'Отложено' },
+    { key: 'abandoned', label: statusLabels.abandoned || 'Брошено' },
   ];
 
   const currentLabel = statuses.find(s => s.key === selectedStatus)?.label || 'Выберите статус';
@@ -42,7 +45,7 @@ export default function StatusPicker({ selectedStatus, onStatusChange, lang, the
               <TouchableOpacity
                 key={status.key}
                 onPress={() => {
-                  onStatusChange(status.key);
+                  if (onStatusChange) onStatusChange(status.key);
                   setModalVisible(false);
                 }}
                 style={{

@@ -1,91 +1,78 @@
 import React from 'react';
 import { View, Text, TextInput, TouchableOpacity, ScrollView, Platform, Keyboard, Switch } from 'react-native';
 import GenreSelector from '../../components/GenreSelector';
-import AuthorSelector from '../../components/AuthorSelector';
 import StatusPicker from './StatusPicker';
 import { spacing, radii } from '../../theme/spacing';
+import { useTheme } from '../../context/ThemeContext';
+import { useLanguage } from '../../context/LanguageContext';
 
-export default function EditMode({
-  book,
-  books,
-  editAuthor,
-  setEditAuthor,
-  editStatus,
-  setEditStatus,
-  editRating,
-  setEditRating,
-  editGenresArray,
-  setEditGenresArray,
-  editLanguages,
-  setEditLanguages,
-  editPages,
-  setEditPages,
-  editStartDate,
-  setEditStartDate,
-  editEndDate,
-  setEditEndDate,
-  editNotes,
-  setEditNotes,
-  editReview,
-  setEditReview,
-  editAuthorCountry,
-  setEditAuthorCountry,
-  editSeries,
-  setEditSeries,
-  editSeriesPosition,
-  setEditSeriesPosition,
-  editOriginalYear,
-  setEditOriginalYear,
-  editactiveBookId,
-  setEditactiveBookId,
-  saveChanges,
-  setIsEditing,
-  setKeyboardHeight,
-  scrollViewRef,
-  lang,
-  theme,
+export default function EditMode({ 
+  book, 
+  books, 
+  editData, 
+  setEditData, 
+  onSave, 
+  onCancel 
 }) {
-  const fields = lang?.fields || {
-    pages: 'Страницы',
-    startDate: 'Дата начала',
-    endDate: 'Дата окончания',
-    rating: 'Оценка',
-    review: 'Отзыв',
-    notes: 'Заметки',
-    authorCountry: 'Страна автора',
-    series: 'Серия',
-    seriesPosition: 'Номер в серии',
-    originalYear: 'Год оригинала',
+  const { theme } = useTheme();
+  const { t } = useLanguage();
+  
+  if (!editData) return null;
+  
+  const updateField = (field, value) => {
+    setEditData({ ...editData, [field]: value });
   };
   
-  const buttons = lang?.buttons || { save: 'Сохранить', cancel: 'Отмена' };
+  const fields = {
+    author: t?.('fields.author') || 'Автор',
+    pages: t?.('fields.pages') || 'Страницы',
+    rating: t?.('fields.rating') || 'Оценка',
+    review: t?.('fields.review') || 'Отзыв',
+    notes: t?.('fields.notes') || 'Заметки',
+  };
+  
+  const handleSavePress = () => {
+    const updatedBook = {
+      ...book,
+      author: editData.author,
+      status: editData.status,
+      rating: editData.rating,
+      genres: editData.genres,
+      languages: editData.languages,
+      totalPages: parseInt(editData.pages) || book.totalPages,
+      startDate: editData.startDate,
+      endDate: editData.endDate,
+      notes: editData.notes,
+      review: editData.review,
+      authorCountry: editData.authorCountry,
+      series: editData.series,
+      seriesPosition: editData.seriesPosition ? parseInt(editData.seriesPosition) : null,
+      originalYear: editData.originalYear ? parseInt(editData.originalYear) : null,
+    };
+    if (onSave) onSave(updatedBook);
+  };
 
   return (
     <ScrollView
-      ref={scrollViewRef}
       showsVerticalScrollIndicator={true}
       keyboardShouldPersistTaps="handled"
       keyboardDismissMode="on-drag"
-      contentContainerStyle={{ paddingBottom: Platform.OS === 'ios' ? 40 : 30 }}
+      contentContainerStyle={{ padding: spacing.lg, paddingBottom: Platform.OS === 'ios' ? 40 : 30 }}
     >
-      <StatusPicker selectedStatus={editStatus} onStatusChange={setEditStatus} lang={lang} theme={theme} />
-
-      <AuthorSelector
-        selectedAuthor={editAuthor}
-        onAuthorChange={setEditAuthor}
-        authorsList={[...new Set(books.map(b => b.author).filter(Boolean))]}
-        lang={lang}
+      {/* Статус */}
+      <StatusPicker 
+        selectedStatus={editData.status} 
+        onStatusChange={(status) => updateField('status', status)}
         theme={theme}
       />
 
-      <Text style={{ color: theme.textSecondary, marginBottom: 5 }}>{fields.authorCountry}</Text>
+      {/* Автор */}
+      <Text style={{ color: theme.textSecondary, marginBottom: 5 }}>{fields.author}</Text>
       <TextInput
-        value={editAuthorCountry}
-        onChangeText={setEditAuthorCountry}
-        placeholder="Например: Россия, Япония"
+        value={editData.author}
+        onChangeText={(val) => updateField('author', val)}
+        placeholder="Имя автора"
         placeholderTextColor={theme.textMuted}
-        returnKeyType="done"
-        onSubmitEditing={Keyboard.dismiss}
         style={{
           padding: spacing.md,
           borderRadius: radii.md,
@@ -95,90 +82,14 @@ export default function EditMode({
         }}
       />
 
-      <Text style={{ color: theme.textSecondary, marginBottom: 5 }}>{fields.series}</Text>
-      <TextInput
-        value={editSeries}
-        onChangeText={setEditSeries}
-        placeholder="Название серии"
-        placeholderTextColor={theme.textMuted}
-        returnKeyType="done"
-        onSubmitEditing={Keyboard.dismiss}
-        style={{
-          padding: spacing.md,
-          borderRadius: radii.md,
-          marginBottom: spacing.md,
-          backgroundColor: theme.surface,
-          color: theme.textPrimary,
-        }}
-      />
-
-      <Text style={{ color: theme.textSecondary, marginBottom: 5 }}>{fields.seriesPosition}</Text>
-      <TextInput
-        value={editSeriesPosition}
-        onChangeText={setEditSeriesPosition}
-        keyboardType="numeric"
-        placeholder="1, 2, 3..."
-        placeholderTextColor={theme.textMuted}
-        returnKeyType="done"
-        onSubmitEditing={Keyboard.dismiss}
-        style={{
-          padding: spacing.md,
-          borderRadius: radii.md,
-          marginBottom: spacing.md,
-          backgroundColor: theme.surface,
-          color: theme.textPrimary,
-        }}
-      />
-
-      <Text style={{ color: theme.textSecondary, marginBottom: 5 }}>{fields.originalYear}</Text>
-      <TextInput
-        value={editOriginalYear}
-        onChangeText={setEditOriginalYear}
-        keyboardType="numeric"
-        placeholder="1999, 1854..."
-        placeholderTextColor={theme.textMuted}
-        returnKeyType="done"
-        onSubmitEditing={Keyboard.dismiss}
-        style={{
-          padding: spacing.md,
-          borderRadius: radii.md,
-          marginBottom: spacing.md,
-          backgroundColor: theme.surface,
-          color: theme.textPrimary,
-        }}
-      />
-
-      <GenreSelector
-        selectedGenres={editGenresArray}
-        onGenresChange={setEditGenresArray}
-        lang={lang}
-        theme={theme}
-      />
-
+      {/* Страницы */}
       <Text style={{ color: theme.textSecondary, marginBottom: 5, marginTop: 8 }}>{fields.pages}</Text>
       <TextInput
-        value={editPages}
-        onChangeText={setEditPages}
+        value={editData.pages?.toString()}
+        onChangeText={(val) => updateField('pages', val)}
         keyboardType="numeric"
-        returnKeyType="done"
-        onSubmitEditing={Keyboard.dismiss}
-        style={{
-          padding: spacing.md,
-          borderRadius: radii.md,
-          marginBottom: spacing.md,
-          backgroundColor: theme.surface,
-          color: theme.textPrimary,
-        }}
-      />
-
-      <Text style={{ color: theme.textSecondary, marginBottom: 5 }}>{fields.startDate}</Text>
-      <TextInput
-        value={editStartDate}
-        onChangeText={setEditStartDate}
-        placeholder="ДД.ММ.ГГГГ"
+        placeholder="Количество страниц"
         placeholderTextColor={theme.textMuted}
-        returnKeyType="done"
-        onSubmitEditing={Keyboard.dismiss}
         style={{
           padding: spacing.md,
           borderRadius: radii.md,
@@ -188,72 +99,49 @@ export default function EditMode({
         }}
       />
 
-      <Text style={{ color: theme.textSecondary, marginBottom: 5 }}>{fields.endDate}</Text>
-      <TextInput
-        value={editEndDate}
-        onChangeText={setEditEndDate}
-        placeholder="ДД.ММ.ГГГГ"
-        placeholderTextColor={theme.textMuted}
-        returnKeyType="done"
-        onSubmitEditing={Keyboard.dismiss}
-        style={{
-          padding: spacing.md,
-          borderRadius: radii.md,
-          marginBottom: spacing.md,
-          backgroundColor: theme.surface,
-          color: theme.textPrimary,
-        }}
-      />
-
+      {/* Рейтинг */}
       <Text style={{ color: theme.textSecondary, marginBottom: 8 }}>{fields.rating}</Text>
       <View style={{ flexDirection: 'row', gap: 12, marginBottom: 15 }}>
         {[1, 2, 3, 4, 5].map((star) => (
           <TouchableOpacity
             key={star}
-            onPress={() => setEditRating(star)}
+            onPress={() => updateField('rating', star)}
             style={{
               width: 50,
               height: 50,
               borderRadius: 25,
-              backgroundColor: editRating === star ? theme.primary : theme.surface,
-              borderWidth: editRating === star ? 0 : 1,
+              backgroundColor: editData.rating === star ? theme.primary : theme.surface,
+              borderWidth: editData.rating === star ? 0 : 1,
               borderColor: theme.border,
               alignItems: 'center',
               justifyContent: 'center',
             }}
-            activeOpacity={0.7}
           >
-            <Text
-              style={{
-                color: editRating === star ? '#FFF' : theme.textPrimary,
-                fontSize: 18,
-                fontWeight: editRating === star ? 'bold' : 'normal',
-              }}
-            >
+            <Text style={{ color: editData.rating === star ? '#FFF' : theme.textPrimary, fontSize: 18 }}>
               {star}
             </Text>
           </TouchableOpacity>
         ))}
       </View>
 
+      {/* Основная книга */}
       <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 15, marginTop: 8 }}>
         <Text style={{ color: theme.textSecondary }}>Сделать основной книгой</Text>
         <Switch
-          value={editactiveBookId}
-          onValueChange={setEditactiveBookId}
+          value={editData.activeBookId || false}
+          onValueChange={(val) => updateField('activeBookId', val)}
           trackColor={{ false: theme.border, true: theme.primary }}
           thumbColor={'#FFF'}
         />
       </View>
 
+      {/* Рецензия */}
       <Text style={{ color: theme.textSecondary, marginBottom: 5, marginTop: 8 }}>{fields.review}</Text>
       <TextInput
-        value={editReview}
-        onChangeText={setEditReview}
+        value={editData.review}
+        onChangeText={(val) => updateField('review', val)}
         multiline
         numberOfLines={4}
-        returnKeyType="done"
-        onSubmitEditing={Keyboard.dismiss}
         style={{
           padding: spacing.md,
           borderRadius: radii.md,
@@ -267,13 +155,12 @@ export default function EditMode({
         placeholderTextColor={theme.textMuted}
       />
 
+      {/* Заметки */}
       <Text style={{ color: theme.textSecondary, marginBottom: 5 }}>{fields.notes}</Text>
       <TextInput
-        value={editNotes}
-        onChangeText={setEditNotes}
+        value={editData.notes}
+        onChangeText={(val) => updateField('notes', val)}
         multiline
-        returnKeyType="done"
-        onSubmitEditing={Keyboard.dismiss}
         style={{
           padding: spacing.md,
           borderRadius: radii.md,
@@ -284,56 +171,20 @@ export default function EditMode({
         }}
       />
 
+      {/* Кнопки */}
       <View style={{ flexDirection: 'row', gap: 12, marginTop: 20, marginBottom: 40 }}>
         <TouchableOpacity
-          onPress={saveChanges}
-          style={{
-            padding: 14,
-            borderRadius: radii.lg,
-            backgroundColor: theme.primary,
-            flex: 1,
-            alignItems: 'center',
-          }}
-          activeOpacity={0.7}
+          onPress={handleSavePress}
+          style={{ padding: 14, borderRadius: radii.lg, backgroundColor: theme.primary, flex: 1, alignItems: 'center' }}
         >
-          <Text style={{ color: '#FFF', fontWeight: 'bold' }}>💾 {buttons.save}</Text>
+          <Text style={{ color: '#FFF', fontWeight: 'bold' }}>💾 Сохранить</Text>
         </TouchableOpacity>
         <TouchableOpacity
-          onPress={() => {
-            setIsEditing(false);
-            Keyboard.dismiss();
-            setKeyboardHeight(0);
-            setTimeout(() => scrollViewRef.current?.scrollTo({ y: 0, animated: true }), 100);
-          }}
-          style={{
-            padding: 14,
-            borderRadius: radii.lg,
-            backgroundColor: theme.error,
-            flex: 1,
-            alignItems: 'center',
-          }}
-          activeOpacity={0.7}
+          onPress={onCancel}
+          style={{ padding: 14, borderRadius: radii.lg, backgroundColor: theme.error, flex: 1, alignItems: 'center' }}
         >
-          <Text style={{ color: '#FFF', fontWeight: 'bold' }}>✖️ {buttons.cancel}</Text>
+          <Text style={{ color: '#FFF', fontWeight: 'bold' }}>✖️ Отмена</Text>
         </TouchableOpacity>
-        {/* Кнопка для цитат */}
-<TouchableOpacity
-  onPress={() => {
-    setIsEditing(false); // выходим из режима редактирования
-    navigation.navigate('QuotesModal', { bookId: book.id });
-  }}
-  style={{
-    padding: 14,
-    borderRadius: radii.lg,
-    backgroundColor: theme.accent || theme.primary,
-    flex: 1,
-    alignItems: 'center',
-    marginBottom: 12,
-  }}
-  activeOpacity={0.7}
->
-  <Text style={{ color: '#FFF', fontWeight: 'bold' }}>📝 Цитаты</Text>
-</TouchableOpacity>
       </View>
     </ScrollView>
   );

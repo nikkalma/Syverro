@@ -1,249 +1,165 @@
-// mobile-app/src/screens/SessionScreen.js
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
-  View,
-  Text,
-  TouchableOpacity,
-  TextInput,
-  ScrollView,
-  Alert,
+  View, Text, StyleSheet, TouchableOpacity, TextInput, Alert, ScrollView
 } from 'react-native';
+import { useStore } from '../store';
+import { useLanguage } from '../context/LanguageContext';
 import { useTheme } from '../context/ThemeContext';
-import useStore from '../store';
-import { spacing, radii } from '../theme/spacing';
 
-const formatDuration = (seconds) => {
-  const mins = Math.floor(seconds / 60);
-  const secs = seconds % 60;
-  return `${mins} мин ${secs} сек`;
-};
-
-export default function SessionScreen({ navigation, lang }) {
+export default function SessionScreen({ navigation, route }) {
+  // 🔥 ПОЛУЧАЕМ АКТИВНУЮ КНИГУ ИЗ STORE
+  const { books, activeBookId, addSession, updateBookProgress, setActiveBook } = useStore();
+  const { t } = useLanguage();
   const { theme } = useTheme();
-  const store = useStore();
+  
+  // Находим активную книгу
+  const book = books.find(b => b.id === activeBookId);
+  
+  const [currentPage, setCurrentPage] = useState(book?.currentPage?.toString() || '');
+  const [isActive, setIsActive] = useState(false);
+  const [startTime, setStartTime] = useState(null);
+  const [elapsedSeconds, setElapsedSeconds] = useState(0);
 
-  const [selectedBookId, setSelectedBookId] = useState(null);
-  const [pageInput, setPageInput] = useState('');
-  const [timer, setTimer] = useState(0);
-  const timerInterval = useRef(null);
-
-  const books = store.books;
-  const sessions = store.sessions;
-  const activeSession = store.activeSession;
-  const startSession = store.startSession;
-  const updateSessionPage = store.updateSessionPage;
-  const endSession = store.endSession;
-  const getBookStats = store.getBookStats;
-  const getActiveBook = store.getActiveBook;
-
-  const activeBook = getActiveBook();
-  const readingBooks = books.filter(b => b.status === 'reading');
-
-  const [stats, setStats] = useState(null);
-
+  // Проверка наличия активной книги
   useEffect(() => {
-    if (selectedBookId) {
-      const newStats = getBookStats(selectedBookId);
-      setStats(newStats);
-    }
-  }, [selectedBookId, sessions]);
-
-  useEffect(() => {
-    if (activeSession) {
-      setSelectedBookId(activeSession.bookId);
-      setTimer(Math.floor((Date.now() - activeSession.startTime) / 1000));
-    } else if (activeBook) {
-      setSelectedBookId(activeBook.id);
-      const book = books.find(b => b.id === activeBook.id);
-      setPageInput(book?.pagesRead?.toString() || '0');
-    }
-  }, [activeSession, activeBook, books]);
-
-  useEffect(() => {
-    if (activeSession) {
-      timerInterval.current = setInterval(() => {
-        setTimer(Math.floor((Date.now() - activeSession.startTime) / 1000));
-      }, 1000);
-    } else if (timerInterval.current) {
-      clearInterval(timerInterval.current);
-      timerInterval.current = null;
-    }
-
-    return () => {
-      if (timerInterval.current) {
-        clearInterval(timerInterval.current);
-      }
-    };
-  }, [activeSession]);
-
-  const formatTime = (seconds) => {
-    const hrs = Math.floor(seconds / 3600);
-    const mins = Math.floor((seconds % 3600) / 60);
-    const secs = seconds % 60;
-    if (hrs > 0) {
-      return `${hrs}:${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
-    }
-    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
-  };
-
-  const handleStart = () => {
-    if (!selectedBookId) {
-      Alert.alert('Ошибка', 'Выберите книгу для чтения');
-      return;
-    }
-    const book = books.find(b => b.id === selectedBookId);
-    const startPage = book?.manualStartPage || parseInt(pageInput) || 0;
-    startSession(selectedBookId, startPage);
-  };
-
-  const handleStop = () => {
-    if (!activeSession) return;
-
-    const endPage = parseInt(pageInput) || activeSession.startPage;
-    const completed = endSession(endPage);
-
-    if (completed) {
+    if (!activeBookId || !book) {
       Alert.alert(
-        '✅ Сессия завершена',
-        `Прочитано: ${completed.pagesRead} стр.\nВремя: ${formatDuration(completed.duration)}`
+        t('session.noActiveBookTitle') || 'Нет активной книги',
+        t('session.noActiveBookMessage') || 'Пожалуйста, выберите книгу для чтения',
+        [{ text: t('common.ok') || 'OK', onPress: () => navigation.goBack() }]
       );
     }
+  }, [activeBookId, book]);
+
+  // Таймер
+  useEffect(() => {
+    let interval;
+    if (isActive && startTime) {
+      interval = setInterval(() => {
+        setElapsedSeconds(Math.floor((Date.now() - startTime) / 1000));
+      }, 1000);
+    }
+    return () => clearInterval(interval);
+  }, [isActive, startTime]);
+
+  if (!book) {
+    return (
+      <View style={[styles.container, { backgroundColor: theme.background }]}>
+        <Text style={{ color: theme.text }}>Загрузка...</Text>
+      </View>
+    );
+  }
+
+  const handleStartSession = () => {
+    const page = parseInt(currentPage);
+    if (isNaN(page) || page < book.currentPage || page > book.totalPages) {
+      Alert.alert(
+        t('common.error') || 'Ошибка',
+        t('session.invalidPage', { current: book.currentPage, total: book.totalPages }) ||
+        `Введите страницу от ${book.currentPage} до ${book.totalPages}`
+      );
+      return;
+    }
+    setIsActive(true);
+    setStartTime(Date.now());
+    setActiveBook(book.id);
   };
 
-  const handlePageChange = (text) => {
-    const num = parseInt(text) || 0;
-    setPageInput(num.toString());
-    if (activeSession) {
-      updateSessionPage(num);
+  const handleEndSession = async () => {
+    if (!isActive) return;
+    
+    const endPage = parseInt(currentPage);
+    const pagesRead = endPage - book.currentPage;
+    const durationMinutes = Math.floor(elapsedSeconds / 60);
+    
+    if (pagesRead <= 0) {
+      Alert.alert(t('common.error') || 'Ошибка', 'Вы не прочитали ни одной страницы');
+      return;
     }
+    
+    const newSession = {
+      id: Date.now().toString(),
+      bookId: book.id,
+      startPage: book.currentPage,
+      endPage: endPage,
+      pagesRead: pagesRead,
+      duration: elapsedSeconds,
+      startTime: startTime,
+      endTime: Date.now(),
+      date: new Date().toISOString()
+    };
+    
+    await addSession(newSession);
+    await updateBookProgress(book.id, {
+      currentPage: endPage,
+      lastRead: new Date().toISOString()
+    });
+    
+    setIsActive(false);
+    Alert.alert(
+      t('common.success') || 'Успех!',
+      t('session.sessionComplete', { pages: pagesRead, minutes: durationMinutes }) ||
+      `Прочитано ${pagesRead} страниц за ${durationMinutes} мин.`
+    );
+    navigation.goBack();
   };
 
   return (
-    <ScrollView
-      style={{ flex: 1, backgroundColor: theme.background }}
-      contentContainerStyle={{ padding: spacing.lg, paddingTop: 60 }}
-    >
-      <Text style={{ color: theme.textPrimary, fontSize: 28, fontWeight: 'bold', marginBottom: spacing.md }}>
-        📖 Сессия чтения
-      </Text>
-
-      <View style={{ marginBottom: spacing.xl }}>
-        <Text style={{ color: theme.textSecondary, marginBottom: spacing.sm }}>
-          Выберите книгу:
-        </Text>
-        <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-          {readingBooks.map(book => (
-            <TouchableOpacity
-              key={book.id}
-              onPress={() => setSelectedBookId(book.id)}
-              style={{
-                paddingHorizontal: spacing.md,
-                paddingVertical: spacing.sm,
-                backgroundColor: selectedBookId === book.id ? theme.primary : theme.surface,
-                borderRadius: radii.lg,
-                marginRight: spacing.sm,
-              }}
-            >
-              <Text style={{ color: selectedBookId === book.id ? '#FFF' : theme.textPrimary }}>
-                {book.title.length > 20 ? book.title.slice(0, 20) + '…' : book.title}
-              </Text>
-            </TouchableOpacity>
-          ))}
-        </ScrollView>
+    <ScrollView style={[styles.container, { backgroundColor: theme.background }]}>
+      <View style={styles.header}>
+        <Text style={[styles.title, { color: theme.text }]}>{book.title}</Text>
+        <Text style={[styles.author, { color: theme.secondaryText }]}>{book.author}</Text>
       </View>
 
-      {selectedBookId && (
-        <View style={{ marginBottom: spacing.xl }}>
-          <Text style={{ color: theme.textPrimary, fontSize: 18, fontWeight: 'bold' }}>
-            {books.find(b => b.id === selectedBookId)?.title}
-          </Text>
-          <Text style={{ color: theme.textSecondary }}>
-            {books.find(b => b.id === selectedBookId)?.author}
-          </Text>
-        </View>
-      )}
-
-      <View style={{ marginBottom: spacing.xl }}>
-        <Text style={{ color: theme.textSecondary, marginBottom: spacing.sm }}>
-          📍 Страница:
+      <View style={styles.progressContainer}>
+        <Text style={[styles.label, { color: theme.text }]}>
+          {t('session.currentPage') || 'Текущая страница'}
         </Text>
         <TextInput
-          value={pageInput}
-          onChangeText={handlePageChange}
+          style={[styles.input, { color: theme.text, borderColor: theme.border }]}
           keyboardType="numeric"
-          placeholder="0"
-          placeholderTextColor={theme.textMuted}
-          style={{
-            padding: spacing.md,
-            borderRadius: radii.md,
-            backgroundColor: theme.surface,
-            color: theme.textPrimary,
-            fontSize: 18,
-            textAlign: 'center',
-          }}
+          value={currentPage}
+          onChangeText={setCurrentPage}
+          editable={!isActive}
         />
+        <Text style={[styles.totalPages, { color: theme.secondaryText }]}>
+          {t('session.ofPages') || 'из'} {book.totalPages}
+        </Text>
       </View>
 
-      {activeSession && (
-        <View style={{ alignItems: 'center', marginBottom: spacing.xl }}>
-          <Text style={{ color: theme.textPrimary, fontSize: 48, fontWeight: 'bold' }}>
-            {formatTime(timer)}
+      {isActive && (
+        <View style={styles.timerContainer}>
+          <Text style={[styles.timer, { color: theme.primary }]}>
+            {Math.floor(elapsedSeconds / 60)}:{String(elapsedSeconds % 60).padStart(2, '0')}
           </Text>
         </View>
       )}
 
-      <View style={{ flexDirection: 'row', gap: spacing.md, marginBottom: spacing.xl }}>
-        <TouchableOpacity
-          onPress={handleStart}
-          disabled={!!activeSession}
-          style={{
-            flex: 1,
-            padding: spacing.md,
-            borderRadius: radii.lg,
-            backgroundColor: activeSession ? theme.surface : theme.success,
-            alignItems: 'center',
-            opacity: activeSession ? 0.5 : 1,
-          }}
-        >
-          <Text style={{ color: activeSession ? theme.textSecondary : '#FFF', fontWeight: 'bold' }}>
-            ▶️ Старт
-          </Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          onPress={handleStop}
-          disabled={!activeSession}
-          style={{
-            flex: 1,
-            padding: spacing.md,
-            borderRadius: radii.lg,
-            backgroundColor: activeSession ? theme.error : theme.surface,
-            alignItems: 'center',
-            opacity: !activeSession ? 0.5 : 1,
-          }}
-        >
-          <Text style={{ color: activeSession ? '#FFF' : theme.textSecondary, fontWeight: 'bold' }}>
-            ⏹️ Стоп
-          </Text>
-        </TouchableOpacity>
-      </View>
-
-      {stats && stats.totalSessions > 0 && (
-        <View style={{ padding: spacing.md, backgroundColor: theme.surface, borderRadius: radii.xl }}>
-          <Text style={{ color: theme.textPrimary, fontWeight: 'bold', marginBottom: spacing.sm }}>
-            📊 Статистика
-          </Text>
-          <Text style={{ color: theme.textSecondary }}>
-            Всего сессий: {stats.totalSessions}
-          </Text>
-          <Text style={{ color: theme.textSecondary }}>
-            Всего страниц: {stats.totalPagesRead}
-          </Text>
-          <Text style={{ color: theme.textSecondary }}>
-            Общее время: {formatDuration(stats.totalTimeSeconds)}
-          </Text>
-        </View>
-      )}
+      <TouchableOpacity
+        style={[styles.button, isActive ? styles.stopButton : styles.startButton]}
+        onPress={isActive ? handleEndSession : handleStartSession}
+      >
+        <Text style={styles.buttonText}>
+          {isActive ? (t('session.endSession') || 'Завершить') : (t('session.startSession') || 'Начать')}
+        </Text>
+      </TouchableOpacity>
     </ScrollView>
   );
 }
+
+const styles = StyleSheet.create({
+  container: { flex: 1, padding: 20 },
+  header: { alignItems: 'center', marginBottom: 30, marginTop: 20 },
+  title: { fontSize: 24, fontWeight: 'bold', textAlign: 'center' },
+  author: { fontSize: 16, marginTop: 5 },
+  progressContainer: { marginBottom: 30 },
+  label: { fontSize: 16, marginBottom: 10 },
+  input: { borderWidth: 1, borderRadius: 10, padding: 12, fontSize: 18, textAlign: 'center' },
+  totalPages: { textAlign: 'center', marginTop: 8 },
+  timerContainer: { alignItems: 'center', marginBottom: 30 },
+  timer: { fontSize: 48, fontWeight: 'bold' },
+  button: { padding: 16, borderRadius: 12, alignItems: 'center', marginHorizontal: 20 },
+  startButton: { backgroundColor: '#4CAF50' },
+  stopButton: { backgroundColor: '#f44336' },
+  buttonText: { color: '#fff', fontSize: 18, fontWeight: 'bold' }
+});

@@ -10,7 +10,6 @@ export const ThemeProvider = ({ children }) => {
   const [mode, setMode] = useState('light');
   const [isLoading, setIsLoading] = useState(true);
 
-  // Загрузка сохранённой темы при запуске
   useEffect(() => {
     const loadTheme = async () => {
       try {
@@ -27,25 +26,22 @@ export const ThemeProvider = ({ children }) => {
     loadTheme();
   }, []);
 
-  // Сохранение темы при изменении
   useEffect(() => {
     if (!isLoading) {
       AsyncStorage.setItem('themeMode', mode);
     }
   }, [mode, isLoading]);
 
- 
-const getTheme = () => {
-  if (mode === 'system') {
-    return systemScheme === 'dark' ? darkTheme : lightTheme;
-  }
-  return mode === 'dark' ? darkTheme : lightTheme;
-};
+  const getTheme = () => {
+    if (mode === 'system') {
+      return systemScheme === 'dark' ? darkTheme : lightTheme;
+    }
+    return mode === 'dark' ? darkTheme : lightTheme;
+  };
 
   const toggleTheme = (newMode) => setMode(newMode);
 
   if (isLoading) {
-    // Можно показать заглушку, пока грузится тема
     return null;
   }
 
@@ -56,4 +52,11 @@ const getTheme = () => {
   );
 };
 
-export const useTheme = () => useContext(ThemeContext);
+// 🔥 ВАЖНО: useTheme должен быть здесь и правильно экспортироваться
+export const useTheme = () => {
+  const context = useContext(ThemeContext);
+  if (!context) {
+    throw new Error('useTheme must be used within a ThemeProvider');
+  }
+  return context;
+};

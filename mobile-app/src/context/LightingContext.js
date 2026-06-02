@@ -1,22 +1,20 @@
 // mobile-app/src/context/LightingContext.js
 import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
-import { useTheme } from '../context/ThemeContext';
+import { useTheme } from './ThemeContext';  // ← ИСПРАВЛЕНО (было ../context/ThemeContext)
 
 const LightingContext = createContext();
 
 export const useLighting = () => useContext(LightingContext);
 
 export const LightingProvider = ({ children }) => {
-  const { themeMode } = useTheme();
-  const [orbPosition, setOrbPosition] = useState({ x: 0.8, y: 0.2 }); // относительные координаты (0-1)
+  const { mode } = useTheme();  // ← ИСПРАВЛЕНО (themeMode → mode)
+  const [orbPosition, setOrbPosition] = useState({ x: 0.8, y: 0.2 });
   const [ambientTint, setAmbientTint] = useState(null);
   const [lightIntensity, setLightIntensity] = useState(0.6);
   
-  // Анимация орба (микро-дрейф)
   const orbDrift = useRef({ x: 0, y: 0 });
   
   useEffect(() => {
-    // Медленный дрейф орба (атмосферное движение)
     const interval = setInterval(() => {
       orbDrift.current = {
         x: Math.sin(Date.now() / 15000) * 0.03,
@@ -31,9 +29,8 @@ export const LightingProvider = ({ children }) => {
     return () => clearInterval(interval);
   }, []);
   
-  // Ambient tint зависит от темы
   useEffect(() => {
-    if (themeMode === 'dark') {
+    if (mode === 'dark') {
       setAmbientTint({
         color: 'rgba(28, 40, 58, 0.15)',
         blend: 'overlay',
@@ -46,7 +43,7 @@ export const LightingProvider = ({ children }) => {
       });
       setLightIntensity(0.35);
     }
-  }, [themeMode]);
+  }, [mode]);
   
   return (
     <LightingContext.Provider
@@ -54,7 +51,7 @@ export const LightingProvider = ({ children }) => {
         orbPosition,
         ambientTint,
         lightIntensity,
-        themeMode,
+        themeMode: mode,
       }}
     >
       {children}

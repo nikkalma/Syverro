@@ -6,20 +6,7 @@ export const createBooksSlice = (set, get) => ({
 
   addBook: async (book) => {
     set((state) => ({
-      books: [...state.books, {
-        ...book,
-        id: book.id || Date.now().toString(),
-        cover: book.cover || null,
-        createdAt: Date.now(),
-        review: book.review || '',
-        favorite: false,
-        pagesRead: 0,
-        lastSessionDate: null,
-        authorCountry: book.authorCountry || '',
-        series: book.series || '',
-        seriesPosition: book.seriesPosition || null,
-        originalYear: book.originalYear || null,
-      }]
+      books: [...state.books, { ...book, id: book.id || Date.now().toString() }]
     }));
   },
 
@@ -31,6 +18,16 @@ export const createBooksSlice = (set, get) => ({
     if (activeBookId === id && updatedBook.status === 'completed') {
       set({ activeBookId: null });
     }
+  },
+
+  updateBookProgress: (id, { currentPage, lastRead }) => {
+    set((state) => ({
+      books: state.books.map((b) =>
+        b.id === id
+          ? { ...b, currentPage: currentPage ?? b.currentPage, lastRead: lastRead ?? b.lastRead }
+          : b
+      ),
+    }));
   },
 
   deleteBook: (id) => {
@@ -45,9 +42,7 @@ export const createBooksSlice = (set, get) => ({
 
   toggleFavorite: (id) => {
     set((state) => ({
-      books: state.books.map((b) =>
-        b.id === id ? { ...b, favorite: !b.favorite } : b
-      )
+      books: state.books.map((b) => b.id === id ? { ...b, favorite: !b.favorite } : b)
     }));
   },
 
@@ -73,31 +68,19 @@ export const createBooksSlice = (set, get) => ({
   },
 
   importBooksFromSheets: async () => {
-    // Твой существующий код импорта
     console.log('Импорт пока не реализован в этом слайсе');
   },
 
-manualStartPage: null, 
-
-  // ========== МИГРАЦИЯ ==========
   migrateFromactiveBookId: () => {
     const { books, activeBookId } = get();
-    
     if (activeBookId !== null) return false;
-    
     const activeBook = books.find(b => b.activeBookId === true);
-    
     if (activeBook && activeBook.status === 'reading') {
       set({ activeBookId: activeBook.id });
-      console.log('✅ Миграция: установлена активная книга', activeBook.title);
     }
-    
     set((state) => ({
       books: state.books.map(({ activeBookId, ...book }) => book)
     }));
-    
-    console.log('✅ Миграция завершена. Книг:', get().books.length, 'Активная книга ID:', get().activeBookId);
-    
     return true;
   },
 });

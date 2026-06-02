@@ -11,8 +11,8 @@ export default function AboutScreen({ navigation, lang }) {
   const handleShare = async () => {
     try {
       await Share.share({
-        message: `📚 Evebrary — трекер книг с душой!\nВерсия ${appVersion}\nСкачай: [ссылка на скачивание]`,
-        title: 'Поделиться Evebrary',
+        message: `📚 Syverro — трекер книг с душой!\nВерсия ${appVersion}\nСкачай: [ссылка на скачивание]`,
+        title: 'Поделиться Syverro',
       });
     } catch (error) {
       console.log('Ошибка шаринга:', error);
@@ -20,11 +20,11 @@ export default function AboutScreen({ navigation, lang }) {
   };
 
   const handleEmail = () => {
-    Linking.openURL('mailto:nikkalma@example.com?subject=Evebrary%20Feedback&body=Здравствуйте!%20Хочу%20поделиться%20мыслями%20о%20приложении...');
+    Linking.openURL('mailto:nikkalma@example.com?subject=Syverro%20Feedback&body=Здравствуйте!%20Хочу%20поделиться%20мыслями%20о%20приложении...');
   };
 
   const handleGitHub = () => {
-    Linking.openURL('https://github.com/yourusername/everbrary');
+    Linking.openURL('https://github.com/yourusername/Syverro');
   };
 
   return (
@@ -44,14 +44,14 @@ export default function AboutScreen({ navigation, lang }) {
       {/* Логотип и название */}
       <View style={{ alignItems: 'center', marginBottom: 30 }}>
         <Text style={{ fontSize: 64, marginBottom: 10 }}>📚</Text>
-        <Text style={{ color: theme.textPrimary, fontSize: 28, fontWeight: 'bold' }}>Evebrary</Text>
+        <Text style={{ color: theme.textPrimary, fontSize: 28, fontWeight: 'bold' }}>Syverro</Text>
         <Text style={{ color: theme.textSecondary, fontSize: 14, marginTop: 5 }}>Версия {appVersion}</Text>
       </View>
 
       {/* Описание */}
       <View style={{ marginBottom: 30 }}>
         <Text style={{ color: theme.textPrimary, fontSize: 16, lineHeight: 24, textAlign: 'center' }}>
-          Evebrary — это минималистичный трекер книг для тех, кто хочет систематизировать свою библиотеку, 
+          Syverro — это минималистичный трекер книг для тех, кто хочет систематизировать свою библиотеку, 
           отслеживать прогресс и не отвлекаться на лишнее. Никакой аналитики, только книги и ты.
         </Text>
       </View>
@@ -97,7 +97,7 @@ export default function AboutScreen({ navigation, lang }) {
           Собрано на React Native · Expo · Zustand
         </Text>
         <Text style={{ color: theme.textSecondary, fontSize: 12, textAlign: 'center', marginTop: 5 }}>
-          © 2026 Evebrary · Сделано с ☕ и 📚
+          © 2026 Syverro · Сделано с ☕ и 📚
         </Text>
       </View>
     </ScrollView>

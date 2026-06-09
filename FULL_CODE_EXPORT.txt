@@ -1,0 +1,3558 @@
+﻿
+==================== FULL CODE EXPORT ====================
+Дата экспорта: 05/31/2026 19:55:19
+Проект: Syverro
+==========================================================
+
+==================== FILE: App.js ====================
+import React from 'react';
+import { ThemeProvider } from './src/context/ThemeContext';
+import { LanguageProvider } from './src/context/LanguageContext';
+import AppNavigator from './src/navigation/AppNavigator';
+
+export default function App() {
+  return (
+    <ThemeProvider>
+      <LanguageProvider>
+        <AppNavigator />
+      </LanguageProvider>
+    </ThemeProvider>
+  );
+}
+
+
+==================== FILE: package.json ====================
+{
+  "name": "syverro",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "start": "expo start",
+    "android": "expo run:android",
+    "ios": "expo run:ios",
+    "web": "expo start --web"
+  },
+  "dependencies": {
+    "@expo/metro-runtime": "~6.1.2",
+    "@react-native-async-storage/async-storage": "2.2.0",
+    "@react-native-community/datetimepicker": "8.4.4",
+    "@react-native-community/hooks": "^100.1.0",
+    "@react-navigation/bottom-tabs": "^7.16.2",
+    "@react-navigation/drawer": "^7.10.2",
+    "@react-navigation/native": "^7.2.4",
+    "@react-navigation/native-stack": "^7.16.0",
+    "@react-navigation/stack": "^7.9.2",
+    "babel-preset-expo": "~54.0.10",
+    "expo": "~54.0.33",
+    "expo-dev-client": "~6.0.21",
+    "expo-file-system": "~19.0.22",
+    "expo-font": "~14.0.11",
+    "expo-sharing": "~14.0.8",
+    "expo-splash-screen": "~31.0.13",
+    "expo-status-bar": "~3.0.9",
+    "react": "19.1.0",
+    "react-dom": "19.1.0",
+    "react-native": "0.81.5",
+    "react-native-gesture-handler": "~2.28.0",
+    "react-native-reanimated": "~4.1.1",
+    "react-native-safe-area-context": "~5.6.0",
+    "react-native-screens": "~4.16.0",
+    "react-native-svg": "15.12.1",
+    "react-native-web": "^0.21.0",
+    "victory-native": "^37.3.6",
+    "zustand": "^5.0.13"
+  },
+  "private": true
+}
+
+
+
+==================== FILE: src/store/index.js ====================
+import { create } from 'zustand';
+import { persist, createJSONStorage } from 'zustand/middleware';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { createBooksSlice } from './slices/booksSlice';
+import { createSessionsSlice } from './slices/sessionsSlice';
+import { createQuotesSlice } from './slices/quotesSlice';
+import { createProfileSlice } from './slices/profileSlice';
+
+// Р¤СѓРЅРєС†РёСЏ РјРёРіСЂР°С†РёРё: РєРѕРЅРІРµСЂС‚РёСЂСѓРµС‚ СЃС‚Р°СЂС‹Р№ isActive РІ РЅРѕРІС‹Р№ activeBookId
+const migrateFromIsActive = (persistedState) => {
+  if (!persistedState) return persistedState;
+  
+  const state = { ...persistedState };
+  
+  // Р•СЃР»Рё РµСЃС‚СЊ РєРЅРёРіРё СЃ isActive, РєРѕРЅРІРµСЂС‚РёСЂСѓРµРј РІ activeBookId
+  if (state.books && Array.isArray(state.books)) {
+    const activeBook = state.books.find(book => book.isActive === true);
+    if (activeBook && !state.activeBookId) {
+      state.activeBookId = activeBook.id;
+      // РЈРґР°Р»СЏРµРј isActive РёР· РІСЃРµС… РєРЅРёРі
+      state.books = state.books.map(book => {
+        const { isActive, ...rest } = book;
+        return rest;
+      });
+      console.log('вњ… РњРёРіСЂР°С†РёСЏ: isActive в†’ activeBookId, Р°РєС‚РёРІРЅР°СЏ РєРЅРёРіР°:', state.activeBookId);
+    }
+  }
+  
+  return state;
+};
+
+const useStore = create(
+  persist(
+    (set, get, store) => ({
+      ...createBooksSlice(set, get, store),
+      ...createSessionsSlice(set, get, store),
+      ...createQuotesSlice(set, get, store),
+      ...createProfileSlice(set, get, store),
+    }),
+    {
+      name: 'syverro-storage',
+      storage: createJSONStorage(() => AsyncStorage),
+      version: 2, // СѓРІРµР»РёС‡РёРІР°РµРј РІРµСЂСЃРёСЋ РїСЂРё РёР·РјРµРЅРµРЅРёРё СЃС‚СЂСѓРєС‚СѓСЂС‹
+      migrate: (persistedState, version) => {
+        console.log('рџ”„ РњРёРіСЂР°С†РёСЏ СЃ РІРµСЂСЃРёРё', version);
+        if (version === 1) {
+          return migrateFromIsActive(persistedState);
+        }
+        return persistedState;
+      },
+      onRehydrateStorage: () => (state) => {
+        console.log('рџ”„ Р РµРіРёРґСЂР°С‚Р°С†РёСЏ РЅР°С‡Р°Р»Р°СЃСЊ');
+        if (state) {
+          console.log('рџ“љ РљРЅРёРі:', state.books?.length);
+          console.log('рџ“– РЎРµСЃСЃРёР№:', state.sessions?.length);
+          console.log('рџ’¬ Р¦РёС‚Р°С‚:', state.quotes?.length);
+          console.log('рџ‘¤ РџСЂРѕС„РёР»СЊ:', state.profile?.name);
+          console.log('рџЋЇ РђРєС‚РёРІРЅР°СЏ РєРЅРёРіР°:', state.activeBookId);
+        }
+      },
+    }
+  )
+);
+
+// рџ”Ґ Р•РґРёРЅС‹Р№ СЌРєСЃРїРѕСЂС‚ вЂ” С‚РѕР»СЊРєРѕ РёРјРµРЅРѕРІР°РЅРЅС‹Р№
+export { useStore };
+
+
+==================== FILE: src/store/slices/booksSlice.js ====================
+// src/store/slices/booksSlice.js
+
+export const createBooksSlice = (set, get) => ({
+  books: [],
+  activeBookId: null,
+
+  addBook: async (book) => {
+    set((state) => ({
+      books: [...state.books, {
+        ...book,
+        id: book.id || Date.now().toString(),
+        cover: book.cover || null,
+        createdAt: Date.now(),
+        review: book.review || '',
+        favorite: false,
+        pagesRead: 0,
+        lastSessionDate: null,
+        authorCountry: book.authorCountry || '',
+        series: book.series || '',
+        seriesPosition: book.seriesPosition || null,
+        originalYear: book.originalYear || null,
+      }]
+    }));
+  },
+
+  updateBook: (id, updatedBook) => {
+    set((state) => ({
+      books: state.books.map((b) => b.id === id ? updatedBook : b)
+    }));
+    const { activeBookId } = get();
+    if (activeBookId === id && updatedBook.status === 'completed') {
+      set({ activeBookId: null });
+    }
+  },
+
+  deleteBook: (id) => {
+    set((state) => ({
+      books: state.books.filter((b) => b.id !== id)
+    }));
+    const { activeBookId } = get();
+    if (activeBookId === id) {
+      set({ activeBookId: null });
+    }
+  },
+
+  toggleFavorite: (id) => {
+    set((state) => ({
+      books: state.books.map((b) =>
+        b.id === id ? { ...b, favorite: !b.favorite } : b
+      )
+    }));
+  },
+
+  setActiveBook: (id) => {
+    const { books } = get();
+    if (id === null) {
+      set({ activeBookId: null });
+      return;
+    }
+    const book = books.find(b => b.id === id);
+    if (book && book.status === 'reading') {
+      set({ activeBookId: id });
+    }
+  },
+
+  getActiveBook: () => {
+    const { books, activeBookId } = get();
+    return books.find(b => b.id === activeBookId && b.status === 'reading') || null;
+  },
+
+  setBooks: (books) => {
+    set({ books });
+  },
+
+  importBooksFromSheets: async () => {
+    // РўРІРѕР№ СЃСѓС‰РµСЃС‚РІСѓСЋС‰РёР№ РєРѕРґ РёРјРїРѕСЂС‚Р°
+    console.log('РРјРїРѕСЂС‚ РїРѕРєР° РЅРµ СЂРµР°Р»РёР·РѕРІР°РЅ РІ СЌС‚РѕРј СЃР»Р°Р№СЃРµ');
+  },
+
+manualStartPage: null, 
+
+  // ========== РњРР“Р РђР¦РРЇ ==========
+  migrateFromactiveBookId: () => {
+    const { books, activeBookId } = get();
+    
+    if (activeBookId !== null) return false;
+    
+    const activeBook = books.find(b => b.activeBookId === true);
+    
+    if (activeBook && activeBook.status === 'reading') {
+      set({ activeBookId: activeBook.id });
+      console.log('вњ… РњРёРіСЂР°С†РёСЏ: СѓСЃС‚Р°РЅРѕРІР»РµРЅР° Р°РєС‚РёРІРЅР°СЏ РєРЅРёРіР°', activeBook.title);
+    }
+    
+    set((state) => ({
+      books: state.books.map(({ activeBookId, ...book }) => book)
+    }));
+    
+    console.log('вњ… РњРёРіСЂР°С†РёСЏ Р·Р°РІРµСЂС€РµРЅР°. РљРЅРёРі:', get().books.length, 'РђРєС‚РёРІРЅР°СЏ РєРЅРёРіР° ID:', get().activeBookId);
+    
+    return true;
+  },
+});
+
+
+==================== FILE: src/store/slices/sessionsSlice.js ====================
+export const createSessionsSlice = (set, get) => ({
+  sessions: [],
+  activeSession: null,
+
+  startSession: (bookId, startPage = 0) => {
+    const { activeSession, books } = get();
+    if (activeSession) return null;
+    const book = books.find(b => b.id === bookId);
+    if (!book) return null;
+
+    const newSession = {
+      id: Date.now().toString(),
+      bookId,
+      bookTitle: book.title,
+      bookAuthor: book.author,
+      startTime: Date.now(),
+      startPage: startPage || 0,
+      endPage: null,
+      pagesRead: 0,
+      duration: 0,
+      status: 'active',
+    };
+    set({ activeSession: newSession });
+    return newSession;
+  },
+
+  updateSessionPage: (page) => {
+    const { activeSession } = get();
+    if (!activeSession || activeSession.status !== 'active') return;
+    set({
+      activeSession: {
+        ...activeSession,
+        endPage: page,
+        pagesRead: Math.max(0, page - activeSession.startPage),
+      }
+    });
+  },
+
+  endSession: (endPage) => {
+    const { activeSession, sessions } = get();
+    if (!activeSession || activeSession.status !== 'active') return null;
+
+    const now = Date.now();
+    const durationSeconds = Math.floor((now - activeSession.startTime) / 1000);
+    const finalEndPage = endPage !== undefined ? endPage : activeSession.endPage || activeSession.startPage;
+    const pagesRead = Math.max(0, finalEndPage - activeSession.startPage);
+
+    const completedSession = {
+      ...activeSession,
+      endTime: now,
+      endPage: finalEndPage,
+      pagesRead,
+      duration: durationSeconds,
+      status: 'completed',
+    };
+
+    set({
+      activeSession: null,
+      sessions: [completedSession, ...sessions],
+    });
+
+    const { books, updateBook } = get();
+    const book = books.find(b => b.id === activeSession.bookId);
+    if (book && pagesRead > 0) {
+      const currentPages = book.pagesRead || 0;
+      updateBook(activeSession.bookId, {
+        ...book,
+        pagesRead: currentPages + pagesRead,
+        lastSessionDate: now,
+      });
+    }
+    return completedSession;
+  },
+
+  getBookSessions: (bookId) => {
+    const { sessions, activeSession } = get();
+    const bookSessions = sessions.filter(s => s.bookId === bookId);
+    if (activeSession && activeSession.bookId === bookId) {
+      return [activeSession, ...bookSessions];
+    }
+    return bookSessions;
+  },
+
+  getBookStats: (bookId) => {
+    const sessions = get().getBookSessions(bookId);
+    const completedSessions = sessions.filter(s => s.status === 'completed');
+    const totalSeconds = completedSessions.reduce((sum, s) => sum + (s.duration || 0), 0);
+    return {
+      totalSessions: completedSessions.length,
+      totalPagesRead: completedSessions.reduce((sum, s) => sum + (s.pagesRead || 0), 0),
+      totalTimeSeconds: totalSeconds,
+      totalTimeMinutes: Math.floor(totalSeconds / 60),
+      lastSession: completedSessions[0]?.endTime || null,
+    };
+  },
+
+  getTotalStats: () => {
+    const { sessions } = get();
+    const completedSessions = sessions.filter(s => s.status === 'completed');
+    return {
+      totalSessions: completedSessions.length,
+      totalPagesRead: completedSessions.reduce((sum, s) => sum + (s.pagesRead || 0), 0),
+      totalTimeSeconds: completedSessions.reduce((sum, s) => sum + (s.duration || 0), 0),
+    };
+  },
+});
+
+
+==================== FILE: src/store/slices/quotesSlice.js ====================
+export const createQuotesSlice = (set, get) => ({
+  quotes: [],
+
+  addQuote: (bookId, text) => {
+    if (!text.trim()) return;
+    const newQuote = {
+      id: Date.now().toString(),
+      bookId,
+      text: text.trim(),
+      createdAt: Date.now(),
+    };
+    set((state) => ({
+      quotes: [newQuote, ...state.quotes]
+    }));
+  },
+
+  deleteQuote: (quoteId) => {
+    set((state) => ({
+      quotes: state.quotes.filter(q => q.id !== quoteId)
+    }));
+  },
+
+  getQuotesByBook: (bookId) => {
+    const { quotes } = get();
+    return quotes.filter(q => q.bookId === bookId).sort((a, b) => b.createdAt - a.createdAt);
+  },
+});
+
+
+==================== FILE: src/store/slices/profileSlice.js ====================
+export const createProfileSlice = (set, get) => ({
+  profile: {
+    name: 'Р§РёС‚Р°С‚РµР»СЊ',
+    bio: '',
+    avatar: null,
+    goals: {
+      monthlyBooks: 0,
+      monthlyPages: 0,
+      yearlyBooks: 0,
+    },
+  },
+
+  updateProfile: (updates) => set((state) => ({
+    profile: { ...state.profile, ...updates }
+  })),
+
+  updateGoals: (goals) => set((state) => ({
+    profile: {
+      ...state.profile,
+      goals: { ...state.profile.goals, ...goals }
+    }
+  })),
+});
+
+
+==================== FILE: src/context/ThemeContext.js ====================
+import React, { createContext, useState, useContext, useEffect } from 'react';
+import { useColorScheme } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { lightTheme, darkTheme } from '../theme/colors';
+
+const ThemeContext = createContext();
+
+export const ThemeProvider = ({ children }) => {
+  const systemScheme = useColorScheme();
+  const [mode, setMode] = useState('light');
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const loadTheme = async () => {
+      try {
+        const savedMode = await AsyncStorage.getItem('themeMode');
+        if (savedMode && ['light', 'dark', 'system'].includes(savedMode)) {
+          setMode(savedMode);
+        }
+      } catch (error) {
+        console.log('РћС€РёР±РєР° Р·Р°РіСЂСѓР·РєРё С‚РµРјС‹:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    loadTheme();
+  }, []);
+
+  useEffect(() => {
+    if (!isLoading) {
+      AsyncStorage.setItem('themeMode', mode);
+    }
+  }, [mode, isLoading]);
+
+  const getTheme = () => {
+    if (mode === 'system') {
+      return systemScheme === 'dark' ? darkTheme : lightTheme;
+    }
+    return mode === 'dark' ? darkTheme : lightTheme;
+  };
+
+  const toggleTheme = (newMode) => setMode(newMode);
+
+  if (isLoading) {
+    return null;
+  }
+
+  return (
+    <ThemeContext.Provider value={{ theme: getTheme(), mode, toggleTheme }}>
+      {children}
+    </ThemeContext.Provider>
+  );
+};
+
+// рџ”Ґ Р’РђР–РќРћ: useTheme РґРѕР»Р¶РµРЅ Р±С‹С‚СЊ Р·РґРµСЃСЊ Рё РїСЂР°РІРёР»СЊРЅРѕ СЌРєСЃРїРѕСЂС‚РёСЂРѕРІР°С‚СЊСЃСЏ
+export const useTheme = () => {
+  const context = useContext(ThemeContext);
+  if (!context) {
+    throw new Error('useTheme must be used within a ThemeProvider');
+  }
+  return context;
+};
+
+
+==================== FILE: src/context/LanguageContext.js ====================
+import React, { createContext, useContext, useState } from 'react';
+
+const LanguageContext = createContext('en');
+
+export const LanguageProvider = ({ children, initialLocale = 'en' }) => {
+  const [locale, setLocale] = useState(initialLocale);
+  return (
+    <LanguageContext.Provider value={{ locale, setLocale }}>
+      {children}
+    </LanguageContext.Provider>
+  );
+};
+
+export const useLanguage = () => useContext(LanguageContext);
+
+
+==================== FILE: src/context/LightingContext.js ====================
+// mobile-app/src/context/LightingContext.js
+import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
+import { useTheme } from '../context/ThemeContext';
+
+const LightingContext = createContext();
+
+export const useLighting = () => useContext(LightingContext);
+
+export const LightingProvider = ({ children }) => {
+  const { themeMode } = useTheme();
+  const [orbPosition, setOrbPosition] = useState({ x: 0.8, y: 0.2 }); // РѕС‚РЅРѕСЃРёС‚РµР»СЊРЅС‹Рµ РєРѕРѕСЂРґРёРЅР°С‚С‹ (0-1)
+  const [ambientTint, setAmbientTint] = useState(null);
+  const [lightIntensity, setLightIntensity] = useState(0.6);
+  
+  // РђРЅРёРјР°С†РёСЏ РѕСЂР±Р° (РјРёРєСЂРѕ-РґСЂРµР№С„)
+  const orbDrift = useRef({ x: 0, y: 0 });
+  
+  useEffect(() => {
+    // РњРµРґР»РµРЅРЅС‹Р№ РґСЂРµР№С„ РѕСЂР±Р° (Р°С‚РјРѕСЃС„РµСЂРЅРѕРµ РґРІРёР¶РµРЅРёРµ)
+    const interval = setInterval(() => {
+      orbDrift.current = {
+        x: Math.sin(Date.now() / 15000) * 0.03,
+        y: Math.cos(Date.now() / 18000) * 0.02,
+      };
+      setOrbPosition({
+        x: 0.8 + orbDrift.current.x,
+        y: 0.2 + orbDrift.current.y,
+      });
+    }, 100);
+    
+    return () => clearInterval(interval);
+  }, []);
+  
+  // Ambient tint Р·Р°РІРёСЃРёС‚ РѕС‚ С‚РµРјС‹
+  useEffect(() => {
+    if (themeMode === 'dark') {
+      setAmbientTint({
+        color: 'rgba(28, 40, 58, 0.15)',
+        blend: 'overlay',
+      });
+      setLightIntensity(0.5);
+    } else {
+      setAmbientTint({
+        color: 'rgba(176, 162, 144, 0.12)',
+        blend: 'soft-light',
+      });
+      setLightIntensity(0.35);
+    }
+  }, [themeMode]);
+  
+  return (
+    <LightingContext.Provider
+      value={{
+        orbPosition,
+        ambientTint,
+        lightIntensity,
+        themeMode,
+      }}
+    >
+      {children}
+    </LightingContext.Provider>
+  );
+};
+
+
+==================== FILE: src/navigation/AppNavigator.js ====================
+import React from 'react';
+import { NavigationContainer } from '@react-navigation/native';
+import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import { useTheme } from '../context/ThemeContext';
+
+// Р­РєСЂР°РЅС‹ РґР»СЏ TabBar
+import ProfileScreen from '../screens/ProfileScreen';
+import SessionScreen from '../screens/SessionScreen';
+import LibraryScreen from '../screens/LibraryScreen';
+import SettingsScreen from '../screens/SettingsScreen';
+
+// РЎС‚РµРєРѕРІС‹Рµ СЌРєСЂР°РЅС‹
+import BookDetailsScreen from '../screens/BookDetailsScreen';
+import InsightsScreen from '../screens/InsightsScreen';
+import FavoriteBooksScreen from '../screens/FavoriteBooksScreen';
+import AboutScreen from '../screens/AboutScreen';
+
+const Tab = createBottomTabNavigator();
+const Stack = createNativeStackNavigator();
+
+// рџ”Ґ РљРћРњРџРћРќР•РќРў РўРђР‘РћР’ РЎ РџРћР”Р”Р•Р Р–РљРћР™ РўР•РњР«
+function MainTabs() {
+  const { theme } = useTheme();
+  
+  // РРєРѕРЅРєРё РёР· РґРёР·Р°Р№РЅ-РїСЂРѕРµРєС‚Р° (РєР°Рє Сѓ РІР°СЃ Р±С‹Р»Рё)
+  const TabIcon = ({ name, color, size }) => {
+    const icons = {
+      Profile: 'рџ‘¤',
+      Session: 'рџ“–',
+      Library: 'рџ“љ',
+      Settings: 'вљ™пёЏ',
+    };
+    return <Text style={{ fontSize: size, color }}>{icons[name]}</Text>;
+  };
+
+  return (
+    <Tab.Navigator
+      screenOptions={{
+        headerShown: false,
+        tabBarStyle: {
+          backgroundColor: theme.surface,
+          borderTopColor: theme.border,
+          height: 60,
+          paddingBottom: 8,
+        },
+        tabBarActiveTintColor: theme.primary,
+        tabBarInactiveTintColor: theme.textMuted,
+        tabBarLabelStyle: {
+          fontSize: 12,
+          marginBottom: 4,
+        },
+      }}
+    >
+      <Tab.Screen 
+        name="Profile" 
+        component={ProfileScreen}
+        options={{
+          tabBarIcon: ({ color, size }) => <TabIcon name="Profile" color={color} size={size} />,
+          tabBarLabel: 'РџСЂРѕС„РёР»СЊ',
+        }}
+      />
+      <Tab.Screen 
+        name="Session" 
+        component={SessionScreen}
+        options={{
+          tabBarIcon: ({ color, size }) => <TabIcon name="Session" color={color} size={size} />,
+          tabBarLabel: 'РЎРµСЃСЃРёРё',
+        }}
+      />
+      <Tab.Screen 
+        name="Library" 
+        component={LibraryScreen}
+        options={{
+          tabBarIcon: ({ color, size }) => <TabIcon name="Library" color={color} size={size} />,
+          tabBarLabel: 'Р‘РёР±Р»РёРѕС‚РµРєР°',
+        }}
+      />
+      <Tab.Screen 
+        name="Settings" 
+        component={SettingsScreen}
+        options={{
+          tabBarIcon: ({ color, size }) => <TabIcon name="Settings" color={color} size={size} />,
+          tabBarLabel: 'РќР°СЃС‚СЂРѕР№РєРё',
+        }}
+      />
+    </Tab.Navigator>
+  );
+}
+
+// рџ”Ґ РћРЎРќРћР’РќРћР™ РЎРўР•Рљ РЎ РџРћР”Р”Р•Р Р–РљРћР™ РўР•РњР«
+function MainStack() {
+  const { theme } = useTheme();
+  
+  return (
+    <Stack.Navigator
+      screenOptions={{
+        headerStyle: { backgroundColor: theme.surface },
+        headerTintColor: theme.text,
+        headerTitleStyle: { fontWeight: '600', color: theme.text },
+        contentStyle: { backgroundColor: theme.background },
+      }}
+    >
+      <Stack.Screen 
+        name="MainTabs" 
+        component={MainTabs} 
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen 
+        name="BookDetails" 
+        component={BookDetailsScreen}
+        options={{ title: 'Р”РµС‚Р°Р»Рё РєРЅРёРіРё' }}
+      />
+      <Stack.Screen 
+        name="Insights" 
+        component={InsightsScreen}
+        options={{ title: 'РРЅСЃР°Р№С‚С‹' }}
+      />
+      <Stack.Screen 
+        name="FavoriteBooks" 
+        component={FavoriteBooksScreen}
+        options={{ title: 'РР·Р±СЂР°РЅРЅРѕРµ' }}
+      />
+      <Stack.Screen 
+        name="About" 
+        component={AboutScreen}
+        options={{ title: 'Рћ РїСЂРёР»РѕР¶РµРЅРёРё' }}
+      />
+    </Stack.Navigator>
+  );
+}
+
+export default function AppNavigator() {
+  const { theme } = useTheme();
+  
+  return (
+    <NavigationContainer>
+      <MainStack />
+    </NavigationContainer>
+  );
+}
+
+
+==================== FILE: src/screens/ProfileScreen/index.js ====================
+import React from 'react';
+import { View, Text, StyleSheet, ScrollView } from 'react-native';
+import { useTheme } from '../../context/ThemeContext';
+import { useStore } from '../../store';
+import { spacing, radii } from '../../theme/spacing';
+import { getTypography } from '../../theme/typography';
+import { glass } from '../../theme/glass';
+import AtmosphericCloud from '../../components/AtmosphericCloud';
+import GlassCard from '../../components/GlassCard';
+
+export default function ProfileScreen() {
+  const { theme, mode } = useTheme();
+  const { books, sessions } = useStore();
+  const typography = getTypography('ru');
+  const glassStyle = glass(mode);
+  
+  const totalBooks = books.length;
+  const finishedBooks = books.filter(b => b.status === 'finished').length;
+  const totalPages = books.reduce((sum, b) => sum + (b.currentPage || 0), 0);
+  const totalSessions = sessions.length;
+  const totalMinutes = sessions.reduce((sum, s) => sum + (s.duration || 0), 0) / 60;
+  
+  return (
+    <View style={[styles.container, { backgroundColor: theme.background }]}>
+      <AtmosphericCloud />
+      
+      <ScrollView contentContainerStyle={styles.scrollContent}>
+        {/* РђРІР°С‚Р°СЂ Рё РёРјСЏ */}
+        <GlassCard style={styles.profileCard}>
+          <Text style={[styles.avatar, { color: theme.textPrimary }]}>рџ‘¤</Text>
+          <Text style={[typography.h2, { color: theme.textPrimary, marginBottom: spacing.xs }]}>
+            РќРёРєР°
+          </Text>
+          <Text style={[typography.secondary, { color: theme.textMuted }]}>
+            Р§РёС‚Р°С‚РµР»СЊ СЃ 2026-05-20
+          </Text>
+        </GlassCard>
+        
+        {/* РЎС‚Р°С‚РёСЃС‚РёРєР° С‡С‚РµРЅРёСЏ */}
+        <GlassCard style={styles.statsCard}>
+          <Text style={[typography.h3, { color: theme.textPrimary, marginBottom: spacing.lg }]}>
+            РЎС‚Р°С‚РёСЃС‚РёРєР° С‡С‚РµРЅРёСЏ
+          </Text>
+          <View style={styles.statsRow}>
+            <View style={styles.statItem}>
+              <Text style={[typography.display, { color: theme.primary, fontSize: 28 }]}>
+                {totalSessions}
+              </Text>
+              <Text style={[typography.caption, { color: theme.textMuted, marginTop: spacing.xs }]}>
+                РЎРµСЃСЃРёР№
+              </Text>
+            </View>
+            <View style={styles.statItem}>
+              <Text style={[typography.display, { color: theme.primary, fontSize: 28 }]}>
+                {totalPages}
+              </Text>
+              <Text style={[typography.caption, { color: theme.textMuted, marginTop: spacing.xs }]}>
+                РЎС‚СЂР°РЅРёС†
+              </Text>
+            </View>
+            <View style={styles.statItem}>
+              <Text style={[typography.display, { color: theme.primary, fontSize: 28 }]}>
+                {Math.floor(totalMinutes)}
+              </Text>
+              <Text style={[typography.caption, { color: theme.textMuted, marginTop: spacing.xs }]}>
+                РњРёРЅСѓС‚
+              </Text>
+            </View>
+          </View>
+        </GlassCard>
+        
+        {/* РЈСЂРѕРІРµРЅСЊ С‡РёС‚Р°С‚РµР»СЏ */}
+        <GlassCard style={styles.levelCard}>
+          <Text style={[typography.h3, { color: theme.textPrimary, marginBottom: spacing.lg }]}>
+            Р’Р°С€ СѓСЂРѕРІРµРЅСЊ
+          </Text>
+          <Text style={[typography.h2, { color: theme.primary, marginBottom: spacing.md }]}>
+            РќРѕРІРёС‡РѕРє
+          </Text>
+          <View style={[styles.progressBar, { backgroundColor: theme.border }]}>
+            <View style={[styles.progressFill, { width: '0%', backgroundColor: theme.primary }]} />
+          </View>
+          <Text style={[typography.secondary, { color: theme.textMuted, marginTop: spacing.sm }]}>
+            0 / 100 РєРЅРёРі РґРѕ РњР°РіРёСЃС‚СЂР°
+          </Text>
+        </GlassCard>
+        
+        {/* РћР±С‰Р°СЏ СЃС‚Р°С‚РёСЃС‚РёРєР° */}
+        <GlassCard style={styles.totalCard}>
+          <View style={styles.totalRow}>
+            <Text style={[typography.body, { color: theme.textSecondary }]}>Р’СЃРµРіРѕ РєРЅРёРі</Text>
+            <Text style={[typography.h3, { color: theme.textPrimary }]}>{totalBooks}</Text>
+          </View>
+          <View style={styles.totalRow}>
+            <Text style={[typography.body, { color: theme.textSecondary }]}>РџСЂРѕС‡РёС‚Р°РЅРѕ</Text>
+            <Text style={[typography.h3, { color: theme.textPrimary }]}>{finishedBooks}</Text>
+          </View>
+          <View style={styles.totalRow}>
+            <Text style={[typography.body, { color: theme.textSecondary }]}>РЎС‚СЂР°РЅРёС†</Text>
+            <Text style={[typography.h3, { color: theme.textPrimary }]}>{totalPages}</Text>
+          </View>
+        </GlassCard>
+      </ScrollView>
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+  },
+  scrollContent: {
+    padding: spacing.lg,
+    paddingTop: spacing.xxxl,
+  },
+  profileCard: {
+    alignItems: 'center',
+    marginBottom: spacing.lg,
+    padding: spacing.xl,
+  },
+  avatar: {
+    fontSize: 60,
+    marginBottom: spacing.md,
+  },
+  statsCard: {
+    marginBottom: spacing.lg,
+    padding: spacing.lg,
+  },
+  statsRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+  },
+  statItem: {
+    alignItems: 'center',
+  },
+  levelCard: {
+    marginBottom: spacing.lg,
+    padding: spacing.lg,
+  },
+  progressBar: {
+    height: spacing.sm,
+    borderRadius: radii.sm,
+    overflow: 'hidden',
+  },
+  progressFill: {
+    height: '100%',
+    borderRadius: radii.sm,
+  },
+  totalCard: {
+    marginBottom: spacing.lg,
+    padding: spacing.lg,
+  },
+  totalRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    paddingVertical: spacing.sm,
+  },
+});
+
+
+==================== FILE: src/screens/InsightsScreen.js ====================
+import React from 'react';
+import { View, Text, StyleSheet, ScrollView } from 'react-native';
+import { useTheme } from '../context/ThemeContext';
+import { useStore } from '../store';
+// рџ”Ґ РРЎРџР РђР’Р›Р•РќРќР«Р™ РРњРџРћР Рў (Р±РµР· С„РёРіСѓСЂРЅС‹С… СЃРєРѕР±РѕРє)
+import AtmosphericCloud from '../components/AtmosphericCloud';
+import GlassCard from '../components/GlassCard';
+
+export default function InsightsScreen() {
+  const { theme } = useTheme();
+  const { books, sessions } = useStore();
+  
+  const totalBooks = books.length;
+  const finishedBooks = books.filter(b => b.status === 'finished').length;
+  const totalSessions = sessions.length;
+  
+  // РЎРѕР±РёСЂР°РµРј СЃС‚Р°С‚РёСЃС‚РёРєСѓ РїРѕ Р¶Р°РЅСЂР°Рј
+  const genresMap = new Map();
+  books.forEach(book => {
+    if (book.genres && Array.isArray(book.genres)) {
+      book.genres.forEach(genre => {
+        genresMap.set(genre, (genresMap.get(genre) || 0) + 1);
+      });
+    }
+  });
+  
+  const topGenres = Array.from(genresMap.entries())
+    .map(([name, count]) => ({ name, count }))
+    .sort((a, b) => b.count - a.count)
+    .slice(0, 3);
+  
+  // РћРїСЂРµРґРµР»СЏРµРј СѓСЂРѕРІРµРЅСЊ С‡РёС‚Р°С‚РµР»СЏ
+  const getReaderLevel = () => {
+    if (finishedBooks === 0) return { name: 'Р’С‹ С‚РѕР»СЊРєРѕ РЅР°С‡Р°Р»Рё', progress: 0 };
+    if (finishedBooks < 5) return { name: 'РќР°С‡РёРЅР°СЋС‰РёР№', progress: finishedBooks / 5 };
+    if (finishedBooks < 20) return { name: 'Р›СЋР±РёС‚РµР»СЊ', progress: finishedBooks / 20 };
+    if (finishedBooks < 50) return { name: 'Р—РЅР°С‚РѕРє', progress: finishedBooks / 50 };
+    return { name: 'РњР°РіРёСЃС‚СЂ', progress: 1 };
+  };
+  
+  const level = getReaderLevel();
+  
+  return (
+    <View style={[styles.container, { backgroundColor: theme.background }]}>
+      <AtmosphericCloud />
+      
+      <ScrollView contentContainerStyle={styles.scrollContent}>
+        <Text style={[styles.headerTitle, { color: theme.text }]}>РЎС‚Р°С‚РёСЃС‚РёРєР°</Text>
+        <Text style={[styles.headerSubtitle, { color: theme.textMuted }]}>РРЅСЃР°Р№С‚С‹</Text>
+        
+        {/* РџСЂРѕРіСЂРµСЃСЃ С‡С‚РµРЅРёСЏ */}
+        <GlassCard style={styles.card}>
+          <Text style={[styles.cardTitle, { color: theme.text }]}>РџСЂРѕРіСЂРµСЃСЃ С‡С‚РµРЅРёСЏ</Text>
+          
+          <View style={styles.statsGrid}>
+            <View style={styles.statItem}>
+              <Text style={[styles.statValue, { color: theme.primary }]}>{totalBooks}</Text>
+              <Text style={[styles.statLabel, { color: theme.textMuted }]}>Р’СЃРµРіРѕ</Text>
+            </View>
+            <View style={styles.statItem}>
+              <Text style={[styles.statValue, { color: theme.primary }]}>{finishedBooks}</Text>
+              <Text style={[styles.statLabel, { color: theme.textMuted }]}>РџСЂРѕС‡РёС‚Р°РЅРѕ</Text>
+            </View>
+            <View style={styles.statItem}>
+              <Text style={[styles.statValue, { color: theme.primary }]}>{totalSessions}</Text>
+              <Text style={[styles.statLabel, { color: theme.textMuted }]}>РЎРµСЃСЃРёР№</Text>
+            </View>
+          </View>
+          
+          <View style={styles.levelContainer}>
+            <Text style={[styles.levelText, { color: theme.text }]}>Р’Р°С€ СѓСЂРѕРІРµРЅСЊ</Text>
+            <Text style={[styles.levelName, { color: theme.primary }]}>{level.name}</Text>
+            <View style={[styles.progressBar, { backgroundColor: theme.border }]}>
+              <View 
+                style={[
+                  styles.progressFill, 
+                  { width: `${level.progress * 100}%`, backgroundColor: theme.primary }
+                ]} 
+              />
+            </View>
+            <Text style={[styles.progressText, { color: theme.textMuted }]}>
+              {finishedBooks} / 100 РєРЅРёРі
+            </Text>
+          </View>
+        </GlassCard>
+        
+        {/* РўРѕРї-3 Р¶Р°РЅСЂР° */}
+        <GlassCard style={styles.card}>
+          <Text style={[styles.cardTitle, { color: theme.text }]}>РўРѕРї-3 Р¶Р°РЅСЂР°</Text>
+          {topGenres.length === 0 ? (
+            <Text style={[styles.emptyText, { color: theme.textMuted }]}>РќРµС‚ РґР°РЅРЅС‹С…</Text>
+          ) : (
+            topGenres.map((genre, index) => (
+              <View key={index} style={styles.genreRow}>
+                <Text style={[styles.genreName, { color: theme.text }]}>{genre.name}</Text>
+                <Text style={[styles.genreCount, { color: theme.primary }]}>{genre.count} РєРЅ.</Text>
+              </View>
+            ))
+          )}
+        </GlassCard>
+        
+        {/* Р”РѕРїРѕР»РЅРёС‚РµР»СЊРЅР°СЏ СЃС‚Р°С‚РёСЃС‚РёРєР° */}
+        <GlassCard style={styles.card}>
+          <Text style={[styles.cardTitle, { color: theme.text }]}>РђРєС‚РёРІРЅРѕСЃС‚СЊ</Text>
+          <View style={styles.statsGrid}>
+            <View style={styles.statItem}>
+              <Text style={[styles.statValue, { color: theme.primary }]}>
+                {Math.floor(sessions.reduce((sum, s) => sum + (s.duration || 0), 0) / 3600)}
+              </Text>
+              <Text style={[styles.statLabel, { color: theme.textMuted }]}>Р§Р°СЃРѕРІ</Text>
+            </View>
+            <View style={styles.statItem}>
+              <Text style={[styles.statValue, { color: theme.primary }]}>
+                {books.reduce((sum, b) => sum + (b.currentPage || 0), 0)}
+              </Text>
+              <Text style={[styles.statLabel, { color: theme.textMuted }]}>РЎС‚СЂР°РЅРёС†</Text>
+            </View>
+            <View style={styles.statItem}>
+              <Text style={[styles.statValue, { color: theme.primary }]}>
+                {Math.round(books.reduce((sum, b) => sum + (b.rating || 0), 0) / (books.length || 1))}
+              </Text>
+              <Text style={[styles.statLabel, { color: theme.textMuted }]}>Р РµР№С‚РёРЅРі</Text>
+            </View>
+          </View>
+        </GlassCard>
+      </ScrollView>
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+  },
+  scrollContent: {
+    padding: 20,
+    paddingTop: 60,
+  },
+  headerTitle: {
+    fontSize: 34,
+    fontWeight: 'bold',
+    marginBottom: 4,
+  },
+  headerSubtitle: {
+    fontSize: 16,
+    marginBottom: 24,
+  },
+  card: {
+    marginBottom: 20,
+    padding: 16,
+  },
+  cardTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    marginBottom: 16,
+  },
+  statsGrid: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    marginBottom: 24,
+  },
+  statItem: {
+    alignItems: 'center',
+  },
+  statValue: {
+    fontSize: 32,
+    fontWeight: 'bold',
+  },
+  statLabel: {
+    fontSize: 14,
+    marginTop: 4,
+  },
+  levelContainer: {
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(0,0,0,0.1)',
+    paddingTop: 16,
+  },
+  levelText: {
+    fontSize: 14,
+    marginBottom: 4,
+  },
+  levelName: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 12,
+  },
+  progressBar: {
+    height: 8,
+    borderRadius: 4,
+    overflow: 'hidden',
+    marginBottom: 8,
+  },
+  progressFill: {
+    height: '100%',
+    borderRadius: 4,
+  },
+  progressText: {
+    fontSize: 12,
+  },
+  emptyText: {
+    textAlign: 'center',
+    paddingVertical: 20,
+  },
+  genreRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    paddingVertical: 8,
+  },
+  genreName: {
+    fontSize: 16,
+  },
+  genreCount: {
+    fontSize: 16,
+    fontWeight: '500',
+  },
+});
+
+
+==================== FILE: src/screens/SessionScreen.js ====================
+import React, { useState, useEffect } from 'react';
+import {
+  View, Text, StyleSheet, TouchableOpacity, TextInput, Alert, ScrollView
+} from 'react-native';
+import { useStore } from '../store';
+import { useLanguage } from '../context/LanguageContext';
+import { useTheme } from '../context/ThemeContext';
+
+export default function SessionScreen({ navigation, route }) {
+  // рџ”Ґ РџРћР›РЈР§РђР•Рњ РђРљРўРР’РќРЈР® РљРќРР“РЈ РР— STORE
+  const { books, activeBookId, addSession, updateBookProgress, setActiveBook } = useStore();
+  const { t } = useLanguage();
+  const { theme } = useTheme();
+  
+  // РќР°С…РѕРґРёРј Р°РєС‚РёРІРЅСѓСЋ РєРЅРёРіСѓ
+  const book = books.find(b => b.id === activeBookId);
+  
+  const [currentPage, setCurrentPage] = useState(book?.currentPage?.toString() || '');
+  const [isActive, setIsActive] = useState(false);
+  const [startTime, setStartTime] = useState(null);
+  const [elapsedSeconds, setElapsedSeconds] = useState(0);
+
+  // РџСЂРѕРІРµСЂРєР° РЅР°Р»РёС‡РёСЏ Р°РєС‚РёРІРЅРѕР№ РєРЅРёРіРё
+  useEffect(() => {
+    if (!activeBookId || !book) {
+      Alert.alert(
+        t('session.noActiveBookTitle') || 'РќРµС‚ Р°РєС‚РёРІРЅРѕР№ РєРЅРёРіРё',
+        t('session.noActiveBookMessage') || 'РџРѕР¶Р°Р»СѓР№СЃС‚Р°, РІС‹Р±РµСЂРёС‚Рµ РєРЅРёРіСѓ РґР»СЏ С‡С‚РµРЅРёСЏ',
+        [{ text: t('common.ok') || 'OK', onPress: () => navigation.goBack() }]
+      );
+    }
+  }, [activeBookId, book]);
+
+  // РўР°Р№РјРµСЂ
+  useEffect(() => {
+    let interval;
+    if (isActive && startTime) {
+      interval = setInterval(() => {
+        setElapsedSeconds(Math.floor((Date.now() - startTime) / 1000));
+      }, 1000);
+    }
+    return () => clearInterval(interval);
+  }, [isActive, startTime]);
+
+  if (!book) {
+    return (
+      <View style={[styles.container, { backgroundColor: theme.background }]}>
+        <Text style={{ color: theme.text }}>Р—Р°РіСЂСѓР·РєР°...</Text>
+      </View>
+    );
+  }
+
+  const handleStartSession = () => {
+    const page = parseInt(currentPage);
+    if (isNaN(page) || page < book.currentPage || page > book.totalPages) {
+      Alert.alert(
+        t('common.error') || 'РћС€РёР±РєР°',
+        t('session.invalidPage', { current: book.currentPage, total: book.totalPages }) ||
+        `Р’РІРµРґРёС‚Рµ СЃС‚СЂР°РЅРёС†Сѓ РѕС‚ ${book.currentPage} РґРѕ ${book.totalPages}`
+      );
+      return;
+    }
+    setIsActive(true);
+    setStartTime(Date.now());
+    setActiveBook(book.id);
+  };
+
+  const handleEndSession = async () => {
+    if (!isActive) return;
+    
+    const endPage = parseInt(currentPage);
+    const pagesRead = endPage - book.currentPage;
+    const durationMinutes = Math.floor(elapsedSeconds / 60);
+    
+    if (pagesRead <= 0) {
+      Alert.alert(t('common.error') || 'РћС€РёР±РєР°', 'Р’С‹ РЅРµ РїСЂРѕС‡РёС‚Р°Р»Рё РЅРё РѕРґРЅРѕР№ СЃС‚СЂР°РЅРёС†С‹');
+      return;
+    }
+    
+    const newSession = {
+      id: Date.now().toString(),
+      bookId: book.id,
+      startPage: book.currentPage,
+      endPage: endPage,
+      pagesRead: pagesRead,
+      duration: elapsedSeconds,
+      startTime: startTime,
+      endTime: Date.now(),
+      date: new Date().toISOString()
+    };
+    
+    await addSession(newSession);
+    await updateBookProgress(book.id, {
+      currentPage: endPage,
+      lastRead: new Date().toISOString()
+    });
+    
+    setIsActive(false);
+    Alert.alert(
+      t('common.success') || 'РЈСЃРїРµС…!',
+      t('session.sessionComplete', { pages: pagesRead, minutes: durationMinutes }) ||
+      `РџСЂРѕС‡РёС‚Р°РЅРѕ ${pagesRead} СЃС‚СЂР°РЅРёС† Р·Р° ${durationMinutes} РјРёРЅ.`
+    );
+    navigation.goBack();
+  };
+
+  return (
+    <ScrollView style={[styles.container, { backgroundColor: theme.background }]}>
+      <View style={styles.header}>
+        <Text style={[styles.title, { color: theme.text }]}>{book.title}</Text>
+        <Text style={[styles.author, { color: theme.secondaryText }]}>{book.author}</Text>
+      </View>
+
+      <View style={styles.progressContainer}>
+        <Text style={[styles.label, { color: theme.text }]}>
+          {t('session.currentPage') || 'РўРµРєСѓС‰Р°СЏ СЃС‚СЂР°РЅРёС†Р°'}
+        </Text>
+        <TextInput
+          style={[styles.input, { color: theme.text, borderColor: theme.border }]}
+          keyboardType="numeric"
+          value={currentPage}
+          onChangeText={setCurrentPage}
+          editable={!isActive}
+        />
+        <Text style={[styles.totalPages, { color: theme.secondaryText }]}>
+          {t('session.ofPages') || 'РёР·'} {book.totalPages}
+        </Text>
+      </View>
+
+      {isActive && (
+        <View style={styles.timerContainer}>
+          <Text style={[styles.timer, { color: theme.primary }]}>
+            {Math.floor(elapsedSeconds / 60)}:{String(elapsedSeconds % 60).padStart(2, '0')}
+          </Text>
+        </View>
+      )}
+
+      <TouchableOpacity
+        style={[styles.button, isActive ? styles.stopButton : styles.startButton]}
+        onPress={isActive ? handleEndSession : handleStartSession}
+      >
+        <Text style={styles.buttonText}>
+          {isActive ? (t('session.endSession') || 'Р—Р°РІРµСЂС€РёС‚СЊ') : (t('session.startSession') || 'РќР°С‡Р°С‚СЊ')}
+        </Text>
+      </TouchableOpacity>
+    </ScrollView>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: { flex: 1, padding: 20 },
+  header: { alignItems: 'center', marginBottom: 30, marginTop: 20 },
+  title: { fontSize: 24, fontWeight: 'bold', textAlign: 'center' },
+  author: { fontSize: 16, marginTop: 5 },
+  progressContainer: { marginBottom: 30 },
+  label: { fontSize: 16, marginBottom: 10 },
+  input: { borderWidth: 1, borderRadius: 10, padding: 12, fontSize: 18, textAlign: 'center' },
+  totalPages: { textAlign: 'center', marginTop: 8 },
+  timerContainer: { alignItems: 'center', marginBottom: 30 },
+  timer: { fontSize: 48, fontWeight: 'bold' },
+  button: { padding: 16, borderRadius: 12, alignItems: 'center', marginHorizontal: 20 },
+  startButton: { backgroundColor: '#4CAF50' },
+  stopButton: { backgroundColor: '#f44336' },
+  buttonText: { color: '#fff', fontSize: 18, fontWeight: 'bold' }
+});
+
+
+==================== FILE: src/screens/LibraryScreen.js ====================
+// mobile-app/src/screens/LibraryScreen.js
+import React, { useState } from 'react';
+import { View, FlatList, Dimensions, TouchableOpacity, ScrollView, Modal } from 'react-native';
+import { useTheme } from '../context/ThemeContext';
+import useStore from '../store';
+import BookCover from '../components/BookCover';
+import { Text } from '../components/Text';
+import { spacing, radii } from '../theme/spacing';
+import AtmosphericCloud from '../components/AtmosphericCloud';
+import GlassCard from '../components/GlassCard';
+
+const { width } = Dimensions.get('window');
+const CARD_WIDTH = (width - 48 - 32) / 3;
+
+export default function LibraryScreen({ navigation, lang }) {
+  const { theme } = useTheme();
+  const { books } = useStore();
+
+  const [filterModalVisible, setFilterModalVisible] = useState(false);
+  const [selectedStatus, setSelectedStatus] = useState('all');
+  const [sortBy, setSortBy] = useState('title');
+
+  const statuses = [
+    { key: 'all', label: 'Р’СЃРµ РєРЅРёРіРё' },
+    { key: 'reading', label: 'Р§РёС‚Р°СЋ' },
+    { key: 'finished', label: 'РџСЂРѕС‡РёС‚Р°РЅРѕ' },
+    { key: 'planned', label: 'Р’ РїР»Р°РЅР°С…' },
+    { key: 'rereading', label: 'РџРµСЂРµС‡РёС‚С‹РІР°СЋ' },
+    { key: 'postponed', label: 'РћС‚Р»РѕР¶РµРЅРѕ' },
+    { key: 'abandoned', label: 'Р‘СЂРѕС€РµРЅРѕ' },
+  ];
+
+  const filteredBooks = books.filter(book => {
+    if (selectedStatus === 'all') return true;
+    return book.status === selectedStatus;
+  });
+
+  const sortedBooks = [...filteredBooks].sort((a, b) => {
+    if (sortBy === 'title') return a.title.localeCompare(b.title);
+    if (sortBy === 'rating') return (b.rating || 0) - (a.rating || 0);
+    if (sortBy === 'date') return (b.createdAt || 0) - (a.createdAt || 0);
+    return 0;
+  });
+
+  const renderBookCard = ({ item }) => (
+    <TouchableOpacity 
+      onPress={() => navigation.navigate('BookDetails', { bookId: item.id, lang: lang })} 
+      style={{ width: CARD_WIDTH, marginBottom: spacing.md }}
+      activeOpacity={0.7}
+    >
+      <BookCover 
+        coverUrl={item.cover} 
+        title={item.title} 
+        width={CARD_WIDTH} 
+        height={CARD_WIDTH * 1.4} 
+      />
+      <Text variant="secondary" numberOfLines={1} style={{ marginTop: spacing.xs }}>
+        {item.title}
+      </Text>
+      <Text variant="caption" numberOfLines={1}>{item.author}</Text>
+      {item.rating ? (
+        <Text variant="caption" style={{ color: theme.warning, marginTop: 2 }}>
+          в… {item.rating}/5
+        </Text>
+      ) : null}
+    </TouchableOpacity>
+  );
+
+  const getStatusLabel = () => {
+    const found = statuses.find(s => s.key === selectedStatus);
+    return found ? found.label : 'Р’СЃРµ РєРЅРёРіРё';
+  };
+
+  const getSortLabel = () => {
+    if (sortBy === 'title') return 'РџРѕ РЅР°Р·РІР°РЅРёСЋ';
+    if (sortBy === 'rating') return 'РџРѕ РѕС†РµРЅРєРµ';
+    if (sortBy === 'date') return 'РџРѕ РґР°С‚Рµ';
+    return 'РџРѕ РЅР°Р·РІР°РЅРёСЋ';
+  };
+
+  return (
+    <View style={{ flex: 1, backgroundColor: theme.background }}>
+      <AtmosphericCloud size={350} />
+      
+      <ScrollView style={{ flex: 1, backgroundColor: 'transparent' }}>
+        <View style={{ paddingHorizontal: spacing.lg, paddingTop: 60 }}>
+          
+          <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: spacing.sm }}>
+            <Text variant="h1" style={{ color: theme.textPrimary }}> Р‘РёР±Р»РёРѕС‚РµРєР°</Text>
+          </View>
+          
+          <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: spacing.xl }}>
+            <TouchableOpacity 
+              onPress={() => setFilterModalVisible(true)}
+              style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm }}
+            >
+              <Text style={{ color: theme.primary, fontSize: 13 }}>рџ“Њ {getStatusLabel()}</Text>
+              <Text style={{ color: theme.textSecondary, fontSize: 10 }}>в–ј</Text>
+            </TouchableOpacity>
+            
+            <TouchableOpacity 
+              onPress={() => {
+                const next = sortBy === 'title' ? 'rating' : sortBy === 'rating' ? 'date' : 'title';
+                setSortBy(next);
+              }}
+              style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm }}
+            >
+              <Text style={{ color: theme.primary, fontSize: 13 }}>рџ“Љ {getSortLabel()}</Text>
+              <Text style={{ color: theme.textSecondary, fontSize: 10 }}>вџі</Text>
+            </TouchableOpacity>
+          </View>
+          
+          <Text variant="body" style={{ marginBottom: spacing.xl, color: theme.textSecondary }}>
+            РќР°Р№РґРµРЅРѕ: {sortedBooks.length} РєРЅРёРі
+          </Text>
+          
+          {sortedBooks.length > 0 ? (
+            <FlatList 
+              data={sortedBooks}
+              keyExtractor={item => item.id}
+              numColumns={3}
+              renderItem={renderBookCard}
+              scrollEnabled={false}
+              columnWrapperStyle={{ justifyContent: 'space-between', gap: 8 }}
+            />
+          ) : (
+            <View style={{ padding: spacing.xl, alignItems: 'center' }}>
+              <Text variant="body" style={{ textAlign: 'center' }}>РќРµС‚ РєРЅРёРі СЃ РІС‹Р±СЂР°РЅРЅС‹Рј СЃС‚Р°С‚СѓСЃРѕРј</Text>
+            </View>
+          )}
+          
+          <View style={{ height: spacing.xl }} />
+        </View>
+      </ScrollView>
+
+      <Modal visible={filterModalVisible} animationType="fade" transparent>
+        <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.7)', justifyContent: 'center', padding: spacing.lg }}>
+          <GlassCard style={{ padding: spacing.lg }}>
+            <Text style={{ color: theme.textPrimary, fontSize: 18, marginBottom: spacing.lg, textAlign: 'center' }}>
+              Р¤РёР»СЊС‚СЂ РїРѕ СЃС‚Р°С‚СѓСЃСѓ
+            </Text>
+            {statuses.map(status => (
+              <TouchableOpacity 
+                key={status.key}
+                onPress={() => {
+                  setSelectedStatus(status.key);
+                  setFilterModalVisible(false);
+                }}
+                style={{ 
+                  paddingVertical: spacing.md, 
+                  paddingHorizontal: spacing.md,
+                  backgroundColor: selectedStatus === status.key ? theme.primary : theme.surface,
+                  borderRadius: radii.md,
+                  marginBottom: spacing.sm,
+                }}
+                activeOpacity={0.4}
+              >
+                <Text style={{ 
+                  color: selectedStatus === status.key ? '#FFF' : theme.textPrimary,
+                  fontWeight: selectedStatus === status.key ? 'bold' : 'normal',
+                }}>
+                  {status.label}
+                </Text>
+              </TouchableOpacity>
+            ))}
+            <TouchableOpacity 
+              onPress={() => setFilterModalVisible(false)} 
+              style={{ marginTop: spacing.lg, padding: spacing.md, borderRadius: radii.md, borderWidth: 1, borderColor: theme.border }}
+              activeOpacity={0.4}
+            >
+              <Text style={{ color: theme.textPrimary, textAlign: 'center' }}>Р—Р°РєСЂС‹С‚СЊ</Text>
+            </TouchableOpacity>
+          </GlassCard>
+        </View>
+      </Modal>
+    </View>
+  );
+}
+
+
+==================== FILE: src/screens/SettingsScreen.js ====================
+import React, { useState } from 'react';
+import { View, Text, TouchableOpacity, ScrollView, Modal, Alert } from 'react-native';
+import { useTheme } from '../context/ThemeContext';
+import CompactThemeSwitcher from '../components/CompactThemeSwitcher';
+import useStore from '../store';
+import { spacing, radii } from '../theme/spacing';
+import STRINGS from '../locales';
+
+export default function SettingsScreen({ navigation, lang, setLocale, locale }) {
+  const { theme } = useTheme();
+  const { importBooksFromSheets } = useStore();
+  const [langModalVisible, setLangModalVisible] = useState(false);
+
+  const languageNames = {
+    be: 'Р‘РµР»Р°СЂСѓСЃРєР°СЏ', de: 'Deutsch', en: 'English', fr: 'FranГ§ais',
+    it: 'Italiano', ja: 'ж—Ґжњ¬иЄћ', ko: 'н•њкµ­м–ґ', pl: 'Polski', ru: 'Р СѓСЃСЃРєРёР№', ua: 'РЈРєСЂР°С—РЅСЃСЊРєР°',
+  };
+
+  const handleImport = () => {
+    Alert.alert(
+      'РџРѕРґС‚РІРµСЂР¶РґРµРЅРёРµ РёРјРїРѕСЂС‚Р°',
+      'РРјРїРѕСЂС‚ Р·Р°РјРµРЅРёС‚ РІСЃРµ С‚РµРєСѓС‰РёРµ РєРЅРёРіРё РЅР° РґР°РЅРЅС‹Рµ РёР· С‚Р°Р±Р»РёС†С‹. РџСЂРѕРґРѕР»Р¶РёС‚СЊ?',
+      [
+        { text: 'РћС‚РјРµРЅР°', style: 'cancel' },
+        {
+          text: 'РРјРїРѕСЂС‚РёСЂРѕРІР°С‚СЊ',
+          onPress: async () => {
+            Alert.alert('РРјРїРѕСЂС‚', 'Р—Р°РіСЂСѓР¶Р°СЋ РєРЅРёРіРё...');
+            const result = await importBooksFromSheets();
+            if (result.success) {
+              Alert.alert('Р“РѕС‚РѕРІРѕ!', `РРјРїРѕСЂС‚РёСЂРѕРІР°РЅРѕ ${result.count} РєРЅРёРі`);
+            } else {
+              Alert.alert('РћС€РёР±РєР°', result.error);
+            }
+          }
+        }
+      ]
+    );
+  };
+
+  const handleResetStats = () => {
+    Alert.alert(
+      'вљ пёЏ РЎР±СЂРѕСЃ СЃС‚Р°С‚РёСЃС‚РёРєРё',
+      'Р’РЎР• СЃРµСЃСЃРёРё С‡С‚РµРЅРёСЏ Р±СѓРґСѓС‚ СѓРґР°Р»РµРЅС‹ Р±РµР· РІРѕР·РјРѕР¶РЅРѕСЃС‚Рё РІРѕСЃСЃС‚Р°РЅРѕРІР»РµРЅРёСЏ. РљРЅРёРіРё РѕСЃС‚Р°РЅСѓС‚СЃСЏ. РџСЂРѕРґРѕР»Р¶РёС‚СЊ?',
+      [
+        { text: 'РћС‚РјРµРЅР°', style: 'cancel' },
+        {
+          text: 'РЎР±СЂРѕСЃРёС‚СЊ',
+          style: 'destructive',
+          onPress: async () => {
+            useStore.setState({ sessions: [], activeSession: null });
+            const { books, updateBook } = useStore.getState();
+            books.forEach(book => {
+              if (book.pagesRead > 0) {
+                updateBook(book.id, { ...book, pagesRead: 0, lastSessionDate: null });
+              }
+            });
+            Alert.alert('вњ… Р“РѕС‚РѕРІРѕ', 'РЎС‚Р°С‚РёСЃС‚РёРєР° С‡С‚РµРЅРёСЏ СЃР±СЂРѕС€РµРЅР°.');
+          }
+        }
+      ]
+    );
+  };
+
+  return (
+    <ScrollView style={{ flex: 1, backgroundColor: theme.background, padding: spacing.lg }}>
+      <Text style={{ color: theme.textPrimary, fontSize: 28, fontWeight: 'bold', marginBottom: spacing.xl, marginTop: 40 }}>
+        вљ™пёЏ РќР°СЃС‚СЂРѕР№РєРё
+      </Text>
+
+      <View style={{ marginBottom: spacing.xl }}>
+        <Text style={{ color: theme.textPrimary, fontSize: 18, marginBottom: spacing.md }}>рџЊ™ РўРµРјР°</Text>
+        <CompactThemeSwitcher lang={lang} />
+      </View>
+
+      <View style={{ marginBottom: spacing.xl }}>
+        <Text style={{ color: theme.textPrimary, fontSize: 18, marginBottom: spacing.md }}>рџЊђ РЇР·С‹Рє</Text>
+        <TouchableOpacity
+          onPress={() => setLangModalVisible(true)}
+          style={{ padding: spacing.md, backgroundColor: theme.surface, borderRadius: radii.lg }}
+        >
+          <Text style={{ color: theme.textPrimary }}>{languageNames[locale] || locale}</Text>
+        </TouchableOpacity>
+      </View>
+
+      <View style={{ marginBottom: spacing.xl }}>
+        <Text style={{ color: theme.textPrimary, fontSize: 18, marginBottom: spacing.md }}>рџ“Ґ Р”Р°РЅРЅС‹Рµ</Text>
+        <TouchableOpacity
+          onPress={handleImport}
+          style={{ padding: spacing.md, backgroundColor: theme.surface, borderRadius: radii.lg }}
+        >
+          <Text style={{ color: theme.primary }}>РРјРїРѕСЂС‚ РёР· Google Sheets</Text>
+        </TouchableOpacity>
+      </View>
+
+      {/* РљРќРћРџРљРђ РЎР‘Р РћРЎРђ РЎРўРђРўРРЎРўРРљР */}
+      <View style={{ marginBottom: spacing.xl }}>
+        <Text style={{ color: theme.textPrimary, fontSize: 18, marginBottom: spacing.md }}>рџ—‘пёЏ РћС‡РёСЃС‚РєР°</Text>
+        <TouchableOpacity
+          onPress={handleResetStats}
+          style={{ padding: spacing.md, backgroundColor: theme.error, borderRadius: radii.lg }}
+        >
+          <Text style={{ color: '#FFF', textAlign: 'center', fontWeight: 'bold' }}>РЎР±СЂРѕСЃРёС‚СЊ СЃС‚Р°С‚РёСЃС‚РёРєСѓ</Text>
+        </TouchableOpacity>
+        <Text style={{ color: theme.textMuted, fontSize: 12, marginTop: spacing.sm }}>
+          РЈРґР°Р»РёС‚ РІСЃРµ СЃРµСЃСЃРёРё С‡С‚РµРЅРёСЏ. РљРЅРёРіРё РѕСЃС‚Р°РЅСѓС‚СЃСЏ.
+        </Text>
+      </View>
+
+      <TouchableOpacity
+        onPress={() => navigation.navigate('About')}
+        style={{ padding: spacing.md, backgroundColor: theme.surface, borderRadius: radii.lg }}
+      >
+        <Text style={{ color: theme.textPrimary }}>в„№пёЏ Рћ РїСЂРёР»РѕР¶РµРЅРёРё</Text>
+      </TouchableOpacity>
+
+      <Modal visible={langModalVisible} animationType="fade" transparent>
+        <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.7)', justifyContent: 'center', padding: spacing.lg }}>
+          <View style={{ backgroundColor: theme.surface, borderRadius: radii.xl, padding: spacing.lg }}>
+            <Text style={{ color: theme.textPrimary, fontSize: 18, marginBottom: spacing.lg, textAlign: 'center' }}>
+              Р’С‹Р±РµСЂРёС‚Рµ СЏР·С‹Рє
+            </Text>
+            {Object.keys(STRINGS).map(loc => (
+              <TouchableOpacity
+                key={loc}
+                onPress={() => { setLocale(loc); setLangModalVisible(false); }}
+                style={{ paddingVertical: spacing.md, paddingHorizontal: spacing.md, backgroundColor: locale === loc ? theme.primary : theme.surface, borderRadius: radii.md, marginBottom: spacing.sm }}
+              >
+                <Text style={{ color: locale === loc ? '#FFF' : theme.textPrimary }}>{languageNames[loc]}</Text>
+              </TouchableOpacity>
+            ))}
+            <TouchableOpacity onPress={() => setLangModalVisible(false)} style={{ marginTop: spacing.lg, padding: spacing.md, borderRadius: radii.md, borderWidth: 1, borderColor: theme.border }}>
+              <Text style={{ color: theme.textPrimary, textAlign: 'center' }}>РћС‚РјРµРЅР°</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+    </ScrollView>
+  );
+}
+
+
+==================== FILE: src/screens/BookDetailsScreen/index.js ====================
+import React, { useState } from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  TouchableOpacity,
+  Alert,
+} from 'react-native';
+import { useStore } from '../../store';
+import { useTheme } from '../../context/ThemeContext';
+import { useLanguage } from '../../context/LanguageContext';
+import { Ionicons } from '@expo/vector-icons';
+import ViewMode from './ViewMode';
+import EditMode from './EditMode';
+
+export default function BookDetailsScreen({ route, navigation }) {
+  // РџРѕР»СѓС‡Р°РµРј bookId РёР· route.params
+  const { bookId } = route.params || {};
+  const { books, updateBook, deleteBook, setActiveBook, activeBookId } = useStore();
+  const { theme } = useTheme();
+  const { t } = useLanguage();
+  
+  const [isEditing, setIsEditing] = useState(false);
+  
+  // РќР°С…РѕРґРёРј РєРЅРёРіСѓ РїРѕ ID
+  const book = books.find(b => b.id === bookId);
+  
+  // РџСЂРѕРІРµСЂРєР° РЅР°Р»РёС‡РёСЏ РєРЅРёРіРё
+  if (!book) {
+    return (
+      <View style={[styles.container, { backgroundColor: theme.background }]}>
+        <Text style={{ color: theme.text, textAlign: 'center', marginTop: 50 }}>
+          {t('bookDetails.notFound') || 'РљРЅРёРіР° РЅРµ РЅР°Р№РґРµРЅР°'}
+        </Text>
+      </View>
+    );
+  }
+  
+  const isActiveBook = activeBookId === book.id;
+  
+  const handleSave = async (updatedBook) => {
+    await updateBook(book.id, updatedBook);
+    setIsEditing(false);
+  };
+  
+  const handleDelete = () => {
+    Alert.alert(
+      t('common.confirm') || 'РџРѕРґС‚РІРµСЂР¶РґРµРЅРёРµ',
+      t('bookDetails.deleteConfirm') || 'Р’С‹ СѓРІРµСЂРµРЅС‹, С‡С‚Рѕ С…РѕС‚РёС‚Рµ СѓРґР°Р»РёС‚СЊ СЌС‚Сѓ РєРЅРёРіСѓ?',
+      [
+        { text: t('common.cancel') || 'РћС‚РјРµРЅР°', style: 'cancel' },
+        {
+          text: t('common.delete') || 'РЈРґР°Р»РёС‚СЊ',
+          style: 'destructive',
+          onPress: async () => {
+            await deleteBook(book.id);
+            navigation.goBack();
+          }
+        }
+      ]
+    );
+  };
+  
+  const handleSetActive = () => {
+    if (isActiveBook) {
+      setActiveBook(null);
+    } else {
+      setActiveBook(book.id);
+    }
+  };
+  
+  return (
+    <ScrollView style={[styles.container, { backgroundColor: theme.background }]}>
+      {/* Header with actions */}
+      <View style={styles.header}>
+        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
+          <Ionicons name="arrow-back" size={24} color={theme.text} />
+        </TouchableOpacity>
+        
+        <View style={styles.headerActions}>
+          {!isEditing && (
+            <>
+              <TouchableOpacity onPress={() => setIsEditing(true)} style={styles.actionButton}>
+                <Ionicons name="pencil" size={22} color={theme.primary} />
+              </TouchableOpacity>
+              
+              <TouchableOpacity onPress={handleSetActive} style={styles.actionButton}>
+                <Ionicons 
+                  name={isActiveBook ? "bookmark" : "bookmark-outline"} 
+                  size={22} 
+                  color={isActiveBook ? theme.primary : theme.text} 
+                />
+              </TouchableOpacity>
+              
+              <TouchableOpacity onPress={handleDelete} style={styles.actionButton}>
+                <Ionicons name="trash-outline" size={22} color="#f44336" />
+              </TouchableOpacity>
+            </>
+          )}
+        </View>
+      </View>
+      
+      {/* рџ”Ґ РљР›Р®Р§Р•Р’РћР• РРЎРџР РђР’Р›Р•РќРР•: РџРµСЂРµРґР°РµРј bookId РІРјРµСЃС‚Рѕ book */}
+      {!isEditing ? (
+        <ViewMode bookId={book.id} onEdit={() => setIsEditing(true)} />
+      ) : (
+        <EditMode book={book} onSave={handleSave} onCancel={() => setIsEditing(false)} />
+      )}
+    </ScrollView>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+  },
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingTop: 12,
+    paddingBottom: 8,
+  },
+  backButton: {
+    padding: 8,
+  },
+  headerActions: {
+    flexDirection: 'row',
+  },
+  actionButton: {
+    padding: 8,
+    marginLeft: 12,
+  },
+});
+
+
+==================== FILE: src/screens/BookDetailsScreen/ViewMode.js ====================
+import React from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
+// рџ”Ґ РРЎРџР РђР’Р›Р•РќРР•: Р”РѕР±Р°РІР»СЏРµРј РёРјРїРѕСЂС‚ useStore
+import { useStore } from '../../store';
+import { useTheme } from '../../context/ThemeContext';
+import { useLanguage } from '../../context/LanguageContext';
+import { Ionicons } from '@expo/vector-icons';
+
+// рџ”Ґ РРЎРџР РђР’Р›Р•РќРР•: РџСЂРёРЅРёРјР°РµРј bookId РІРјРµСЃС‚Рѕ book
+export default function ViewMode({ bookId, onEdit }) {
+  const { books } = useStore();
+  const { theme } = useTheme();
+  const { t } = useLanguage();
+  
+  // рџ”Ґ РРЎРџР РђР’Р›Р•РќРР•: РќР°С…РѕРґРёРј РєРЅРёРіСѓ РїРѕ ID
+  const book = books.find(b => b.id === bookId);
+  
+  if (!book) {
+    return (
+      <View style={[styles.container, { backgroundColor: theme.background }]}>
+<Text style={{ color: theme.text }}>
+  {t('bookDetails.notFound') || 'РљРЅРёРіР° РЅРµ РЅР°Р№РґРµРЅР°'}
+</Text>
+      </View>
+    );
+  }
+  
+  return (
+    <ScrollView style={[styles.container, { backgroundColor: theme.background }]}>
+      <View style={styles.header}>
+        <Text style={[styles.title, { color: theme.text }]}>{book.title}</Text>
+        <Text style={[styles.author, { color: theme.secondaryText }]}>{book.author}</Text>
+      </View>
+      
+      <View style={styles.infoCard}>
+        <View style={styles.infoRow}>
+          <Text style={[styles.infoLabel, { color: theme.secondaryText }]}>
+            {t('bookDetails.status') || 'РЎС‚Р°С‚СѓСЃ'}:
+          </Text>
+          <Text style={[styles.infoValue, { color: theme.text }]}>{book.status}</Text>
+        </View>
+        
+        <View style={styles.infoRow}>
+          <Text style={[styles.infoLabel, { color: theme.secondaryText }]}>
+            {t('bookDetails.progress') || 'РџСЂРѕРіСЂРµСЃСЃ'}:
+          </Text>
+          <Text style={[styles.infoValue, { color: theme.text }]}>
+            {book.currentPage} / {book.totalPages} {t('bookDetails.pages') || 'СЃС‚СЂ.'}
+          </Text>
+        </View>
+        
+        {book.rating > 0 && (
+          <View style={styles.infoRow}>
+            <Text style={[styles.infoLabel, { color: theme.secondaryText }]}>
+              {t('bookDetails.rating') || 'Р РµР№С‚РёРЅРі'}:
+            </Text>
+            <Text style={[styles.infoValue, { color: theme.text }]}>{'в…'.repeat(book.rating)}</Text>
+          </View>
+        )}
+      </View>
+      
+      <TouchableOpacity style={[styles.editButton, { backgroundColor: theme.primary }]} onPress={onEdit}>
+        <Text style={styles.editButtonText}>{t('common.edit') || 'Р РµРґР°РєС‚РёСЂРѕРІР°С‚СЊ'}</Text>
+      </TouchableOpacity>
+    </ScrollView>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: { flex: 1, padding: 20 },
+  header: { alignItems: 'center', marginBottom: 30 },
+  title: { fontSize: 24, fontWeight: 'bold', textAlign: 'center' },
+  author: { fontSize: 16, marginTop: 5 },
+  infoCard: { backgroundColor: 'rgba(0,0,0,0.05)', borderRadius: 12, padding: 16, marginBottom: 20 },
+  infoRow: { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 8 },
+  infoLabel: { fontSize: 14 },
+  infoValue: { fontSize: 14, fontWeight: '500' },
+  editButton: { padding: 14, borderRadius: 10, alignItems: 'center', marginTop: 20 },
+  editButtonText: { color: '#fff', fontSize: 16, fontWeight: 'bold' }
+});
+
+
+==================== FILE: src/screens/BookDetailsScreen/EditMode.js ====================
+import React from 'react';
+import { View, Text, TextInput, TouchableOpacity, ScrollView, Platform, Keyboard, Switch } from 'react-native';
+import GenreSelector from '../../components/GenreSelector';
+import AuthorSelector from '../../components/AuthorSelector';
+import StatusPicker from './StatusPicker';
+import { spacing, radii } from '../../theme/spacing';
+
+export default function EditMode({
+  book,
+  books,
+  editAuthor,
+  setEditAuthor,
+  editStatus,
+  setEditStatus,
+  editRating,
+  setEditRating,
+  editGenresArray,
+  setEditGenresArray,
+  editLanguages,
+  setEditLanguages,
+  editPages,
+  setEditPages,
+  editStartDate,
+  setEditStartDate,
+  editEndDate,
+  setEditEndDate,
+  editNotes,
+  setEditNotes,
+  editReview,
+  setEditReview,
+  editAuthorCountry,
+  setEditAuthorCountry,
+  editSeries,
+  setEditSeries,
+  editSeriesPosition,
+  setEditSeriesPosition,
+  editOriginalYear,
+  setEditOriginalYear,
+  editactiveBookId,
+  setEditactiveBookId,
+  saveChanges,
+  setIsEditing,
+  setKeyboardHeight,
+  scrollViewRef,
+  lang,
+  theme,
+}) {
+  const fields = lang?.fields || {
+    pages: 'РЎС‚СЂР°РЅРёС†С‹',
+    startDate: 'Р”Р°С‚Р° РЅР°С‡Р°Р»Р°',
+    endDate: 'Р”Р°С‚Р° РѕРєРѕРЅС‡Р°РЅРёСЏ',
+    rating: 'РћС†РµРЅРєР°',
+    review: 'РћС‚Р·С‹РІ',
+    notes: 'Р—Р°РјРµС‚РєРё',
+    authorCountry: 'РЎС‚СЂР°РЅР° Р°РІС‚РѕСЂР°',
+    series: 'РЎРµСЂРёСЏ',
+    seriesPosition: 'РќРѕРјРµСЂ РІ СЃРµСЂРёРё',
+    originalYear: 'Р“РѕРґ РѕСЂРёРіРёРЅР°Р»Р°',
+  };
+  
+  const buttons = lang?.buttons || { save: 'РЎРѕС…СЂР°РЅРёС‚СЊ', cancel: 'РћС‚РјРµРЅР°' };
+
+  return (
+    <ScrollView
+      ref={scrollViewRef}
+      showsVerticalScrollIndicator={true}
+      keyboardShouldPersistTaps="handled"
+      keyboardDismissMode="on-drag"
+      contentContainerStyle={{ paddingBottom: Platform.OS === 'ios' ? 40 : 30 }}
+    >
+      <StatusPicker selectedStatus={editStatus} onStatusChange={setEditStatus} lang={lang} theme={theme} />
+
+      <AuthorSelector
+        selectedAuthor={editAuthor}
+        onAuthorChange={setEditAuthor}
+        authorsList={[...new Set(books.map(b => b.author).filter(Boolean))]}
+        lang={lang}
+        theme={theme}
+      />
+
+      <Text style={{ color: theme.textSecondary, marginBottom: 5 }}>{fields.authorCountry}</Text>
+      <TextInput
+        value={editAuthorCountry}
+        onChangeText={setEditAuthorCountry}
+        placeholder="РќР°РїСЂРёРјРµСЂ: Р РѕСЃСЃРёСЏ, РЇРїРѕРЅРёСЏ"
+        placeholderTextColor={theme.textMuted}
+        returnKeyType="done"
+        onSubmitEditing={Keyboard.dismiss}
+        style={{
+          padding: spacing.md,
+          borderRadius: radii.md,
+          marginBottom: spacing.md,
+          backgroundColor: theme.surface,
+          color: theme.textPrimary,
+        }}
+      />
+
+      <Text style={{ color: theme.textSecondary, marginBottom: 5 }}>{fields.series}</Text>
+      <TextInput
+        value={editSeries}
+        onChangeText={setEditSeries}
+        placeholder="РќР°Р·РІР°РЅРёРµ СЃРµСЂРёРё"
+        placeholderTextColor={theme.textMuted}
+        returnKeyType="done"
+        onSubmitEditing={Keyboard.dismiss}
+        style={{
+          padding: spacing.md,
+          borderRadius: radii.md,
+          marginBottom: spacing.md,
+          backgroundColor: theme.surface,
+          color: theme.textPrimary,
+        }}
+      />
+
+      <Text style={{ color: theme.textSecondary, marginBottom: 5 }}>{fields.seriesPosition}</Text>
+      <TextInput
+        value={editSeriesPosition}
+        onChangeText={setEditSeriesPosition}
+        keyboardType="numeric"
+        placeholder="1, 2, 3..."
+        placeholderTextColor={theme.textMuted}
+        returnKeyType="done"
+        onSubmitEditing={Keyboard.dismiss}
+        style={{
+          padding: spacing.md,
+          borderRadius: radii.md,
+          marginBottom: spacing.md,
+          backgroundColor: theme.surface,
+          color: theme.textPrimary,
+        }}
+      />
+
+      <Text style={{ color: theme.textSecondary, marginBottom: 5 }}>{fields.originalYear}</Text>
+      <TextInput
+        value={editOriginalYear}
+        onChangeText={setEditOriginalYear}
+        keyboardType="numeric"
+        placeholder="1999, 1854..."
+        placeholderTextColor={theme.textMuted}
+        returnKeyType="done"
+        onSubmitEditing={Keyboard.dismiss}
+        style={{
+          padding: spacing.md,
+          borderRadius: radii.md,
+          marginBottom: spacing.md,
+          backgroundColor: theme.surface,
+          color: theme.textPrimary,
+        }}
+      />
+
+      <GenreSelector
+        selectedGenres={editGenresArray}
+        onGenresChange={setEditGenresArray}
+        lang={lang}
+        theme={theme}
+      />
+
+      <Text style={{ color: theme.textSecondary, marginBottom: 5, marginTop: 8 }}>{fields.pages}</Text>
+      <TextInput
+        value={editPages}
+        onChangeText={setEditPages}
+        keyboardType="numeric"
+        returnKeyType="done"
+        onSubmitEditing={Keyboard.dismiss}
+        style={{
+          padding: spacing.md,
+          borderRadius: radii.md,
+          marginBottom: spacing.md,
+          backgroundColor: theme.surface,
+          color: theme.textPrimary,
+        }}
+      />
+
+      <Text style={{ color: theme.textSecondary, marginBottom: 5 }}>{fields.startDate}</Text>
+      <TextInput
+        value={editStartDate}
+        onChangeText={setEditStartDate}
+        placeholder="Р”Р”.РњРњ.Р“Р“Р“Р“"
+        placeholderTextColor={theme.textMuted}
+        returnKeyType="done"
+        onSubmitEditing={Keyboard.dismiss}
+        style={{
+          padding: spacing.md,
+          borderRadius: radii.md,
+          marginBottom: spacing.md,
+          backgroundColor: theme.surface,
+          color: theme.textPrimary,
+        }}
+      />
+
+      <Text style={{ color: theme.textSecondary, marginBottom: 5 }}>{fields.endDate}</Text>
+      <TextInput
+        value={editEndDate}
+        onChangeText={setEditEndDate}
+        placeholder="Р”Р”.РњРњ.Р“Р“Р“Р“"
+        placeholderTextColor={theme.textMuted}
+        returnKeyType="done"
+        onSubmitEditing={Keyboard.dismiss}
+        style={{
+          padding: spacing.md,
+          borderRadius: radii.md,
+          marginBottom: spacing.md,
+          backgroundColor: theme.surface,
+          color: theme.textPrimary,
+        }}
+      />
+
+      <Text style={{ color: theme.textSecondary, marginBottom: 8 }}>{fields.rating}</Text>
+      <View style={{ flexDirection: 'row', gap: 12, marginBottom: 15 }}>
+        {[1, 2, 3, 4, 5].map((star) => (
+          <TouchableOpacity
+            key={star}
+            onPress={() => setEditRating(star)}
+            style={{
+              width: 50,
+              height: 50,
+              borderRadius: 25,
+              backgroundColor: editRating === star ? theme.primary : theme.surface,
+              borderWidth: editRating === star ? 0 : 1,
+              borderColor: theme.border,
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+            activeOpacity={0.7}
+          >
+            <Text
+              style={{
+                color: editRating === star ? '#FFF' : theme.textPrimary,
+                fontSize: 18,
+                fontWeight: editRating === star ? 'bold' : 'normal',
+              }}
+            >
+              {star}
+            </Text>
+          </TouchableOpacity>
+        ))}
+      </View>
+
+      <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 15, marginTop: 8 }}>
+        <Text style={{ color: theme.textSecondary }}>РЎРґРµР»Р°С‚СЊ РѕСЃРЅРѕРІРЅРѕР№ РєРЅРёРіРѕР№</Text>
+        <Switch
+          value={editactiveBookId}
+          onValueChange={setEditactiveBookId}
+          trackColor={{ false: theme.border, true: theme.primary }}
+          thumbColor={'#FFF'}
+        />
+      </View>
+
+      <Text style={{ color: theme.textSecondary, marginBottom: 5, marginTop: 8 }}>{fields.review}</Text>
+      <TextInput
+        value={editReview}
+        onChangeText={setEditReview}
+        multiline
+        numberOfLines={4}
+        returnKeyType="done"
+        onSubmitEditing={Keyboard.dismiss}
+        style={{
+          padding: spacing.md,
+          borderRadius: radii.md,
+          marginBottom: spacing.md,
+          backgroundColor: theme.surface,
+          color: theme.textPrimary,
+          minHeight: 100,
+          textAlignVertical: 'top',
+        }}
+        placeholder="РџРѕРґРµР»РёС‚РµСЃСЊ РІРїРµС‡Р°С‚Р»РµРЅРёСЏРјРё Рѕ РєРЅРёРіРµ..."
+        placeholderTextColor={theme.textMuted}
+      />
+
+      <Text style={{ color: theme.textSecondary, marginBottom: 5 }}>{fields.notes}</Text>
+      <TextInput
+        value={editNotes}
+        onChangeText={setEditNotes}
+        multiline
+        returnKeyType="done"
+        onSubmitEditing={Keyboard.dismiss}
+        style={{
+          padding: spacing.md,
+          borderRadius: radii.md,
+          marginBottom: spacing.md,
+          backgroundColor: theme.surface,
+          color: theme.textPrimary,
+          minHeight: 80,
+        }}
+      />
+
+      <View style={{ flexDirection: 'row', gap: 12, marginTop: 20, marginBottom: 40 }}>
+        <TouchableOpacity
+          onPress={saveChanges}
+          style={{
+            padding: 14,
+            borderRadius: radii.lg,
+            backgroundColor: theme.primary,
+            flex: 1,
+            alignItems: 'center',
+          }}
+          activeOpacity={0.7}
+        >
+          <Text style={{ color: '#FFF', fontWeight: 'bold' }}>рџ’ѕ {buttons.save}</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          onPress={() => {
+            setIsEditing(false);
+            Keyboard.dismiss();
+            setKeyboardHeight(0);
+            setTimeout(() => scrollViewRef.current?.scrollTo({ y: 0, animated: true }), 100);
+          }}
+          style={{
+            padding: 14,
+            borderRadius: radii.lg,
+            backgroundColor: theme.error,
+            flex: 1,
+            alignItems: 'center',
+          }}
+          activeOpacity={0.7}
+        >
+          <Text style={{ color: '#FFF', fontWeight: 'bold' }}>вњ–пёЏ {buttons.cancel}</Text>
+        </TouchableOpacity>
+        {/* РљРЅРѕРїРєР° РґР»СЏ С†РёС‚Р°С‚ */}
+<TouchableOpacity
+  onPress={() => {
+    setIsEditing(false); // РІС‹С…РѕРґРёРј РёР· СЂРµР¶РёРјР° СЂРµРґР°РєС‚РёСЂРѕРІР°РЅРёСЏ
+    navigation.navigate('QuotesModal', { bookId: book.id });
+  }}
+  style={{
+    padding: 14,
+    borderRadius: radii.lg,
+    backgroundColor: theme.accent || theme.primary,
+    flex: 1,
+    alignItems: 'center',
+    marginBottom: 12,
+  }}
+  activeOpacity={0.7}
+>
+  <Text style={{ color: '#FFF', fontWeight: 'bold' }}>рџ“ќ Р¦РёС‚Р°С‚С‹</Text>
+</TouchableOpacity>
+      </View>
+    </ScrollView>
+  );
+}
+
+
+==================== FILE: src/components/AtmosphericCloud.js ====================
+// mobile-app/src/components/AtmosphericCloud.js
+import React, { useEffect, useRef } from 'react';
+import { Animated } from 'react-native';
+import { useTheme } from '../context/ThemeContext';
+import { useLighting } from '../context/LightingContext';
+import { radii } from '../theme/spacing';
+
+export default function AtmosphericCloud({ size = 350, style }) {
+  const { theme, themeMode } = useTheme();
+  const { orbPosition } = useLighting();
+  const scale = useRef(new Animated.Value(1)).current;
+  const opacity = useRef(new Animated.Value(0.7)).current;
+
+  useEffect(() => {
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(scale, { toValue: 1.02, duration: 8000, useNativeDriver: true }),
+        Animated.timing(scale, { toValue: 0.98, duration: 8000, useNativeDriver: true }),
+      ])
+    ).start();
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(opacity, { toValue: 0.75, duration: 12000, useNativeDriver: true }),
+        Animated.timing(opacity, { toValue: 0.65, duration: 12000, useNativeDriver: true }),
+      ])
+    ).start();
+  }, []);
+
+  const baseColor = theme.orbColor || (themeMode === 'dark' 
+    ? 'rgba(28, 40, 58, 0.72)'
+    : 'rgba(176, 162, 144, 0.7)');
+
+  return (
+    <Animated.View
+      style={[
+        {
+          position: 'absolute',
+          right: -size / 3,
+          top: -size / 3,
+          width: size,
+          height: size,
+          borderRadius: radii.full,
+          backgroundColor: baseColor,
+          transform: [{ scale }],
+          opacity,
+          shadowColor: themeMode === 'dark' ? '#5C7C9A' : '#4A5A6A',
+          shadowOffset: { width: 0, height: 0 },
+          shadowOpacity: 0.2,
+          shadowRadius: size * 0.08,
+          elevation: 5,
+        },
+        style,
+      ]}
+    />
+  );
+}
+
+
+==================== FILE: src/components/GlassCard.js ====================
+// mobile-app/src/components/GlassCard.js
+import React from 'react';
+import { View, TouchableOpacity } from 'react-native';
+import { useTheme } from '../context/ThemeContext';
+import { spacing, radii } from '../theme/spacing';
+
+export default function GlassCard({ 
+  children, 
+  elevated = false, 
+  style, 
+  noPadding = false,
+  onPress,
+}) {
+  const { theme, themeMode } = useTheme();
+  
+  const glassBackground = theme.glassBackground || (themeMode === 'dark' 
+    ? 'rgba(14, 26, 38, 0.7)' 
+    : 'rgba(236, 232, 226, 0.7)');
+  
+  const glassBorder = theme.glassBorder || (themeMode === 'dark'
+    ? 'rgba(140, 170, 200, 0.12)'
+    : 'rgba(216, 210, 200, 0.5)');
+
+  const content = (
+    <View
+      style={[
+        {
+          backgroundColor: glassBackground,
+          borderColor: glassBorder,
+          borderWidth: 1,
+          borderRadius: radii.xl,
+          padding: noPadding ? 0 : spacing.lg,
+          shadowColor: theme.primary,
+          shadowOffset: { width: 0, height: 4 },
+          shadowOpacity: elevated ? 0.3 : 0.1,
+          shadowRadius: elevated ? 20 : 8,
+          elevation: elevated ? 8 : 2,
+        },
+        style,
+      ]}
+    >
+      {children}
+    </View>
+  );
+
+  if (onPress) {
+    return (
+      <TouchableOpacity onPress={onPress} activeOpacity={1} delayLongPress={9999}>
+        {content}
+      </TouchableOpacity>
+    );
+  }
+
+  return content;
+}
+
+
+==================== FILE: src/components/Button.js ====================
+// mobile-app/src/components/Button.js
+import React from 'react';
+import { TouchableOpacity, ActivityIndicator } from 'react-native';
+import { Text } from './Text';
+import { useTheme } from '../context/ThemeContext';
+import { radii } from '../theme/spacing';
+
+export const Button = ({
+  title,
+  onPress,
+  variant = 'primary',
+  loading = false,
+  disabled = false,
+  style,
+  textStyle,
+}) => {
+  const { theme } = useTheme();
+
+  const getButtonStyle = () => {
+    switch (variant) {
+      case 'primary':
+        return { backgroundColor: theme.primary, borderWidth: 0 };
+      case 'secondary':
+        return { backgroundColor: theme.surface, borderWidth: 1, borderColor: theme.border };
+      case 'outline':
+        return { backgroundColor: 'transparent', borderWidth: 1, borderColor: theme.primary };
+      case 'danger':
+        return { backgroundColor: theme.error, borderWidth: 0 };
+      default:
+        return { backgroundColor: theme.primary, borderWidth: 0 };
+    }
+  };
+
+  const getTextColor = () => {
+    if (disabled) return theme.textMuted;
+    switch (variant) {
+      case 'primary': return '#FFFFFF';
+      case 'secondary': return theme.textPrimary;
+      case 'outline': return theme.primary;
+      case 'danger': return '#FFFFFF';
+      default: return '#FFFFFF';
+    }
+  };
+
+  return (
+    <TouchableOpacity
+      onPress={onPress}
+      disabled={disabled || loading}
+      activeOpacity={0.7}
+      style={[
+        {
+          paddingVertical: 12,
+          paddingHorizontal: 20,
+          borderRadius: radii.lg,
+          alignItems: 'center',
+          justifyContent: 'center',
+          opacity: disabled ? 0.5 : 1,
+        },
+        getButtonStyle(),
+        style,
+      ]}
+    >
+      {loading ? (
+        <ActivityIndicator color={getTextColor()} size="small" />
+      ) : (
+        <Text variant="body" style={[{ color: getTextColor(), fontWeight: '500', opacity: 1 }, textStyle]}>
+          {title}
+        </Text>
+      )}
+    </TouchableOpacity>
+  );
+};
+
+
+==================== FILE: src/components/Header.js ====================
+import React from 'react';
+import { View, Text, TouchableOpacity } from 'react-native';
+import { DrawerActions } from '@react-navigation/native';
+import { useTheme } from '../context/ThemeContext';
+
+export default function Header({ navigation, lang, booksCount }) {
+  const { theme } = useTheme();
+
+  return (
+    <View style={{ 
+      flexDirection: 'row', 
+      alignItems: 'center', 
+      marginTop: 35, 
+      marginBottom: 20,
+      paddingHorizontal: 18,   // в†ђ Р­РўРћ СЃРґРІРёРіР°РµС‚ РјРµРЅСЋ Рё С‡РёСЃР»Рѕ РєРЅРёРі
+    }}>
+      <TouchableOpacity 
+        onPress={() => navigation.dispatch(DrawerActions.openDrawer())}
+        style={{ marginRight: 15, padding: 5 }}
+        activeOpacity={0.4}
+      >
+        <Text style={{ color: theme.textPrimary, fontSize: 32 }}>в°</Text>
+      </TouchableOpacity>
+      
+      <Text style={{ color: theme.textPrimary, fontSize: 28, flex: 1 }}>{lang.app.title}</Text>
+      
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+        <Text style={{ color: theme.textSecondary, fontSize: 14 }}>рџ“љ {booksCount} {lang.books?.count || 'РєРЅРёРі'}</Text>
+      </View>
+    </View>
+  );
+}
+
+
+==================== FILE: src/theme/colors.js ====================
+// mobile-app/src/theme/colors.js
+
+export const lightTheme = {
+  // Р‘Р°Р·Р° вЂ” РћР§Р•Р’РР”РќРћ С‚С‘РїР»Р°СЏ Р±СѓРјР°РіР°
+  background: '#E0D4C3',           // в†ђ РµС‰С‘ С‚РµРїР»РµРµ, РµС‰С‘ С‚РµРјРЅРµРµ
+  surface: '#D4C7B4',              // РєР°СЂС‚РѕС‡РєРё вЂ” Р·Р°РјРµС‚РЅРѕ С‚РµРјРЅРµРµ С„РѕРЅР°
+  surfaceAlt: '#C8BAA6',           // Р°Р»СЊС‚РµСЂРЅР°С‚РёРІРЅР°СЏ РїРѕРІРµСЂС…РЅРѕСЃС‚СЊ
+  
+  // РўРµРєСЃС‚ вЂ” РјСЏРіРєРёР№, С‚С‘РїР»С‹Р№
+  textPrimary: '#2A2622',          // РјСЏРіРєРёР№ С‚С‘РјРЅС‹Р№
+  textSecondary: '#6B6358',        // С‚С‘РїР»С‹Р№ РІС‚РѕСЂРѕСЃС‚РµРїРµРЅРЅС‹Р№
+  textMuted: '#948A7C',            // РїС‹Р»СЊРЅС‹Р№, РїСЂРёРіР»СѓС€С‘РЅРЅС‹Р№
+  
+  // РђРєС†РµРЅС‚С‹
+  primary: '#4A5A6A',
+  primarySoft: '#6B7A88',
+  accent: '#B8A99A',
+  accentSoft: '#D1C6BA',
+  
+  // РЎС‚Р°С‚СѓСЃС‹
+  success: '#6B8F7A',
+  warning: '#D4A76A',
+  error: '#C47A7A',
+  info: '#7A8FC4',
+  status: '#4A5A6A',
+  
+  // Р“СЂР°РЅРёС†С‹
+  border: '#BEB09C',
+  borderSoft: '#D4C7B4',
+  card: '#D4C7B4',
+  cardHover: '#DDD0BE',
+  cardActive: '#C8BAA6',
+  
+  // РЎРїРµС†РёР°Р»СЊРЅС‹Рµ
+  chip: '#C8BAA6',
+  chipActive: '#BEB09C',
+  currentBookGlow: '#4A5A6A',
+  neonGlow: '#4A5A6A',
+  
+  // РЎС‚РµРєР»Рѕ (С‚С‘РїР»РѕРµ)
+  glassBackground: 'rgba(212, 199, 180, 0.7)',
+  glassBorder: 'rgba(190, 176, 156, 0.5)',
+  
+  // Orb вЂ” РіР»СѓР±РѕРєРёР№, РїС‹Р»СЊРЅС‹Р№
+  orbColor: 'rgba(176, 162, 144, 0.7)',
+};
+
+export const darkTheme = {
+  // Р‘Р°Р·Р° вЂ” РіР»СѓР±РѕРєРёР№ navy
+  background: '#0B1220',
+  surface: '#0E1A26',
+  surfaceAlt: '#121F2E',
+  
+  // РўРµРєСЃС‚
+  textPrimary: '#E7EDF5',
+  textSecondary: '#97A6BA',
+  textMuted: '#6E7C90',
+  
+  // РђРєС†РµРЅС‚С‹
+  primary: '#5C7C9A',
+  primarySoft: '#3A5570',
+  accent: '#A8B0BA',
+  accentSoft: '#2C3F55',
+  
+  // РЎС‚Р°С‚СѓСЃС‹
+  success: '#6B9B7A',
+  warning: '#D4A76A',
+  error: '#C47A7A',
+  info: '#7A9BC4',
+  status: '#5C7C9A',
+  
+  // Р“СЂР°РЅРёС†С‹
+  border: 'rgba(140, 170, 200, 0.12)',
+  borderSoft: '#16232E',
+  card: '#0E1A26',
+  cardHover: '#15263A',
+  cardActive: '#121F2E',
+  
+  // РЎРїРµС†РёР°Р»СЊРЅС‹Рµ
+  chip: '#1B2A3A',
+  chipActive: '#2C3F55',
+  currentBookGlow: '#5C7C9A',
+  neonGlow: '#5C7C9A',
+  
+  // РЎС‚РµРєР»Рѕ
+  glassBackground: 'rgba(14, 26, 38, 0.7)',
+  glassBorder: 'rgba(140, 170, 200, 0.12)',
+  
+  // Orb вЂ” cosmic haze
+  orbColor: 'rgba(28, 40, 58, 0.72)',
+};
+
+export const light = lightTheme;
+export const dark = darkTheme;
+
+
+==================== FILE: src/theme/spacing.js ====================
+// mobile-app/src/theme/spacing.js
+
+export const spacing = {
+  xs: 4,
+  sm: 8,
+  md: 12,
+  lg: 16,
+  xl: 20,
+  xxl: 24,
+  xxxl: 32,
+};
+
+export const radii = {
+  none: 0,
+  xs: 4,
+  sm: 8,
+  md: 12,
+  lg: 16,
+  xl: 20,
+  xxl: 24,
+  full: 999,
+};
+
+export const defaultRadius = radii.xl;
+export const buttonRadius = radii.lg;
+export const inputRadius = radii.md;
+
+
+==================== FILE: src/theme/typography.js ====================
+import { getFontFamily, fonts } from './fonts';
+
+const asianAdjustments = (locale) => {
+  if (locale === 'ja') return { lineHeightMultiplier: 1.15, letterSpacingOffset: 0.5 };
+  if (locale === 'ko') return { lineHeightMultiplier: 1.1, letterSpacingOffset: 0.3 };
+  return { lineHeightMultiplier: 1, letterSpacingOffset: 0 };
+};
+
+export const getTypography = (locale = 'en') => {
+  const fontFamily = getFontFamily(locale);
+  const asian = asianAdjustments(locale);
+
+  return {
+    display: {
+      fontFamily: fonts.display,
+      fontSize: 48,
+      lineHeight: 56 * asian.lineHeightMultiplier,
+      letterSpacing: -0.5 + asian.letterSpacingOffset,
+    },
+    h1: {
+      fontFamily,
+      fontSize: 32,
+      lineHeight: 40 * asian.lineHeightMultiplier,
+      letterSpacing: -0.3 + asian.letterSpacingOffset,
+    },
+    h2: {
+      fontFamily,
+      fontSize: 24,
+      lineHeight: 32 * asian.lineHeightMultiplier,
+      letterSpacing: 0 + asian.letterSpacingOffset,
+    },
+    h3: {
+      fontFamily,
+      fontSize: 20,
+      lineHeight: 28 * asian.lineHeightMultiplier,
+      letterSpacing: 0 + asian.letterSpacingOffset,
+    },
+    body: {
+      fontFamily,
+      fontSize: 16,
+      lineHeight: 24 * asian.lineHeightMultiplier,
+      letterSpacing: 0 + asian.letterSpacingOffset,
+    },
+    secondary: {
+      fontFamily,
+      fontSize: 14,
+      lineHeight: 20 * asian.lineHeightMultiplier,
+      letterSpacing: 0 + asian.letterSpacingOffset,
+    },
+    caption: {
+      fontFamily,
+      fontSize: 12,
+      lineHeight: 16 * asian.lineHeightMultiplier,
+      letterSpacing: 0 + asian.letterSpacingOffset,
+    },
+    mono: {
+      fontFamily,
+      fontSize: 14,
+      lineHeight: 20 * asian.lineHeightMultiplier,
+      letterSpacing: 0 + asian.letterSpacingOffset,
+    },
+  };
+};
+
+
+==================== FILE: src/theme/fonts.js ====================
+export const fonts = {
+  ui: 'Inter_28pt-Regular',      // в†ђ С‚РѕС‡РЅРѕРµ РёРјСЏ С„Р°Р№Р»Р°
+  uiBold: 'Inter_28pt-Semibold', // в†ђ С‚РѕС‡РЅРѕРµ РёРјСЏ С„Р°Р№Р»Р°
+  ja: 'NotoSansJP-Regular',      // в†ђ С‚РѕС‡РЅРѕРµ РёРјСЏ С„Р°Р№Р»Р°
+  ko: 'NotoSansKR-Regular',      // в†ђ С‚РѕС‡РЅРѕРµ РёРјСЏ С„Р°Р№Р»Р°
+  display: 'PlayfairDisplay-Regular', // в†ђ С‚РѕС‡РЅРѕРµ РёРјСЏ С„Р°Р№Р»Р°
+};
+
+export const getFontFamily = (locale, isBold = false) => {
+  if (locale === 'ja') return fonts.ja;
+  if (locale === 'ko') return fonts.ko;
+  return isBold ? fonts.uiBold : fonts.ui;
+};
+
+
+==================== FILE: src/theme/glass.js ====================
+import { spacing } from './spacing';
+
+export const glass = (themeMode = 'dark') => ({
+  background: themeMode === 'dark'
+    ? 'rgba(18, 28, 36, 0.72)'
+    : 'rgba(248, 244, 234, 0.72)',
+  border: themeMode === 'dark'
+    ? 'rgba(255, 255, 255, 0.08)'
+    : 'rgba(0, 0, 0, 0.05)',
+  borderRadius: 24,
+  padding: spacing.md,
+});
+
+
+==================== FILE: src/theme/index.js ====================
+export * from './colors';
+export * from './spacing';
+export * from './fonts';
+export * from './typography';
+export * from './glass';
+
+
+==================== FILE: src/locales/ru.js ====================
+export default {
+  // ==================== РћРЎРќРћР’РќР«Р• ====================
+  app: {
+    title: 'РЎРёРІРµСЂСЂРѕ'
+  },
+
+  // ==================== РљРќРћРџРљР ====================
+  buttons: {
+    addBook: '+ Р”РѕР±Р°РІРёС‚СЊ РєРЅРёРіСѓ',
+    save: 'РЎРѕС…СЂР°РЅРёС‚СЊ',
+    cancel: 'РћС‚РјРµРЅР°',
+    edit: 'Р РµРґР°РєС‚РёСЂРѕРІР°С‚СЊ',
+    delete: 'РЈРґР°Р»РёС‚СЊ'
+  },
+
+  // ==================== РћР‘Р©РР• ====================
+  common: {
+    error: 'РћС€РёР±РєР°',
+    success: 'РЈСЃРїРµС…!',
+    confirm: 'РџРѕРґС‚РІРµСЂР¶РґРµРЅРёРµ',
+    ok: 'OK',
+    back: 'РќР°Р·Р°Рґ',
+    save: 'РЎРѕС…СЂР°РЅРёС‚СЊ',
+    cancel: 'РћС‚РјРµРЅР°',
+    edit: 'Р РµРґР°РєС‚РёСЂРѕРІР°С‚СЊ',
+    delete: 'РЈРґР°Р»РёС‚СЊ'
+  },
+
+  // ==================== РўР•РњРђ ====================
+  theme: {
+    title: 'РўРµРјР°',
+    light: 'РЎРІРµС‚Р»Р°СЏ',
+    dark: 'РўС‘РјРЅР°СЏ',
+    system: 'РЎРёСЃС‚РµРјРЅР°СЏ'
+  },
+
+  // ==================== РЇР—Р«Рљ ====================
+  language: {
+    title: 'РЇР·С‹Рє'
+  },
+
+  // ==================== РРњРџРћР Рў ====================
+  import: {
+    button: 'рџ“Ґ РРјРїРѕСЂС‚',
+    alertTitle: 'РРјРїРѕСЂС‚',
+    alertLoading: 'Р—Р°РіСЂСѓР¶Р°СЋ РєРЅРёРіРё...',
+    alertSuccess: 'Р“РѕС‚РѕРІРѕ!',
+    alertError: 'РћС€РёР±РєР°'
+  },
+
+  // ==================== РљРќРР“Р ====================
+  books: {
+    count: 'РєРЅРёРі'
+  },
+
+  // ==================== Р­РљР РђРќР« ====================
+  screens: {
+    details: 'Р”РµС‚Р°Р»Рё РєРЅРёРіРё',
+    back: 'РќР°Р·Р°Рґ'
+  },
+
+  // ==================== РњР•РќР® ====================
+  menu: {
+    profile: 'РњРѕР№ РїСЂРѕС„РёР»СЊ',
+    stats: 'РЎС‚Р°С‚РёСЃС‚РёРєР°',
+    insights: 'РРЅСЃР°Р№С‚С‹',
+    theme: 'РўС‘РјРЅР°СЏ',
+    language: 'Р СѓСЃСЃРєРёР№',
+    about: 'Рћ РїСЂРёР»РѕР¶РµРЅРёРё'
+  },
+
+  // ==================== РџР›Р•Р™РЎРҐРћР›Р”Р•Р Р« ====================
+  placeholders: {
+    title: 'РќР°Р·РІР°РЅРёРµ',
+    author: 'РђРІС‚РѕСЂ',
+    section: 'Р Р°Р·РґРµР» (РЎС‚СЂР°РЅР°, СЃС‚РѕР»РµС‚РёРµ)',
+    genres: 'Р–Р°РЅСЂС‹ С‡РµСЂРµР· Р·Р°РїСЏС‚СѓСЋ',
+    pages: 'РљРѕР»РёС‡РµСЃС‚РІРѕ СЃС‚СЂР°РЅРёС†',
+    startDate: 'Р”Р°С‚Р° РЅР°С‡Р°Р»Р° (Р”Р”.РњРњ.Р“Р“Р“Р“)',
+    endDate: 'Р”Р°С‚Р° РѕРєРѕРЅС‡Р°РЅРёСЏ (Р”Р”.РњРњ.Р“Р“Р“Р“)',
+    notes: 'Р—Р°РјРµС‚РєРё / РѕС‚Р·С‹РІ',
+    search: 'РџРѕРёСЃРє РїРѕ РЅР°Р·РІР°РЅРёСЋ, Р°РІС‚РѕСЂСѓ, Р¶Р°РЅСЂСѓ...'
+  },
+
+  // ==================== РџРћР›РЇ ====================
+  fields: {
+    author: 'РђРІС‚РѕСЂ',
+    status: 'РЎС‚Р°С‚СѓСЃ',
+    rating: 'РћС†РµРЅРєР°',
+    section: 'Р Р°Р·РґРµР»',
+    genres: 'Р–Р°РЅСЂС‹',
+    pages: 'РЎС‚СЂР°РЅРёС†',
+    startDate: 'Р”Р°С‚Р° РЅР°С‡Р°Р»Р°',
+    endDate: 'Р”Р°С‚Р° РѕРєРѕРЅС‡Р°РЅРёСЏ',
+    notes: 'Р—Р°РјРµС‚РєРё',
+    languages: 'РЇР·С‹Рє РїСЂРѕС‡С‚РµРЅРёСЏ',
+    review: 'Р РµС†РµРЅР·РёСЏ',
+    authorCountry: 'РЎС‚СЂР°РЅР° Р°РІС‚РѕСЂР°',
+    series: 'РЎРµСЂРёСЏ',
+    seriesPosition: 'РќРѕРјРµСЂ РІ СЃРµСЂРёРё',
+    originalYear: 'Р“РѕРґ РѕСЂРёРіРёРЅР°Р»Р°'
+  },
+
+  // ==================== РЎРўРђРўРЈРЎР« РљРќРР“ ====================
+  status: {
+    planned: 'РІ РїР»Р°РЅР°С…',
+    reading: 'С‡РёС‚Р°СЋ',
+    finished: 'РїСЂРѕС‡РёС‚Р°РЅРѕ',
+    postponed: 'РѕС‚Р»РѕР¶РµРЅРѕ',
+    abandoned: 'Р±СЂРѕС€РµРЅРѕ',
+    rereading: 'РїРµСЂРµС‡РёС‚С‹РІР°СЋ'
+  },
+
+  // ==================== РћРЁРР‘РљР ====================
+  errors: {
+    emptyFields: 'РџРѕР¶Р°Р»СѓР№СЃС‚Р°, Р·Р°РїРѕР»РЅРёС‚Рµ РѕР±СЏР·Р°С‚РµР»СЊРЅС‹Рµ РїРѕР»СЏ',
+    bookNotFound: 'РљРЅРёРіР° РЅРµ РЅР°Р№РґРµРЅР°',
+    networkError: 'РћС€РёР±РєР° СЃРµС‚Рё'
+  },
+
+  // ==================== Р¤РР›Р¬РўР Р« ====================
+  filters: {
+    all: 'Р’СЃРµ',
+    finished: 'РџСЂРѕС‡РёС‚Р°РЅРѕ',
+    reading: 'Р§РёС‚Р°СЋ',
+    planned: 'Р’ РїР»Р°РЅР°С…'
+  },
+
+  // ==================== РЎРћР РўРР РћР’РљРђ ====================
+  sort: {
+    button: 'РЎРѕСЂС‚РёСЂРѕРІР°С‚СЊ',
+    title: 'РЎРѕСЂС‚РёСЂРѕРІР°С‚СЊ РїРѕ',
+    byDate: 'РџРѕ РґР°С‚Рµ РґРѕР±Р°РІР»РµРЅРёСЏ',
+    byTitle: 'РџРѕ РЅР°Р·РІР°РЅРёСЋ',
+    byAuthor: 'РџРѕ Р°РІС‚РѕСЂСѓ',
+    byRating: 'РџРѕ РѕС†РµРЅРєРµ'
+  },
+
+  // ==================== РџРЈРЎРўР«Р• РЎРћРЎРўРћРЇРќРРЇ ====================
+  empty: {
+    title: 'рџ“­ РќРµС‚ РєРЅРёРі',
+    subtitle: 'РќР°Р¶РјРёС‚Рµ вћ•, С‡С‚РѕР±С‹ РґРѕР±Р°РІРёС‚СЊ'
+  },
+
+  // ==================== РЎР§Р•РўР§РРљР ====================
+  counters: {
+    total: 'Р’СЃРµРіРѕ',
+    finished: 'РџСЂРѕС‡РёС‚Р°РЅРѕ',
+    reading: 'Р§РёС‚Р°СЋ',
+    planned: 'Р’ РїР»Р°РЅР°С…'
+  },
+
+  // ==================== Р”Р•Р™РЎРўР’РРЇ ====================
+  actions: {
+    deleteTitle: 'РЈРґР°Р»РµРЅРёРµ РєРЅРёРіРё',
+    deleteConfirm: 'РўРѕС‡РЅРѕ СѓРґР°Р»РёС‚СЊ',
+    delete: 'РЈРґР°Р»РёС‚СЊ',
+    cancel: 'РћС‚РјРµРЅР°'
+  },
+
+  // ==================== РРќРЎРђР™РўР« (РЎРўРђРўРРЎРўРРљРђ РќРђ Р“Р›РђР’РќРћР™) ====================
+  insights: {
+    title: 'РРЅСЃР°Р№С‚С‹',
+    progress: 'РџСЂРѕРіСЂРµСЃСЃ С‡С‚РµРЅРёСЏ',
+    finished: 'РџСЂРѕС‡РёС‚Р°РЅРѕ',
+    total: 'Р’СЃРµРіРѕ',
+    topGenres: 'РўРѕРї-3 Р¶Р°РЅСЂР°',
+    noGenreData: 'РќРµС‚ РґР°РЅРЅС‹С…',
+    books: 'РєРЅ.',
+    addFirstBook: 'Р”РѕР±Р°РІСЊС‚Рµ РїРµСЂРІСѓСЋ РєРЅРёРіСѓ',
+    justStarted: 'Р’С‹ С‚РѕР»СЊРєРѕ РЅР°С‡Р°Р»Рё',
+    goodStart: 'РћС‚Р»РёС‡РЅС‹Р№ СЃС‚Р°СЂС‚',
+    bookworm: 'РљРЅРёР¶РЅС‹Р№ С‡РµСЂРІСЊ',
+    bookKing: 'РљРЅРёР¶РЅС‹Р№ РєРѕСЂРѕР»СЊ'
+  },
+
+  // ==================== Р”Р•РўРђР›Р РљРќРР“Р ====================
+  bookDetails: {
+    notFound: 'РљРЅРёРіР° РЅРµ РЅР°Р№РґРµРЅР°',
+    deleteConfirm: 'Р’С‹ СѓРІРµСЂРµРЅС‹, С‡С‚Рѕ С…РѕС‚РёС‚Рµ СѓРґР°Р»РёС‚СЊ СЌС‚Сѓ РєРЅРёРіСѓ?',
+    status: 'РЎС‚Р°С‚СѓСЃ',
+    progress: 'РџСЂРѕРіСЂРµСЃСЃ',
+    rating: 'Р РµР№С‚РёРЅРі',
+    pages: 'СЃС‚СЂ.'
+  },
+
+  // ==================== РЎР•РЎРЎРРЇ Р§РўР•РќРРЇ ====================
+  session: {
+    noActiveBookTitle: 'РќРµС‚ Р°РєС‚РёРІРЅРѕР№ РєРЅРёРіРё',
+    noActiveBookMessage: 'РџРѕР¶Р°Р»СѓР№СЃС‚Р°, РІС‹Р±РµСЂРёС‚Рµ РєРЅРёРіСѓ РґР»СЏ С‡С‚РµРЅРёСЏ',
+    startSession: 'РќР°С‡Р°С‚СЊ СЃРµСЃСЃРёСЋ',
+    endSession: 'Р—Р°РІРµСЂС€РёС‚СЊ СЃРµСЃСЃРёСЋ',
+    currentPage: 'РўРµРєСѓС‰Р°СЏ СЃС‚СЂР°РЅРёС†Р°',
+    ofPages: 'РёР·',
+    pagesRead: 'РџСЂРѕС‡РёС‚Р°РЅРѕ СЃС‚СЂР°РЅРёС†',
+    duration: 'Р”Р»РёС‚РµР»СЊРЅРѕСЃС‚СЊ',
+    invalidPage: 'Р’РІРµРґРёС‚Рµ СЃС‚СЂР°РЅРёС†Сѓ РѕС‚ {current} РґРѕ {total}',
+    sessionComplete: 'РџСЂРѕС‡РёС‚Р°РЅРѕ {pages} СЃС‚СЂР°РЅРёС† Р·Р° {minutes} РјРёРЅ.'
+  },
+
+  // ==================== РЎРўРђРўРРЎРўРРљРђ (INSIGHTS SCREEN) ====================
+  statistics: {
+    title: 'РЎС‚Р°С‚РёСЃС‚РёРєР° С‡С‚РµРЅРёСЏ',
+    subtitle: 'Р’Р°С€Рё РґРѕСЃС‚РёР¶РµРЅРёСЏ',
+    totalBooks: 'Р’СЃРµРіРѕ РєРЅРёРі',
+    totalPages: 'РџСЂРѕС‡РёС‚Р°РЅРѕ СЃС‚СЂР°РЅРёС†',
+    totalHours: 'Р§Р°СЃРѕРІ С‡С‚РµРЅРёСЏ',
+    averageSpeed: 'РЎСЂРµРґРЅСЏСЏ СЃРєРѕСЂРѕСЃС‚СЊ',
+    bestDay: 'Р›СѓС‡С€РёР№ РґРµРЅСЊ',
+    weeklyActivity: 'РђРєС‚РёРІРЅРѕСЃС‚СЊ Р·Р° РЅРµРґРµР»СЋ'
+  },
+
+  // ==================== Рћ РџР РР›РћР–Р•РќРР ====================
+  about: {
+    title: 'Рћ РїСЂРёР»РѕР¶РµРЅРёРё',
+    version: 'Р’РµСЂСЃРёСЏ',
+    author: 'Р Р°Р·СЂР°Р±РѕС‚С‡РёРє',
+    description: 'Syverro - РєР°РјРµСЂРЅР°СЏ С‡РёС‚Р°С‚РµР»СЊСЃРєР°СЏ СЃСЂРµРґР° РґР»СЏ РѕС‚СЃР»РµР¶РёРІР°РЅРёСЏ РїСЂРѕРіСЂРµСЃСЃР° С‡С‚РµРЅРёСЏ'
+  },
+
+  // ==================== РР—Р‘Р РђРќРќР«Р• РљРќРР“Р ====================
+  favoriteBooks: {
+    title: 'РР·Р±СЂР°РЅРЅС‹Рµ РєРЅРёРіРё',
+    emptyTitle: 'РќРµС‚ РёР·Р±СЂР°РЅРЅС‹С… РєРЅРёРі',
+    emptyMessage: 'Р”РѕР±Р°РІР»СЏР№С‚Рµ РєРЅРёРіРё РІ РёР·Р±СЂР°РЅРЅРѕРµ, С‡С‚РѕР±С‹ РѕРЅРё РѕС‚РѕР±СЂР°Р¶Р°Р»РёСЃСЊ Р·РґРµСЃСЊ'
+  },
+
+  // ==================== РџР РћР¤РР›Р¬ ====================
+  profile: {
+    title: 'РџСЂРѕС„РёР»СЊ',
+    readerLevel: 'РЈСЂРѕРІРµРЅСЊ С‡РёС‚Р°С‚РµР»СЏ',
+    stats: 'РЎС‚Р°С‚РёСЃС‚РёРєР°'
+  }
+};
+
+
+==================== FILE: src/locales/en.js ====================
+export default {
+  // ==================== MAIN ====================
+  app: {
+    title: 'Syverro'
+  },
+
+  // ==================== BUTTONS ====================
+  buttons: {
+    addBook: '+ Add book',
+    save: 'Save',
+    cancel: 'Cancel',
+    edit: 'Edit',
+    delete: 'Delete'
+  },
+
+  // ==================== COMMON ====================
+  common: {
+    error: 'Error',
+    success: 'Success!',
+    confirm: 'Confirm',
+    ok: 'OK',
+    back: 'Back',
+    save: 'Save',
+    cancel: 'Cancel',
+    edit: 'Edit',
+    delete: 'Delete'
+  },
+
+  // ==================== THEME ====================
+  theme: {
+    title: 'Theme',
+    light: 'Light',
+    dark: 'Dark',
+    system: 'System'
+  },
+
+  // ==================== LANGUAGE ====================
+  language: {
+    title: 'Language'
+  },
+
+  // ==================== IMPORT ====================
+  import: {
+    button: 'рџ“Ґ Import',
+    alertTitle: 'Import',
+    alertLoading: 'Loading books...',
+    alertSuccess: 'Done!',
+    alertError: 'Error'
+  },
+
+  // ==================== BOOKS ====================
+  books: {
+    count: 'books'
+  },
+
+  // ==================== SCREENS ====================
+  screens: {
+    details: 'Book details',
+    back: 'Back'
+  },
+
+  // ==================== MENU ====================
+  menu: {
+    profile: 'My profile',
+    stats: 'Statistics',
+    insights: 'Insights',
+    theme: 'Dark mode',
+    language: 'English',
+    about: 'About'
+  },
+
+  // ==================== PLACEHOLDERS ====================
+  placeholders: {
+    title: 'Title',
+    author: 'Author',
+    section: 'Section (Country, century)',
+    genres: 'Genres (comma separated)',
+    pages: 'Number of pages',
+    startDate: 'Start date (MM/DD/YYYY)',
+    endDate: 'End date (MM/DD/YYYY)',
+    notes: 'Notes / review',
+    search: 'Search by title, author, genre...'
+  },
+
+  // ==================== FIELDS ====================
+  fields: {
+    author: 'Author',
+    status: 'Status',
+    rating: 'Rating',
+    section: 'Section',
+    genres: 'Genres',
+    pages: 'Pages',
+    startDate: 'Start date',
+    endDate: 'End date',
+    notes: 'Notes',
+    languages: 'Reading language',
+    review: 'Review',
+    authorCountry: 'Author country',
+    series: 'Series',
+    seriesPosition: 'Position in series',
+    originalYear: 'Original year'
+  },
+
+  // ==================== BOOK STATUSES ====================
+  status: {
+    planned: 'planned',
+    reading: 'reading',
+    finished: 'finished',
+    postponed: 'postponed',
+    abandoned: 'abandoned',
+    rereading: 'rereading'
+  },
+
+  // ==================== ERRORS ====================
+  errors: {
+    emptyFields: 'Please fill in required fields',
+    bookNotFound: 'Book not found',
+    networkError: 'Network error'
+  },
+
+  // ==================== FILTERS ====================
+  filters: {
+    all: 'All',
+    finished: 'Finished',
+    reading: 'Reading',
+    planned: 'Planned'
+  },
+
+  // ==================== SORT ====================
+  sort: {
+    button: 'Sort',
+    title: 'Sort by',
+    byDate: 'By date added',
+    byTitle: 'By title',
+    byAuthor: 'By author',
+    byRating: 'By rating'
+  },
+
+  // ==================== EMPTY STATES ====================
+  empty: {
+    title: 'рџ“­ No books',
+    subtitle: 'Tap вћ• to add'
+  },
+
+  // ==================== COUNTERS ====================
+  counters: {
+    total: 'Total',
+    finished: 'Finished',
+    reading: 'Reading',
+    planned: 'Planned'
+  },
+
+  // ==================== ACTIONS ====================
+  actions: {
+    deleteTitle: 'Delete book',
+    deleteConfirm: 'Delete permanently?',
+    delete: 'Delete',
+    cancel: 'Cancel'
+  },
+
+  // ==================== INSIGHTS (HOME STATS) ====================
+  insights: {
+    title: 'Insights',
+    progress: 'Reading progress',
+    finished: 'Finished',
+    total: 'Total',
+    topGenres: 'Top 3 genres',
+    noGenreData: 'No data',
+    books: 'books',
+    addFirstBook: 'Add your first book',
+    justStarted: 'Just started',
+    goodStart: 'Good start',
+    bookworm: 'Bookworm',
+    bookKing: 'Book king'
+  },
+
+  // ==================== BOOK DETAILS ====================
+  bookDetails: {
+    notFound: 'Book not found',
+    deleteConfirm: 'Are you sure you want to delete this book?',
+    status: 'Status',
+    progress: 'Progress',
+    rating: 'Rating',
+    pages: 'pages'
+  },
+
+  // ==================== READING SESSION ====================
+  session: {
+    noActiveBookTitle: 'No active book',
+    noActiveBookMessage: 'Please select a book to read',
+    startSession: 'Start session',
+    endSession: 'End session',
+    currentPage: 'Current page',
+    ofPages: 'of',
+    pagesRead: 'Pages read',
+    duration: 'Duration',
+    invalidPage: 'Enter page from {current} to {total}',
+    sessionComplete: 'Read {pages} pages in {minutes} min.'
+  },
+
+  // ==================== STATISTICS (INSIGHTS SCREEN) ====================
+  statistics: {
+    title: 'Reading statistics',
+    subtitle: 'Your achievements',
+    totalBooks: 'Total books',
+    totalPages: 'Pages read',
+    totalHours: 'Hours read',
+    averageSpeed: 'Average speed',
+    bestDay: 'Best day',
+    weeklyActivity: 'Weekly activity'
+  },
+
+  // ==================== ABOUT ====================
+  about: {
+    title: 'About',
+    version: 'Version',
+    author: 'Developer',
+    description: 'Syverro - a cozy reading environment for tracking reading progress'
+  },
+
+  // ==================== FAVORITE BOOKS ====================
+  favoriteBooks: {
+    title: 'Favorite books',
+    emptyTitle: 'No favorite books',
+    emptyMessage: 'Add books to favorites to see them here'
+  },
+
+  // ==================== PROFILE ====================
+  profile: {
+    title: 'Profile',
+    readerLevel: 'Reader level',
+    stats: 'Statistics'
+  }
+};
+
+
+==================== FILE: src/locales/ua.js ====================
+export default {
+  // ==================== РћРЎРќРћР’РќР† ====================
+  app: {
+    title: 'РЎС–РІРµСЂСЂРѕ'
+  },
+
+  // ==================== РљРќРћРџРљР ====================
+  buttons: {
+    addBook: '+ Р”РѕРґР°С‚Рё РєРЅРёРіСѓ',
+    save: 'Р—Р±РµСЂРµРіС‚Рё',
+    cancel: 'РЎРєР°СЃСѓРІР°С‚Рё',
+    edit: 'Р РµРґР°РіСѓРІР°С‚Рё',
+    delete: 'Р’РёРґР°Р»РёС‚Рё'
+  },
+
+  // ==================== Р—РђР“РђР›Р¬РќР† ====================
+  common: {
+    error: 'РџРѕРјРёР»РєР°',
+    success: 'РЈСЃРїС–С…!',
+    confirm: 'РџС–РґС‚РІРµСЂРґР¶РµРЅРЅСЏ',
+    ok: 'OK',
+    back: 'РќР°Р·Р°Рґ',
+    save: 'Р—Р±РµСЂРµРіС‚Рё',
+    cancel: 'РЎРєР°СЃСѓРІР°С‚Рё',
+    edit: 'Р РµРґР°РіСѓРІР°С‚Рё',
+    delete: 'Р’РёРґР°Р»РёС‚Рё'
+  },
+
+  // ==================== РўР•РњРђ ====================
+  theme: {
+    title: 'РўРµРјР°',
+    light: 'РЎРІС–С‚Р»Р°',
+    dark: 'РўРµРјРЅР°',
+    system: 'РЎРёСЃС‚РµРјРЅР°'
+  },
+
+  // ==================== РњРћР’Рђ ====================
+  language: {
+    title: 'РњРѕРІР°'
+  },
+
+  // ==================== Р†РњРџРћР Рў ====================
+  import: {
+    button: 'рџ“Ґ Р†РјРїРѕСЂС‚',
+    alertTitle: 'Р†РјРїРѕСЂС‚',
+    alertLoading: 'Р—Р°РІР°РЅС‚Р°Р¶СѓСЋ РєРЅРёРіРё...',
+    alertSuccess: 'Р“РѕС‚РѕРІРѕ!',
+    alertError: 'РџРѕРјРёР»РєР°'
+  },
+
+  // ==================== РљРќРР“Р ====================
+  books: {
+    count: 'РєРЅРёРі'
+  },
+
+  // ==================== Р•РљР РђРќР ====================
+  screens: {
+    details: 'Р”РµС‚Р°Р»С– РєРЅРёРіРё',
+    back: 'РќР°Р·Р°Рґ'
+  },
+
+  // ==================== РњР•РќР® ====================
+  menu: {
+    profile: 'РњС–Р№ РїСЂРѕС„С–Р»СЊ',
+    stats: 'РЎС‚Р°С‚РёСЃС‚РёРєР°',
+    insights: 'Р†РЅСЃР°Р№С‚Рё',
+    theme: 'РўРµРјРЅР°',
+    language: 'РЈРєСЂР°С—РЅСЃСЊРєР°',
+    about: 'РџСЂРѕ РґРѕРґР°С‚РѕРє'
+  },
+
+  // ==================== РџР›Р•Р™РЎРҐРћР›Р”Р•Р Р ====================
+  placeholders: {
+    title: 'РќР°Р·РІР°',
+    author: 'РђРІС‚РѕСЂ',
+    section: 'Р РѕР·РґС–Р» (РљСЂР°С—РЅР°, СЃС‚РѕР»С–С‚С‚СЏ)',
+    genres: 'Р–Р°РЅСЂРё С‡РµСЂРµР· РєРѕРјСѓ',
+    pages: 'РљС–Р»СЊРєС–СЃС‚СЊ СЃС‚РѕСЂС–РЅРѕРє',
+    startDate: 'Р”Р°С‚Р° РїРѕС‡Р°С‚РєСѓ (Р”Р”.РњРњ.Р Р Р Р )',
+    endDate: 'Р”Р°С‚Р° Р·Р°РєС–РЅС‡РµРЅРЅСЏ (Р”Р”.РњРњ.Р Р Р Р )',
+    notes: 'РќРѕС‚Р°С‚РєРё / РІС–РґРіСѓРє',
+    search: 'РџРѕС€СѓРє Р·Р° РЅР°Р·РІРѕСЋ, Р°РІС‚РѕСЂРѕРј, Р¶Р°РЅСЂРѕРј...'
+  },
+
+  // ==================== РџРћР›РЇ ====================
+  fields: {
+    author: 'РђРІС‚РѕСЂ',
+    status: 'РЎС‚Р°С‚СѓСЃ',
+    rating: 'РћС†С–РЅРєР°',
+    section: 'Р РѕР·РґС–Р»',
+    genres: 'Р–Р°РЅСЂРё',
+    pages: 'РЎС‚РѕСЂС–РЅРѕРє',
+    startDate: 'Р”Р°С‚Р° РїРѕС‡Р°С‚РєСѓ',
+    endDate: 'Р”Р°С‚Р° Р·Р°РєС–РЅС‡РµРЅРЅСЏ',
+    notes: 'РќРѕС‚Р°С‚РєРё',
+    languages: 'РњРѕРІР° РїСЂРѕС‡РёС‚Р°РЅРЅСЏ',
+    review: 'Р РµС†РµРЅР·С–СЏ',
+    authorCountry: 'РљСЂР°С—РЅР° Р°РІС‚РѕСЂР°',
+    series: 'РЎРµСЂС–СЏ',
+    seriesPosition: 'РќРѕРјРµСЂ Сѓ СЃРµСЂС–С—',
+    originalYear: 'Р С–Рє РѕСЂРёРіС–РЅР°Р»Сѓ'
+  },
+
+  // ==================== РЎРўРђРўРЈРЎР РљРќРР“ ====================
+  status: {
+    planned: 'РІ РїР»Р°РЅР°С…',
+    reading: 'С‡РёС‚Р°СЋ',
+    finished: 'РїСЂРѕС‡РёС‚Р°РЅРѕ',
+    postponed: 'РІС–РґРєР»Р°РґРµРЅРѕ',
+    abandoned: 'РєРёРЅСѓС‚Рѕ',
+    rereading: 'РїРµСЂРµС‡РёС‚СѓСЋ'
+  },
+
+  // ==================== РџРћРњРР›РљР ====================
+  errors: {
+    emptyFields: 'Р‘СѓРґСЊ Р»Р°СЃРєР°, Р·Р°РїРѕРІРЅС–С‚СЊ РѕР±РѕРІ\'СЏР·РєРѕРІС– РїРѕР»СЏ',
+    bookNotFound: 'РљРЅРёРіСѓ РЅРµ Р·РЅР°Р№РґРµРЅРѕ',
+    networkError: 'РџРѕРјРёР»РєР° РјРµСЂРµР¶С–'
+  },
+
+  // ==================== Р¤Р†Р›Р¬РўР Р ====================
+  filters: {
+    all: 'Р’СЃС–',
+    finished: 'РџСЂРѕС‡РёС‚Р°РЅРѕ',
+    reading: 'Р§РёС‚Р°СЋ',
+    planned: 'Р’ РїР»Р°РЅР°С…'
+  },
+
+  // ==================== РЎРћР РўРЈР’РђРќРќРЇ ====================
+  sort: {
+    button: 'РЎРѕСЂС‚СѓРІР°С‚Рё',
+    title: 'РЎРѕСЂС‚СѓРІР°С‚Рё Р·Р°',
+    byDate: 'Р—Р° РґР°С‚РѕСЋ РґРѕРґР°РІР°РЅРЅСЏ',
+    byTitle: 'Р—Р° РЅР°Р·РІРѕСЋ',
+    byAuthor: 'Р—Р° Р°РІС‚РѕСЂРѕРј',
+    byRating: 'Р—Р° РѕС†С–РЅРєРѕСЋ'
+  },
+
+  // ==================== РџРЈРЎРўР† РЎРўРђРќР ====================
+  empty: {
+    title: 'рџ“­ РќРµРјР°С” РєРЅРёРі',
+    subtitle: 'РќР°С‚РёСЃРЅС–С‚СЊ вћ•, С‰РѕР± РґРѕРґР°С‚Рё'
+  },
+
+  // ==================== Р›Р†Р§РР›Р¬РќРРљР ====================
+  counters: {
+    total: 'Р’СЃСЊРѕРіРѕ',
+    finished: 'РџСЂРѕС‡РёС‚Р°РЅРѕ',
+    reading: 'Р§РёС‚Р°СЋ',
+    planned: 'Р’ РїР»Р°РЅР°С…'
+  },
+
+  // ==================== Р”Р†Р‡ ====================
+  actions: {
+    deleteTitle: 'Р’РёРґР°Р»РµРЅРЅСЏ РєРЅРёРіРё',
+    deleteConfirm: 'РўРѕС‡РЅРѕ РІРёРґР°Р»РёС‚Рё?',
+    delete: 'Р’РёРґР°Р»РёС‚Рё',
+    cancel: 'РЎРєР°СЃСѓРІР°С‚Рё'
+  },
+
+  // ==================== Р†РќРЎРђР™РўР (РЎРўРђРўРРЎРўРРљРђ РќРђ Р“РћР›РћР’РќР†Р™) ====================
+  insights: {
+    title: 'Р†РЅСЃР°Р№С‚Рё',
+    progress: 'РџСЂРѕРіСЂРµСЃ С‡РёС‚Р°РЅРЅСЏ',
+    finished: 'РџСЂРѕС‡РёС‚Р°РЅРѕ',
+    total: 'Р’СЃСЊРѕРіРѕ',
+    topGenres: 'РўРѕРї-3 Р¶Р°РЅСЂРё',
+    noGenreData: 'РќРµРјР°С” РґР°РЅРёС…',
+    books: 'РєРЅ.',
+    addFirstBook: 'Р”РѕРґР°Р№С‚Рµ РїРµСЂС€Сѓ РєРЅРёРіСѓ',
+    justStarted: 'Р’Рё С‚С–Р»СЊРєРё РїРѕС‡Р°Р»Рё',
+    goodStart: 'Р§СѓРґРѕРІРёР№ СЃС‚Р°СЂС‚',
+    bookworm: 'РљРЅРёР¶РєРѕРІРёР№ С‡РµСЂРІ\'СЏРє',
+    bookKing: 'РљРЅРёР¶РєРѕРІРёР№ РєРѕСЂРѕР»СЊ'
+  },
+
+  // ==================== Р”Р•РўРђР›Р† РљРќРР“Р ====================
+  bookDetails: {
+    notFound: 'РљРЅРёРіСѓ РЅРµ Р·РЅР°Р№РґРµРЅРѕ',
+    deleteConfirm: 'Р’Рё РІРїРµРІРЅРµРЅС–, С‰Рѕ С…РѕС‡РµС‚Рµ РІРёРґР°Р»РёС‚Рё С†СЋ РєРЅРёРіСѓ?',
+    status: 'РЎС‚Р°С‚СѓСЃ',
+    progress: 'РџСЂРѕРіСЂРµСЃ',
+    rating: 'РћС†С–РЅРєР°',
+    pages: 'СЃС‚РѕСЂ.'
+  },
+
+  // ==================== РЎР•РЎР†РЇ Р§РРўРђРќРќРЇ ====================
+  session: {
+    noActiveBookTitle: 'РќРµРјР°С” Р°РєС‚РёРІРЅРѕС— РєРЅРёРіРё',
+    noActiveBookMessage: 'Р‘СѓРґСЊ Р»Р°СЃРєР°, РѕР±РµСЂС–С‚СЊ РєРЅРёРіСѓ РґР»СЏ С‡РёС‚Р°РЅРЅСЏ',
+    startSession: 'РџРѕС‡Р°С‚Рё СЃРµСЃС–СЋ',
+    endSession: 'Р—Р°РІРµСЂС€РёС‚Рё СЃРµСЃС–СЋ',
+    currentPage: 'РџРѕС‚РѕС‡РЅР° СЃС‚РѕСЂС–РЅРєР°',
+    ofPages: 'Р·',
+    pagesRead: 'РџСЂРѕС‡РёС‚Р°РЅРѕ СЃС‚РѕСЂС–РЅРѕРє',
+    duration: 'РўСЂРёРІР°Р»С–СЃС‚СЊ',
+    invalidPage: 'Р’РІРµРґС–С‚СЊ СЃС‚РѕСЂС–РЅРєСѓ РІС–Рґ {current} РґРѕ {total}',
+    sessionComplete: 'РџСЂРѕС‡РёС‚Р°РЅРѕ {pages} СЃС‚РѕСЂС–РЅРѕРє Р·Р° {minutes} С…РІ.'
+  },
+
+  // ==================== РЎРўРђРўРРЎРўРРљРђ (INSIGHTS SCREEN) ====================
+  statistics: {
+    title: 'РЎС‚Р°С‚РёСЃС‚РёРєР° С‡РёС‚Р°РЅРЅСЏ',
+    subtitle: 'Р’Р°С€С– РґРѕСЃСЏРіРЅРµРЅРЅСЏ',
+    totalBooks: 'Р’СЃСЊРѕРіРѕ РєРЅРёРі',
+    totalPages: 'РџСЂРѕС‡РёС‚Р°РЅРѕ СЃС‚РѕСЂС–РЅРѕРє',
+    totalHours: 'Р“РѕРґРёРЅ С‡РёС‚Р°РЅРЅСЏ',
+    averageSpeed: 'РЎРµСЂРµРґРЅСЏ С€РІРёРґРєС–СЃС‚СЊ',
+    bestDay: 'РќР°Р№РєСЂР°С‰РёР№ РґРµРЅСЊ',
+    weeklyActivity: 'РђРєС‚РёРІРЅС–СЃС‚СЊ Р·Р° С‚РёР¶РґРµРЅСЊ'
+  },
+
+  // ==================== РџР Рћ Р”РћР”РђРўРћРљ ====================
+  about: {
+    title: 'РџСЂРѕ РґРѕРґР°С‚РѕРє',
+    version: 'Р’РµСЂСЃС–СЏ',
+    author: 'Р РѕР·СЂРѕР±РЅРёРє',
+    description: 'Syverro - РєР°РјРµСЂРЅРµ С‡РёС‚Р°С†СЊРєРµ СЃРµСЂРµРґРѕРІРёС‰Рµ РґР»СЏ РІС–РґСЃС‚РµР¶РµРЅРЅСЏ РїСЂРѕРіСЂРµСЃСѓ С‡РёС‚Р°РЅРЅСЏ'
+  },
+
+  // ==================== РЈР›Р®Р‘Р›Р•РќР† РљРќРР“Р ====================
+  favoriteBooks: {
+    title: 'РЈР»СЋР±Р»РµРЅС– РєРЅРёРіРё',
+    emptyTitle: 'РќРµРјР°С” СѓР»СЋР±Р»РµРЅРёС… РєРЅРёРі',
+    emptyMessage: 'Р”РѕРґР°РІР°Р№С‚Рµ РєРЅРёРіРё РІ СѓР»СЋР±Р»РµРЅС–, С‰РѕР± РІРѕРЅРё РІС–РґРѕР±СЂР°Р¶Р°Р»РёСЃСЏ С‚СѓС‚'
+  },
+
+  // ==================== РџР РћР¤Р†Р›Р¬ ====================
+  profile: {
+    title: 'РџСЂРѕС„С–Р»СЊ',
+    readerLevel: 'Р С–РІРµРЅСЊ С‡РёС‚Р°С‡Р°',
+    stats: 'РЎС‚Р°С‚РёСЃС‚РёРєР°'
+  }
+};
+
+
+==================== FILE: src/locales/be.js ====================
+export default {
+  // ==================== РђРЎРќРћРЋРќР«РЇ ====================
+  app: {
+    title: 'РЎС–РІРµСЂСЂР°'
+  },
+
+  // ==================== РљРќРћРџРљР† ====================
+  buttons: {
+    addBook: '+ Р”Р°РґР°С†СЊ РєРЅС–РіСѓ',
+    save: 'Р—Р°С…Р°РІР°С†СЊ',
+    cancel: 'РЎРєР°СЃР°РІР°С†СЊ',
+    edit: 'Р СЌРґР°РіР°РІР°С†СЊ',
+    delete: 'Р’С‹РґР°Р»С–С†СЊ'
+  },
+
+  // ==================== РђР“РЈР›Р¬РќР«РЇ ====================
+  common: {
+    error: 'РџР°РјС‹Р»РєР°',
+    success: 'РџРѕСЃРїРµС…!',
+    confirm: 'РџР°С†РІРµСЂРґР¶Р°РЅРЅРµ',
+    ok: 'OK',
+    back: 'РќР°Р·Р°Рґ',
+    save: 'Р—Р°С…Р°РІР°С†СЊ',
+    cancel: 'РЎРєР°СЃР°РІР°С†СЊ',
+    edit: 'Р СЌРґР°РіР°РІР°С†СЊ',
+    delete: 'Р’С‹РґР°Р»С–С†СЊ'
+  },
+
+  // ==================== РўР­РњРђ ====================
+  theme: {
+    title: 'РўСЌРјР°',
+    light: 'РЎРІРµС‚Р»Р°СЏ',
+    dark: 'Р¦С‘РјРЅР°СЏ',
+    system: 'РЎС–СЃС‚СЌРјРЅР°СЏ'
+  },
+
+  // ==================== РњРћР’Рђ ====================
+  language: {
+    title: 'РњРѕРІР°'
+  },
+
+  // ==================== Р†РњРџРђР Рў ====================
+  import: {
+    button: 'рџ“Ґ Р†РјРїР°СЂС‚',
+    alertTitle: 'Р†РјРїР°СЂС‚',
+    alertLoading: 'Р—Р°РіСЂСѓР¶Р°СЋ РєРЅС–РіС–...',
+    alertSuccess: 'Р“Р°С‚РѕРІР°!',
+    alertError: 'РџР°РјС‹Р»РєР°'
+  },
+
+  // ==================== РљРќР†Р“Р† ====================
+  books: {
+    count: 'РєРЅС–Рі'
+  },
+
+  // ==================== Р­РљР РђРќР« ====================
+  screens: {
+    details: 'Р”СЌС‚Р°Р»С– РєРЅС–РіС–',
+    back: 'РќР°Р·Р°Рґ'
+  },
+
+  // ==================== РњР•РќР® ====================
+  menu: {
+    profile: 'РњРѕР№ РїСЂРѕС„С–Р»СЊ',
+    stats: 'РЎС‚Р°С‚С‹СЃС‚С‹РєР°',
+    insights: 'Р†РЅСЃР°Р№С‚С‹',
+    theme: 'Р¦С‘РјРЅР°СЏ',
+    language: 'Р‘РµР»Р°СЂСѓСЃРєР°СЏ',
+    about: 'РџСЂР° РїСЂР°РіСЂР°РјСѓ'
+  },
+
+  // ==================== РџР›Р•Р™РЎРҐРћР›Р”Р­Р Р« ====================
+  placeholders: {
+    title: 'РќР°Р·РІР°',
+    author: 'РђСћС‚Р°СЂ',
+    section: 'Р Р°Р·РґР·РµР» (РљСЂР°С–РЅР°, СЃС‚Р°РіРѕРґРґР·Рµ)',
+    genres: 'Р–Р°РЅСЂС‹ РїСЂР°Р· РєРѕСЃРєСѓ',
+    pages: 'РљРѕР»СЊРєР°СЃС†СЊ СЃС‚Р°СЂРѕРЅР°Рє',
+    startDate: 'Р”Р°С‚Р° РїР°С‡Р°С‚РєСѓ (Р”Р”.РњРњ.Р“Р“Р“Р“)',
+    endDate: 'Р”Р°С‚Р° Р·Р°РєР°РЅС‡СЌРЅРЅСЏ (Р”Р”.РњРњ.Р“Р“Р“Р“)',
+    notes: 'РќР°С‚atРєС– / РІРѕРґРіСѓРє',
+    search: 'РџРѕС€СѓРє РїР° РЅР°Р·РІРµ, Р°СћС‚Р°СЂС‹, Р¶Р°РЅСЂС‹...'
+  },
+
+  // ==================== РџРђР›Р† ====================
+  fields: {
+    author: 'РђСћС‚Р°СЂ',
+    status: 'РЎС‚Р°С‚СѓСЃ',
+    rating: 'РђС†СЌРЅРєР°',
+    section: 'Р Р°Р·РґР·РµР»',
+    genres: 'Р–Р°РЅСЂС‹',
+    pages: 'РЎС‚Р°СЂРѕРЅР°Рє',
+    startDate: 'Р”Р°С‚Р° РїР°С‡Р°С‚РєСѓ',
+    endDate: 'Р”Р°С‚Р° Р·Р°РєР°РЅС‡СЌРЅРЅСЏ',
+    notes: 'РќРѕС‚Р°С‚РєС–',
+    languages: 'РњРѕРІР° РїСЂР°С‡С‹С‚Р°РЅРЅСЏ',
+    review: 'Р СЌС†СЌРЅР·С–СЏ',
+    authorCountry: 'РљСЂР°С–РЅР° Р°СћС‚Р°СЂР°',
+    series: 'РЎРµСЂС‹СЏ',
+    seriesPosition: 'РќСѓРјР°СЂ Сѓ СЃРµСЂС‹С–',
+    originalYear: 'Р“РѕРґ Р°СЂС‹РіС–РЅР°Р»Сѓ'
+  },
+
+  // ==================== РЎРўРђРўРЈРЎР« РљРќР†Р“ ====================
+  status: {
+    planned: 'Сѓ РїР»Р°РЅР°С…',
+    reading: 'С‡С‹С‚Р°СЋ',
+    finished: 'РїСЂР°С‡С‹С‚Р°РЅР°',
+    postponed: 'Р°РґРєР»Р°РґР·РµРЅР°',
+    abandoned: 'РєС–РЅСѓС‚Р°',
+    rereading: 'РїРµСЂР°С‡С‹С‚РІР°СЋ'
+  },
+
+  // ==================== РџРђРњР«Р›РљР† ====================
+  errors: {
+    emptyFields: 'РљР°Р»С– Р»Р°СЃРєР°, Р·Р°РїРѕСћРЅС–С†Рµ Р°Р±Р°РІСЏР·РєРѕРІС‹СЏ РїР°Р»С–',
+    bookNotFound: 'РљРЅС–РіР° РЅРµ Р·РЅРѕР№РґР·РµРЅР°',
+    networkError: 'РџР°РјС‹Р»РєР° СЃРµС‚РєС–'
+  },
+
+  // ==================== Р¤Р†Р›Р¬РўР Р« ====================
+  filters: {
+    all: 'РЈСЃРµ',
+    finished: 'РџСЂР°С‡С‹С‚Р°РЅР°',
+    reading: 'Р§С‹С‚Р°СЋ',
+    planned: 'РЈ РїР»Р°РЅР°С…'
+  },
+
+  // ==================== РЎРђР РўРђР’РђРќРќР• ====================
+  sort: {
+    button: 'РЎР°СЂС‚Р°РІР°С†СЊ',
+    title: 'РЎР°СЂС‚Р°РІР°С†СЊ РїР°',
+    byDate: 'РџР° РґР°С†Рµ РґР°РґР°РЅРЅСЏ',
+    byTitle: 'РџР° РЅР°Р·РІРµ',
+    byAuthor: 'РџР° Р°СћС‚Р°СЂС‹',
+    byRating: 'РџР° Р°С†СЌРЅС†С‹'
+  },
+
+  // ==================== РџРЈРЎРўР«РЇ РЎРўРђРќР« ====================
+  empty: {
+    title: 'рџ“­ РќСЏРјР° РєРЅС–Рі',
+    subtitle: 'РќР°С†С–СЃРЅС–С†Рµ вћ•, РєР°Р± РґР°РґР°С†СЊ'
+  },
+
+  // ==================== Р›Р†Р§Р«Р›Р¬РќР†РљР† ====================
+  counters: {
+    total: 'РЈСЃСЏРіРѕ',
+    finished: 'РџСЂР°С‡С‹С‚Р°РЅР°',
+    reading: 'Р§С‹С‚Р°СЋ',
+    planned: 'РЈ РїР»Р°РЅР°С…'
+  },
+
+  // ==================== Р”Р—Р•РЇРќРќР† ====================
+  actions: {
+    deleteTitle: 'Р’С‹РґР°Р»РµРЅРЅРµ РєРЅС–РіС–',
+    deleteConfirm: 'Р”Р°РєР»Р°РґРЅР° РІС‹РґР°Р»С–С†СЊ?',
+    delete: 'Р’С‹РґР°Р»С–С†СЊ',
+    cancel: 'РЎРєР°СЃР°РІР°С†СЊ'
+  },
+
+  // ==================== Р†РќРЎРђР™РўР« (РЎРўРђРўР«РЎРўР«РљРђ РќРђ Р“РђР›РћРЋРќРђР™) ====================
+  insights: {
+    title: 'Р†РЅСЃР°Р№С‚С‹',
+    progress: 'РџСЂР°РіСЂРµСЃ С‡С‹С‚Р°РЅРЅСЏ',
+    finished: 'РџСЂР°С‡С‹С‚Р°РЅР°',
+    total: 'РЈСЃСЏРіРѕ',
+    topGenres: 'РўРѕРї-3 Р¶Р°РЅСЂС‹',
+    noGenreData: 'РќСЏРјР° РґР°РЅС‹С…',
+    books: 'РєРЅ.',
+    addFirstBook: 'Р”Р°РґР°Р№С†Рµ РїРµСЂС€СѓСЋ РєРЅС–РіСѓ',
+    justStarted: 'Р’С‹ С‚РѕР»СЊРєС– РїР°С‡Р°Р»С–',
+    goodStart: 'Р’С‹РґР°С‚РЅС‹ СЃС‚Р°СЂС‚',
+    bookworm: 'РљРЅС–Р¶РЅС‹ С‡Р°СЂРІСЏРє',
+    bookKing: 'РљРЅС–Р¶РЅС‹ РєР°СЂРѕР»СЊ'
+  },
+
+  // ==================== Р”Р­РўРђР›Р† РљРќР†Р“Р† ====================
+  bookDetails: {
+    notFound: 'РљРЅС–РіР° РЅРµ Р·РЅРѕР№РґР·РµРЅР°',
+    deleteConfirm: 'Р’С‹ СћРїСЌСћРЅРµРЅС‹, С€С‚Рѕ С…РѕС‡Р°С†Рµ РІС‹РґР°Р»С–С†СЊ РіСЌС‚Сѓ РєРЅС–РіСѓ?',
+    status: 'РЎС‚Р°С‚СѓСЃ',
+    progress: 'РџСЂР°РіСЂРµСЃ',
+    rating: 'РђС†СЌРЅРєР°',
+    pages: 'СЃС‚Р°СЂ.'
+  },
+
+  // ==================== РЎР•РЎР†РЇ Р§Р«РўРђРќРќРЇ ====================
+  session: {
+    noActiveBookTitle: 'РќСЏРјР° Р°РєС‚С‹СћРЅР°Р№ РєРЅС–РіС–',
+    noActiveBookMessage: 'РљР°Р»С– Р»Р°СЃРєР°, Р°Р±СЏСЂС‹С†Рµ РєРЅС–РіСѓ РґР»СЏ С‡С‹С‚Р°РЅРЅСЏ',
+    startSession: 'РџР°С‡Р°С†СЊ СЃРµСЃС–СЋ',
+    endSession: 'Р—Р°РІСЏСЂС€С‹С†СЊ СЃРµСЃС–СЋ',
+    currentPage: 'Р‘СЏРіСѓС‡Р°СЏ СЃС‚Р°СЂРѕРЅРєР°',
+    ofPages: 'Р·',
+    pagesRead: 'РџСЂР°С‡С‹С‚Р°РЅР° СЃС‚Р°СЂРѕРЅР°Рє',
+    duration: 'РџСЂР°С†СЏРіР»Р°СЃС†СЊ',
+    invalidPage: 'РЈРІСЏРґР·С–С†Рµ СЃС‚Р°СЂРѕРЅРєСѓ Р°Рґ {current} РґР° {total}',
+    sessionComplete: 'РџСЂР°С‡С‹С‚Р°РЅР° {pages} СЃС‚Р°СЂРѕРЅР°Рє Р·Р° {minutes} С…РІ.'
+  },
+
+  // ==================== РЎРўРђРўР«РЎРўР«РљРђ (INSIGHTS SCREEN) ====================
+  statistics: {
+    title: 'РЎС‚Р°С‚С‹СЃС‚С‹РєР° С‡С‹С‚Р°РЅРЅСЏ',
+    subtitle: 'Р’Р°С€С‹ РґР°СЃСЏРіРЅРµРЅРЅС–',
+    totalBooks: 'РЈСЃСЏРіРѕ РєРЅС–Рі',
+    totalPages: 'РџСЂР°С‡С‹С‚Р°РЅР° СЃС‚Р°СЂРѕРЅР°Рє',
+    totalHours: 'Р“Р°РґР·С–РЅ С‡С‹С‚Р°РЅРЅСЏ',
+    averageSpeed: 'РЎСЏСЂСЌРґРЅСЏСЏ С…СѓС‚РєР°СЃС†СЊ',
+    bestDay: 'РќР°Р№Р»РµРїС€С‹ РґР·РµРЅСЊ',
+    weeklyActivity: 'РђРєС‚С‹СћРЅР°СЃС†СЊ Р·Р° С‚С‹РґР·РµРЅСЊ'
+  },
+
+  // ==================== РџР Рђ РџР РђР“Р РђРњРЈ ====================
+  about: {
+    title: 'РџСЂР° РїСЂР°РіСЂР°РјСѓ',
+    version: 'Р’РµСЂСЃС–СЏ',
+    author: 'Р Р°СЃРїСЂР°С†РѕСћС€С‡С‹Рє',
+    description: 'Syverro - РєР°РјРµСЂРЅР°Рµ С‡С‹С‚Р°С†РєР°Рµ Р°СЃСЏСЂРѕРґРґР·Рµ РґР»СЏ Р°РґСЃРѕС‡РІР°РЅРЅСЏ РїСЂР°РіСЂСЌСЃСѓ С‡С‹С‚Р°РЅРЅСЏ'
+  },
+
+  // ==================== РђР’РћР‘Р РђРќР«РЇ РљРќР†Р“Р† ====================
+  favoriteBooks: {
+    title: 'РђР±СЂР°РЅС‹СЏ РєРЅС–РіС–',
+    emptyTitle: 'РќСЏРјР° Р°Р±СЂР°РЅС‹С… РєРЅС–Рі',
+    emptyMessage: 'Р”Р°РґР°РІР°Р№С†Рµ РєРЅС–РіС– Сћ Р°Р±СЂР°РЅС‹СЏ, РєР°Р± СЏРЅС‹ Р°РґР»СЋСЃС‚СЂРѕСћРІР°Р»С–СЃСЏ С‚СѓС‚'
+  },
+
+  // ==================== РџР РћР¤Р†Р›Р¬ ====================
+  profile: {
+    title: 'РџСЂРѕС„С–Р»СЊ',
+    readerLevel: 'РЈР·СЂРѕРІРµРЅСЊ С‡С‹С‚Р°С‡Р°',
+    stats: 'РЎС‚Р°С‚С‹СЃС‚С‹РєР°'
+  }
+};
+
+
+==================== FILE: src/locales/index.js ====================
+import ru from './ru';
+import en from './en';
+import ua from './ua';
+import be from './be';
+
+export default {
+  ru,
+  en,
+  ua,
+  be
+};
+
+

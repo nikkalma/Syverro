@@ -39,14 +39,14 @@ async def create_book(
     try:
         # Проверяем, существует ли уже такая книга
         existing = await db.execute(
-            select(Book).where(
-                Book.title == book_data.title,
-                Book.author == book_data.author
-            )
-        )
-        existing_book = existing.scalar_one_or_none()
+    select(Book).where(
+        Book.title == book_data.title,
+        Book.author == book_data.author
+    ).limit(1)
+)
+existing_book = existing.scalar_one_or_none()
         
-        if existing_book:
+if existing_book:
             # Книга уже есть в каталоге, проверяем, не добавлена ли она уже пользователю
             user_book_exists = await db.execute(
                 select(UserBook).where(

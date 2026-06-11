@@ -2,20 +2,22 @@ from datetime import datetime
 from uuid import UUID
 from pydantic import BaseModel, EmailStr
 
+
 class UserCreate(BaseModel):
-    email: str
+    email: EmailStr
     password: str
 
-class UserResponse(BaseModel):
-    id: UUID  # ✅ теперь ожидает UUID
-    email: str
-    created_at: datetime
-    class Config:
-        from_attributes = True
 
 class UserLogin(BaseModel):
-    email: str
+    email: EmailStr
     password: str
+
+
+class UserResponse(BaseModel):
+    id: UUID
+    email: EmailStr
+    created_at: datetime
+
 
 class TokenResponse(BaseModel):
     access_token: str

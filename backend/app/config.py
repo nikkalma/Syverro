@@ -4,16 +4,23 @@ from dotenv import load_dotenv
 load_dotenv()
 
 class Settings:
-    DATABASE_URL: str = os.getenv("DATABASE_URL", "postgresql+asyncpg://postgres:postgres@localhost:5432/syverro")
+    DATABASE_URL: str = os.getenv("DATABASE_URL", "")
+    SECRET_KEY: str = os.getenv("SECRET_KEY", "your-secret-key-change-this-in-production")
+    ALGORITHM: str = "HS256"
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
     
-    @property
-    def async_database_url(self) -> str:
-        url = self.DATABASE_URL
-        # Railway даёт postgres:// или postgresql://
-        if url.startswith("postgres://"):
-            url = url.replace("postgres://", "postgresql+asyncpg://", 1)
-        elif url.startswith("postgresql://") and "+asyncpg" not in url:
-            url = url.replace("postgresql://", "postgresql+asyncpg://", 1)
-        return url
+    def __init__(self):
+        # Проверяем и конвертируем URL
+        if self.DATABASE_URL:
+            print(f"🔍 Original DATABASE_URL: {self.DATABASE_URL[:60]}...")
+            # Конвертируем postgres:// → postgresql+asyncpg://
+            if self.DATABASE_URL.startswith("postgres://"):
+                self.DATABASE_URL = self.DATABASE_URL.replace("postgres://", "postgresql+asyncpg://", 1)
+                print(f"✅ Converted to asyncpg: {self.DATABASE_URL[:60]}...")
+            elif self.DATABASE_URL.startswith("postgresql://") and "+asyncpg" not in self.DATABASE_URL:
+                self.DATABASE_URL = self.DATABASE_URL.replace("postgresql://", "postgresql+asyncpg://", 1)
+                print(f"✅ Added asyncpg driver: {self.DATABASE_URL[:60]}...")
+        else:
+            print("❌ DATABASE_URL is not set in environment!")
 
 settings = Settings()

@@ -8,10 +8,9 @@ app = FastAPI(title="Syverro API", version="0.1.0")
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
-        "http://localhost:3000",
-        "http://127.0.0.1:3000",
-        "https://test.syverro.com",
-        "https://syverro.com"
+       "https://test.syverro.com",          # <-- Твой тестовый фронтенд
+        "https://syverro-production.up.railway.app", # <-- Твой собственный бэкенд (важно!)
+        "https://syverro.com", 
     ],
     allow_credentials=True,
     allow_methods=["*"],

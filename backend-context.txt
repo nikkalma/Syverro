@@ -1,0 +1,1200 @@
+﻿
+
+===== app\api\v1\auth.py =====
+
+from fastapi import APIRouter, HTTPException, Depends
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select
+from app.database import get_db
+from app.models.user import User
+from app.schemas.user import UserCreate, UserResponse, UserLogin, TokenResponse
+from app.core.security import hash_password, verify_password, create_access_token, get_user_by_email
+
+router = APIRouter(prefix="/auth", tags=["auth"])
+
+@router.post("/register", response_model=UserResponse)
+async def register(user_data: UserCreate, db: AsyncSession = Depends(get_db)):
+    # РџСЂРѕРІРµСЂРєР°, СЃСѓС‰РµСЃС‚РІСѓРµС‚ Р»Рё РїРѕР»СЊР·РѕРІР°С‚РµР»СЊ
+    result = await db.execute(select(User).where(User.email == user_data.email))
+    existing = result.scalar_one_or_none()
+    if existing:
+        raise HTTPException(status_code=400, detail="Email already registered")
+
+    # РЎРѕР·РґР°РЅРёРµ РїРѕР»СЊР·РѕРІР°С‚РµР»СЏ
+    user = User(
+        email=user_data.email,
+        password_hash=hash_password(user_data.password)
+    )
+    db.add(user)
+    await db.commit()
+    await db.refresh(user)
+
+    return UserResponse(
+        id=user.id,
+        email=user.email,
+        created_at=user.created_at.isoformat() if user.created_at else ""
+    )
+
+@router.post("/login", response_model=TokenResponse)
+async def login(user_data: UserLogin, db: AsyncSession = Depends(get_db)):
+    user = await get_user_by_email(db, user_data.email)
+    if not user or not verify_password(user_data.password, user.password_hash):
+        raise HTTPException(status_code=401, detail="Invalid email or password")
+    
+    access_token = create_access_token({"sub": str(user.id)})
+    return TokenResponse(access_token=access_token)
+
+
+===== app\api\v1\books.py =====
+
+from fastapi import APIRouter, Depends, HTTPException, status
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select
+from app.core.deps import get_current_user, get_db
+from app.models.user import User
+from app.models.book import Book, UserBook
+from app.schemas.book import BookCreate, BookResponse, UserBookCreate, UserBookResponse
+from uuid import UUID
+
+router = APIRouter(prefix="/books", tags=["books"])
+
+
+@router.get("/", response_model=list[BookResponse])
+async def get_user_books(
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    """РџРѕР»СѓС‡РёС‚СЊ РІСЃРµ РєРЅРёРіРё РїРѕР»СЊР·РѕРІР°С‚РµР»СЏ"""
+    try:
+        # РџРѕР»СѓС‡Р°РµРј РІСЃРµ РєРЅРёРіРё, РєРѕС‚РѕСЂС‹Рµ РїРѕР»СЊР·РѕРІР°С‚РµР»СЊ РґРѕР±Р°РІРёР» РІ СЃРІРѕСЋ Р±РёР±Р»РёРѕС‚РµРєСѓ
+        result = await db.execute(
+            select(Book).join(UserBook).where(UserBook.user_id == current_user.id)
+        )
+        books = result.scalars().all()
+        return books
+    except Exception as e:
+        print(f"РћС€РёР±РєР° РІ get_user_books: {e}")
+        # Р’РѕР·РІСЂР°С‰Р°РµРј РїСѓСЃС‚РѕР№ СЃРїРёСЃРѕРє РІ СЃР»СѓС‡Р°Рµ РѕС€РёР±РєРё
+        return []
+
+
+@router.post("/", response_model=BookResponse)
+async def create_book(
+    book_data: BookCreate,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    """РЎРѕР·РґР°С‚СЊ РЅРѕРІСѓСЋ РєРЅРёРіСѓ РІ РєР°С‚Р°Р»РѕРіРµ Рё РґРѕР±Р°РІРёС‚СЊ РІ Р±РёР±Р»РёРѕС‚РµРєСѓ РїРѕР»СЊР·РѕРІР°С‚РµР»СЏ"""
+    try:
+        # РџСЂРѕРІРµСЂСЏРµРј, СЃСѓС‰РµСЃС‚РІСѓРµС‚ Р»Рё СѓР¶Рµ С‚Р°РєР°СЏ РєРЅРёРіР°
+        existing = await db.execute(
+            select(Book).where(
+                Book.title == book_data.title,
+                Book.author == book_data.author
+            )
+        )
+        existing_book = existing.scalar_one_or_none()
+        
+        if existing_book:
+            # РљРЅРёРіР° СѓР¶Рµ РµСЃС‚СЊ РІ РєР°С‚Р°Р»РѕРіРµ, РїСЂРѕРІРµСЂСЏРµРј, РЅРµ РґРѕР±Р°РІР»РµРЅР° Р»Рё РѕРЅР° СѓР¶Рµ РїРѕР»СЊР·РѕРІР°С‚РµР»СЋ
+            user_book_exists = await db.execute(
+                select(UserBook).where(
+                    UserBook.user_id == current_user.id,
+                    UserBook.book_id == existing_book.id
+                )
+            )
+            if not user_book_exists.scalar_one_or_none():
+                # Р”РѕР±Р°РІР»СЏРµРј СЃРІСЏР·СЊ СЃ РїРѕР»СЊР·РѕРІР°С‚РµР»РµРј
+                user_book = UserBook(
+                    user_id=current_user.id,
+                    book_id=existing_book.id,
+                    status="planned"
+                )
+                db.add(user_book)
+                await db.commit()
+            return existing_book
+        
+        # РЎРѕР·РґР°С‘Рј РЅРѕРІСѓСЋ РєРЅРёРіСѓ
+        new_book = Book(**book_data.model_dump())
+        db.add(new_book)
+        await db.flush()  # Р§С‚РѕР±С‹ РїРѕР»СѓС‡РёС‚СЊ id РЅРѕРІРѕР№ РєРЅРёРіРё
+        
+        # Р”РѕР±Р°РІР»СЏРµРј СЃРІСЏР·СЊ СЃ РїРѕР»СЊР·РѕРІР°С‚РµР»РµРј
+        user_book = UserBook(
+            user_id=current_user.id,
+            book_id=new_book.id,
+            status="planned"
+        )
+        db.add(user_book)
+        
+        await db.commit()
+        await db.refresh(new_book)
+        
+        return new_book
+    except Exception as e:
+        print(f"РћС€РёР±РєР° РІ create_book: {e}")
+        await db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"РћС€РёР±РєР° СЃРѕР·РґР°РЅРёСЏ РєРЅРёРіРё: {str(e)}"
+        )
+
+
+@router.get("/user-books/", response_model=list[UserBookResponse])
+async def get_user_books_with_status(
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    """РџРѕР»СѓС‡РёС‚СЊ РІСЃРµ РєРЅРёРіРё РїРѕР»СЊР·РѕРІР°С‚РµР»СЏ СЃРѕ СЃС‚Р°С‚СѓСЃР°РјРё"""
+    try:
+        result = await db.execute(
+            select(UserBook)
+            .where(UserBook.user_id == current_user.id)
+        )
+        user_books = result.scalars().all()
+        
+        # Р—Р°РіСЂСѓР¶Р°РµРј СЃРІСЏР·Р°РЅРЅС‹Рµ РєРЅРёРіРё
+        for ub in user_books:
+            await db.refresh(ub, attribute_names=["book"])
+        
+        return user_books
+    except Exception as e:
+        print(f"РћС€РёР±РєР° РІ get_user_books_with_status: {e}")
+        return []
+
+
+@router.put("/{book_id}/status")
+async def update_book_status(
+    book_id: UUID,
+    status_value: str,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    """РћР±РЅРѕРІРёС‚СЊ СЃС‚Р°С‚СѓСЃ РєРЅРёРіРё Сѓ РїРѕР»СЊР·РѕРІР°С‚РµР»СЏ"""
+    result = await db.execute(
+        select(UserBook).where(
+            UserBook.user_id == current_user.id,
+            UserBook.book_id == book_id
+        )
+    )
+    user_book = result.scalar_one_or_none()
+    
+    if not user_book:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Book not found in user's library"
+        )
+    
+    user_book.status = status_value
+    await db.commit()
+    
+    return {"message": "Status updated"}
+
+
+===== app\api\v1\sync.py =====
+
+from fastapi import APIRouter, Depends
+from sqlalchemy.ext.asyncio import AsyncSession
+from app.core.deps import get_current_user, get_db
+from app.models.user import User
+
+router = APIRouter(prefix="/sync", tags=["sync"])
+
+
+@router.get("/")
+async def get_sync_data(
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    """РџРѕР»СѓС‡РёС‚СЊ РґР°РЅРЅС‹Рµ РґР»СЏ СЃРёРЅС…СЂРѕРЅРёР·Р°С†РёРё (GET)"""
+    return {
+        "books": [],
+        "sessions": [],
+        "quotes": [],
+        "server_time": "2026-01-15T10:00:00Z"
+    }
+
+
+@router.post("/")
+async def sync_data(
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    """РћС‚РїСЂР°РІРёС‚СЊ РґР°РЅРЅС‹Рµ РґР»СЏ СЃРёРЅС…СЂРѕРЅРёР·Р°С†РёРё (POST)"""
+    return {
+        "books": [],
+        "sessions": [],
+        "quotes": [],
+        "server_time": "2026-01-15T10:00:00Z"
+    }
+
+
+===== app\api\v1\__init__.py =====
+
+from .auth import router as auth_router
+from .sync import router as sync_router
+from .books import router as books_router
+
+routers = [
+    auth_router,
+    sync_router,
+    books_router,
+]
+
+
+===== app\core\deps.py =====
+
+from typing import Annotated
+from uuid import UUID
+from fastapi import Depends, HTTPException, status
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select
+from app.database import get_db
+from app.core.security import decode_token
+from app.models.user import User
+
+security = HTTPBearer()
+
+
+async def get_current_user(
+    credentials: Annotated[HTTPAuthorizationCredentials, Depends(security)],
+    db: Annotated[AsyncSession, Depends(get_db)]
+) -> User:
+    """РџРѕР»СѓС‡РёС‚СЊ С‚РµРєСѓС‰РµРіРѕ РїРѕР»СЊР·РѕРІР°С‚РµР»СЏ РїРѕ JWT С‚РѕРєРµРЅСѓ"""
+    token = credentials.credentials
+    payload = decode_token(token)
+    
+    if payload is None:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid token",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+    
+    user_id = payload.get("sub")
+    if user_id is None:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid token payload",
+        )
+    
+    # РџСЂРµРѕР±СЂР°Р·СѓРµРј СЃС‚СЂРѕРєСѓ РІ UUID, РµСЃР»Рё РЅСѓР¶РЅРѕ
+    if isinstance(user_id, str):
+        try:
+            user_id = UUID(user_id)
+        except ValueError:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Invalid user ID format",
+            )
+    
+    result = await db.execute(select(User).where(User.id == user_id))
+    user = result.scalar_one_or_none()
+    
+    if user is None:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="User not found",
+        )
+    
+    return user
+
+
+async def get_current_user_optional(
+    credentials: Annotated[HTTPAuthorizationCredentials | None, Depends(security)] = None,
+    db: Annotated[AsyncSession, Depends(get_db)] = None
+) -> User | None:
+    """РџРѕР»СѓС‡РёС‚СЊ С‚РµРєСѓС‰РµРіРѕ РїРѕР»СЊР·РѕРІР°С‚РµР»СЏ (РѕРїС†РёРѕРЅР°Р»СЊРЅРѕ, Р±РµР· РѕС€РёР±РєРё)"""
+    if not credentials:
+        return None
+    
+    try:
+        return await get_current_user(credentials, db)
+    except HTTPException:
+        return None
+
+
+===== app\core\security.py =====
+
+from datetime import datetime, timedelta
+from jose import JWTError, jwt
+import bcrypt
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select
+from app.models.user import User
+
+SECRET_KEY = "your-secret-key-change-this-in-production"
+ALGORITHM = "HS256"
+ACCESS_TOKEN_EXPIRE_MINUTES = 30
+
+
+def verify_password(plain_password: str, hashed_password: str) -> bool:
+    """РџСЂРѕРІРµСЂРёС‚СЊ РїР°СЂРѕР»СЊ"""
+    return bcrypt.checkpw(plain_password.encode('utf-8'), hashed_password.encode('utf-8'))
+
+
+def get_password_hash(password: str) -> str:
+    """РџРѕР»СѓС‡РёС‚СЊ С…РµС€ РїР°СЂРѕР»СЏ"""
+    salt = bcrypt.gensalt()
+    return bcrypt.hashpw(password.encode('utf-8'), salt).decode('utf-8')
+
+
+# РђР»РёР°СЃ РґР»СЏ СЃРѕРІРјРµСЃС‚РёРјРѕСЃС‚Рё
+hash_password = get_password_hash
+
+
+def create_access_token(data: dict, expires_delta: timedelta | None = None) -> str:
+    """РЎРѕР·РґР°С‚СЊ JWT С‚РѕРєРµРЅ"""
+    to_encode = data.copy()
+    if expires_delta:
+        expire = datetime.utcnow() + expires_delta
+    else:
+        expire = datetime.utcnow() + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+    to_encode.update({"exp": expire})
+    encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
+    return encoded_jwt
+
+
+def decode_token(token: str) -> dict | None:
+    """Р”РµРєРѕРґРёСЂРѕРІР°С‚СЊ JWT С‚РѕРєРµРЅ"""
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        return payload
+    except JWTError:
+        return None
+
+
+async def get_user_by_email(db: AsyncSession, email: str) -> User | None:
+    """РџРѕР»СѓС‡РёС‚СЊ РїРѕР»СЊР·РѕРІР°С‚РµР»СЏ РїРѕ email"""
+    result = await db.execute(select(User).where(User.email == email))
+    return result.scalar_one_or_none()
+
+
+===== app\models\book.py =====
+
+from sqlalchemy import Column, String, Integer, DateTime, ForeignKey, Boolean, JSON, UniqueConstraint
+from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy.sql import func
+from sqlalchemy.orm import relationship
+from app.database import Base
+import uuid
+
+
+class Book(Base):
+    __tablename__ = "books"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    title = Column(String, nullable=False)
+    author = Column(String, nullable=False)
+    cover = Column(String, nullable=True)
+    genres = Column(JSON, default=[])
+    total_pages = Column(Integer, nullable=True)
+    created_at = Column(DateTime, server_default=func.now())
+    updated_at = Column(DateTime, onupdate=func.now())
+    
+    # Relationships
+    user_books = relationship("UserBook", back_populates="book", cascade="all, delete-orphan")
+    
+    # Constraints
+    __table_args__ = (
+        UniqueConstraint('title', 'author', name='unique_book_title_author'),
+    )
+
+
+class UserBook(Base):
+    __tablename__ = "user_books"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    user_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False)
+    book_id = Column(UUID(as_uuid=True), ForeignKey("books.id"), nullable=False)
+    status = Column(String, default="planned")  # planned, reading, finished, postponed, abandoned
+    rating = Column(Integer, nullable=True)
+    current_page = Column(Integer, default=0)
+    start_date = Column(DateTime, nullable=True)
+    end_date = Column(DateTime, nullable=True)
+    notes = Column(String, nullable=True)
+    is_favorite = Column(Boolean, default=False)
+    created_at = Column(DateTime, server_default=func.now())
+    updated_at = Column(DateTime, onupdate=func.now())
+    
+    # Relationships
+    book = relationship("Book", back_populates="user_books")
+    user = relationship("User", back_populates="user_books")
+
+
+===== app\models\user.py =====
+
+from sqlalchemy import Column, String, DateTime
+from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy.sql import func
+from sqlalchemy.orm import relationship
+from app.database import Base
+import uuid
+
+
+class User(Base):
+    __tablename__ = "users"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    email = Column(String, unique=True, nullable=False, index=True)
+    password_hash = Column(String, nullable=False)
+    created_at = Column(DateTime, server_default=func.now())
+    updated_at = Column(DateTime, onupdate=func.now())
+    
+    # Relationships
+    user_books = relationship("UserBook", back_populates="user", cascade="all, delete-orphan")
+
+
+===== app\schemas\book.py =====
+
+from pydantic import BaseModel
+from datetime import datetime
+from typing import Optional, List
+from uuid import UUID
+
+
+class BookBase(BaseModel):
+    title: str
+    author: str
+    cover: Optional[str] = None
+    genres: Optional[List[str]] = []
+    total_pages: Optional[int] = None
+
+
+class BookCreate(BookBase):
+    pass
+
+
+class BookResponse(BookBase):
+    id: UUID
+    created_at: datetime
+    updated_at: Optional[datetime]
+
+    class Config:
+        from_attributes = True
+
+
+class UserBookCreate(BaseModel):
+    book_id: UUID
+    status: str = "planned"
+    rating: Optional[int] = None
+    current_page: Optional[int] = 0
+    start_date: Optional[datetime] = None
+    notes: Optional[str] = None
+
+
+class UserBookResponse(BaseModel):
+    id: UUID
+    user_id: UUID
+    book_id: UUID
+    book: BookResponse
+    status: str
+    rating: Optional[int]
+    current_page: int
+    start_date: Optional[datetime]
+    end_date: Optional[datetime]
+    notes: Optional[str]
+    is_favorite: bool
+    created_at: datetime
+    updated_at: Optional[datetime]
+
+    class Config:
+        from_attributes = True
+
+
+===== app\schemas\user.py =====
+
+from datetime import datetime
+from uuid import UUID
+from pydantic import BaseModel, EmailStr
+
+class UserCreate(BaseModel):
+    email: str
+    password: str
+
+class UserResponse(BaseModel):
+    id: UUID  # вњ… С‚РµРїРµСЂСЊ РѕР¶РёРґР°РµС‚ UUID
+    email: str
+    created_at: datetime
+    class Config:
+        from_attributes = True
+
+class UserLogin(BaseModel):
+    email: str
+    password: str
+
+class TokenResponse(BaseModel):
+    access_token: str
+    token_type: str = "bearer"
+
+
+===== app\config.py =====
+
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
+
+
+class Settings:
+    DATABASE_URL: str = os.getenv("DATABASE_URL", "postgresql+asyncpg://postgres:postgres@localhost:5432/syverro")
+    SECRET_KEY: str = os.getenv("SECRET_KEY", "your-secret-key-change-this-in-production")
+    ALGORITHM: str = "HS256"
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
+
+
+settings = Settings()
+
+
+===== app\database.py =====
+
+from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sessionmaker
+from sqlalchemy.orm import declarative_base
+from app.config import settings
+
+engine = create_async_engine(
+    settings.DATABASE_URL,
+    echo=True,
+    future=True
+)
+
+AsyncSessionLocal = async_sessionmaker(
+    engine,
+    class_=AsyncSession,
+    expire_on_commit=False
+)
+
+Base = declarative_base()
+
+async def get_db():
+    async with AsyncSessionLocal() as session:
+        yield session
+
+
+===== app\main.py =====
+
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+from app.api.v1 import routers
+from app.database import engine, Base
+
+app = FastAPI(title="Syverro API", version="0.1.0")
+
+# CORS - СЂР°Р·СЂРµС€Р°РµРј Р·Р°РїСЂРѕСЃС‹ СЃ Р»РѕРєР°Р»СЊРЅРѕРіРѕ СЃР°Р№С‚Р°
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:3000", "http://127.0.0.1:3000"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+@app.on_event("startup")
+async def init_db():
+    async with engine.begin() as conn:
+        await conn.run_sync(Base.metadata.create_all)
+
+# РџРѕРґРєР»СЋС‡Р°РµРј СЂРѕСѓС‚РµСЂС‹
+for router in routers:
+    app.include_router(router, prefix="/api/v1")
+
+
+===== app\api\v1\auth.py =====
+
+from fastapi import APIRouter, HTTPException, Depends
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select
+from app.database import get_db
+from app.models.user import User
+from app.schemas.user import UserCreate, UserResponse, UserLogin, TokenResponse
+from app.core.security import hash_password, verify_password, create_access_token, get_user_by_email
+
+router = APIRouter(prefix="/auth", tags=["auth"])
+
+@router.post("/register", response_model=UserResponse)
+async def register(user_data: UserCreate, db: AsyncSession = Depends(get_db)):
+    # РџСЂРѕРІРµСЂРєР°, СЃСѓС‰РµСЃС‚РІСѓРµС‚ Р»Рё РїРѕР»СЊР·РѕРІР°С‚РµР»СЊ
+    result = await db.execute(select(User).where(User.email == user_data.email))
+    existing = result.scalar_one_or_none()
+    if existing:
+        raise HTTPException(status_code=400, detail="Email already registered")
+
+    # РЎРѕР·РґР°РЅРёРµ РїРѕР»СЊР·РѕРІР°С‚РµР»СЏ
+    user = User(
+        email=user_data.email,
+        password_hash=hash_password(user_data.password)
+    )
+    db.add(user)
+    await db.commit()
+    await db.refresh(user)
+
+    return UserResponse(
+        id=user.id,
+        email=user.email,
+        created_at=user.created_at.isoformat() if user.created_at else ""
+    )
+
+@router.post("/login", response_model=TokenResponse)
+async def login(user_data: UserLogin, db: AsyncSession = Depends(get_db)):
+    user = await get_user_by_email(db, user_data.email)
+    if not user or not verify_password(user_data.password, user.password_hash):
+        raise HTTPException(status_code=401, detail="Invalid email or password")
+    
+    access_token = create_access_token({"sub": str(user.id)})
+    return TokenResponse(access_token=access_token)
+
+
+===== app\api\v1\books.py =====
+
+from fastapi import APIRouter, Depends, HTTPException, status
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select
+from app.core.deps import get_current_user, get_db
+from app.models.user import User
+from app.models.book import Book, UserBook
+from app.schemas.book import BookCreate, BookResponse, UserBookCreate, UserBookResponse
+from uuid import UUID
+
+router = APIRouter(prefix="/books", tags=["books"])
+
+
+@router.get("/", response_model=list[BookResponse])
+async def get_user_books(
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    """РџРѕР»СѓС‡РёС‚СЊ РІСЃРµ РєРЅРёРіРё РїРѕР»СЊР·РѕРІР°С‚РµР»СЏ"""
+    try:
+        # РџРѕР»СѓС‡Р°РµРј РІСЃРµ РєРЅРёРіРё, РєРѕС‚РѕСЂС‹Рµ РїРѕР»СЊР·РѕРІР°С‚РµР»СЊ РґРѕР±Р°РІРёР» РІ СЃРІРѕСЋ Р±РёР±Р»РёРѕС‚РµРєСѓ
+        result = await db.execute(
+            select(Book).join(UserBook).where(UserBook.user_id == current_user.id)
+        )
+        books = result.scalars().all()
+        return books
+    except Exception as e:
+        print(f"РћС€РёР±РєР° РІ get_user_books: {e}")
+        # Р’РѕР·РІСЂР°С‰Р°РµРј РїСѓСЃС‚РѕР№ СЃРїРёСЃРѕРє РІ СЃР»СѓС‡Р°Рµ РѕС€РёР±РєРё
+        return []
+
+
+@router.post("/", response_model=BookResponse)
+async def create_book(
+    book_data: BookCreate,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    """РЎРѕР·РґР°С‚СЊ РЅРѕРІСѓСЋ РєРЅРёРіСѓ РІ РєР°С‚Р°Р»РѕРіРµ Рё РґРѕР±Р°РІРёС‚СЊ РІ Р±РёР±Р»РёРѕС‚РµРєСѓ РїРѕР»СЊР·РѕРІР°С‚РµР»СЏ"""
+    try:
+        # РџСЂРѕРІРµСЂСЏРµРј, СЃСѓС‰РµСЃС‚РІСѓРµС‚ Р»Рё СѓР¶Рµ С‚Р°РєР°СЏ РєРЅРёРіР°
+        existing = await db.execute(
+            select(Book).where(
+                Book.title == book_data.title,
+                Book.author == book_data.author
+            )
+        )
+        existing_book = existing.scalar_one_or_none()
+        
+        if existing_book:
+            # РљРЅРёРіР° СѓР¶Рµ РµСЃС‚СЊ РІ РєР°С‚Р°Р»РѕРіРµ, РїСЂРѕРІРµСЂСЏРµРј, РЅРµ РґРѕР±Р°РІР»РµРЅР° Р»Рё РѕРЅР° СѓР¶Рµ РїРѕР»СЊР·РѕРІР°С‚РµР»СЋ
+            user_book_exists = await db.execute(
+                select(UserBook).where(
+                    UserBook.user_id == current_user.id,
+                    UserBook.book_id == existing_book.id
+                )
+            )
+            if not user_book_exists.scalar_one_or_none():
+                # Р”РѕР±Р°РІР»СЏРµРј СЃРІСЏР·СЊ СЃ РїРѕР»СЊР·РѕРІР°С‚РµР»РµРј
+                user_book = UserBook(
+                    user_id=current_user.id,
+                    book_id=existing_book.id,
+                    status="planned"
+                )
+                db.add(user_book)
+                await db.commit()
+            return existing_book
+        
+        # РЎРѕР·РґР°С‘Рј РЅРѕРІСѓСЋ РєРЅРёРіСѓ
+        new_book = Book(**book_data.model_dump())
+        db.add(new_book)
+        await db.flush()  # Р§С‚РѕР±С‹ РїРѕР»СѓС‡РёС‚СЊ id РЅРѕРІРѕР№ РєРЅРёРіРё
+        
+        # Р”РѕР±Р°РІР»СЏРµРј СЃРІСЏР·СЊ СЃ РїРѕР»СЊР·РѕРІР°С‚РµР»РµРј
+        user_book = UserBook(
+            user_id=current_user.id,
+            book_id=new_book.id,
+            status="planned"
+        )
+        db.add(user_book)
+        
+        await db.commit()
+        await db.refresh(new_book)
+        
+        return new_book
+    except Exception as e:
+        print(f"РћС€РёР±РєР° РІ create_book: {e}")
+        await db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"РћС€РёР±РєР° СЃРѕР·РґР°РЅРёСЏ РєРЅРёРіРё: {str(e)}"
+        )
+
+
+@router.get("/user-books/", response_model=list[UserBookResponse])
+async def get_user_books_with_status(
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    """РџРѕР»СѓС‡РёС‚СЊ РІСЃРµ РєРЅРёРіРё РїРѕР»СЊР·РѕРІР°С‚РµР»СЏ СЃРѕ СЃС‚Р°С‚СѓСЃР°РјРё"""
+    try:
+        result = await db.execute(
+            select(UserBook)
+            .where(UserBook.user_id == current_user.id)
+        )
+        user_books = result.scalars().all()
+        
+        # Р—Р°РіСЂСѓР¶Р°РµРј СЃРІСЏР·Р°РЅРЅС‹Рµ РєРЅРёРіРё
+        for ub in user_books:
+            await db.refresh(ub, attribute_names=["book"])
+        
+        return user_books
+    except Exception as e:
+        print(f"РћС€РёР±РєР° РІ get_user_books_with_status: {e}")
+        return []
+
+
+@router.put("/{book_id}/status")
+async def update_book_status(
+    book_id: UUID,
+    status_value: str,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    """РћР±РЅРѕРІРёС‚СЊ СЃС‚Р°С‚СѓСЃ РєРЅРёРіРё Сѓ РїРѕР»СЊР·РѕРІР°С‚РµР»СЏ"""
+    result = await db.execute(
+        select(UserBook).where(
+            UserBook.user_id == current_user.id,
+            UserBook.book_id == book_id
+        )
+    )
+    user_book = result.scalar_one_or_none()
+    
+    if not user_book:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Book not found in user's library"
+        )
+    
+    user_book.status = status_value
+    await db.commit()
+    
+    return {"message": "Status updated"}
+
+
+===== app\api\v1\sync.py =====
+
+from fastapi import APIRouter, Depends
+from sqlalchemy.ext.asyncio import AsyncSession
+from app.core.deps import get_current_user, get_db
+from app.models.user import User
+
+router = APIRouter(prefix="/sync", tags=["sync"])
+
+
+@router.get("/")
+async def get_sync_data(
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    """РџРѕР»СѓС‡РёС‚СЊ РґР°РЅРЅС‹Рµ РґР»СЏ СЃРёРЅС…СЂРѕРЅРёР·Р°С†РёРё (GET)"""
+    return {
+        "books": [],
+        "sessions": [],
+        "quotes": [],
+        "server_time": "2026-01-15T10:00:00Z"
+    }
+
+
+@router.post("/")
+async def sync_data(
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    """РћС‚РїСЂР°РІРёС‚СЊ РґР°РЅРЅС‹Рµ РґР»СЏ СЃРёРЅС…СЂРѕРЅРёР·Р°С†РёРё (POST)"""
+    return {
+        "books": [],
+        "sessions": [],
+        "quotes": [],
+        "server_time": "2026-01-15T10:00:00Z"
+    }
+
+
+===== app\api\v1\__init__.py =====
+
+from .auth import router as auth_router
+from .sync import router as sync_router
+from .books import router as books_router
+
+routers = [
+    auth_router,
+    sync_router,
+    books_router,
+]
+
+
+===== app\core\deps.py =====
+
+from typing import Annotated
+from uuid import UUID
+from fastapi import Depends, HTTPException, status
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select
+from app.database import get_db
+from app.core.security import decode_token
+from app.models.user import User
+
+security = HTTPBearer()
+
+
+async def get_current_user(
+    credentials: Annotated[HTTPAuthorizationCredentials, Depends(security)],
+    db: Annotated[AsyncSession, Depends(get_db)]
+) -> User:
+    """РџРѕР»СѓС‡РёС‚СЊ С‚РµРєСѓС‰РµРіРѕ РїРѕР»СЊР·РѕРІР°С‚РµР»СЏ РїРѕ JWT С‚РѕРєРµРЅСѓ"""
+    token = credentials.credentials
+    payload = decode_token(token)
+    
+    if payload is None:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid token",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+    
+    user_id = payload.get("sub")
+    if user_id is None:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid token payload",
+        )
+    
+    # РџСЂРµРѕР±СЂР°Р·СѓРµРј СЃС‚СЂРѕРєСѓ РІ UUID, РµСЃР»Рё РЅСѓР¶РЅРѕ
+    if isinstance(user_id, str):
+        try:
+            user_id = UUID(user_id)
+        except ValueError:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Invalid user ID format",
+            )
+    
+    result = await db.execute(select(User).where(User.id == user_id))
+    user = result.scalar_one_or_none()
+    
+    if user is None:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="User not found",
+        )
+    
+    return user
+
+
+async def get_current_user_optional(
+    credentials: Annotated[HTTPAuthorizationCredentials | None, Depends(security)] = None,
+    db: Annotated[AsyncSession, Depends(get_db)] = None
+) -> User | None:
+    """РџРѕР»СѓС‡РёС‚СЊ С‚РµРєСѓС‰РµРіРѕ РїРѕР»СЊР·РѕРІР°С‚РµР»СЏ (РѕРїС†РёРѕРЅР°Р»СЊРЅРѕ, Р±РµР· РѕС€РёР±РєРё)"""
+    if not credentials:
+        return None
+    
+    try:
+        return await get_current_user(credentials, db)
+    except HTTPException:
+        return None
+
+
+===== app\core\security.py =====
+
+from datetime import datetime, timedelta
+from jose import JWTError, jwt
+import bcrypt
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select
+from app.models.user import User
+
+SECRET_KEY = "your-secret-key-change-this-in-production"
+ALGORITHM = "HS256"
+ACCESS_TOKEN_EXPIRE_MINUTES = 30
+
+
+def verify_password(plain_password: str, hashed_password: str) -> bool:
+    """РџСЂРѕРІРµСЂРёС‚СЊ РїР°СЂРѕР»СЊ"""
+    return bcrypt.checkpw(plain_password.encode('utf-8'), hashed_password.encode('utf-8'))
+
+
+def get_password_hash(password: str) -> str:
+    """РџРѕР»СѓС‡РёС‚СЊ С…РµС€ РїР°СЂРѕР»СЏ"""
+    salt = bcrypt.gensalt()
+    return bcrypt.hashpw(password.encode('utf-8'), salt).decode('utf-8')
+
+
+# РђР»РёР°СЃ РґР»СЏ СЃРѕРІРјРµСЃС‚РёРјРѕСЃС‚Рё
+hash_password = get_password_hash
+
+
+def create_access_token(data: dict, expires_delta: timedelta | None = None) -> str:
+    """РЎРѕР·РґР°С‚СЊ JWT С‚РѕРєРµРЅ"""
+    to_encode = data.copy()
+    if expires_delta:
+        expire = datetime.utcnow() + expires_delta
+    else:
+        expire = datetime.utcnow() + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+    to_encode.update({"exp": expire})
+    encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
+    return encoded_jwt
+
+
+def decode_token(token: str) -> dict | None:
+    """Р”РµРєРѕРґРёСЂРѕРІР°С‚СЊ JWT С‚РѕРєРµРЅ"""
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        return payload
+    except JWTError:
+        return None
+
+
+async def get_user_by_email(db: AsyncSession, email: str) -> User | None:
+    """РџРѕР»СѓС‡РёС‚СЊ РїРѕР»СЊР·РѕРІР°С‚РµР»СЏ РїРѕ email"""
+    result = await db.execute(select(User).where(User.email == email))
+    return result.scalar_one_or_none()
+
+
+===== app\models\book.py =====
+
+from sqlalchemy import Column, String, Integer, DateTime, ForeignKey, Boolean, JSON, UniqueConstraint
+from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy.sql import func
+from sqlalchemy.orm import relationship
+from app.database import Base
+import uuid
+
+
+class Book(Base):
+    __tablename__ = "books"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    title = Column(String, nullable=False)
+    author = Column(String, nullable=False)
+    cover = Column(String, nullable=True)
+    genres = Column(JSON, default=[])
+    total_pages = Column(Integer, nullable=True)
+    created_at = Column(DateTime, server_default=func.now())
+    updated_at = Column(DateTime, onupdate=func.now())
+    
+    # Relationships
+    user_books = relationship("UserBook", back_populates="book", cascade="all, delete-orphan")
+    
+    # Constraints
+    __table_args__ = (
+        UniqueConstraint('title', 'author', name='unique_book_title_author'),
+    )
+
+
+class UserBook(Base):
+    __tablename__ = "user_books"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    user_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False)
+    book_id = Column(UUID(as_uuid=True), ForeignKey("books.id"), nullable=False)
+    status = Column(String, default="planned")  # planned, reading, finished, postponed, abandoned
+    rating = Column(Integer, nullable=True)
+    current_page = Column(Integer, default=0)
+    start_date = Column(DateTime, nullable=True)
+    end_date = Column(DateTime, nullable=True)
+    notes = Column(String, nullable=True)
+    is_favorite = Column(Boolean, default=False)
+    created_at = Column(DateTime, server_default=func.now())
+    updated_at = Column(DateTime, onupdate=func.now())
+    
+    # Relationships
+    book = relationship("Book", back_populates="user_books")
+    user = relationship("User", back_populates="user_books")
+
+
+===== app\models\user.py =====
+
+from sqlalchemy import Column, String, DateTime
+from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy.sql import func
+from sqlalchemy.orm import relationship
+from app.database import Base
+import uuid
+
+
+class User(Base):
+    __tablename__ = "users"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    email = Column(String, unique=True, nullable=False, index=True)
+    password_hash = Column(String, nullable=False)
+    created_at = Column(DateTime, server_default=func.now())
+    updated_at = Column(DateTime, onupdate=func.now())
+    
+    # Relationships
+    user_books = relationship("UserBook", back_populates="user", cascade="all, delete-orphan")
+
+
+===== app\schemas\book.py =====
+
+from pydantic import BaseModel
+from datetime import datetime
+from typing import Optional, List
+from uuid import UUID
+
+
+class BookBase(BaseModel):
+    title: str
+    author: str
+    cover: Optional[str] = None
+    genres: Optional[List[str]] = []
+    total_pages: Optional[int] = None
+
+
+class BookCreate(BookBase):
+    pass
+
+
+class BookResponse(BookBase):
+    id: UUID
+    created_at: datetime
+    updated_at: Optional[datetime]
+
+    class Config:
+        from_attributes = True
+
+
+class UserBookCreate(BaseModel):
+    book_id: UUID
+    status: str = "planned"
+    rating: Optional[int] = None
+    current_page: Optional[int] = 0
+    start_date: Optional[datetime] = None
+    notes: Optional[str] = None
+
+
+class UserBookResponse(BaseModel):
+    id: UUID
+    user_id: UUID
+    book_id: UUID
+    book: BookResponse
+    status: str
+    rating: Optional[int]
+    current_page: int
+    start_date: Optional[datetime]
+    end_date: Optional[datetime]
+    notes: Optional[str]
+    is_favorite: bool
+    created_at: datetime
+    updated_at: Optional[datetime]
+
+    class Config:
+        from_attributes = True
+
+
+===== app\schemas\user.py =====
+
+from datetime import datetime
+from uuid import UUID
+from pydantic import BaseModel, EmailStr
+
+class UserCreate(BaseModel):
+    email: str
+    password: str
+
+class UserResponse(BaseModel):
+    id: UUID  # вњ… С‚РµРїРµСЂСЊ РѕР¶РёРґР°РµС‚ UUID
+    email: str
+    created_at: datetime
+    class Config:
+        from_attributes = True
+
+class UserLogin(BaseModel):
+    email: str
+    password: str
+
+class TokenResponse(BaseModel):
+    access_token: str
+    token_type: str = "bearer"
+
+
+===== app\config.py =====
+
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
+
+
+class Settings:
+    DATABASE_URL: str = os.getenv("DATABASE_URL", "postgresql+asyncpg://postgres:postgres@localhost:5432/syverro")
+    SECRET_KEY: str = os.getenv("SECRET_KEY", "your-secret-key-change-this-in-production")
+    ALGORITHM: str = "HS256"
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
+
+
+settings = Settings()
+
+
+===== app\database.py =====
+
+from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sessionmaker
+from sqlalchemy.orm import declarative_base
+from app.config import settings
+
+engine = create_async_engine(
+    settings.DATABASE_URL,
+    echo=True,
+    future=True
+)
+
+AsyncSessionLocal = async_sessionmaker(
+    engine,
+    class_=AsyncSession,
+    expire_on_commit=False
+)
+
+Base = declarative_base()
+
+async def get_db():
+    async with AsyncSessionLocal() as session:
+        yield session
+
+
+===== app\main.py =====
+
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+from app.api.v1 import routers
+from app.database import engine, Base
+
+app = FastAPI(title="Syverro API", version="0.1.0")
+
+# CORS - СЂР°Р·СЂРµС€Р°РµРј Р·Р°РїСЂРѕСЃС‹ СЃ Р»РѕРєР°Р»СЊРЅРѕРіРѕ СЃР°Р№С‚Р°
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:3000", "http://127.0.0.1:3000"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+@app.on_event("startup")
+async def init_db():
+    async with engine.begin() as conn:
+        await conn.run_sync(Base.metadata.create_all)
+
+# РџРѕРґРєР»СЋС‡Р°РµРј СЂРѕСѓС‚РµСЂС‹
+for router in routers:
+    app.include_router(router, prefix="/api/v1")

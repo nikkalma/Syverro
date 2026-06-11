@@ -3,7 +3,7 @@ import React from 'react';
 import { View, FlatList, Dimensions, ScrollView, TouchableOpacity } from 'react-native';
 import { useTheme } from '../../context/ThemeContext';
 import { useLanguage } from '../../context/LanguageContext';
-import useStore from '../../store';
+import { useStore } from '../../store';
 import Header from '../../components/Header';
 import BookCover from '../../components/BookCover';
 import { Text } from '../../components/Text';

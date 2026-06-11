@@ -1,0 +1,123 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  background-color: #0B1220;
+  font-family: 'Inter', sans-serif;
+  color: #E7EDF5;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Атмосферный шар (Орб) */
+.orb {
+  position: absolute;
+  width: 70vmax;
+  height: 70vmax;
+  background: radial-gradient(circle, rgba(42, 75, 96, 0.4) 0%, rgba(5, 11, 18, 0) 70%);
+  border-radius: 50%;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  filter: blur(40px);
+  animation: pulse 8s ease-in-out infinite;
+  z-index: 0;
+  pointer-events: none;
+}
+
+@keyframes pulse {
+  0%, 100% { transform: translate(-50%, -50%) scale(1); opacity: 0.6; }
+  50% { transform: translate(-50%, -50%) scale(1.2); opacity: 0.9; }
+}
+
+.container {
+  max-width: 600px;
+  width: 90%;
+  padding: 2rem;
+  text-align: center;
+  position: relative;
+  z-index: 2;
+  pointer-events: auto;
+  backdrop-filter: blur(2px);
+}
+
+.glass-card {
+  background: rgba(14, 26, 38, 0.6);
+  border-radius: 32px;
+  padding: 3rem 2rem;
+  border: 1px solid rgba(174, 198, 207, 0.2);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+}
+
+h1 {
+  font-size: 4.5rem;
+  font-weight: 600;
+  letter-spacing: -2px;
+  color: #E7EDF5;
+  margin-bottom: 0.5rem;
+}
+
+.tagline {
+  font-size: 1rem;
+  font-weight: 400;
+  text-transform: uppercase;
+  letter-spacing: 4px;
+  color: #5B86A1;
+}
+
+input {
+  width: 100%;
+  padding: 12px 16px;
+  background: #121C24;
+  border: 1px solid #2A4B60;
+  border-radius: 40px;
+  color: white;
+  font-family: 'Inter', sans-serif;
+  outline: none;
+  margin-bottom: 12px;
+}
+
+input:focus {
+  border-color: #AEC6CF;
+  box-shadow: 0 0 8px rgba(174, 198, 207, 0.3);
+}
+
+button {
+  width: 100%;
+  padding: 12px;
+  background: #2A4B60;
+  border: none;
+  border-radius: 40px;
+  color: white;
+  font-weight: 600;
+  font-family: 'Inter', sans-serif;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+button:hover {
+  background: #5B86A1;
+}
+
+.error {
+  color: #C47A7A;
+  font-size: 0.875rem;
+  margin-top: 8px;
+}
+
+.link {
+  color: #5B86A1;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.link:hover {
+  text-decoration: underline;
+}

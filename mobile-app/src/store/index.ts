@@ -6,38 +6,18 @@ import { createSessionsSlice, SessionsSlice } from './slices/sessionsSlice';
 import { createQuotesSlice, QuotesSlice } from './slices/quotesSlice';
 import { createProfileSlice, ProfileSlice } from './slices/profileSlice';
 
-// Типы состояний
-export interface StoreState {
+export type StoreState = {
   books: any[];
   activeBookId: string | null;
   sessions: any[];
   activeSession: any | null;
   quotes: any[];
   profile: any;
-}
+};
 
 export type StoreActions = BooksSlice & SessionsSlice & QuotesSlice & ProfileSlice;
 export type Store = StoreState & StoreActions;
 
-// Миграция
-const migrateFromV1 = (persistedState: any): any => {
-  if (!persistedState) return persistedState;
-  const state = { ...persistedState };
-  
-  if (state.books && Array.isArray(state.books)) {
-    const activeBook = state.books.find((book: any) => book.isActive === true);
-    if (activeBook && !state.activeBookId) {
-      state.activeBookId = activeBook.id;
-      state.books = state.books.map((book: any) => {
-        const { isActive, ...rest } = book;
-        return rest;
-      });
-    }
-  }
-  return state;
-};
-
-// Создаём store
 export const useStore = create<Store>()(
   persist(
     (set, get, store) => ({
@@ -50,11 +30,6 @@ export const useStore = create<Store>()(
       name: 'syverro-storage',
       storage: createJSONStorage(() => AsyncStorage),
       version: 2,
-      migrate: (persistedState, version) => {
-        console.log('🔄 Миграция с версии', version);
-        if (version === 1) return migrateFromV1(persistedState);
-        return persistedState;
-      },
       partialize: (state: any) => ({
         books: state.books,
         activeBookId: state.activeBookId,

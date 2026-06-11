@@ -4,7 +4,7 @@ import { View, TouchableOpacity } from 'react-native';
 import BookCover from '../../components/BookCover';
 import { Text } from '../../components/Text';
 import { useTheme } from '../../context/ThemeContext';
-import useStore from '../../store';
+import { useStore }  from '../../store';
 import { spacing } from '../../theme/spacing';
 import type { Book } from '../../types/book.types';
 

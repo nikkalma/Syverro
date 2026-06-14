@@ -1,16 +1,17 @@
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
-import { useAuthStore } from './store/authStore'
-import Layout from './components/Layout'
-import Login from './pages/Login'
-import Register from './pages/Register'
-import Dashboard from './pages/Dashboard'
-import Insights from './pages/Insights'
-import WorldMap from './pages/WorldMap'
-import Profile from './pages/Profile'
-import './global.css';
+// src/App.tsx
+
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { useAuthStore } from './store/authStore';
+import Layout from './components/Layout';
+import Login from './pages/Login';
+import Register from './pages/Register';
+import LibraryPage from './pages/LibraryPage';  // ← изменили
+import Insights from './pages/Insights';
+import WorldMap from './pages/WorldMap';
+import Profile from './pages/Profile';
 
 function App() {
-  const token = useAuthStore((state) => state.token)
+  const token = useAuthStore((state) => state.token);
 
   if (!token) {
     return (
@@ -21,14 +22,14 @@ function App() {
           <Route path="*" element={<Navigate to="/login" />} />
         </Routes>
       </BrowserRouter>
-    )
+    );
   }
 
   return (
     <BrowserRouter>
       <Layout>
         <Routes>
-          <Route path="/" element={<Dashboard />} />
+          <Route path="/" element={<LibraryPage />} />
           <Route path="/insights" element={<Insights />} />
           <Route path="/worldmap" element={<WorldMap />} />
           <Route path="/profile" element={<Profile />} />
@@ -36,7 +37,7 @@ function App() {
         </Routes>
       </Layout>
     </BrowserRouter>
-  )
+  );
 }
 
-export default App
+export default App;

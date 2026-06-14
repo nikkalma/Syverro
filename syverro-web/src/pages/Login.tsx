@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { apiClient } from '../api/client'
+import { apiClient } from '../shared/api/client'
 import { useAuthStore } from '../store/authStore'
 
 export default function Login() {

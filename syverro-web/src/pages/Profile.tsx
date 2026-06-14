@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuthStore } from '../store/authStore'
-import { apiClient } from '../api/client'
+import { apiClient } from '../shared/api/client'
 
 interface UserProfile {
   id: number

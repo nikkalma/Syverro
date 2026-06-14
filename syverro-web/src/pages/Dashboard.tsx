@@ -1,11 +1,9 @@
 import { useEffect, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
 import { useAuthStore } from '../store/authStore'
 import { booksApi } from '../api/books'
 import { Book } from '../types/book'
 
 export default function Dashboard() {
-  const navigate = useNavigate()
   const logout = useAuthStore((state) => state.logout)
   const token = useAuthStore((state) => state.token)
   const [books, setBooks] = useState<Book[]>([])
@@ -73,12 +71,6 @@ export default function Dashboard() {
             style={{ flex: 1, background: '#3A5570' }}
           >
             + Добавить книгу
-          </button>
-          <button 
-            onClick={() => navigate('/profile')}
-            style={{ flex: 1, background: '#2A4B60' }}
-          >
-            👤 Профиль
           </button>
         </div>
 

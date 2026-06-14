@@ -1,14 +1,11 @@
 import { useEffect, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { useAuthStore } from '../store/authStore'
 import { booksApi } from '../api/books'
-
-interface Book {
-  id: string
-  title: string
-  author: string
-}
+import { Book } from '../types/book'
 
 export default function Dashboard() {
+  const navigate = useNavigate()
   const logout = useAuthStore((state) => state.logout)
   const token = useAuthStore((state) => state.token)
   const [books, setBooks] = useState<Book[]>([])
@@ -67,7 +64,7 @@ export default function Dashboard() {
       <div className="orb"></div>
       <div className="glass-card">
         <h1>Библиотека</h1>
-        <div className="tagline">ВАШИ КНИГИ</div>
+        <div className="tagline">ТВОИ КНИГИ</div>
         <div style={{ width: 60, height: 2, background: '#2A4B60', margin: '1.5rem auto' }}></div>
 
         <div style={{ display: 'flex', gap: '12px', marginBottom: '1.5rem' }}>
@@ -76,6 +73,12 @@ export default function Dashboard() {
             style={{ flex: 1, background: '#3A5570' }}
           >
             + Добавить книгу
+          </button>
+          <button 
+            onClick={() => navigate('/profile')}
+            style={{ flex: 1, background: '#2A4B60' }}
+          >
+            👤 Профиль
           </button>
         </div>
 

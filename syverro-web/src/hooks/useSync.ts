@@ -5,7 +5,7 @@ import { booksApi } from '../api/books'
 
 export const useSync = () => {
   const token = useAuthStore((state) => state.token)
-  const { setBooks } = useBookStore() // убрали setUserBooks
+  const { setBooks } = useBookStore()
   const [syncing, setSyncing] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -17,7 +17,7 @@ export const useSync = () => {
     setError(null)
 
     try {
-      console.log('🔄 Синхронизация...')
+      console.log('🔄 Синхронизация книг...')
       const data = await booksApi.getUserBooks()
       
       if (data) {

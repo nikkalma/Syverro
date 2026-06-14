@@ -1,19 +1,39 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { useAuthStore } from './store/authStore'
+import Layout from './components/Layout'
 import Login from './pages/Login'
 import Register from './pages/Register'
 import Dashboard from './pages/Dashboard'
+import Insights from './pages/Insights'
+import WorldMap from './pages/WorldMap'
+import Profile from './pages/Profile'
 
 function App() {
   const token = useAuthStore((state) => state.token)
 
+  if (!token) {
+    return (
+      <BrowserRouter>
+        <Routes>
+          <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<Register />} />
+          <Route path="*" element={<Navigate to="/login" />} />
+        </Routes>
+      </BrowserRouter>
+    )
+  }
+
   return (
     <BrowserRouter>
-      <Routes>
-        <Route path="/login" element={!token ? <Login /> : <Navigate to="/" />} />
-        <Route path="/register" element={!token ? <Register /> : <Navigate to="/" />} />
-        <Route path="/" element={token ? <Dashboard /> : <Navigate to="/login" />} />
-      </Routes>
+      <Layout>
+        <Routes>
+          <Route path="/" element={<Dashboard />} />
+          <Route path="/insights" element={<Insights />} />
+          <Route path="/worldmap" element={<WorldMap />} />
+          <Route path="/profile" element={<Profile />} />
+          <Route path="*" element={<Navigate to="/" />} />
+        </Routes>
+      </Layout>
     </BrowserRouter>
   )
 }

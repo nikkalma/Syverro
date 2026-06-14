@@ -7,6 +7,7 @@ import Dashboard from './pages/Dashboard'
 import Insights from './pages/Insights'
 import WorldMap from './pages/WorldMap'
 import Profile from './pages/Profile'
+import './global.css';
 
 function App() {
   const token = useAuthStore((state) => state.token)

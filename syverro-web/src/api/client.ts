@@ -1,6 +1,12 @@
 import axios from 'axios';
 
-const API_BASE_URL = 'https://api.syverro.com';
+const isProduction = import.meta.env.MODE === 'production';
+const PROD_API_URL = 'https://api.syverro.com/api/v1';
+const DEV_API_URL = '/api/v1';
+
+export const API_BASE_URL = isProduction ? PROD_API_URL : DEV_API_URL;
+
+console.log(`API Client mode: ${import.meta.env.MODE}, base URL: ${API_BASE_URL}`);
 
 export const apiClient = axios.create({
   baseURL: API_BASE_URL,
@@ -9,44 +15,31 @@ export const apiClient = axios.create({
   },
 });
 
-// Добавляем токен в каждый запрос
-apiClient.interceptors.request.use((config) => {
-  // Пробуем разные варианты получения токена
-  let token = null;
-  
-  // Вариант 1: прямой ключ
-  token = localStorage.getItem('@auth_token');
-  
-  // Вариант 2: из auth-storage (Zustand persist)
-  if (!token) {
-    const authStorage = localStorage.getItem('auth-storage');
-    if (authStorage) {
-      try {
-        const parsed = JSON.parse(authStorage);
-        token = parsed.state?.token;
-      } catch (e) {
-        console.error('Ошибка парсинга auth-storage:', e);
-      }
+apiClient.interceptors.request.use(
+  (config) => {
+    const token = localStorage.getItem('access_token');
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
     }
+    return config;
+  },
+  (error) => {
+    return Promise.reject(error);
   }
-  
-  // Вариант 3: из storage (старый вариант)
-  if (!token) {
-    const storage = localStorage.getItem('storage');
-    if (storage) {
-      try {
-        const parsed = JSON.parse(storage);
-        token = parsed.state?.token;
-      } catch (e) {}
+);
+
+apiClient.interceptors.response.use(
+  (response) => response,
+  async (error) => {
+    const originalRequest = error.config;
+    if (error.response?.status === 401 && !originalRequest._retry) {
+      originalRequest._retry = true;
+      console.log('401 Unauthorized, logging out...');
+      localStorage.removeItem('access_token');
+      window.location.href = '/login';
     }
+    return Promise.reject(error);
   }
-  
-  if (token) {
-    console.log('Токен найден, добавляем в заголовок');
-    config.headers.Authorization = `Bearer ${token}`;
-  } else {
-    console.warn('Токен не найден в localStorage');
-  }
-  
-  return config;
-});
+);
+
+export default apiClient;

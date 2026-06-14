@@ -1,15 +1,11 @@
-// src/pages/LibraryPage.tsx
-
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAuthStore } from '../store/authStore';
 import { useLibrary } from '../features/library/hooks/useLibrary';
 import BookGrid from '../widgets/BookGrid';
 import { bookApi } from '../entities/book/book.api';
 
 export default function LibraryPage() {
   const navigate = useNavigate();
-  const logout = useAuthStore((state) => state.logout);
   const { books, loading, toggleFavorite } = useLibrary();
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
@@ -19,14 +15,14 @@ export default function LibraryPage() {
   };
 
   const handleAddBookManually = async () => {
-    // Временная заглушка для ручного добавления
     const title = prompt('Название книги');
     const author = prompt('Автор');
     if (title && author) {
       try {
-        await bookApi.create({ 
-          title, 
-          author, 
+        await bookApi.create({
+          id: '',
+          title,
+          author,
           status: 'planned',
           rating: null,
           cover: null,
@@ -39,6 +35,7 @@ export default function LibraryPage() {
           notes: '',
           languages: [],
           review: '',
+          createdAt: 0,
           favorite: false,
           authorCountry: null,
           series: null,

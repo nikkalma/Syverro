@@ -1,5 +1,3 @@
-// src/widgets/BookCard.tsx
-
 import { useState } from 'react';
 import BookCover from '../components/BookCover';
 import type { Book } from '../entities/book/book.types';

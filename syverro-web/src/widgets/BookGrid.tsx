@@ -1,5 +1,3 @@
-// src/widgets/BookGrid.tsx
-
 import type { Book } from '../entities/book/book.types';
 import BookCard from './BookCard';
 

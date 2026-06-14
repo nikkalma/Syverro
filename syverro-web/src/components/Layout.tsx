@@ -1,67 +1,67 @@
-import { ReactNode } from 'react'
-import { Link, useLocation } from 'react-router-dom'
+import { useState } from 'react';
 
-interface LayoutProps {
-  children: ReactNode
+interface BookCoverProps {
+  coverUrl: string | null;
+  title: string;
+  width?: number;
+  height?: number;
+  className?: string;
 }
 
-const navItems = [
-  { path: '/', label: 'Библиотека', icon: '📚' },
-  { path: '/insights', label: 'Инсайты', icon: '💡' },
-  { path: '/worldmap', label: 'Карта миров', icon: '🗺️' },
-  { path: '/profile', label: 'Профиль', icon: '👤' },
-]
+export default function BookCover({ 
+  coverUrl, 
+  title, 
+  width = 120, 
+  height = 168,
+  className = ''
+}: BookCoverProps) {
+  const [imageLoading, setImageLoading] = useState(true);
+  const [imageError, setImageError] = useState(false);
 
-export default function Layout({ children }: LayoutProps) {
-  const location = useLocation()
+  if (coverUrl && !imageError && (coverUrl.startsWith('http') || coverUrl.startsWith('data:'))) {
+    return (
+      <div 
+        className={`relative ${className}`} 
+        style={{ width, height }}
+      >
+        {imageLoading && (
+          <div 
+            className="absolute inset-0 bg-[#121C24] rounded-lg flex items-center justify-center"
+            style={{ width, height }}
+          >
+            <div className="w-6 h-6 border-2 border-[#5B86A1] border-t-transparent rounded-full animate-spin" />
+          </div>
+        )}
+        <img
+          src={coverUrl}
+          alt={title}
+          className="w-full h-full object-cover rounded-lg"
+          style={{ opacity: imageLoading ? 0 : 1 }}
+          onLoad={() => setImageLoading(false)}
+          onError={() => {
+            setImageError(true);
+            setImageLoading(false);
+          }}
+        />
+      </div>
+    );
+  }
+
+  const fontSize = Math.min(width / 6, 14);
 
   return (
-    <div style={{ minHeight: '100vh', background: '#0A1118' }}>
-      <header
-        style={{
-          position: 'fixed',
-          top: 0,
-          left: 0,
-          right: 0,
-          height: '64px',
-          background: 'rgba(10, 17, 24, 0.95)',
-          backdropFilter: 'blur(10px)',
-          borderBottom: '1px solid #2A4B60',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          padding: '0 32px',
-          zIndex: 100,
-        }}
-      >
-        <div>
-          <h1 style={{ color: '#E6EDF3', fontSize: '1.5rem', margin: 0 }}>Syverro</h1>
+    <div
+      className="bg-[#121C24] rounded-lg flex items-center justify-center border border-[#2A4B60]"
+      style={{ width, height }}
+    >
+      <div className="text-center px-2">
+        <div 
+          className="text-[#E6EDF3] font-medium text-center line-clamp-4"
+          style={{ fontSize: `${fontSize}px`, lineHeight: `${fontSize + 4}px` }}
+        >
+          {title || '?'}
         </div>
-        <nav style={{ display: 'flex', gap: '24px' }}>
-          {navItems.map((item) => (
-            <Link
-              key={item.path}
-              to={item.path}
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '8px',
-                color: location.pathname === item.path ? '#5B86A1' : '#97A6BA',
-                textDecoration: 'none',
-                padding: '8px 16px',
-                borderRadius: '12px',
-                background: location.pathname === item.path ? 'rgba(90, 134, 161, 0.15)' : 'transparent',
-              }}
-            >
-              <span style={{ fontSize: '1.25rem' }}>{item.icon}</span>
-              <span>{item.label}</span>
-            </Link>
-          ))}
-        </nav>
-      </header>
-      <main style={{ paddingTop: '80px', paddingLeft: '32px', paddingRight: '32px', maxWidth: '1400px', margin: '0 auto' }}>
-        {children}
-      </main>
+      </div>
     </div>
-  )
+  );
 }

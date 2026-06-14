@@ -6,8 +6,6 @@ const DEV_API_URL = '/api/v1';
 
 export const API_BASE_URL = isProduction ? PROD_API_URL : DEV_API_URL;
 
-console.log(`API Client mode: ${import.meta.env.MODE}, base URL: ${API_BASE_URL}`);
-
 export const apiClient = axios.create({
   baseURL: API_BASE_URL,
   headers: {
@@ -32,7 +30,6 @@ apiClient.interceptors.response.use(
     const originalRequest = error.config;
     if (error.response?.status === 401 && !originalRequest._retry) {
       originalRequest._retry = true;
-      console.log('401 Unauthorized, logging out...');
       localStorage.removeItem('access_token');
       window.location.href = '/login';
     }

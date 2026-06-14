@@ -1,11 +1,9 @@
-// src/App.tsx
-
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { useAuthStore } from './store/authStore';
 import Layout from './components/Layout';
 import Login from './pages/Login';
 import Register from './pages/Register';
-import LibraryPage from './pages/LibraryPage';  // ← изменили
+import LibraryPage from './pages/LibraryPage';
 import Insights from './pages/Insights';
 import WorldMap from './pages/WorldMap';
 import Profile from './pages/Profile';

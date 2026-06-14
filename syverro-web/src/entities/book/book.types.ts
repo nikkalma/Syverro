@@ -1,5 +1,3 @@
-// src/entities/book/book.types.ts
-
 export type BookStatus = 'planned' | 'reading' | 'finished' | 'postponed' | 'abandoned' | 'rereading';
 export type ReadingFormat = 'reading' | 'listening';
 export type BookRating = 1 | 2 | 3 | 4 | 5 | null;

@@ -7,22 +7,21 @@ export function useLibrary() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const loadBooks = async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      const data = await bookApi.getAll();
-      setBooks(data || []);
-    } catch (err: any) {
-      console.error('Ошибка загрузки книг:', err);
-      setError(err.message || 'Не удалось загрузить книги');
-    } finally {
-      setLoading(false);
-    }
-  };
-
   useEffect(() => {
-    loadBooks();
+    console.log('🔍 useLibrary mounted');
+    bookApi.getAll()
+      .then((data) => {
+        console.log('🔍 books loaded:', data);
+        setBooks(data);
+      })
+      .catch((err) => {
+        console.error('❌ failed to load books:', err);
+        setError(err.message);
+      })
+      .finally(() => {
+        setLoading(false);
+        console.log('🔍 loading finished');
+      });
   }, []);
 
   const toggleFavorite = (bookId: string) => {
@@ -33,11 +32,5 @@ export function useLibrary() {
     );
   };
 
-  return {
-    books,
-    loading,
-    error,
-    loadBooks,
-    toggleFavorite,
-  };
+  return { books, loading, error, toggleFavorite };
 }

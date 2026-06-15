@@ -6,7 +6,7 @@ import { bookApi } from '../entities/book/book.api';
 
 export default function LibraryPage() {
   const navigate = useNavigate();
-  const { books, loading, toggleFavorite } = useLibrary();
+  const { books, loading, error, toggleFavorite } = useLibrary();
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
 
@@ -14,41 +14,41 @@ export default function LibraryPage() {
     navigate(`/book/${bookId}`);
   };
 
- const handleAddBookManually = async () => {
-  const title = prompt('Название книги');
-  const author = prompt('Автор');
-  if (title && author) {
-    try {
-      await bookApi.create({
-        title,
-        author,
-        status: 'planned',
-        rating: null,
-        cover: null,
-        section: null,
-        genres: [],
-        totalPages: 0,
-        currentPage: 0,
-        startDate: null,
-        endDate: null,
-        notes: '',
-        languages: [],
-        review: '',
-        favorite: false,
-        authorCountry: null,
-        series: null,
-        seriesPosition: null,
-        originalYear: null,
-        readingFormat: 'reading',
-        lastRead: null,
-      });
-      window.location.reload();
-    } catch (error) {
-      console.error('Ошибка добавления:', error);
-      alert('Ошибка добавления книги');
+  const handleAddBookManually = async () => {
+    const title = prompt('Название книги');
+    const author = prompt('Автор');
+    if (title && author) {
+      try {
+        await bookApi.create({
+          title,
+          author,
+          status: 'planned',
+          rating: null,
+          cover: null,
+          section: null,
+          genres: [],
+          totalPages: 0,
+          currentPage: 0,
+          startDate: null,
+          endDate: null,
+          notes: '',
+          languages: [],
+          review: '',
+          favorite: false,
+          authorCountry: null,
+          series: null,
+          seriesPosition: null,
+          originalYear: null,
+          readingFormat: 'reading',
+          lastRead: null,
+        });
+        window.location.reload();
+      } catch (error) {
+        console.error('Ошибка добавления:', error);
+        alert('Ошибка добавления книги');
+      }
     }
-  }
-};
+  };
 
   const filteredBooks = books.filter((book) => {
     if (statusFilter !== 'all' && book.status !== statusFilter) return false;
@@ -66,6 +66,14 @@ export default function LibraryPage() {
     return (
       <div className="flex justify-center items-center py-20">
         <div className="w-8 h-8 border-2 border-[#5B86A1] border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="text-center py-20 text-red-500">
+        Ошибка: {error}
       </div>
     );
   }

@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import BookCover from '../components/BookCover';
 import type { Book } from '../entities/book/book.types';
 
 interface BookCardProps {
@@ -33,12 +32,22 @@ export default function BookCard({ book, onPress, onToggleFavorite, showFavorite
       style={{ transform: isHovered ? 'translateY(-4px)' : 'none' }}
     >
       <div className="relative">
-        <BookCover
-          coverUrl={book.cover}
-          title={book.title}
-          width={140}
-          height={196}
-        />
+        {book.cover ? (
+          <img
+            src={book.cover}
+            alt={book.title}
+            className="w-full h-auto rounded-lg object-cover"
+            style={{ aspectRatio: '2/3' }}
+          />
+        ) : (
+          <div className="bg-[#121C24] rounded-lg flex items-center justify-center border border-[#2A4B60]" style={{ aspectRatio: '2/3' }}>
+            <div className="text-center px-2">
+              <div className="text-[#E6EDF3] font-medium text-center line-clamp-4" style={{ fontSize: '14px', lineHeight: '18px' }}>
+                {book.title || '?'}
+              </div>
+            </div>
+          </div>
+        )}
         
         {showFavorite && (
           <button

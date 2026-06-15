@@ -2,8 +2,9 @@ import { apiClient } from '../../shared/api/client';
 import type { Book, NewBook } from './book.types';
 
 export const bookApi = {
+  // Глобальный каталог (все книги мира)
   getAll: async (): Promise<Book[]> => {
-    const response = await apiClient.get('/books/global/');
+    const response = await apiClient.get('/books/catalog/');
     return response.data;
   },
 

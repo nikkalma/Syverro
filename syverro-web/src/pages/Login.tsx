@@ -17,7 +17,7 @@ export default function Login() {
     setLoading(true)
 
     try {
-      const response = await apiClient.post('/api/v1/auth/login', { email, password })
+      const response = await apiClient.post('/auth/login', { email, password })
       const { access_token } = response.data
       setToken(access_token)
       navigate('/')

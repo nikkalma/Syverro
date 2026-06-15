@@ -24,8 +24,8 @@ export default function Register() {
     setLoading(true)
 
     try {
-      await apiClient.post('/api/v1/auth/register', { email, password })
-      const response = await apiClient.post('/api/v1/auth/login', { email, password })
+      await apiClient.post('/auth/register', { email, password })
+      const response = await apiClient.post('/auth/login', { email, password })
       const { access_token } = response.data
       setToken(access_token)
       navigate('/')

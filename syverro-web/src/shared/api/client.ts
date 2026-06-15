@@ -1,8 +1,8 @@
 import axios from 'axios';
 
 const isProduction = import.meta.env.MODE === 'production';
-const PROD_API_URL = 'https://api.syverro.com/api/v1';
-const DEV_API_URL = 'http://localhost:8000/api/v1';
+const PROD_API_URL = 'https://api.syverro.com';
+const DEV_API_URL = 'http://localhost:8000';
 
 export const API_BASE_URL = isProduction ? PROD_API_URL : DEV_API_URL;
 

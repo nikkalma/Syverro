@@ -1,12 +1,8 @@
 import axios from 'axios';
 
-const isProduction = import.meta.env.MODE === 'production';
-const PROD_API_URL = 'https://api.syverro.com';
-const DEV_API_URL = 'http://localhost:8000';
+export const API_BASE_URL = 'https://api.syverro.com';
 
-export const API_BASE_URL = isProduction ? PROD_API_URL : DEV_API_URL;
-
-console.log('API Client mode:', import.meta.env.MODE, 'baseURL:', API_BASE_URL);
+console.log('API Client mode: production, baseURL:', API_BASE_URL);
 
 export const apiClient = axios.create({
   baseURL: API_BASE_URL,

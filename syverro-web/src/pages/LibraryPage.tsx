@@ -10,6 +10,8 @@ export default function LibraryPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
 
+  console.log('🔥🔥🔥 LibraryPage render, books length:', books.length, books);
+
   const handleBookPress = (bookId: string) => {
     navigate(`/book/${bookId}`);
   };
@@ -61,6 +63,8 @@ export default function LibraryPage() {
     }
     return true;
   });
+
+  console.log('🔥🔥🔥 filteredBooks length:', filteredBooks.length);
 
   if (loading) {
     return (

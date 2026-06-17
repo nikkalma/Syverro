@@ -6,6 +6,7 @@ import { useTheme } from '../context/ThemeContext';
 import { useLanguage } from '../context/LanguageContext';
 
 // Screens
+import AuthScreen from '../screens/AuthScreen';        // ← ДОБАВИТЬ
 import LibraryScreen from '../screens/LibraryScreen';
 import SessionScreen from '../screens/SessionScreen';
 import ProfileScreen from '../screens/ProfileScreen';
@@ -37,7 +38,6 @@ function MainTabs() {
         tabBarIcon: ({ focused, color, size }) => {
           let iconName: keyof typeof Ionicons.glyphMap = 'book-outline';
 
-          // Используем английские имена экранов
           switch (route.name) {
             case 'Profile':
               iconName = focused ? 'person' : 'person-outline';
@@ -61,7 +61,6 @@ function MainTabs() {
         },
       })}
     >
-      {/* Новый порядок: Профиль, Библиотека, Сессия, Настройки */}
       <Tab.Screen 
         name="Profile" 
         component={ProfileScreen} 
@@ -91,15 +90,23 @@ export default function AppNavigator() {
   const { t } = useLanguage();
 
   return (
-   <Stack.Navigator
-  screenOptions={{
-    headerStyle: { backgroundColor: theme.surface },
-    headerTintColor: theme.textPrimary,
-    headerTitleStyle: { fontWeight: '300', fontSize: 18 },
-    headerBackTitle: '',  
-    presentation: 'card',
-  }}
->
+    <Stack.Navigator
+      screenOptions={{
+        headerStyle: { backgroundColor: theme.surface },
+        headerTintColor: theme.textPrimary,
+        headerTitleStyle: { fontWeight: '300', fontSize: 18 },
+        headerBackTitle: '',  
+        presentation: 'card',
+      }}
+    >
+      {/* 🔐 ЭКРАН АВТОРИЗАЦИИ - ПЕРВЫЙ */}
+      <Stack.Screen 
+        name="Auth" 
+        component={AuthScreen} 
+        options={{ headerShown: false }} 
+      />
+      
+      {/* 🏠 ГЛАВНЫЕ ЭКРАНЫ (после входа) */}
       <Stack.Screen 
         name="MainTabs" 
         component={MainTabs} 

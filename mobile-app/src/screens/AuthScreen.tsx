@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';  // ← добавили useEffect
 import {
   View,
   Text,
@@ -10,11 +10,22 @@ import {
 } from 'react-native';
 import { authService } from '../services/auth.service';
 
-export default function AuthScreen({ navigation }: any) {  // ← добавить navigation
+export default function AuthScreen({ navigation }: any) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLogin, setIsLogin] = useState(true);
   const [loading, setLoading] = useState(false);
+
+  // ✅ ПРОВЕРКА: если уже есть токен → сразу в MainTabs
+  useEffect(() => {
+    const checkAuth = async () => {
+      const token = await authService.getToken();
+      if (token) {
+        navigation.replace('MainTabs');
+      }
+    };
+    checkAuth();
+  }, []);
 
   const handleSubmit = async () => {
     if (!email || !password) {
@@ -26,11 +37,11 @@ export default function AuthScreen({ navigation }: any) {  // ← добавит
     try {
       if (isLogin) {
         await authService.login(email, password);
-        navigation.replace('Main');  // ← переход на главный экран
+        navigation.replace('MainTabs');  // ← ИСПРАВЛЕНО
       } else {
         await authService.register(email, password);
         await authService.login(email, password);
-        navigation.replace('Main');  // ← переход на главный экран
+        navigation.replace('MainTabs');  // ← ИСПРАВЛЕНО
       }
     } catch (error: any) {
       const message = error?.response?.data?.detail || 'Что-то пошло не так';

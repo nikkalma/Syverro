@@ -1,5 +1,5 @@
+// src/store/authStore.ts
 import { create } from 'zustand'
-import { persist } from 'zustand/middleware'
 
 interface AuthState {
   token: string | null
@@ -7,15 +7,20 @@ interface AuthState {
   logout: () => void
 }
 
-export const useAuthStore = create<AuthState>()(
-  persist(
-    (set) => ({
-      token: null,
-      setToken: (token) => set({ token }),
-      logout: () => set({ token: null }),
-    }),
-    {
-      name: 'auth-storage',
+export const useAuthStore = create<AuthState>((set) => ({
+  token: localStorage.getItem('access_token') || null,
+  
+  setToken: (token) => {
+    if (token) {
+      localStorage.setItem('access_token', token)
+    } else {
+      localStorage.removeItem('access_token')
     }
-  )
-)
+    set({ token })
+  },
+  
+  logout: () => {
+    localStorage.removeItem('access_token')
+    set({ token: null })
+  },
+}))

@@ -8,10 +8,10 @@ export function useLibrary() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    console.log('🔍 useLibrary mounted');
+    console.log('🔥 useLibrary mounted, fetching books...');
     bookApi.getAll()
       .then((data) => {
-        console.log('🔍 books loaded:', data);
+        console.log('🔥 books loaded:', data);
         setBooks(data);
       })
       .catch((err) => {
@@ -20,9 +20,9 @@ export function useLibrary() {
       })
       .finally(() => {
         setLoading(false);
-        console.log('🔍 loading finished');
+        console.log('🔥 loading finished');
       });
-  }, []);
+  }, []); // ✅ Добавлен useEffect
 
   const toggleFavorite = (bookId: string) => {
     setBooks((prev) =>

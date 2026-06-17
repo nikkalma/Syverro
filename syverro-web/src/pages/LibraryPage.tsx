@@ -1,54 +1,25 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { useLibrary } from '../features/library/hooks/useLibrary';
 import BookGrid from '../widgets/BookGrid';
-import { bookApi } from '../entities/book/book.api';
+import AddBookModal from '../components/AddBookModal';
+import type { BookStatus } from '../entities/book/book.types';
 
 export default function LibraryPage() {
-  const navigate = useNavigate();
-  const { books, loading, error, toggleFavorite } = useLibrary();
+  const { books, loading, error, isAdding, addBook } = useLibrary();
   const [searchQuery, setSearchQuery] = useState('');
-  const [statusFilter, setStatusFilter] = useState('all');
+  const [statusFilter, setStatusFilter] = useState<BookStatus | 'all'>('all');
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
 
-  console.log('🔥🔥🔥 LibraryPage render, books length:', books.length, books);
-
-  const handleBookPress = (bookId: string) => {
-    navigate(`/book/${bookId}`);
-  };
-
-  const handleAddBookManually = async () => {
-    const title = prompt('Название книги');
-    const author = prompt('Автор');
-    if (title && author) {
-      try {
-        await bookApi.create({
-          title,
-          author,
-          status: 'planned',
-          rating: null,
-          cover: null,
-          section: null,
-          genres: [],
-          totalPages: 0,
-          currentPage: 0,
-          startDate: null,
-          endDate: null,
-          notes: '',
-          languages: [],
-          review: '',
-          favorite: false,
-          authorCountry: null,
-          series: null,
-          seriesPosition: null,
-          originalYear: null,
-          readingFormat: 'reading',
-          lastRead: null,
-        });
-        window.location.reload();
-      } catch (error) {
-        console.error('Ошибка добавления:', error);
-        alert('Ошибка добавления книги');
-      }
+  const handleAddBook = async (bookData: { title: string; author: string; status: BookStatus }) => {
+    const result = await addBook(bookData);
+    if (result.success) {
+      setIsModalOpen(false);
+      setToast({ message: 'Книга добавлена!', type: 'success' });
+      setTimeout(() => setToast(null), 3000);
+    } else {
+      setToast({ message: result.error || 'Ошибка добавления', type: 'error' });
+      setTimeout(() => setToast(null), 3000);
     }
   };
 
@@ -57,14 +28,12 @@ export default function LibraryPage() {
     if (searchQuery) {
       const query = searchQuery.toLowerCase();
       return (
-        book.title.toLowerCase().includes(query) ||
-        book.author.toLowerCase().includes(query)
+        book.title?.toLowerCase().includes(query) ||
+        book.author?.toLowerCase().includes(query)
       );
     }
     return true;
   });
-
-  console.log('🔥🔥🔥 filteredBooks length:', filteredBooks.length);
 
   if (loading) {
     return (
@@ -75,18 +44,13 @@ export default function LibraryPage() {
   }
 
   if (error) {
-    return (
-      <div className="text-center py-20 text-red-500">
-        Ошибка: {error}
-      </div>
-    );
+    return <div className="text-center py-20 text-red-500">Ошибка: {error}</div>;
   }
 
   return (
     <div>
       <div className="flex justify-between items-center mb-8 flex-wrap gap-4">
         <h1 className="text-3xl font-light text-[#E6EDF3]">Библиотека</h1>
-        
         <div className="flex gap-3">
           <input
             type="text"
@@ -95,21 +59,20 @@ export default function LibraryPage() {
             onChange={(e) => setSearchQuery(e.target.value)}
             className="px-4 py-2 bg-[#121C24] border border-[#2A4B60] rounded-full text-[#E6EDF3] placeholder-[#5B86A1] focus:outline-none focus:border-[#5B86A1]"
           />
-          
           <select
             value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
+            onChange={(e) => setStatusFilter(e.target.value as BookStatus | 'all')}
             className="px-4 py-2 bg-[#121C24] border border-[#2A4B60] rounded-full text-[#E6EDF3] focus:outline-none"
           >
             <option value="all">Все статусы</option>
             <option value="reading">Читаю</option>
             <option value="finished">Прочитано</option>
             <option value="planned">В планах</option>
-            <option value="rereading">Перечитываю</option>
+            <option value="postponed">Отложено</option>
+            <option value="abandoned">Брошено</option>
           </select>
-
           <button
-            onClick={handleAddBookManually}
+            onClick={() => setIsModalOpen(true)}
             className="px-4 py-2 bg-[#2A4B60] hover:bg-[#3A5570] rounded-full text-[#E6EDF3] transition"
           >
             + Добавить
@@ -122,13 +85,23 @@ export default function LibraryPage() {
           {searchQuery || statusFilter !== 'all' ? 'Ничего не найдено' : 'В библиотеке пока нет книг'}
         </div>
       ) : (
-        <BookGrid
-          books={filteredBooks}
-          onBookPress={handleBookPress}
-          onToggleFavorite={toggleFavorite}
-          showFavorite={true}
-          columns={4}
-        />
+        <BookGrid books={filteredBooks} />
+      )}
+
+      <AddBookModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        onSave={handleAddBook}
+        isLoading={isAdding}
+      />
+
+      {toast && (
+        <div
+          className="fixed bottom-4 right-4 px-6 py-3 rounded-lg shadow-lg text-white z-50"
+          style={{ background: toast.type === 'success' ? '#5B86A1' : '#D32F2F' }}
+        >
+          {toast.message}
+        </div>
       )}
     </div>
   );

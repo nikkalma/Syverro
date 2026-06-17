@@ -43,7 +43,7 @@ export default function BookCard({ book, onPress, onToggleFavorite, showFavorite
           <div className="bg-[#121C24] rounded-lg flex items-center justify-center border border-[#2A4B60]" style={{ aspectRatio: '2/3' }}>
             <div className="text-center px-2">
               <div className="text-[#E6EDF3] font-medium text-center line-clamp-4" style={{ fontSize: '14px', lineHeight: '18px' }}>
-                {book.title || '?'}
+                {book.title || 'ТЕСТ'}
               </div>
             </div>
           </div>

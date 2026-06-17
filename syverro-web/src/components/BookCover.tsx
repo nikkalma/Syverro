@@ -62,7 +62,7 @@ export default function BookCover({
           className="text-[#E6EDF3] font-medium text-center line-clamp-4"
           style={{ fontSize: `${fontSize}px`, lineHeight: `${fontSize + 4}px` }}
         >
-          {title || '?'}
+          {title || 'ТЕСТ'}
         </div>
       </div>
     </div>

@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { useAuthStore } from '../store/authStore';
 
 export const API_BASE_URL = 'https://api.syverro.com';
 
@@ -13,7 +14,7 @@ export const apiClient = axios.create({
 
 apiClient.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem('access_token');
+    const token = useAuthStore.getState().token;
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
@@ -29,6 +30,7 @@ apiClient.interceptors.response.use(
     if (error.response?.status === 401 && !originalRequest._retry) {
       originalRequest._retry = true;
       localStorage.removeItem('access_token');
+      useAuthStore.getState().logout();
       window.location.href = '/login';
     }
     return Promise.reject(error);

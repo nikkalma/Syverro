@@ -1,0 +1,1033 @@
+﻿
+
+========== src\api\books.ts ==========
+import { apiClient } from '../shared/api/client'
+
+export const booksApi = {
+  getUserBooks: async () => {
+    const response = await apiClient.get('/books/')
+    return response.data
+  },
+
+  addBook: async (bookData: { title: string; author: string }) => {
+    const response = await apiClient.post('/books/', bookData)
+    return response.data
+  },
+}
+
+
+========== src\api\insights.ts ==========
+
+
+
+========== src\api\worlds.ts ==========
+
+
+
+========== src\components\BookCover.tsx ==========
+// src/components/BookCover.tsx
+
+import { useState } from 'react';
+
+interface BookCoverProps {
+  coverUrl: string | null;
+  title: string;
+  width?: number;
+  height?: number;
+  className?: string;
+}
+
+export default function BookCover({ 
+  coverUrl, 
+  title, 
+  width = 120, 
+  height = 168,
+  className = ''
+}: BookCoverProps) {
+  const [imageLoading, setImageLoading] = useState(true);
+  const [imageError, setImageError] = useState(false);
+
+  if (coverUrl && !imageError && (coverUrl.startsWith('http') || coverUrl.startsWith('data:'))) {
+    return (
+      <div 
+        className={`relative ${className}`} 
+        style={{ width, height }}
+      >
+        {imageLoading && (
+          <div 
+            className="absolute inset-0 bg-[#121C24] rounded-lg flex items-center justify-center"
+            style={{ width, height }}
+          >
+            <div className="w-6 h-6 border-2 border-[#5B86A1] border-t-transparent rounded-full animate-spin" />
+          </div>
+        )}
+        <img
+          src={coverUrl}
+          alt={title}
+          className="w-full h-full object-cover rounded-lg"
+          style={{ opacity: imageLoading ? 0 : 1 }}
+          onLoad={() => setImageLoading(false)}
+          onError={() => {
+            setImageError(true);
+            setImageLoading(false);
+          }}
+        />
+      </div>
+    );
+  }
+
+  // РџР»РµР№СЃС…РѕР»РґРµСЂ
+  const fontSize = Math.min(width / 6, 14);
+
+  return (
+    <div
+      className="bg-[#121C24] rounded-lg flex items-center justify-center border border-[#2A4B60]"
+      style={{ width, height }}
+    >
+      <div className="text-center px-2">
+        <div 
+          className="text-[#E6EDF3] font-medium text-center line-clamp-4"
+          style={{ fontSize: `${fontSize}px`, lineHeight: `${fontSize + 4}px` }}
+        >
+          {title || 'РўР•РЎРў'}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+
+========== src\components\Layout.tsx ==========
+import { useState } from 'react';
+
+interface BookCoverProps {
+  coverUrl: string | null;
+  title: string;
+  width?: number;
+  height?: number;
+  className?: string;
+}
+
+export default function BookCover({ 
+  coverUrl, 
+  title, 
+  width = 120, 
+  height = 168,
+  className = ''
+}: BookCoverProps) {
+  const [imageLoading, setImageLoading] = useState(true);
+  const [imageError, setImageError] = useState(false);
+
+  if (coverUrl && !imageError && (coverUrl.startsWith('http') || coverUrl.startsWith('data:'))) {
+    return (
+      <div 
+        className={`relative ${className}`} 
+        style={{ width, height }}
+      >
+        {imageLoading && (
+          <div 
+            className="absolute inset-0 bg-[#121C24] rounded-lg flex items-center justify-center"
+            style={{ width, height }}
+          >
+            <div className="w-6 h-6 border-2 border-[#5B86A1] border-t-transparent rounded-full animate-spin" />
+          </div>
+        )}
+        <img
+          src={coverUrl}
+          alt={title}
+          className="w-full h-full object-cover rounded-lg"
+          style={{ opacity: imageLoading ? 0 : 1 }}
+          onLoad={() => setImageLoading(false)}
+          onError={() => {
+            setImageError(true);
+            setImageLoading(false);
+          }}
+        />
+      </div>
+    );
+  }
+
+  const fontSize = Math.min(width / 6, 14);
+
+  return (
+    <div
+      className="bg-[#121C24] rounded-lg flex items-center justify-center border border-[#2A4B60]"
+      style={{ width, height }}
+    >
+      <div className="text-center px-2">
+        <div 
+          className="text-[#E6EDF3] font-medium text-center line-clamp-4"
+          style={{ fontSize: `${fontSize}px`, lineHeight: `${fontSize + 4}px` }}
+        >
+          {title || '?'}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+
+========== src\entities\book\book.api.ts ==========
+import { apiClient } from '../../shared/api/client';
+import type { Book, NewBook } from './book.types';
+
+export const bookApi = {
+  getAll: async (): Promise<Book[]> => {
+    const response = await apiClient.get('/books/catalog/');
+    return response.data;
+  },
+
+  getById: async (id: string): Promise<Book> => {
+    const response = await apiClient.get(`/books/${id}`);
+    return response.data;
+  },
+
+  create: async (data: NewBook): Promise<Book> => {
+    const response = await apiClient.post('/books/', data);
+    return response.data;
+  },
+
+  getUserBooks: async (): Promise<any[]> => {
+    const response = await apiClient.get('/books/user-books/');
+    return response.data;
+  },
+
+  updateStatus: async (bookId: string, status: string): Promise<void> => {
+    await apiClient.put(`/books/${bookId}/status?status_value=${status}`);
+  },
+};
+
+
+========== src\entities\book\book.types.ts ==========
+export type BookStatus = 'planned' | 'reading' | 'finished' | 'postponed' | 'abandoned' | 'rereading';
+export type ReadingFormat = 'reading' | 'listening';
+export type BookRating = 1 | 2 | 3 | 4 | 5 | null;
+
+export interface Book {
+  id: string;
+  title: string;
+  author: string;
+  status: BookStatus;
+  rating: BookRating;
+  cover: string | null;
+  section: string | null;
+  genres: string[];
+  totalPages: number;
+  currentPage: number;
+  startDate: string | null;
+  endDate: string | null;
+  notes: string;
+  languages: string[];
+  review: string;
+  createdAt: number;
+  favorite: boolean;
+  authorCountry: string | null;
+  series: string | null;
+  seriesPosition: number | null;
+  originalYear: number | null;
+  readingFormat: ReadingFormat;
+  lastRead: string | null;
+}
+
+export type NewBook = Omit<Book, 'id' | 'createdAt'>;
+export type BookUpdate = Partial<Book>;
+
+
+========== src\features\library\hooks\useLibrary.ts ==========
+import { useEffect, useState } from 'react';
+import { bookApi } from '../../../entities/book/book.api';
+import type { Book } from '../../../entities/book/book.types';
+
+export function useLibrary() {
+  const [books, setBooks] = useState<Book[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    console.log('рџ”Ќ useLibrary mounted');
+    bookApi.getAll()
+      .then((data) => {
+        console.log('рџ”Ќ books loaded:', data);
+        setBooks(data);
+      })
+      .catch((err) => {
+        console.error('вќЊ failed to load books:', err);
+        setError(err.message);
+      })
+      .finally(() => {
+        setLoading(false);
+        console.log('рџ”Ќ loading finished');
+      });
+  }, []);
+
+  const toggleFavorite = (bookId: string) => {
+    setBooks((prev) =>
+      prev.map((book) =>
+        book.id === bookId ? { ...book, favorite: !book.favorite } : book
+      )
+    );
+  };
+
+  return { books, loading, error, toggleFavorite };
+}
+
+
+========== src\pages\Insights.tsx ==========
+export default function Insights() {
+  return (
+    <div className="glass-card">
+      <h1>РРЅСЃР°Р№С‚С‹</h1>
+      <div className="tagline">Р’РђРЁР РњР«РЎР›Р Р Р¦РРўРђРўР«</div>
+      <div style={{ width: 60, height: 2, background: '#2A4B60', margin: '1.5rem auto' }}></div>
+      <p style={{ color: '#97A6BA', textAlign: 'center' }}>РЎРєРѕСЂРѕ Р·РґРµСЃСЊ РїРѕСЏРІСЏС‚СЃСЏ РІР°С€Рё РёРЅСЃР°Р№С‚С‹</p>
+    </div>
+  )
+}
+
+
+========== src\pages\LibraryPage.tsx ==========
+import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useLibrary } from '../features/library/hooks/useLibrary';
+import BookGrid from '../widgets/BookGrid';
+import { bookApi } from '../entities/book/book.api';
+
+export default function LibraryPage() {
+  const navigate = useNavigate();
+  const { books, loading, error, toggleFavorite } = useLibrary();
+  const [searchQuery, setSearchQuery] = useState('');
+  const [statusFilter, setStatusFilter] = useState('all');
+
+  console.log('рџ”Ґрџ”Ґрџ”Ґ LibraryPage render, books length:', books.length, books);
+
+  const handleBookPress = (bookId: string) => {
+    navigate(`/book/${bookId}`);
+  };
+
+  const handleAddBookManually = async () => {
+    const title = prompt('РќР°Р·РІР°РЅРёРµ РєРЅРёРіРё');
+    const author = prompt('РђРІС‚РѕСЂ');
+    if (title && author) {
+      try {
+        await bookApi.create({
+          title,
+          author,
+          status: 'planned',
+          rating: null,
+          cover: null,
+          section: null,
+          genres: [],
+          totalPages: 0,
+          currentPage: 0,
+          startDate: null,
+          endDate: null,
+          notes: '',
+          languages: [],
+          review: '',
+          favorite: false,
+          authorCountry: null,
+          series: null,
+          seriesPosition: null,
+          originalYear: null,
+          readingFormat: 'reading',
+          lastRead: null,
+        });
+        window.location.reload();
+      } catch (error) {
+        console.error('РћС€РёР±РєР° РґРѕР±Р°РІР»РµРЅРёСЏ:', error);
+        alert('РћС€РёР±РєР° РґРѕР±Р°РІР»РµРЅРёСЏ РєРЅРёРіРё');
+      }
+    }
+  };
+
+  const filteredBooks = books.filter((book) => {
+    if (statusFilter !== 'all' && book.status !== statusFilter) return false;
+    if (searchQuery) {
+      const query = searchQuery.toLowerCase();
+      return (
+        book.title.toLowerCase().includes(query) ||
+        book.author.toLowerCase().includes(query)
+      );
+    }
+    return true;
+  });
+
+  console.log('рџ”Ґрџ”Ґрџ”Ґ filteredBooks length:', filteredBooks.length);
+
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center py-20">
+        <div className="w-8 h-8 border-2 border-[#5B86A1] border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="text-center py-20 text-red-500">
+        РћС€РёР±РєР°: {error}
+      </div>
+    );
+  }
+
+  return (
+    <div>
+      <div className="flex justify-between items-center mb-8 flex-wrap gap-4">
+        <h1 className="text-3xl font-light text-[#E6EDF3]">Р‘РёР±Р»РёРѕС‚РµРєР°</h1>
+        
+        <div className="flex gap-3">
+          <input
+            type="text"
+            placeholder="рџ”Ќ РџРѕРёСЃРє..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="px-4 py-2 bg-[#121C24] border border-[#2A4B60] rounded-full text-[#E6EDF3] placeholder-[#5B86A1] focus:outline-none focus:border-[#5B86A1]"
+          />
+          
+          <select
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value)}
+            className="px-4 py-2 bg-[#121C24] border border-[#2A4B60] rounded-full text-[#E6EDF3] focus:outline-none"
+          >
+            <option value="all">Р’СЃРµ СЃС‚Р°С‚СѓСЃС‹</option>
+            <option value="reading">Р§РёС‚Р°СЋ</option>
+            <option value="finished">РџСЂРѕС‡РёС‚Р°РЅРѕ</option>
+            <option value="planned">Р’ РїР»Р°РЅР°С…</option>
+            <option value="rereading">РџРµСЂРµС‡РёС‚С‹РІР°СЋ</option>
+          </select>
+
+          <button
+            onClick={handleAddBookManually}
+            className="px-4 py-2 bg-[#2A4B60] hover:bg-[#3A5570] rounded-full text-[#E6EDF3] transition"
+          >
+            + Р”РѕР±Р°РІРёС‚СЊ
+          </button>
+        </div>
+      </div>
+
+      {filteredBooks.length === 0 ? (
+        <div className="text-center py-20 text-[#97A6BA]">
+          {searchQuery || statusFilter !== 'all' ? 'РќРёС‡РµРіРѕ РЅРµ РЅР°Р№РґРµРЅРѕ' : 'Р’ Р±РёР±Р»РёРѕС‚РµРєРµ РїРѕРєР° РЅРµС‚ РєРЅРёРі'}
+        </div>
+      ) : (
+        <BookGrid
+          books={filteredBooks}
+          onBookPress={handleBookPress}
+          onToggleFavorite={toggleFavorite}
+          showFavorite={true}
+          columns={4}
+        />
+      )}
+    </div>
+  );
+}
+
+
+========== src\pages\Login.tsx ==========
+import React, { useState } from 'react'
+import { Link, useNavigate } from 'react-router-dom'
+import { apiClient } from '../shared/api/client'
+import { useAuthStore } from '../store/authStore'
+
+export default function Login() {
+  const navigate = useNavigate()
+  const setToken = useAuthStore((state) => state.setToken)
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [error, setError] = useState('')
+  const [loading, setLoading] = useState(false)
+
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault()
+    setError('')
+    setLoading(true)
+
+    try {
+      const response = await apiClient.post('/auth/login', { email, password })
+      const { access_token } = response.data
+      setToken(access_token)
+      navigate('/')
+    } catch (err: any) {
+      setError(err.response?.data?.detail || 'РћС€РёР±РєР° РІС…РѕРґР°')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  return (
+    <div className="container">
+      <div className="orb"></div>
+      <div className="glass-card">
+        <h1>Syverro</h1>
+        <div className="tagline">РџР РћРЎРўР РђРќРЎРўР’Рћ Р”Р›РЇ Р§РўР•РќРРЇ</div>
+        <div style={{ width: 60, height: 2, background: '#2A4B60', margin: '1.5rem auto' }}></div>
+
+        <form onSubmit={handleSubmit}>
+          <input
+            type="email"
+            placeholder="Email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
+          />
+          <input
+            type="password"
+            placeholder="РџР°СЂРѕР»СЊ"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
+          />
+          {error && <div className="error">{error}</div>}
+          <button type="submit" disabled={loading}>
+            {loading ? 'Р’С…РѕРґ...' : 'Р’РѕР№С‚Рё'}
+          </button>
+        </form>
+
+        <div style={{ marginTop: '1.5rem' }}>
+          <Link to="/register" className="link">РќРµС‚ Р°РєРєР°СѓРЅС‚Р°? Р—Р°СЂРµРіРёСЃС‚СЂРёСЂРѕРІР°С‚СЊСЃСЏ</Link>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+
+========== src\pages\Profile.tsx ==========
+import { useEffect, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
+import { useAuthStore } from '../store/authStore'
+import { apiClient } from '../shared/api/client'
+
+interface UserProfile {
+  id: number
+  email: string
+  created_at: string
+}
+
+export default function Profile() {
+  const navigate = useNavigate()
+  const logout = useAuthStore((state) => state.logout)
+  const token = useAuthStore((state) => state.token)
+  const [profile, setProfile] = useState<UserProfile | null>(null)
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    if (token) {
+      loadProfile()
+    }
+  }, [token])
+
+  const loadProfile = async () => {
+    try {
+      const response = await apiClient.get('/users/me')
+      setProfile(response.data)
+    } catch (error) {
+      console.error('РћС€РёР±РєР° Р·Р°РіСЂСѓР·РєРё РїСЂРѕС„РёР»СЏ:', error)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  if (loading) {
+    return (
+      <div className="container">
+        <div className="orb"></div>
+        <div className="glass-card">
+          <h1>РџСЂРѕС„РёР»СЊ</h1>
+          <div style={{ textAlign: 'center', marginTop: '2rem' }}>Р—Р°РіСЂСѓР·РєР°...</div>
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <div className="container">
+      <div className="orb"></div>
+      <div className="glass-card">
+        <h1>РџСЂРѕС„РёР»СЊ</h1>
+        <div className="tagline">Р›РР§РќР«Р• Р”РђРќРќР«Р•</div>
+        <div style={{ width: 60, height: 2, background: '#2A4B60', margin: '1.5rem auto' }}></div>
+
+        <div style={{ textAlign: 'left', marginTop: '2rem' }}>
+          <p><strong>Email:</strong> {profile?.email}</p>
+          <p><strong>Р”Р°С‚Р° СЂРµРіРёСЃС‚СЂР°С†РёРё:</strong> {profile?.created_at ? new Date(profile.created_at).toLocaleDateString('ru-RU') : 'вЂ”'}</p>
+          <p><strong>ID РїРѕР»СЊР·РѕРІР°С‚РµР»СЏ:</strong> {profile?.id}</p>
+        </div>
+
+        <div style={{ display: 'flex', gap: '12px', marginTop: '2rem' }}>
+          <button onClick={() => navigate('/')} style={{ flex: 1, background: '#2A4B60' }}>
+            в†ђ РќР°Р·Р°Рґ РІ Р±РёР±Р»РёРѕС‚РµРєСѓ
+          </button>
+          <button onClick={logout} style={{ flex: 1, background: '#3A5570' }}>
+            Р’С‹Р№С‚Рё
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+
+========== src\pages\Register.tsx ==========
+import { useState } from 'react'
+import { Link, useNavigate } from 'react-router-dom'
+import { apiClient } from '../shared/api/client'
+import { useAuthStore } from '../store/authStore'
+
+export default function Register() {
+  const navigate = useNavigate()
+  const setToken = useAuthStore((state) => state.setToken)
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [confirmPassword, setConfirmPassword] = useState('')
+  const [error, setError] = useState('')
+  const [loading, setLoading] = useState(false)
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setError('')
+
+    if (password !== confirmPassword) {
+      setError('РџР°СЂРѕР»Рё РЅРµ СЃРѕРІРїР°РґР°СЋС‚')
+      return
+    }
+
+    setLoading(true)
+
+    try {
+      await apiClient.post('/auth/register', { email, password })
+      const response = await apiClient.post('/auth/login', { email, password })
+      const { access_token } = response.data
+      setToken(access_token)
+      navigate('/')
+    } catch (err: any) {
+      setError(err.response?.data?.detail || 'РћС€РёР±РєР° СЂРµРіРёСЃС‚СЂР°С†РёРё')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  return (
+    <div className="container">
+      <div className="orb"></div>
+      <div className="glass-card">
+        <h1>Syverro</h1>
+        <div className="tagline">РџР РћРЎРўР РђРќРЎРўР’Рћ Р”Р›РЇ Р§РўР•РќРРЇ</div>
+        <div style={{ width: 60, height: 2, background: '#2A4B60', margin: '1.5rem auto' }}></div>
+
+        <form onSubmit={handleSubmit}>
+          <input
+            type="email"
+            placeholder="Email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
+          />
+          <input
+            type="password"
+            placeholder="РџР°СЂРѕР»СЊ"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
+          />
+          <input
+            type="password"
+            placeholder="РџРѕРґС‚РІРµСЂРґРёС‚Рµ РїР°СЂРѕР»СЊ"
+            value={confirmPassword}
+            onChange={(e) => setConfirmPassword(e.target.value)}
+            required
+          />
+          {error && <div className="error">{error}</div>}
+          <button type="submit" disabled={loading}>
+            {loading ? 'Р РµРіРёСЃС‚СЂР°С†РёСЏ...' : 'Р—Р°СЂРµРіРёСЃС‚СЂРёСЂРѕРІР°С‚СЊСЃСЏ'}
+          </button>
+        </form>
+
+        <div style={{ marginTop: '1.5rem' }}>
+          <Link to="/login" className="link">РЈР¶Рµ РµСЃС‚СЊ Р°РєРєР°СѓРЅС‚? Р’РѕР№С‚Рё</Link>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+
+========== src\pages\WorldMap.tsx ==========
+export default function WorldMap() {
+  return (
+    <div className="glass-card">
+      <h1>рџ—єпёЏ РљР°СЂС‚Р° РјРёСЂРѕРІ</h1>
+      <div className="tagline">Р’ Р РђР—Р РђР‘РћРўРљР•</div>
+      <div style={{ width: 60, height: 2, background: '#2A4B60', margin: '1.5rem auto' }}></div>
+      <p style={{ color: '#97A6BA', textAlign: 'center' }}>
+        Р—РґРµСЃСЊ Р±СѓРґРµС‚ РІРёР·СѓР°Р»РёР·Р°С†РёСЏ СЃРІСЏР·РµР№ РјРµР¶РґСѓ РєРЅРёРіР°РјРё, РІСЃРµР»РµРЅРЅС‹РјРё Рё РёРґРµСЏРјРё.
+      </p>
+    </div>
+  )
+}
+
+
+========== src\shared\api\client.ts ==========
+import axios from 'axios';
+
+export const API_BASE_URL = 'https://api.syverro.com';
+
+console.log('API Client mode: production, baseURL:', API_BASE_URL);
+
+export const apiClient = axios.create({
+  baseURL: API_BASE_URL,
+  headers: {
+    'Content-Type': 'application/json',
+  },
+});
+
+apiClient.interceptors.request.use(
+  (config) => {
+    const token = localStorage.getItem('access_token');
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+  },
+  (error) => Promise.reject(error)
+);
+
+apiClient.interceptors.response.use(
+  (response) => response,
+  async (error) => {
+    const originalRequest = error.config;
+    if (error.response?.status === 401 && !originalRequest._retry) {
+      originalRequest._retry = true;
+      localStorage.removeItem('access_token');
+      window.location.href = '/login';
+    }
+    return Promise.reject(error);
+  }
+);
+
+export default apiClient;
+
+
+========== src\store\authStore.ts ==========
+// src/store/authStore.ts
+import { create } from 'zustand'
+
+interface AuthState {
+  token: string | null
+  setToken: (token: string | null) => void
+  logout: () => void
+}
+
+export const useAuthStore = create<AuthState>((set) => ({
+  token: localStorage.getItem('access_token') || null,
+  
+  setToken: (token) => {
+    if (token) {
+      localStorage.setItem('access_token', token)
+    } else {
+      localStorage.removeItem('access_token')
+    }
+    set({ token })
+  },
+  
+  logout: () => {
+    localStorage.removeItem('access_token')
+    set({ token: null })
+  },
+}))
+
+
+========== src\store\bookStore.ts ==========
+import { create } from 'zustand'
+import { persist } from 'zustand/middleware'
+import { Book, BookStatus } from '../types/book'
+
+interface BookState {
+  books: Book[]
+  loading: boolean
+  setBooks: (books: Book[]) => void
+  addBook: (book: Book) => void
+  updateBook: (id: string, updates: Partial<Book>) => void
+  toggleFavorite: (id: string) => void
+  setLoading: (loading: boolean) => void
+}
+
+export const useBookStore = create<BookState>()(
+  persist(
+    (set) => ({
+      books: [],
+      loading: false,
+      setBooks: (books) => set({ books }),
+      addBook: (book) => set((state) => ({ books: [...state.books, book] })),
+      updateBook: (id, updates) =>
+        set((state) => ({
+          books: state.books.map((b) => (b.id === id ? { ...b, ...updates } : b)),
+        })),
+      toggleFavorite: (id) =>
+        set((state) => ({
+          books: state.books.map((b) =>
+            b.id === id ? { ...b, favorite: !b.favorite } : b
+          ),
+        })),
+      setLoading: (loading) => set({ loading }),
+    }),
+    {
+      name: 'book-storage',
+    }
+  )
+)
+
+
+========== src\types\auth.ts ==========
+export interface LoginCredentials {
+  email: string;
+  password: string;
+}
+
+export interface RegisterData {
+  email: string;
+  password: string;
+}
+
+export interface AuthResponse {
+  access_token: string;
+  token_type: string;
+}
+
+
+========== src\types\book.ts ==========
+export interface Book {
+  id: string
+  title: string
+  author: string
+  cover?: string
+  totalPages?: number
+  genres?: string[]
+  status: 'planned' | 'reading' | 'finished' | 'postponed' | 'abandoned'
+  rating?: number
+  currentPage?: number
+  notes?: string
+  createdAt: string
+  updatedAt: string
+}
+
+export interface UserBook {
+  id: string
+  bookId: string
+  status: string
+  rating: number | null
+  currentPage: number
+  startDate: string | null
+  endDate: string | null
+  notes: string | null
+  isFavorite: boolean
+}
+
+
+========== src\types\insight.ts ==========
+
+
+
+========== src\types\user.ts ==========
+export interface User {
+  id: string
+  email: string
+  createdAt: string
+  profile?: {
+    name?: string
+    avatar?: string
+    readerLevel?: string
+  }
+}
+
+
+========== src\types\world.ts ==========
+
+
+
+========== src\widgets\BookCard.tsx ==========
+import { useState } from 'react';
+import type { Book } from '../entities/book/book.types';
+
+interface BookCardProps {
+  book: Book;
+  onPress?: (id: string) => void;
+  onToggleFavorite?: (id: string) => void;
+  showFavorite?: boolean;
+}
+
+export default function BookCard({ book, onPress, onToggleFavorite, showFavorite = true }: BookCardProps) {
+  const [isHovered, setIsHovered] = useState(false);
+
+  const getStatusBadge = () => {
+    const statusMap: Record<string, string> = {
+      reading: 'рџ“– Р§РёС‚Р°СЋ',
+      finished: 'вњ… РџСЂРѕС‡РёС‚Р°РЅРѕ',
+      planned: 'рџ“… Р’ РїР»Р°РЅР°С…',
+      postponed: 'вЏё РћС‚Р»РѕР¶РµРЅРѕ',
+      abandoned: 'вќЊ Р‘СЂРѕС€РµРЅРѕ',
+      rereading: 'рџ”„ РџРµСЂРµС‡РёС‚С‹РІР°СЋ',
+    };
+    return statusMap[book.status] || '';
+  };
+
+  return (
+    <div
+      className="cursor-pointer transition-all duration-200"
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+      onClick={() => onPress?.(book.id)}
+      style={{ transform: isHovered ? 'translateY(-4px)' : 'none' }}
+    >
+      <div className="relative">
+        {book.cover ? (
+          <img
+            src={book.cover}
+            alt={book.title}
+            className="w-full h-auto rounded-lg object-cover"
+            style={{ aspectRatio: '2/3' }}
+          />
+        ) : (
+          <div className="bg-[#121C24] rounded-lg flex items-center justify-center border border-[#2A4B60]" style={{ aspectRatio: '2/3' }}>
+            <div className="text-center px-2">
+              <div className="text-[#E6EDF3] font-medium text-center line-clamp-4" style={{ fontSize: '14px', lineHeight: '18px' }}>
+                {book.title || 'РўР•РЎРў'}
+              </div>
+            </div>
+          </div>
+        )}
+        
+        {showFavorite && (
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              onToggleFavorite?.(book.id);
+            }}
+            className="absolute top-2 right-2 bg-black/50 rounded-full w-6 h-6 flex items-center justify-center text-sm hover:scale-110 transition"
+          >
+            {book.favorite ? 'вќ¤пёЏ' : 'в™Ў'}
+          </button>
+        )}
+      </div>
+      
+      <div className="mt-2 px-1">
+        <div className="text-[#E6EDF3] text-sm font-medium truncate">{book.title}</div>
+        <div className="text-[#5B86A1] text-xs truncate">{book.author}</div>
+        
+        {book.status && (
+          <div className="text-[10px] text-[#97A6BA] mt-1 truncate">
+            {getStatusBadge()}
+          </div>
+        )}
+        
+        {book.rating && (
+          <div className="text-xs text-yellow-500 mt-1">
+            {'в­ђ'.repeat(book.rating)}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+
+========== src\widgets\BookGrid.tsx ==========
+import type { Book } from '../entities/book/book.types';
+import BookCard from './BookCard';
+
+interface BookGridProps {
+  books: Book[];
+  onBookPress?: (id: string) => void;
+  onToggleFavorite?: (id: string) => void;
+  showFavorite?: boolean;
+  columns?: 3 | 4 | 5;
+}
+
+export default function BookGrid({ 
+  books, 
+  onBookPress, 
+  onToggleFavorite, 
+  showFavorite = true,
+  columns = 4 
+}: BookGridProps) {
+  const gridCols = {
+    3: 'grid-cols-1 sm:grid-cols-2 md:grid-cols-3',
+    4: 'grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4',
+    5: 'grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5',
+  }[columns];
+
+  return (
+    <div className={`grid ${gridCols} gap-6`}>
+      {books.map((book) => (
+        <BookCard
+          key={book.id}
+          book={book}
+          onPress={onBookPress}
+          onToggleFavorite={onToggleFavorite}
+          showFavorite={showFavorite}
+        />
+      ))}
+    </div>
+  );
+}
+
+
+========== src\App.tsx ==========
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { useAuthStore } from './store/authStore';
+import Layout from './components/Layout';
+import Login from './pages/Login';
+import Register from './pages/Register';
+import LibraryPage from './pages/LibraryPage';
+import Insights from './pages/Insights';
+import WorldMap from './pages/WorldMap';
+import Profile from './pages/Profile';
+
+function App() {
+  const token = useAuthStore((state) => state.token);
+
+  if (!token) {
+    return (
+      <BrowserRouter>
+        <Routes>
+          <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<Register />} />
+          <Route path="*" element={<Navigate to="/login" />} />
+        </Routes>
+      </BrowserRouter>
+    );
+  }
+
+  return (
+    <BrowserRouter>
+      <Layout>
+        <Routes>
+          <Route path="/" element={<LibraryPage />} />
+          <Route path="/insights" element={<Insights />} />
+          <Route path="/worldmap" element={<WorldMap />} />
+          <Route path="/profile" element={<Profile />} />
+          <Route path="*" element={<Navigate to="/" />} />
+        </Routes>
+      </Layout>
+    </BrowserRouter>
+  );
+}
+
+export default App;
+
+
+========== src\main.tsx ==========
+import React from 'react'
+import ReactDOM from 'react-dom/client'
+import App from './App'
+import './styles/globals.css'
+
+ReactDOM.createRoot(document.getElementById('root')!).render(
+  <React.StrictMode>
+    <App />
+  </React.StrictMode>,
+)
+
+
+========== src\vite-env.d.ts ==========
+/// <reference types="vite/client" />

@@ -3,7 +3,7 @@ import type { Book, NewBook } from './book.types';
 
 export const bookApi = {
   getAll: async (): Promise<Book[]> => {
-    const response = await apiClient.get('/books/catalog/');
+    const response = await apiClient.get('/books/');  // ← убрал /catalog/
     return response.data;
   },
 

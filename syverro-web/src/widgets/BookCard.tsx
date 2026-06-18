@@ -17,11 +17,11 @@ const statusLabels: Record<BookStatus, string> = {
 };
 
 const statusColors: Record<BookStatus, string> = {
-  reading: 'bg-blue-500/20 text-blue-400',
-  completed: 'bg-green-500/20 text-green-400',
-  want_to_read: 'bg-purple-500/20 text-purple-400',
-  postponed: 'bg-yellow-500/20 text-yellow-400',
-  abandoned: 'bg-red-500/20 text-red-400',
+  reading: 'bg-blue-500/20 text-blue-400 border-blue-500/30',
+  completed: 'bg-green-500/20 text-green-400 border-green-500/30',
+  want_to_read: 'bg-purple-500/20 text-purple-400 border-purple-500/30',
+  postponed: 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30',
+  abandoned: 'bg-red-500/20 text-red-400 border-red-500/30',
 };
 
 export default function BookCard({
@@ -33,9 +33,10 @@ export default function BookCard({
   const [isAdding, setIsAdding] = useState(false);
   const [showStatusMenu, setShowStatusMenu] = useState(false);
 
-  // Используем optional chaining для безопасного доступа
   const userData = book.userData;
   const hasUserData = userData !== null && userData !== undefined;
+
+  const allStatuses: BookStatus[] = ['reading', 'want_to_read', 'completed', 'postponed', 'abandoned'];
 
   const handleAddToLibrary = async (status: BookStatus) => {
     if (!onAddToMyLibrary) return;
@@ -59,23 +60,44 @@ export default function BookCard({
     await onToggleFavorite(book.id);
   };
 
-  const allStatuses: BookStatus[] = ['reading', 'want_to_read', 'completed', 'postponed', 'abandoned'];
+  const progress = hasUserData && book.total_pages
+    ? Math.round((userData.current_page / book.total_pages) * 100)
+    : 0;
 
   return (
-    <div className="group relative bg-[#121C24] border border-[#2A4B60] rounded-xl overflow-hidden hover:border-[#5B86A1] transition-all duration-300">
+    <div className="group relative bg-[#121C24] border border-[#2A4B60] rounded-2xl overflow-hidden hover:border-[#5B86A1] hover:shadow-xl hover:shadow-[#5B86A1]/10 transition-all duration-300">
       {/* Обложка */}
-      <div className="aspect-[2/3] bg-[#1A2832] flex items-center justify-center">
+      <div className="aspect-[2/3] bg-gradient-to-br from-[#1A2832] to-[#0F1A22] flex items-center justify-center relative overflow-hidden">
         {book.cover ? (
           <img
             src={book.cover}
             alt={book.title}
-            className="w-full h-full object-cover"
+            className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
           />
         ) : (
-          <div className="text-[#5B86A1] text-sm text-center p-4">
-            <div className="text-4xl mb-2">📖</div>
-            <div className="font-medium">{book.title}</div>
-            <div className="text-xs">{book.author}</div>
+          <div className="text-[#5B86A1] text-center p-4">
+            <div className="text-6xl mb-3 opacity-50">📖</div>
+            <div className="font-medium text-lg text-[#E6EDF3]">{book.title}</div>
+            <div className="text-sm">{book.author}</div>
+          </div>
+        )}
+        
+        {/* Статус на обложке */}
+        {hasUserData && userData.status && (
+          <div className="absolute top-3 right-3">
+            <span className={`text-xs px-3 py-1 rounded-full border ${statusColors[userData.status]} backdrop-blur-sm`}>
+              {statusLabels[userData.status]}
+            </span>
+          </div>
+        )}
+
+        {/* Прогресс-бар на обложке */}
+        {hasUserData && userData.current_page > 0 && book.total_pages && (
+          <div className="absolute bottom-0 left-0 right-0 h-1 bg-[#0A1118]">
+            <div
+              className="h-full bg-[#5B86A1] transition-all duration-500"
+              style={{ width: `${Math.min(progress, 100)}%` }}
+            />
           </div>
         )}
       </div>
@@ -85,37 +107,38 @@ export default function BookCard({
         <h3 className="font-medium text-[#E6EDF3] truncate">{book.title}</h3>
         <p className="text-sm text-[#97A6BA] truncate">{book.author}</p>
 
-        {/* Статус - используем userData напрямую с проверкой */}
-        {hasUserData && userData.status && (
-          <div className="mt-2">
-            <span className={`text-xs px-2 py-1 rounded-full ${statusColors[userData.status]}`}>
-              {statusLabels[userData.status]}
-            </span>
-            {userData.current_page > 0 && (
-              <span className="ml-2 text-xs text-[#97A6BA]">
-                {userData.current_page}
-                {book.total_pages ? ` / ${book.total_pages} стр.` : ''}
-              </span>
+        {/* Жанры */}
+        {book.genres && book.genres.length > 0 && (
+          <div className="mt-2 flex flex-wrap gap-1">
+            {book.genres.slice(0, 2).map((genre) => (
+              <span key={genre} className="text-xs text-[#5B86A1]">#{genre}</span>
+            ))}
+            {book.genres.length > 2 && (
+              <span className="text-xs text-[#5B86A1]">+{book.genres.length - 2}</span>
             )}
           </div>
         )}
 
-        {/* Кнопки действий */}
+        {/* Прогресс текстом */}
+        {hasUserData && userData.current_page > 0 && book.total_pages && (
+          <div className="mt-2 text-xs text-[#97A6BA]">
+            {userData.current_page} / {book.total_pages} стр. ({progress}%)
+          </div>
+        )}
+
+        {/* Кнопки */}
         <div className="mt-3 flex gap-2">
-          {/* Кнопка "В библиотеку" — только если книги нет в личной библиотеке */}
           {!hasUserData && onAddToMyLibrary && (
             <div className="relative flex-1">
               <button
                 onClick={() => setShowStatusMenu(!showStatusMenu)}
                 disabled={isAdding}
-                className="w-full px-3 py-1.5 text-xs bg-[#2A4B60] hover:bg-[#3A5570] text-[#E6EDF3] rounded-lg transition disabled:opacity-50"
+                className="w-full px-3 py-2 text-xs font-medium bg-[#2A4B60] hover:bg-[#3A5570] text-[#E6EDF3] rounded-lg transition disabled:opacity-50"
               >
                 {isAdding ? 'Добавление...' : '+ В библиотеку'}
               </button>
-
-              {/* Выпадающее меню статусов */}
               {showStatusMenu && (
-                <div className="absolute z-10 mt-1 w-48 bg-[#1A2832] border border-[#2A4B60] rounded-lg shadow-xl py-1">
+                <div className="absolute z-10 mt-1 w-full bg-[#1A2832] border border-[#2A4B60] rounded-lg shadow-xl py-1">
                   {allStatuses.map((s) => (
                     <button
                       key={s}
@@ -130,11 +153,10 @@ export default function BookCard({
             </div>
           )}
 
-          {/* Кнопка избранного — только если книга в личной библиотеке */}
           {hasUserData && onToggleFavorite && (
             <button
               onClick={handleToggleFavorite}
-              className={`px-3 py-1.5 text-xs rounded-lg transition ${
+              className={`px-3 py-2 text-sm rounded-lg transition ${
                 userData.is_favorite
                   ? 'bg-yellow-500/20 text-yellow-400'
                   : 'bg-[#2A4B60] text-[#97A6BA] hover:text-[#E6EDF3]'
@@ -144,19 +166,16 @@ export default function BookCard({
             </button>
           )}
 
-          {/* Кнопка смены статуса — только если книга в личной библиотеке */}
           {hasUserData && onUpdateStatus && (
             <div className="relative">
               <button
                 onClick={() => setShowStatusMenu(!showStatusMenu)}
-                className="px-3 py-1.5 text-xs bg-[#2A4B60] hover:bg-[#3A5570] text-[#E6EDF3] rounded-lg transition"
+                className="px-3 py-2 text-sm bg-[#2A4B60] hover:bg-[#3A5570] text-[#E6EDF3] rounded-lg transition"
               >
                 📝
               </button>
-
-              {/* Выпадающее меню для смены статуса */}
               {showStatusMenu && (
-                <div className="absolute z-10 mt-1 w-48 bg-[#1A2832] border border-[#2A4B60] rounded-lg shadow-xl py-1">
+                <div className="absolute z-10 mt-1 right-0 w-48 bg-[#1A2832] border border-[#2A4B60] rounded-lg shadow-xl py-1">
                   {allStatuses.map((s) => (
                     <button
                       key={s}
@@ -171,27 +190,6 @@ export default function BookCard({
             </div>
           )}
         </div>
-
-        {/* Жанры */}
-        {book.genres && book.genres.length > 0 && (
-          <div className="mt-2 flex flex-wrap gap-1">
-            {book.genres.slice(0, 2).map((genre) => (
-              <span key={genre} className="text-xs text-[#5B86A1]">
-                #{genre}
-              </span>
-            ))}
-            {book.genres.length > 2 && (
-              <span className="text-xs text-[#5B86A1]">+{book.genres.length - 2}</span>
-            )}
-          </div>
-        )}
-
-        {/* Статус модерации */}
-        {book.status === 'pending_moderation' && (
-          <div className="mt-2 text-xs text-yellow-500/70">
-            ⏳ Ожидает модерации
-          </div>
-        )}
       </div>
     </div>
   );

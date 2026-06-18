@@ -5,27 +5,23 @@ import AddBookModal from '../components/AddBookModal';
 import type { BookStatus } from '../entities/book/book.types';
 
 export default function LibraryPage() {
-  const { 
-    books, 
-    loading, 
-    error, 
-    isAdding, 
-    addBook, 
+  const {
+    books,
+    loading,
+    error,
+    isAdding,
+    addBook,
     addToMyLibrary,
     updateStatus,
-    toggleFavorite 
+    toggleFavorite,
   } = useLibrary();
-  
-  const [searchQuery, setSearchQuery] = useState<string>('');
+
+  const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<BookStatus | 'all' | 'not_in_library'>('all');
-  const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
+  const [isModalOpen, setIsModalOpen] = useState(false);
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
 
-  const handleAddBook = async (bookData: {
-    title: string;
-    author: string;
-    status: BookStatus;
-  }) => {
+  const handleAddBook = async (bookData: { title: string; author: string; status: BookStatus }) => {
     const result = await addBook(bookData);
     if (result.success) {
       setIsModalOpen(false);
@@ -67,17 +63,17 @@ export default function LibraryPage() {
   }
 
   return (
-    <div style={{ width: '100%' }}>
+    <div className="w-full">
       {/* Шапка */}
-      <div className="flex justify-between items-center mb-8 flex-wrap gap-4">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
         <h1 className="text-3xl font-light text-[#E6EDF3]">Библиотека</h1>
-        <div className="flex gap-3 flex-wrap">
+        <div className="flex flex-wrap gap-3 w-full sm:w-auto">
           <input
             type="text"
             placeholder="🔍 Поиск..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="px-4 py-2 bg-[#121C24] border border-[#2A4B60] rounded-full text-[#E6EDF3] placeholder-[#5B86A1] focus:outline-none focus:border-[#5B86A1]"
+            className="flex-1 sm:flex-none px-4 py-2 bg-[#121C24] border border-[#2A4B60] rounded-full text-[#E6EDF3] placeholder-[#5B86A1] focus:outline-none focus:border-[#5B86A1] min-w-[150px]"
           />
           <select
             value={statusFilter}
@@ -94,14 +90,14 @@ export default function LibraryPage() {
           </select>
           <button
             onClick={() => setIsModalOpen(true)}
-            className="px-4 py-2 bg-[#2A4B60] hover:bg-[#3A5570] rounded-full text-[#E6EDF3] transition"
+            className="px-4 py-2 bg-[#2A4B60] hover:bg-[#3A5570] rounded-full text-[#E6EDF3] transition whitespace-nowrap"
           >
             + Добавить
           </button>
         </div>
       </div>
 
-      {/* Сетка книг */}
+      {/* Книги */}
       {filteredBooks.length === 0 ? (
         <div className="text-center py-20 text-[#97A6BA]">
           {searchQuery || statusFilter !== 'all' ? 'Ничего не найдено' : 'В библиотеке пока нет книг'}

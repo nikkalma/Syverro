@@ -1,0 +1,82 @@
+[
+  {
+    "id": "1",
+    "title": "Дюна",
+    "author": "Фрэнк Герберт",
+    "cover": null,
+    "genres": ["Фантастика"],
+    "total_pages": 600,
+    "status": "approved",
+    "userData": {
+      "status": "reading",
+      "current_page": 150,
+      "rating": 5,
+      "is_favorite": true
+    }
+  },
+  {
+    "id": "2",
+    "title": "1984",
+    "author": "Джордж Оруэлл",
+    "cover": null,
+    "genres": ["Антиутопия"],
+    "total_pages": 328,
+    "status": "approved",
+    "userData": {
+      "status": "completed",
+      "current_page": 328,
+      "rating": 4,
+      "is_favorite": false
+    }
+  },
+  {
+    "id": "3",
+    "title": "Мастер и Маргарита",
+    "author": "Михаил Булгаков",
+    "cover": null,
+    "genres": ["Классика"],
+    "total_pages": 480,
+    "status": "approved",
+    "userData": {
+      "status": "want_to_read",
+      "current_page": 0,
+      "rating": null,
+      "is_favorite": false
+    }
+  },
+  {
+    "id": "4",
+    "title": "Преступление и наказание",
+    "author": "Фёдор Достоевский",
+    "cover": null,
+    "genres": ["Классика"],
+    "total_pages": 670,
+    "status": "approved",
+    "userData": null
+  },
+  {
+    "id": "5",
+    "title": "Властелин колец",
+    "author": "Джон Р. Р. Толкин",
+    "cover": null,
+    "genres": ["Фэнтези"],
+    "total_pages": 1200,
+    "status": "approved",
+    "userData": null
+  },
+  {
+    "id": "6",
+    "title": "Гарри Поттер и философский камень",
+    "author": "Дж. К. Роулинг",
+    "cover": null,
+    "genres": ["Фэнтези"],
+    "total_pages": 432,
+    "status": "approved",
+    "userData": {
+      "status": "reading",
+      "current_page": 200,
+      "rating": 5,
+      "is_favorite": true
+    }
+  }
+]

@@ -16,7 +16,13 @@ export default function Layout({ children }: LayoutProps) {
   const location = useLocation();
 
   return (
-    <div style={{ minHeight: '100vh', background: '#0A1118' }}>
+    <div style={{ 
+      minHeight: '100vh', 
+      background: '#0A1118',
+      display: 'flex',
+      flexDirection: 'column',
+    }}>
+      {/* Хедер */}
       <header
         style={{
           position: 'fixed',
@@ -59,7 +65,18 @@ export default function Layout({ children }: LayoutProps) {
           ))}
         </nav>
       </header>
-      <main style={{ paddingTop: '80px', paddingLeft: '32px', paddingRight: '32px', maxWidth: '1400px', margin: '0 auto' }}>
+
+      {/* Основной контент — растягиваем на всю ширину */}
+      <main style={{ 
+        paddingTop: '80px',
+        paddingLeft: '32px',
+        paddingRight: '32px',
+        paddingBottom: '40px',
+        width: '100%',
+        maxWidth: '1440px',
+        margin: '0 auto',
+        flex: 1,
+      }}>
         {children}
       </main>
     </div>

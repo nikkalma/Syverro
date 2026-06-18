@@ -67,10 +67,11 @@ export default function LibraryPage() {
   }
 
   return (
-    <div>
+    <div style={{ width: '100%' }}>
+      {/* Шапка */}
       <div className="flex justify-between items-center mb-8 flex-wrap gap-4">
         <h1 className="text-3xl font-light text-[#E6EDF3]">Библиотека</h1>
-        <div className="flex gap-3">
+        <div className="flex gap-3 flex-wrap">
           <input
             type="text"
             placeholder="🔍 Поиск..."
@@ -100,6 +101,7 @@ export default function LibraryPage() {
         </div>
       </div>
 
+      {/* Сетка книг */}
       {filteredBooks.length === 0 ? (
         <div className="text-center py-20 text-[#97A6BA]">
           {searchQuery || statusFilter !== 'all' ? 'Ничего не найдено' : 'В библиотеке пока нет книг'}

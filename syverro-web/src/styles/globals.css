@@ -13,11 +13,7 @@ body {
   font-family: 'Inter', sans-serif;
   color: #E7EDF5;
   min-height: 100vh;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  position: relative;
-  overflow: hidden;
+  overflow-y: auto; /* ← СКРОЛЛ РАБОТАЕТ */
 }
 
 /* Атмосферный шар (Орб) */

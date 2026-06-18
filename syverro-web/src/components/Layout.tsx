@@ -38,8 +38,8 @@ export default function Layout({ children }: LayoutProps) {
         </nav>
       </header>
 
-      {/* Основной контент */}
-      <main className="flex-1 pt-20 px-4 md:px-8 pb-8 w-full max-w-[1600px] mx-auto">
+      {/* Основной контент — БЕЗ ОГРАНИЧЕНИЙ */}
+      <main className="flex-1 pt-20 px-4 md:px-8 pb-8 w-full">
         {children}
       </main>
     </div>

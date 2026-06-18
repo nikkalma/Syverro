@@ -1,32 +1,80 @@
-export type BookStatus = 'planned' | 'reading' | 'finished' | 'postponed' | 'abandoned' | 'rereading';
-export type ReadingFormat = 'reading' | 'listening';
-export type BookRating = 1 | 2 | 3 | 4 | 5 | null;
-
+// ============================================
+// GLOBAL LIBRARY
+// ============================================
 export interface Book {
   id: string;
   title: string;
   author: string;
-  status: BookStatus;
-  rating: BookRating;
   cover: string | null;
-  section: string | null;
   genres: string[];
-  totalPages: number;
-  currentPage: number;
-  startDate: string | null;
-  endDate: string | null;
-  notes: string;
-  languages: string[];
-  review: string;
-  createdAt: number;
-  favorite: boolean;
-  authorCountry: string | null;
+  total_pages: number | null;
+  description: string | null;
   series: string | null;
-  seriesPosition: number | null;
-  originalYear: number | null;
-  readingFormat: ReadingFormat;
-  lastRead: string | null;
+  series_position: number | null;
+  isbn: string | null;
+  published_year: number | null;
+  status: 'pending_moderation' | 'approved';
+  created_by: string; // user_id
+  created_at: string;
+  updated_at: string | null;
 }
 
-export type NewBook = Omit<Book, 'id' | 'createdAt'>;
-export type BookUpdate = Partial<Book>;
+export interface BookCreate {
+  title: string;
+  author: string;
+  cover?: string | null;
+  genres?: string[];
+  total_pages?: number | null;
+  description?: string | null;
+  series?: string | null;
+  series_position?: number | null;
+  isbn?: string | null;
+  published_year?: number | null;
+}
+
+// ============================================
+// USER LIBRARY
+// ============================================
+export type BookStatus = 'reading' | 'completed' | 'want_to_read' | 'postponed' | 'abandoned';
+
+export interface UserBook {
+  id: string;
+  user_id: string;
+  book_id: string;
+  book: Book; // полная информация о книге
+  status: BookStatus;
+  current_page: number;
+  rating: number | null;
+  start_date: string | null;
+  end_date: string | null;
+  notes: string | null;
+  quotes: string[];
+  is_favorite: boolean;
+  created_at: string;
+  updated_at: string | null;
+}
+
+export interface UserBookCreate {
+  book_id: string;
+  status: BookStatus;
+  current_page?: number;
+  rating?: number | null;
+  start_date?: string | null;
+  end_date?: string | null;
+  notes?: string | null;
+  is_favorite?: boolean;
+}
+
+// ============================================
+// ENRICHED BOOK (для отображения в UI)
+// ============================================
+export interface EnrichedBook extends Book {
+  userData: {
+    user_book_id: string;
+    status: BookStatus;
+    current_page: number;
+    rating: number | null;
+    is_favorite: boolean;
+    notes: string | null;
+  } | null; // null = книга не добавлена в личную библиотеку
+}

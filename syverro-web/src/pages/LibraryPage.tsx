@@ -5,13 +5,27 @@ import AddBookModal from '../components/AddBookModal';
 import type { BookStatus } from '../entities/book/book.types';
 
 export default function LibraryPage() {
-  const { books, loading, error, isAdding, addBook } = useLibrary();
-  const [searchQuery, setSearchQuery] = useState('');
-  const [statusFilter, setStatusFilter] = useState<BookStatus | 'all'>('all');
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const { 
+    books, 
+    loading, 
+    error, 
+    isAdding, 
+    addBook, 
+    addToMyLibrary,
+    updateStatus,
+    toggleFavorite 
+  } = useLibrary();
+  
+  const [searchQuery, setSearchQuery] = useState<string>('');
+  const [statusFilter, setStatusFilter] = useState<BookStatus | 'all' | 'not_in_library'>('all');
+  const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
 
-  const handleAddBook = async (bookData: { title: string; author: string; status: BookStatus }) => {
+  const handleAddBook = async (bookData: {
+    title: string;
+    author: string;
+    status: BookStatus;
+  }) => {
     const result = await addBook(bookData);
     if (result.success) {
       setIsModalOpen(false);
@@ -24,7 +38,12 @@ export default function LibraryPage() {
   };
 
   const filteredBooks = books.filter((book) => {
-    if (statusFilter !== 'all' && book.status !== statusFilter) return false;
+    if (statusFilter === 'not_in_library') {
+      return book.userData === null;
+    }
+    if (statusFilter !== 'all') {
+      if (!book.userData || book.userData.status !== statusFilter) return false;
+    }
     if (searchQuery) {
       const query = searchQuery.toLowerCase();
       return (
@@ -61,15 +80,16 @@ export default function LibraryPage() {
           />
           <select
             value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value as BookStatus | 'all')}
+            onChange={(e) => setStatusFilter(e.target.value as typeof statusFilter)}
             className="px-4 py-2 bg-[#121C24] border border-[#2A4B60] rounded-full text-[#E6EDF3] focus:outline-none"
           >
-            <option value="all">Все статусы</option>
+            <option value="all">Все книги</option>
             <option value="reading">Читаю</option>
-            <option value="finished">Прочитано</option>
-            <option value="planned">В планах</option>
+            <option value="completed">Прочитано</option>
+            <option value="want_to_read">Хочу прочитать</option>
             <option value="postponed">Отложено</option>
             <option value="abandoned">Брошено</option>
+            <option value="not_in_library">Не в библиотеке</option>
           </select>
           <button
             onClick={() => setIsModalOpen(true)}
@@ -85,7 +105,12 @@ export default function LibraryPage() {
           {searchQuery || statusFilter !== 'all' ? 'Ничего не найдено' : 'В библиотеке пока нет книг'}
         </div>
       ) : (
-        <BookGrid books={filteredBooks} />
+        <BookGrid
+          books={filteredBooks}
+          onAddToMyLibrary={addToMyLibrary}
+          onUpdateStatus={updateStatus}
+          onToggleFavorite={toggleFavorite}
+        />
       )}
 
       <AddBookModal

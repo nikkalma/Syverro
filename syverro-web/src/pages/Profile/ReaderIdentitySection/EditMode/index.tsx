@@ -1,6 +1,7 @@
+// src/pages/Profile/ReaderIdentitySection/EditMode/index.tsx
 import { useState } from 'react';
 import { TagSelect } from './TagSelect';
-import { COUNTRIES, LANGUAGES, GENRES, THEMES, VIBES, MOTIFS, MOODS, ERAS } from '../constants';
+import { COUNTRIES, LANGUAGES, GENRES, THEMES, VIBES, MOTIFS, ERAS } from '../constants';
 import { readingGoalLabels } from '../../../../types/reader';
 import { LocaleData } from '../../../../locales';
 
@@ -64,6 +65,11 @@ export function EditMode({ profile, t, onSave, onCancel }: EditModeProps) {
     value: key,
   }));
 
+  const motifOptions = MOTIFS.map((key) => ({
+    label: t.taxonomy.motif[key] || key,
+    value: key,
+  }));
+
   const eraOptions = ERAS.map((era) => ({
     label: t.taxonomy.eras?.[era.value] || era.label,
     value: era.value,
@@ -108,7 +114,7 @@ export function EditMode({ profile, t, onSave, onCancel }: EditModeProps) {
             🌍 Языковой профиль
           </h3>
 
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '12px', marginBottom: '12px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '12px' }}>
             <div>
               <label style={{ fontSize: '11px', color: '#97A6BA', display: 'block', marginBottom: '4px' }}>
                 {t.nativeCountry}
@@ -143,6 +149,9 @@ export function EditMode({ profile, t, onSave, onCancel }: EditModeProps) {
                 ))}
               </select>
             </div>
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '12px' }}>
             <div>
               <label style={{ fontSize: '11px', color: '#97A6BA', display: 'block', marginBottom: '4px' }}>
                 {t.nativeLanguage}
@@ -160,25 +169,28 @@ export function EditMode({ profile, t, onSave, onCancel }: EditModeProps) {
                 ))}
               </select>
             </div>
-          </div>
-
-          <div style={{ marginBottom: '12px' }}>
-            <TagSelect
-              value={data.spokenLanguages || []}
-              options={languageOptions}
-              onChange={(val) => handleChange('spokenLanguages', val)}
-              label={t.spokenLanguages}
-              placeholder="Выберите языки..."
-              onOpenChange={setIsDropdownOpen}
-            />
+            <div>
+              <label style={{ fontSize: '11px', color: '#97A6BA', display: 'block', marginBottom: '4px' }}>
+                {t.spokenLanguages}
+              </label>
+              <TagSelect
+                value={data.spokenLanguages || []}
+                options={languageOptions}
+                onChange={(val) => handleChange('spokenLanguages', val)}
+                placeholder="Выберите языки..."
+                onOpenChange={setIsDropdownOpen}
+              />
+            </div>
           </div>
 
           <div>
+            <label style={{ fontSize: '11px', color: '#97A6BA', display: 'block', marginBottom: '4px' }}>
+              {t.readingLanguages}
+            </label>
             <TagSelect
               value={data.readingLanguages || []}
               options={languageOptions}
               onChange={(val) => handleChange('readingLanguages', val)}
-              label={t.readingLanguages}
               placeholder="Выберите языки чтения..."
               onOpenChange={setIsDropdownOpen}
             />
@@ -200,7 +212,7 @@ export function EditMode({ profile, t, onSave, onCancel }: EditModeProps) {
           }}
         >
           <h3 style={{ fontSize: '13px', color: '#5B86A1', fontWeight: '500', marginBottom: '16px' }}>
-            📚 Вкусы
+            📚 Читательский вкус
           </h3>
 
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
@@ -227,7 +239,16 @@ export function EditMode({ profile, t, onSave, onCancel }: EditModeProps) {
               options={vibeOptions}
               onChange={(val) => handleChange('favoriteVibes', val)}
               label={t.favoriteVibes}
-              placeholder="Выберите вайбы..."
+              placeholder="Выберите атмосферу..."
+              onOpenChange={setIsDropdownOpen}
+            />
+
+            <TagSelect
+              value={data.favoriteMotifs || []}
+              options={motifOptions}
+              onChange={(val) => handleChange('favoriteMotifs', val)}
+              label="Любимые мотивы"
+              placeholder="Выберите мотивы..."
               onOpenChange={setIsDropdownOpen}
             />
 
@@ -249,7 +270,7 @@ export function EditMode({ profile, t, onSave, onCancel }: EditModeProps) {
               onOpenChange={setIsDropdownOpen}
             />
 
-            <div>
+            <div style={{ gridColumn: '1 / -1' }}>
               <label style={{ fontSize: '11px', color: '#97A6BA', display: 'block', marginBottom: '4px' }}>
                 {t.favoriteAuthors}
               </label>

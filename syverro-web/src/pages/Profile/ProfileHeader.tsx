@@ -1,11 +1,10 @@
 // src/pages/Profile/ProfileHeader.tsx
 import { useState, useRef } from 'react';
-import { EnrichedBook } from '../../types/book';
 import { storageService } from '../../services/storageService';
 import { readingGoalLabels, ReadingGoal } from '../../types/reader';
 
 interface ProfileHeaderProps {
-  books: EnrichedBook[];
+  books: any[];
 }
 
 export default function ProfileHeader({ books }: ProfileHeaderProps) {
@@ -16,15 +15,9 @@ export default function ProfileHeader({ books }: ProfileHeaderProps) {
   const [tempName, setTempName] = useState(displayName);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Книги в личной библиотеке
-  const libraryBooks = books.filter((b) => b.personal !== null);
-  const totalBooks = libraryBooks.length;
-
-  // Статус и уровень (пока хардкод, потом из профиля)
-  const status = 'Reading beyond borders.';
-  const level = 'Celestial Explorer';
-
-  // Цели чтения из профиля
+  // Статус и уровень (пока хардкод)
+  const status = profile.status || 'Пришла читать';
+  const level = profile.level || 'Демиург Сиверро';
   const readingGoals = profile.readingGoals || [];
 
   const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -58,29 +51,26 @@ export default function ProfileHeader({ books }: ProfileHeaderProps) {
     <div
       style={{
         display: 'flex',
-        alignItems: 'flex-start',
-        gap: '24px',
-        padding: '24px',
-        background: 'rgba(18, 28, 36, 0.6)',
-        backdropFilter: 'blur(12px)',
-        WebkitBackdropFilter: 'blur(12px)',
-        borderRadius: '16px',
-        border: '1px solid rgba(255, 255, 255, 0.08)',
+        flexDirection: 'column',
+        alignItems: 'center',
+        padding: '32px 24px',
         marginBottom: '32px',
+        textAlign: 'center',
       }}
     >
-      {/* Аватар */}
+      {/* Аватар — 120px */}
       <div
         style={{
           position: 'relative',
-          width: '80px',
-          height: '80px',
+          width: '120px',
+          height: '120px',
           borderRadius: '50%',
           flexShrink: 0,
           cursor: 'pointer',
           overflow: 'hidden',
           background: 'rgba(91, 134, 161, 0.15)',
-          border: '1px solid rgba(255, 255, 255, 0.08)',
+          border: '2px solid rgba(255, 255, 255, 0.08)',
+          marginBottom: '16px',
         }}
         onClick={() => fileInputRef.current?.click()}
       >
@@ -94,7 +84,7 @@ export default function ProfileHeader({ books }: ProfileHeaderProps) {
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              fontSize: '32px',
+              fontSize: '48px',
               color: '#5B86A1',
             }}
           >
@@ -123,11 +113,11 @@ export default function ProfileHeader({ books }: ProfileHeaderProps) {
         </div>
       </div>
 
-      {/* Информация */}
-      <div style={{ flex: 1 }}>
+      {/* Информация — всё по центру */}
+      <div style={{ width: '100%' }}>
         {/* Имя */}
         {isEditingName ? (
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
             <input
               type="text"
               value={tempName}
@@ -143,13 +133,14 @@ export default function ProfileHeader({ books }: ProfileHeaderProps) {
                 border: '1px solid rgba(91, 134, 161, 0.3)',
                 borderRadius: '6px',
                 color: '#E6EDF3',
-                fontSize: '24px',
+                fontSize: '28px',
                 fontWeight: '500',
                 fontFamily: 'Inter, sans-serif',
                 outline: 'none',
                 marginBottom: 0,
                 width: 'auto',
                 minWidth: '120px',
+                textAlign: 'center',
               }}
             />
             <button
@@ -173,7 +164,7 @@ export default function ProfileHeader({ books }: ProfileHeaderProps) {
         ) : (
           <div
             style={{
-              fontSize: '24px',
+              fontSize: '28px',
               fontWeight: '500',
               color: '#E6EDF3',
               cursor: 'pointer',
@@ -190,29 +181,31 @@ export default function ProfileHeader({ books }: ProfileHeaderProps) {
           </div>
         )}
 
-        {/* Статус и уровень */}
+        {/* Статус */}
         <div
           style={{
             fontSize: '14px',
             color: '#97A6BA',
-            marginTop: '2px',
+            marginTop: '4px',
           }}
         >
-          {status}
+          Статус: {status}
         </div>
+
+        {/* Уровень */}
         <div
           style={{
             fontSize: '13px',
             color: '#5B86A1',
-            marginBottom: '8px',
+            marginBottom: '12px',
           }}
         >
-          Level: {level}
+          Уровень: {level}
         </div>
 
-        {/* Цели чтения (теги) */}
+        {/* Цели чтения (теги) — по центру */}
         {readingGoals.length > 0 && (
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', justifyContent: 'center' }}>
             {readingGoals.map((goal) => (
               <span
                 key={goal}

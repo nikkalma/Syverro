@@ -1,10 +1,8 @@
 // src/pages/Profile/index.tsx
 import { useLibrary } from '../../hooks/useLibrary';
 import ProfileHeader from './ProfileHeader';
-import ReaderIdentitySection from './ReaderIdentitySection';
+import ReaderIdentitySection from './ReaderIdentitySection'; // ← папка рядом
 import LibrarySection from './LibrarySection';
-import StatsSection from './StatsSection';
-import SettingsSection from './SettingsSection';
 
 export default function Profile() {
   const { books, loading } = useLibrary();
@@ -22,8 +20,6 @@ export default function Profile() {
       <ProfileHeader books={books} />
       <ReaderIdentitySection />
       <LibrarySection books={books} />
-      <StatsSection books={books} />
-      <SettingsSection />
     </div>
   );
 }

@@ -1,3 +1,4 @@
+// src/pages/Profile/ReaderIdentitySection/constants.ts
 import taxonomy from '../../../data/syverro_taxonomy.json';
 import booksData from '../../../data/books.json';
 
@@ -134,25 +135,25 @@ const cleanGenres = rawGenres.filter((genre: string) => {
 export const GENRES = Array.from(new Set(cleanGenres)).sort();
 
 export const ERAS = [
-  { value: 'ancient', label: 'Ancient World (before V c.)' },
-  { value: '5c', label: 'V century' },
-  { value: '6c', label: 'VI century' },
-  { value: '7c', label: 'VII century' },
-  { value: '8c', label: 'VIII century' },
-  { value: '9c', label: 'IX century' },
-  { value: '10c', label: 'X century' },
-  { value: '11c', label: 'XI century' },
-  { value: '12c', label: 'XII century' },
-  { value: '13c', label: 'XIII century' },
-  { value: '14c', label: 'XIV century' },
-  { value: '15c', label: 'XV century' },
-  { value: '16c', label: 'XVI century' },
-  { value: '17c', label: 'XVII century' },
-  { value: '18c', label: 'XVIII century' },
-  { value: '19c', label: 'XIX century' },
-  { value: '20c', label: 'XX century' },
-  { value: '21c', label: 'XXI century' },
-  { value: 'future', label: 'Future (not published)' },
+  { value: 'ancient', label: 'Древний мир (до V в.)' },
+  { value: '5c', label: 'V век' },
+  { value: '6c', label: 'VI век' },
+  { value: '7c', label: 'VII век' },
+  { value: '8c', label: 'VIII век' },
+  { value: '9c', label: 'IX век' },
+  { value: '10c', label: 'X век' },
+  { value: '11c', label: 'XI век' },
+  { value: '12c', label: 'XII век' },
+  { value: '13c', label: 'XIII век' },
+  { value: '14c', label: 'XIV век' },
+  { value: '15c', label: 'XV век' },
+  { value: '16c', label: 'XVI век' },
+  { value: '17c', label: 'XVII век' },
+  { value: '18c', label: 'XVIII век' },
+  { value: '19c', label: 'XIX век' },
+  { value: '20c', label: 'XX век' },
+  { value: '21c', label: 'XXI век' },
+  { value: 'future', label: 'Будущее (не издано)' },
 ];
 
 export const ERAS_LABELS = ERAS.map(e => e.label);

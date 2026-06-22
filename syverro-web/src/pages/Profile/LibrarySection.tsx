@@ -1,9 +1,8 @@
 // src/pages/Profile/LibrarySection.tsx
-import { useState } from 'react';
+import { useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { EnrichedBook } from '../../types/book';
 import { userBookService } from '../../services/userBookService';
-import { statusLabels, statusOrder, UserBookStatus } from '../../types/userBook';
 
 const CURRENT_USER_ID = 'user_1';
 
@@ -11,17 +10,21 @@ interface LibrarySectionProps {
   books: EnrichedBook[];
 }
 
-function BookCard({ book, userBook, onClick }: { 
-  book: EnrichedBook; 
-  userBook: any; 
-  onClick: () => void 
+function BookCard({ book, userBook, onClick }: {
+  book: EnrichedBook;
+  userBook: any;
+  onClick: () => void;
 }) {
+  const progress = book.totalPages > 0
+    ? Math.round((userBook.currentPage / book.totalPages) * 100)
+    : 0;
+
   return (
     <div
       onClick={onClick}
       style={{
         flexShrink: 0,
-        width: '160px',
+        width: '140px',
         background: 'rgba(10, 17, 24, 0.6)',
         backdropFilter: 'blur(8px)',
         WebkitBackdropFilter: 'blur(8px)',
@@ -32,12 +35,12 @@ function BookCard({ book, userBook, onClick }: {
         transition: 'all 0.2s',
       }}
       onMouseEnter={(e) => {
-        e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.15)';
+        e.currentTarget.style.borderColor = 'rgba(255,255,255,0.15)';
         e.currentTarget.style.transform = 'translateY(-4px)';
         e.currentTarget.style.boxShadow = '0 8px 24px rgba(0,0,0,0.3)';
       }}
       onMouseLeave={(e) => {
-        e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.06)';
+        e.currentTarget.style.borderColor = 'rgba(255,255,255,0.06)';
         e.currentTarget.style.transform = 'translateY(0)';
         e.currentTarget.style.boxShadow = 'none';
       }}
@@ -62,32 +65,35 @@ function BookCard({ book, userBook, onClick }: {
         ) : (
           <span style={{ fontSize: '48px', opacity: 0.3 }}>📖</span>
         )}
-        {userBook.status === 'reading' && book.totalPages > 0 && (
+        
+        {/* Прогресс */}
+        {progress > 0 && (
           <div
             style={{
               position: 'absolute',
               bottom: 0,
               left: 0,
               right: 0,
-              height: '4px',
+              height: '3px',
               background: 'rgba(255,255,255,0.1)',
             }}
           >
             <div
               style={{
-                width: `${(userBook.currentPage / book.totalPages) * 100}%`,
+                width: `${progress}%`,
                 height: '100%',
                 background: '#5B86A1',
+                transition: 'width 0.3s',
               }}
             />
           </div>
         )}
       </div>
 
-      <div style={{ padding: '12px' }}>
+      <div style={{ padding: '8px 10px' }}>
         <div
           style={{
-            fontSize: '13px',
+            fontSize: '12px',
             fontWeight: '500',
             color: '#E6EDF3',
             overflow: 'hidden',
@@ -99,7 +105,7 @@ function BookCard({ book, userBook, onClick }: {
         </div>
         <div
           style={{
-            fontSize: '12px',
+            fontSize: '11px',
             color: '#97A6BA',
             overflow: 'hidden',
             textOverflow: 'ellipsis',
@@ -110,98 +116,88 @@ function BookCard({ book, userBook, onClick }: {
         </div>
         <div
           style={{
-            marginTop: '4px',
-            padding: '2px 10px',
-            background: 'rgba(91, 134, 161, 0.15)',
-            borderRadius: '12px',
             fontSize: '10px',
             color: '#5B86A1',
-            display: 'inline-block',
+            marginTop: '2px',
           }}
         >
-          {statusLabels[userBook.status as UserBookStatus]}
+          {progress}%
         </div>
-        {userBook.status === 'reading' && book.totalPages > 0 && (
-          <div
-            style={{
-              fontSize: '11px',
-              color: '#5B86A1',
-              marginTop: '4px',
-            }}
-          >
-            {userBook.currentPage} / {book.totalPages} стр.
-          </div>
-        )}
       </div>
-    </div>
-  );
-}
-
-function ShowAllButton({ count, onClick }: { count: number; onClick: () => void }) {
-  return (
-    <div
-      onClick={onClick}
-      style={{
-        flexShrink: 0,
-        width: '160px',
-        minHeight: '240px',
-        background: 'rgba(10, 17, 24, 0.4)',
-        backdropFilter: 'blur(8px)',
-        WebkitBackdropFilter: 'blur(8px)',
-        borderRadius: '12px',
-        border: '1px dashed rgba(255, 255, 255, 0.08)',
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        cursor: 'pointer',
-        transition: 'all 0.2s',
-        padding: '20px',
-      }}
-      onMouseEnter={(e) => {
-        e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.15)';
-        e.currentTarget.style.background = 'rgba(18, 28, 36, 0.6)';
-      }}
-      onMouseLeave={(e) => {
-        e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.08)';
-        e.currentTarget.style.background = 'rgba(10, 17, 24, 0.4)';
-      }}
-    >
-      <span style={{ fontSize: '32px', color: '#5B86A1' }}>→</span>
-      <span
-        style={{
-          color: '#97A6BA',
-          fontSize: '13px',
-          marginTop: '8px',
-          textAlign: 'center',
-        }}
-      >
-        Показать все {count} книг
-      </span>
     </div>
   );
 }
 
 export default function LibrarySection({ books }: LibrarySectionProps) {
   const navigate = useNavigate();
-  const [activeStatus, setActiveStatus] = useState<UserBookStatus | 'all'>('all');
+  const scrollRef = useRef<HTMLDivElement>(null);
 
-  // Получаем книги из userBookService
   const userBooks = userBookService.getByUser(CURRENT_USER_ID);
   const userBookMap = new Map(userBooks.map((ub) => [ub.bookId, ub]));
 
-  // Фильтруем книги, которые есть в личной библиотеке
+  // Книги в библиотеке
   const libraryBooks = books.filter((b) => userBookMap.has(b.id));
+  const totalBooks = libraryBooks.length;
 
-  // Фильтруем по активному статусу
-  const filteredBooks = activeStatus === 'all'
-    ? libraryBooks
-    : libraryBooks.filter((b) => userBookMap.get(b.id)?.status === activeStatus);
+  // Читаю сейчас (статус 'reading')
+  const readingBooks = libraryBooks.filter(
+    (b) => userBookMap.get(b.id)?.status === 'reading'
+  );
 
-  const statusCounts = userBooks.reduce((acc, ub) => {
-    acc[ub.status] = (acc[ub.status] || 0) + 1;
-    return acc;
-  }, {} as Record<string, number>);
+  // Прочитано (статус 'completed')
+  const completedBooks = libraryBooks.filter(
+    (b) => userBookMap.get(b.id)?.status === 'completed'
+  );
+
+  // ============================================
+  // РАСЧЁТ СТАТИСТИКИ ТОЛЬКО ПО АКТУАЛЬНЫМ КНИГАМ
+  // ============================================
+  const relevantBooks = libraryBooks.filter(
+    (b) => {
+      const status = userBookMap.get(b.id)?.status;
+      return status === 'completed' || status === 'reading' || status === 'rereading';
+    }
+  );
+
+  // Самый частый жанр
+  const allGenres = relevantBooks.flatMap((b) => b.genres || []);
+  const genreCounts: Record<string, number> = {};
+  allGenres.forEach((g) => {
+    genreCounts[g] = (genreCounts[g] || 0) + 1;
+  });
+  let topGenre = '—';
+  let topGenreCount = 0;
+  for (const [genre, count] of Object.entries(genreCounts)) {
+    if (count > topGenreCount) {
+      topGenreCount = count;
+      topGenre = genre;
+    }
+  }
+
+  // Самая частая страна автора
+  const allCountries = relevantBooks
+    .map((b) => b.authorCountry)
+    .filter((c): c is string => c !== null && c !== undefined);
+  const countryCounts: Record<string, number> = {};
+  allCountries.forEach((c) => {
+    countryCounts[c] = (countryCounts[c] || 0) + 1;
+  });
+  let topCountry = '—';
+  let topCountryCount = 0;
+  for (const [country, count] of Object.entries(countryCounts)) {
+    if (count > topCountryCount) {
+      topCountryCount = count;
+      topCountry = country;
+    }
+  }
+
+  // Прокрутка колесиком
+  const handleWheel = (e: React.WheelEvent) => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollLeft += e.deltaY;
+      e.preventDefault();
+    }
+  };
 
   return (
     <div
@@ -209,122 +205,68 @@ export default function LibrarySection({ books }: LibrarySectionProps) {
         background: 'rgba(18, 28, 36, 0.6)',
         backdropFilter: 'blur(12px)',
         WebkitBackdropFilter: 'blur(12px)',
-        border: '1px solid rgba(255, 255, 255, 0.08)',
         borderRadius: '16px',
-        padding: '24px',
+        border: '1px solid rgba(255, 255, 255, 0.08)',
+        padding: '20px 24px',
         marginBottom: '32px',
       }}
     >
-      <h2
-        style={{
-          fontSize: '20px',
-          fontWeight: '400',
-          color: '#E6EDF3',
-          marginBottom: '20px',
-        }}
-      >
-        📚 Личная библиотека
-      </h2>
-
+      {/* Заголовок */}
       <div
         style={{
           display: 'flex',
-          gap: '4px',
-          marginBottom: '24px',
-          borderBottom: '1px solid rgba(255, 255, 255, 0.06)',
-          paddingBottom: '4px',
-          flexWrap: 'wrap',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          marginBottom: '16px',
         }}
       >
-        <button
-          onClick={() => setActiveStatus('all')}
+        <h3
           style={{
-            padding: '10px 20px',
-            background: 'transparent',
-            border: 'none',
-            borderBottom: activeStatus === 'all' ? '2px solid #5B86A1' : '2px solid transparent',
-            color: activeStatus === 'all' ? '#E6EDF3' : '#97A6BA',
-            fontSize: '14px',
-            fontWeight: activeStatus === 'all' ? '500' : '400',
-            cursor: 'pointer',
-            fontFamily: 'Inter, sans-serif',
-            transition: 'all 0.2s',
+            fontSize: '16px',
+            fontWeight: '400',
+            color: '#E6EDF3',
           }}
         >
-          Все
-          <span
-            style={{
-              marginLeft: '8px',
-              padding: '2px 8px',
-              background: 'rgba(255,255,255,0.06)',
-              borderRadius: '12px',
-              fontSize: '11px',
-              color: '#97A6BA',
-            }}
-          >
-            {libraryBooks.length}
-          </span>
-        </button>
-
-        {statusOrder.map((status) => (
-          <button
-            key={status}
-            onClick={() => setActiveStatus(status)}
-            style={{
-              padding: '10px 20px',
-              background: 'transparent',
-              border: 'none',
-              borderBottom: activeStatus === status ? '2px solid #5B86A1' : '2px solid transparent',
-              color: activeStatus === status ? '#E6EDF3' : '#97A6BA',
-              fontSize: '14px',
-              fontWeight: activeStatus === status ? '500' : '400',
-              cursor: 'pointer',
-              fontFamily: 'Inter, sans-serif',
-              transition: 'all 0.2s',
-            }}
-          >
-            {statusLabels[status]}
-            <span
-              style={{
-                marginLeft: '8px',
-                padding: '2px 8px',
-                background: 'rgba(255,255,255,0.06)',
-                borderRadius: '12px',
-                fontSize: '11px',
-                color: '#97A6BA',
-              }}
-            >
-              {statusCounts[status] || 0}
-            </span>
-          </button>
-        ))}
+          📚 Читаю сейчас
+        </h3>
+        <span
+          style={{
+            fontSize: '12px',
+            color: '#5B86A1',
+          }}
+        >
+          {readingBooks.length} книг
+        </span>
       </div>
 
-      {filteredBooks.length === 0 ? (
+      {/* Горизонтальный скролл книг */}
+      {readingBooks.length === 0 ? (
         <div
           style={{
             textAlign: 'center',
-            padding: '40px 20px',
+            padding: '20px',
             color: '#5B86A1',
-            fontSize: '14px',
+            fontSize: '13px',
           }}
         >
-          {activeStatus === 'all'
-            ? 'В вашей библиотеке пока нет книг'
-            : `Нет книг в статусе «${statusLabels[activeStatus as UserBookStatus]}»`}
+          Сейчас вы ничего не читаете. Начните новую книгу!
         </div>
       ) : (
         <div
+          ref={scrollRef}
+          onWheel={handleWheel}
           style={{
             display: 'flex',
-            gap: '16px',
+            gap: '12px',
             overflowX: 'auto',
             padding: '4px 4px 12px 4px',
             scrollbarWidth: 'thin',
             scrollbarColor: '#2A4B60 transparent',
+            cursor: 'grab',
+            scrollBehavior: 'smooth',
           }}
         >
-          {filteredBooks.map((book) => (
+          {readingBooks.map((book) => (
             <BookCard
               key={book.id}
               book={book}
@@ -332,14 +274,89 @@ export default function LibrarySection({ books }: LibrarySectionProps) {
               onClick={() => navigate(`/book/${book.id}`)}
             />
           ))}
-          {filteredBooks.length > 8 && (
-            <ShowAllButton
-              count={filteredBooks.length}
-              onClick={() => navigate('/my-library')}
-            />
-          )}
         </div>
       )}
+
+      {/* Статистика */}
+      <div
+        style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(4, 1fr)',
+          gap: '16px',
+          marginTop: '16px',
+          paddingTop: '16px',
+          borderTop: '1px solid rgba(255, 255, 255, 0.06)',
+        }}
+      >
+        {/* Всего книг — ссылка на библиотеку */}
+        <div
+          onClick={() => navigate('/my-library')}
+          style={{
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            textAlign: 'center',
+            cursor: 'pointer',
+            transition: 'opacity 0.2s',
+          }}
+          onMouseEnter={(e) => (e.currentTarget.style.opacity = '0.7')}
+          onMouseLeave={(e) => (e.currentTarget.style.opacity = '1')}
+        >
+          <div style={{ fontSize: '20px', fontWeight: '300', color: '#E6EDF3' }}>
+            {totalBooks}
+          </div>
+          <div style={{ fontSize: '12px', color: '#97A6BA' }}>Всего книг</div>
+        </div>
+
+        {/* Прочитано */}
+        <div
+          style={{
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            textAlign: 'center',
+          }}
+        >
+          <div style={{ fontSize: '20px', fontWeight: '300', color: '#4CAF50' }}>
+            {completedBooks.length}
+          </div>
+          <div style={{ fontSize: '12px', color: '#97A6BA' }}>Прочитано</div>
+        </div>
+
+        {/* Главный жанр */}
+        <div
+          style={{
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            textAlign: 'center',
+          }}
+        >
+          <div style={{ fontSize: '20px', fontWeight: '300', color: '#5B86A1' }}>
+            {topGenre}
+          </div>
+          <div style={{ fontSize: '12px', color: '#97A6BA' }}>Главный жанр</div>
+        </div>
+
+        {/* Главная страна */}
+        <div
+          style={{
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            textAlign: 'center',
+          }}
+        >
+          <div style={{ fontSize: '20px', fontWeight: '300', color: '#5B86A1' }}>
+            {topCountry}
+          </div>
+          <div style={{ fontSize: '12px', color: '#97A6BA' }}>Главная страна</div>
+        </div>
+      </div>
     </div>
   );
 }

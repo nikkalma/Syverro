@@ -26,6 +26,8 @@ export interface ReaderProfile {
   currentCountry?: string;
   displayName?: string;
   avatar?: string;
+  status?: string;
+  level?: string;
 
   // Языки
   nativeLanguage?: string;
@@ -39,7 +41,11 @@ export interface ReaderProfile {
   favoriteAuthors?: string[];
   favoriteLiteraryCountries?: string[];
   favoriteEras?: string[];
+  favoriteMotifs?: string[];   // ← добавили
 
   // Цели чтения
   readingGoals?: ReadingGoal[];
+  
+  // Цитата дня
+  quoteOfTheDay?: string;
 }

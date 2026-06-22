@@ -1,7 +1,7 @@
 // src/types/userBook.ts
 export type UserBookStatus =
-  | 'planned'
   | 'reading'
+  | 'shelf'
   | 'completed'
   | 'paused'
   | 'abandoned';
@@ -11,24 +11,25 @@ export interface UserBook {
   userId: string;
   bookId: string;
   status: UserBookStatus;
+  rereadCount: number;          // ← вместо isRereading
   currentPage: number;
   addedAt: string;
   startedAt?: string;
-  finishedAt?: string;
+  completedAt?: string;
   personalNote?: string;
 }
 
 export const statusLabels: Record<UserBookStatus, string> = {
-  planned: 'Планирую',
   reading: 'Читаю',
-  completed: 'Прочитано',
+  shelf: 'На полке',             // ← вместо planned
+  completed: 'Завершено',
   paused: 'Отложено',
   abandoned: 'Брошено',
 };
 
 export const statusOrder: UserBookStatus[] = [
   'reading',
-  'planned',
+  'shelf',
   'completed',
   'paused',
   'abandoned',

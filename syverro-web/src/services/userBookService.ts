@@ -35,8 +35,10 @@ export const userBookService = {
       userId,
       bookId,
       status,
+      rereadCount: 0,
       currentPage: 0,
       addedAt: now,
+      startedAt: status === 'reading' ? now : undefined,
     };
     const all = getAll();
     all.push(newBook);
@@ -44,7 +46,11 @@ export const userBookService = {
     return newBook;
   },
 
-  update: (userId: string, bookId: string, updates: Partial<Omit<UserBook, 'id' | 'userId' | 'bookId' | 'addedAt'>>): UserBook | null => {
+  update: (
+    userId: string,
+    bookId: string,
+    updates: Partial<Omit<UserBook, 'id' | 'userId' | 'bookId' | 'addedAt'>>
+  ): UserBook | null => {
     const all = getAll();
     const index = all.findIndex((b) => b.userId === userId && b.bookId === bookId);
     if (index === -1) return null;
@@ -52,25 +58,45 @@ export const userBookService = {
     const current = all[index];
     const now = new Date().toISOString();
 
-    // Автоматические даты
-    let startedAt = current.startedAt;
-    let finishedAt = current.finishedAt;
+    let { status, rereadCount, startedAt, completedAt } = current;
 
-    // Если статус меняется на 'reading' и нет startedAt
-    if (updates.status === 'reading' && !startedAt) {
-      startedAt = now;
-    }
+    // ============================================
+    // ЛОГИКА ПЕРЕЧИТЫВАНИЯ
+    // ============================================
+    if (updates.status) {
+      const newStatus = updates.status;
 
-    // Если статус меняется на 'completed' и нет finishedAt
-    if (updates.status === 'completed' && !finishedAt) {
-      finishedAt = now;
+      // finished → reading = начало перечитывания
+      if (status === 'completed' && newStatus === 'reading') {
+        rereadCount = (rereadCount || 0) + 1;
+        startedAt = now;
+        completedAt = undefined;
+        status = newStatus;
+      }
+      // reading → finished = завершение чтения
+      else if (status === 'reading' && newStatus === 'completed') {
+        completedAt = now;
+        status = newStatus;
+      }
+      // Любой другой переход
+      else {
+        status = newStatus;
+        if (newStatus === 'reading' && !startedAt) {
+          startedAt = now;
+        }
+        if (newStatus === 'completed' && !completedAt) {
+          completedAt = now;
+        }
+      }
     }
 
     const updated: UserBook = {
       ...current,
       ...updates,
+      status,
+      rereadCount,
       startedAt,
-      finishedAt,
+      completedAt,
     };
 
     all[index] = updated;
@@ -83,7 +109,6 @@ export const userBookService = {
     saveAll(all.filter((b) => !(b.userId === userId && b.bookId === bookId)));
   },
 
-  // Вспомогательный метод для получения книги с прогрессом
   getWithProgress: (userId: string, bookId: string, totalPages?: number) => {
     const userBook = userBookService.getByBook(userId, bookId);
     if (!userBook) return null;

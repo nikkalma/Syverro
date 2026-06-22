@@ -501,4 +501,8 @@ export const en: LocaleData = {
     empty: 'Library is empty. Add your first book.',
     emptyFiltered: 'No books match your filters',
   },
+
+  settings: {
+  title: 'Settings',
+},
 };

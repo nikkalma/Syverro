@@ -6,7 +6,7 @@ import { useLanguage } from '../../context/LanguageContext';
 import { useTheme } from '../../context/ThemeContext';
 import { spacing } from '../../theme/spacing';
 import { getTypography } from '../../theme/typography';
-import type { Book } from '../../types/book.types';
+import type { Book } from '../../types/book';
 import type { ReadingSession } from '../../types/session.types';
 
 interface Props {

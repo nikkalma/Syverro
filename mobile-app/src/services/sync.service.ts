@@ -1,6 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { apiClient } from './api/client';
-import { Book } from '../types/book.types';
+import { Book } from '../types/book';
 import { ReadingSession } from '../types/session.types';
 import { Quote } from '../types/quote.types';
 import { useStore } from '../store';

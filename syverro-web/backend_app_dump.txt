@@ -1,0 +1,874 @@
+﻿
+===== backend/app/config.py =====
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
+
+class Settings:
+    DATABASE_URL: str = os.getenv("DATABASE_URL", "")
+    SECRET_KEY: str = os.getenv("SECRET_KEY", "your-secret-key-change-this-in-production")
+    ALGORITHM: str = "HS256"
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
+    
+    def __init__(self):
+        # Проверяем и конвертируем URL
+        if self.DATABASE_URL:
+            print(f"🔍 Original DATABASE_URL: {self.DATABASE_URL[:60]}...")
+            # Конвертируем postgres:// → postgresql+asyncpg://
+            if self.DATABASE_URL.startswith("postgres://"):
+                self.DATABASE_URL = self.DATABASE_URL.replace("postgres://", "postgresql+asyncpg://", 1)
+                print(f"✅ Converted to asyncpg: {self.DATABASE_URL[:60]}...")
+            elif self.DATABASE_URL.startswith("postgresql://") and "+asyncpg" not in self.DATABASE_URL:
+                self.DATABASE_URL = self.DATABASE_URL.replace("postgresql://", "postgresql+asyncpg://", 1)
+                print(f"✅ Added asyncpg driver: {self.DATABASE_URL[:60]}...")
+        else:
+            print("❌ DATABASE_URL is not set in environment!")
+
+settings = Settings()
+
+===== backend/app/database.py =====
+from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sessionmaker
+from sqlalchemy.orm import declarative_base
+from app.config import settings
+
+# Печать информации о подключении
+print(f"🔍 Creating database engine with URL: {settings.DATABASE_URL[:80]}..." if settings.DATABASE_URL else "❌ DATABASE_URL not set!")
+
+engine = create_async_engine(
+    settings.DATABASE_URL,
+    echo=True,  # Временно включаем SQL-логи для отладки
+    future=True
+)
+
+AsyncSessionLocal = async_sessionmaker(
+    engine,
+    class_=AsyncSession,
+    expire_on_commit=False
+)
+
+Base = declarative_base()
+
+async def get_db():
+    print("🟢 get_db() called - creating session")
+    async with AsyncSessionLocal() as session:
+        yield session
+    print("🔴 Session closed")
+
+===== backend/app/main.py =====
+cat > /opt/syverro/backend/app/main.py << 'EOF'
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+
+app = FastAPI()
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+@app.get("/health")
+async def health():
+    return {"status": "ok"}
+
+@app.get("/books/")
+async def get_books():
+    return [
+        {"id": "1", "title": "Дюна", "author": "Фрэнк Герберт"},
+        {"id": "2", "title": "1984", "author": "Джордж Оруэлл"},
+    ]
+
+@app.get("/books/catalog/")
+async def get_catalog():
+    return [
+        {"id": "3", "title": "Мастер и Маргарита", "author": "Михаил Булгаков"},
+        {"id": "4", "title": "Преступление и наказание", "author": "Фёдор Достоевский"},
+    ]
+EOF
+
+===== backend/app/api\auth.py =====
+from fastapi import APIRouter, Depends, HTTPException, status
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select
+from app.core.deps import get_current_user, get_db
+from app.core.security import hash_password, verify_password, create_access_token
+from app.models.user import User
+from app.schemas.user import UserCreate, UserLogin, UserResponse, TokenResponse
+import logging
+
+logger = logging.getLogger(__name__)
+router = APIRouter(prefix="/auth", tags=["auth"])
+
+
+@router.post("/register", response_model=UserResponse)
+async def register(user_data: UserCreate, db: AsyncSession = Depends(get_db)):
+    logger.info(f"🔍 REGISTER ATTEMPT: {user_data.email}")
+
+    try:
+        result = await db.execute(select(User).where(User.email == user_data.email))
+        existing = result.scalar_one_or_none()
+        if existing:
+            logger.warning(f"❌ Email already registered: {user_data.email}")
+            raise HTTPException(status_code=400, detail="Email already registered")
+
+        user = User(
+            email=user_data.email,
+            password_hash=hash_password(user_data.password)
+        )
+        db.add(user)
+        await db.commit()
+        await db.refresh(user)
+
+        logger.info(f"✅ User created: {user.id} - {user.email}")
+
+        return UserResponse(
+            id=user.id,
+            email=user.email,
+            created_at=user.created_at.isoformat() if user.created_at else ""
+        )
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"🔥 REGISTER ERROR: {type(e).__name__} - {str(e)}")
+        await db.rollback()
+        raise HTTPException(status_code=500, detail=f"Internal error: {str(e)}")
+
+
+@router.post("/login", response_model=TokenResponse)
+async def login(user_data: UserLogin, db: AsyncSession = Depends(get_db)):
+    logger.info(f"🔍 LOGIN ATTEMPT: {user_data.email}")
+
+    try:
+        user = await get_user_by_email(db, user_data.email)
+        if not user or not verify_password(user_data.password, user.password_hash):
+            logger.warning(f"❌ Login failed: {user_data.email}")
+            raise HTTPException(status_code=401, detail="Invalid email or password")
+
+        access_token = create_access_token({"sub": str(user.id)})
+        logger.info(f"✅ Login success: {user.id} - {user.email}")
+
+        return TokenResponse(access_token=access_token)
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"🔥 LOGIN ERROR: {type(e).__name__} - {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Internal error: {str(e)}")
+
+
+# ✅ НОВЫЙ ЭНДПОИНТ — ПРОВЕРКА ТОКЕНА
+@router.get("/me", response_model=UserResponse)
+async def get_current_user_info(
+    current_user: User = Depends(get_current_user),
+):
+    """Получить информацию о текущем пользователе (для проверки токена)"""
+    logger.info(f"🔍 ME request for user: {current_user.id} - {current_user.email}")
+    return UserResponse(
+        id=current_user.id,
+        email=current_user.email,
+        created_at=current_user.created_at.isoformat() if current_user.created_at else ""
+    )
+
+===== backend/app/api\books.py =====
+from fastapi import APIRouter, Depends, HTTPException, status
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select
+from app.core.deps import get_current_user, get_db
+from app.models.user import User
+from app.models.book import Book, UserBook
+from app.schemas.book import BookCreate, BookResponse, UserBookResponse
+from uuid import UUID
+
+router = APIRouter(prefix="/books", tags=["books"])
+
+# ========== ГЛОБАЛЬНЫЙ КАТАЛОГ (ВСЕ КНИГИ МИРА) ==========
+@router.get("/catalog/", response_model=list[BookResponse])
+async def get_catalog(
+    db: AsyncSession = Depends(get_db)
+):
+    """Все книги из глобального каталога (без авторизации)"""
+    try:
+        result = await db.execute(select(Book))
+        books = result.scalars().all()
+        return books
+    except Exception as e:
+        print(f"Error: {e}")
+        return []
+
+# ========== МОИ КНИГИ (ТОЛЬКО ДОБАВЛЕННЫЕ ПОЛЬЗОВАТЕЛЕМ) ==========
+@router.get("/", response_model=list[BookResponse])
+async def get_user_books(
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    try:
+        result = await db.execute(
+            select(Book).join(UserBook).where(UserBook.user_id == current_user.id)
+        )
+        books = result.scalars().all()
+        return books
+    except Exception as e:
+        print(f"Error: {e}")
+        return []
+
+# ========== ДОБАВИТЬ КНИГУ (СОЗДАЁТ СВЯЗЬ В USERBOOK) ==========
+@router.post("/", response_model=BookResponse)
+async def create_book(
+    book_data: BookCreate,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    try:
+        existing = await db.execute(
+            select(Book).where(
+                Book.title == book_data.title,
+                Book.author == book_data.author
+            )
+        )
+        existing_book = existing.scalar_one_or_none()
+
+        if existing_book:
+            user_book_exists = await db.execute(
+                select(UserBook).where(
+                    UserBook.user_id == current_user.id,
+                    UserBook.book_id == existing_book.id
+                )
+            )
+            if not user_book_exists.scalar_one_or_none():
+                user_book = UserBook(
+                    user_id=current_user.id,
+                    book_id=existing_book.id,
+                    status="planned"
+                )
+                db.add(user_book)
+                await db.commit()
+            return existing_book
+
+        new_book = Book(**book_data.model_dump())
+        db.add(new_book)
+        await db.flush()
+
+        user_book = UserBook(
+            user_id=current_user.id,
+            book_id=new_book.id,
+            status="planned"
+        )
+        db.add(user_book)
+
+        await db.commit()
+        await db.refresh(new_book)
+
+        return new_book
+    except Exception as e:
+        print(f"Error: {e}")
+        await db.rollback()
+        raise HTTPException(status_code=500, detail=str(e))
+
+# ========== МОИ КНИГИ СО СТАТУСАМИ (ДЛЯ ПРОФИЛЯ) ==========
+@router.get("/user-books/", response_model=list[UserBookResponse])
+async def get_user_books_with_status(
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    try:
+        result = await db.execute(
+            select(UserBook).where(UserBook.user_id == current_user.id)
+        )
+        user_books = result.scalars().all()
+        for ub in user_books:
+            await db.refresh(ub, attribute_names=["book"])
+        return user_books
+    except Exception as e:
+        print(f"Error: {e}")
+        return []
+
+# ========== ОБНОВИТЬ СТАТУС КНИГИ ==========
+@router.put("/{book_id}/status")
+async def update_book_status(
+    book_id: UUID,
+    status_value: str,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    result = await db.execute(
+        select(UserBook).where(
+            UserBook.user_id == current_user.id,
+            UserBook.book_id == book_id
+        )
+    )
+    user_book = result.scalar_one_or_none()
+
+    if not user_book:
+        raise HTTPException(status_code=404, detail="Book not found")
+
+    user_book.status = status_value
+    await db.commit()
+
+    return {"message": "Status updated"}
+
+===== backend/app/api\sync.py =====
+from fastapi import APIRouter, Depends
+from sqlalchemy.ext.asyncio import AsyncSession
+from app.core.deps import get_current_user, get_db
+from app.models.user import User
+
+router = APIRouter(prefix="/sync", tags=["sync"])
+
+
+@router.get("/")
+async def get_sync_data(
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    """Получить данные для синхронизации (GET)"""
+    return {
+        "books": [],
+        "sessions": [],
+        "quotes": [],
+        "server_time": "2026-01-15T10:00:00Z"
+    }
+
+
+@router.post("/")
+async def sync_data(
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    """Отправить данные для синхронизации (POST)"""
+    return {
+        "books": [],
+        "sessions": [],
+        "quotes": [],
+        "server_time": "2026-01-15T10:00:00Z"
+    }
+
+===== backend/app/api\__init__.py =====
+from .auth import router as auth_router
+from .sync import router as sync_router
+from .books import router as books_router
+
+routers = [
+    auth_router,
+    sync_router,
+    books_router,
+]
+
+===== backend/app/api\__pycache__\auth.cpython-312.pyc =====
+�
+    z�)j�  �                   �&  � d dl mZmZmZ d dlmZ d dlmZ d dlm	Z	 d dl
+mZ d dlmZmZmZmZ d dlmZmZmZmZ  edd	g�
+�      Zej/                  de��       ee	�      fdedefd��       Zej/                  de��       ee	�      fdedefd��       Zy)�    )�	APIRouter�HTTPException�Depends)�AsyncSession)�select)�get_db)�User)�
+UserCreate�UserResponse�	UserLogin�TokenResponse)�hash_password�verify_password�create_access_token�get_user_by_emailz/auth�auth)�prefix�tagsz	/register)�response_model�	user_data�dbc              �   �f  K  � |j                  t        t        �      j                  t        j                  | j                  k(  �      �      � d {  ��� }|j                  �       }|rt        dd��      �t        | j                  t        | j                  �      ��      }|j                  |�       |j                  �       � d {  ���  |j                  |�      � d {  ���  t        |j                  |j                  |j                  r|j                  j                  �       ��      S d��      S 7 ��7 �l7 �U�w)Ni�  zEmail already registered��status_code�detail)�email�password_hash� )�idr   �
+created_at)�executer   r	   �wherer   �scalar_one_or_noner   r   �password�add�commit�refreshr   r   r    �	isoformat)r   r   �result�existing�users        �1C:\Users\kleme\Syverro\backend\app\api\v1\auth.py�registerr-      s�   � �� � �:�:�f�T�l�0�0����y���1N�O�P�P�F��(�(�*�H����4N�O�O� ��o�o�#�I�$6�$6�7��D� �F�F�4�L�
+�)�)�+���
+�*�*�T�
+�����7�7��j�j�26�/�/�4�?�?�,�,�.�� � HJ�� � Q�� ���s8   �AD1�D+�A1D1� D-�D1�D/�AD1�-D1�/D1z/loginc              �   �   K  � t        || j                  �      � d {  ��� }|r t        | j                  |j                  �      st        dd��      �t        dt        |j                  �      i�      }t        |��      S 7 �_�w)Ni�  zInvalid email or passwordr   �sub)�access_token)
+r   r   r   r$   r   r   r   �strr   r   )r   r   r+   r0   s       r,   �loginr2   "   sf   � �� �"�2�y���7�7�D���y�'9�'9�4�;M�;M�N���4O�P�P�&��s�4�7�7�|�'<�=�L��l�3�3� 8�s   �A>�A<�A A>N)�fastapir   r   r   �sqlalchemy.ext.asyncior   �
+sqlalchemyr   �app.databaser   �app.models.userr	   �app.schemas.userr
+   r   r   r   �app.core.securityr   r   r   r   �router�postr-   r2   � �    r,   �<module>r>      s�   �� 5� 5� /� � �  � O� O� d� d�	�'���	1�����[���6�=D�V�_� �j� �l� � 7��, ���X�m��4�9@��� 4�9� 4�,� 4� 5�4r=   
+
+===== backend/app/api\__pycache__\books.cpython-312.pyc =====
+�
+    ��)jm  �            
+       �  � d dl mZmZmZmZ d dlmZ d dlmZ d dl	m
+Z
+mZ d dlmZ d dlmZmZ d dlmZmZmZmZ d dlmZ  ed	d
+g��      Zej3                  dee   ��       ee
+�       ee�      fdedefd��       Zej9                  de��       ee
+�       ee�      fdededefd��       Zej3                  dee   ��       ee
+�       ee�      fdedefd��       Zej?                  d�       ee
+�       ee�      fdede dedefd��       Z!y)�    )�	APIRouter�Depends�HTTPException�status)�AsyncSession)�select)�get_current_user�get_db)�User)�Book�UserBook)�
+BookCreate�BookResponse�UserBookCreate�UserBookResponse)�UUIDz/books�books)�prefix�tags�/)�response_model�current_user�dbc              �   �b  K  � 	 |j                  t        t        �      j                  t        �      j                  t        j                  | j                  k(  �      �      � d{  ��� }|j                  �       j                  �       }|S 7 �$# t        $ r}t        d|� ��       g cY d}~S d}~ww xY w�w)u;   Получить все книги пользователяNu    Ошибка в get_user_books: )�executer   r   �joinr   �where�user_id�id�scalars�all�	Exception�print)r   r   �resultr   �es        �2C:\Users\kleme\Syverro\backend\app\api\v1\books.py�get_user_booksr'      s�   � �� �
+��z�z��4�L���h�'�-�-�h�.>�.>�,�/�/�.Q�R�
+� 
+�� ��� �$�$�&����	
+��
+ � ��0���4�5��	���sG   �B/�AB	 �"B�##B	 �B/�B	 �		B,�B'�!B,�"B/�'B,�,B/�	book_datac              �   ��  K  � 	 |j                  t        t        �      j                  t        j                  | j                  k(  t        j
+                  | j
+                  k(  �      �      � d{  ��� }|j                  �       }|r�|j                  t        t        �      j                  t        j                  |j                  k(  t        j                  |j                  k(  �      �      � d{  ��� }|j                  �       sKt        |j                  |j                  d��      }|j                  |�       |j                  �       � d{  ���  |S t        di | j                  �       ��}|j                  |�       |j                  �       � d{  ���  t        |j                  |j                  d��      }|j                  |�       |j                  �       � d{  ���  |j                  |�      � d{  ���  |S 7 ���7 ��7 ��7 �r7 �)7 �# t         $ rS}t#        d|� ��       |j%                  �       � d{  ���7   t'        t(        j*                  dt-        |�      � ���      �d}~ww xY w�w)u}   Создать новую книгу в каталоге и добавить в библиотеку пользователяN�planned)r   �book_idr   u   Ошибка в create_book: u*   Ошибка создания книги: ��status_code�detail� )r   r   r   r   �title�author�scalar_one_or_noner   r   r   r+   �add�commit�
+model_dump�flush�refreshr"   r#   �rollbackr   r   �HTTP_500_INTERNAL_SERVER_ERROR�str)	r(   r   r   �existing�existing_book�user_book_exists�	user_book�new_bookr%   s	            r&   �create_bookr@       s�  � �� �4
+�����4�L����
+�
+�i�o�o�-����y�/�/�/��
+� 
+�� !�3�3�5���%'�Z�Z��x� �&�&��$�$����7��$�$��(8�(8�8��&�  �� $�6�6�8�$�(�O�O�)�,�,�$��	�
+ ���y�!��i�i�k�!�!� � � �1�)�.�.�0�1��
+���x���h�h�j��� � �O�O��K�K��
+�	�
+ 	���y���i�i�k����j�j��"�"�"���W
+�� �� "�� 	�� 	��"�� � 
+��-�a�S�1�2��k�k�m�����=�=�?��A��x�H�
+� 	
+��
+�s�   �I �A'H �+G3�,A=H �)G6�*AH �G9�H �
+I �=H �G;�	A
+H �G=�H �,G?�-H �2I �3H �6H �9H �;H �=H �?H �	I�
+!I�+H.�,,I�I�I z/user-books/c              �   �  K  � 	 |j                  t        t        �      j                  t        j                  | j
+                  k(  �      �      � d{  ��� }|j                  �       j                  �       }|D ]  }|j                  |dg��      � d{  ���  �  |S 7 �G7 �
+# t        $ r}t        d|� ��       g cY d}~S d}~ww xY w�w)uS   Получить все книги пользователя со статусамиN�book)�attribute_namesu,   Ошибка в get_user_books_with_status: )r   r   r   r   r   r   r    r!   r7   r"   r#   )r   r   r$   �
+user_books�ubr%   s         r&   �get_user_books_with_statusrF   ^   s�   � �� ���z�z��8���U�8�#�#�|���6�7�
+� 
+�� �^�^�%�)�)�+�
+� �B��*�*�R�&��*�:�:�:� � ��
+�� ;�� � ��<�Q�C�@�A��	���sY   �C�AB �B�>B �B�B �C�B �B �	B>�$B9�3B>�4C�9B>�>Cz/{book_id}/statusr+   �status_valuec              �   �v  K  � |j                  t        t        �      j                  t        j                  |j
+                  k(  t        j                  | k(  �      �      � d{  ��� }|j                  �       }|st        t        j                  d��      �||_	        |j                  �       � d{  ���  ddiS 7 �T7 �
+�w)uD   Обновить статус книги у пользователяNz Book not found in user's libraryr,   �messagezStatus updated)r   r   r   r   r   r   r+   r2   r   r   �HTTP_404_NOT_FOUNDr4   )r+   rG   r   r   r$   r>   s         r&   �update_book_statusrK   u   s�   � �� � �:�:��x����������/�����'�	
+�� �F� �)�)�+�I����1�1�5�
+� 	
+�
+ $�I��
+�)�)�+����'�(�(�#�� �s%   �AB9� B5�!AB9�,B7�-	B9�7B9N)"�fastapir   r   r   r   �sqlalchemy.ext.asyncior   �
+sqlalchemyr   �app.core.depsr	   r
+   �app.models.userr   �app.models.bookr   r   �app.schemas.bookr   r   r   r   �uuidr   �router�get�listr'   �postr@   rF   �putr:   rK   r/   �    r&   �<module>rZ      sa  �� =� =� /� � 2�  � *� W� W� �	�(�'��	3�� ���C��\� 2��3� �!1�2��v������� 4��$ ���S���.� !�!1�2��v��:
+��:
+��:
+� 	�:
+� /�:
+�z ���N�4�0@�+A��B� �!1�2��v������� C��, ���� � !�!1�2��v��	)��)��)� �)� 	�	)� !�)rY   
+
+===== backend/app/api\__pycache__\sync.cpython-312.pyc =====
+�
+    ��)j�  �                   ��   � d dl mZmZ d dlmZ d dlmZmZ d dlm	Z	  eddg��      Z
+e
+j                  d�       ee�       ee�      fd	e	d
+efd��       Ze
+j                  d�       ee�       ee�      fd	e	d
+efd��       Zy)�    )�	APIRouter�Depends)�AsyncSession)�get_current_user�get_db)�Userz/sync�sync)�prefix�tags�/�current_user�dbc              �   �   K  � g g g dd�S �w)uE   Получить данные для синхронизации (GET)�2026-01-15T10:00:00Z��books�sessions�quotes�server_time� �r   r   s     �1C:\Users\kleme\Syverro\backend\app\api\v1\sync.py�get_sync_datar   	   �   � �� � ���-�	� ��   �
+c              �   �   K  � g g g dd�S �w)uH   Отправить данные для синхронизации (POST)r   r   r   r   s     r   �	sync_datar      r   r   N)�fastapir   r   �sqlalchemy.ext.asyncior   �app.core.depsr   r   �app.models.userr   �router�getr   �postr   r   �    r   �<module>r&      s�   �� &� /� 2�  �	�'���	1�� ���C�� �!1�2��v��
+��
+��
+� �
+� ���S�� �!1�2��v��
+��
+��
+� �
+r%   
+
+===== backend/app/api\__pycache__\__init__.cpython-312.pyc =====
+�
+    c�)j�   �                   �2   � d dl mZ d dlmZ d dlmZ eeegZy)�   )�routerN)�authr   �auth_router�sync�sync_router�books�books_router�routers� �    �5C:\Users\kleme\Syverro\backend\app\api\v1\__init__.py�<module>r      s    �� '� '� )� ����r   
+
+===== backend/app/core\deps.py =====
+from typing import Annotated
+from uuid import UUID
+from fastapi import Depends, HTTPException, status
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select
+from app.database import get_db
+from app.core.security import decode_token
+from app.models.user import User
+
+security = HTTPBearer()
+
+
+async def get_current_user(
+    credentials: Annotated[HTTPAuthorizationCredentials, Depends(security)],
+    db: Annotated[AsyncSession, Depends(get_db)]
+) -> User:
+    """Получить текущего пользователя по JWT токену (временно упрощено)"""
+    token = credentials.credentials
+    payload = decode_token(token)
+    
+    if payload is None:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid token",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+    
+    user_id = payload.get("sub")
+    if user_id is None:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid token payload",
+        )
+    
+    # Временно: возвращаем первого пользователя (только для теста!)
+    # Преобразуем строку в UUID, если нужно
+    if isinstance(user_id, str):
+        try:
+            user_id = UUID(user_id)
+        except ValueError:
+            # Если не UUID, ищем по email или создаём фейкового
+            result = await db.execute(select(User).limit(1))
+            user = result.scalar_one_or_none()
+            if user:
+                return user
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Invalid user ID format",
+            )
+    
+    result = await db.execute(select(User).where(User.id == user_id))
+    user = result.scalar_one_or_none()
+    
+    if user is None:
+        # Временно: если пользователь не найден, возвращаем первого (только для теста!)
+        result = await db.execute(select(User).limit(1))
+        user = result.scalar_one_or_none()
+        if user:
+            return user
+        
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="User not found",
+        )
+    
+    return user
+
+
+async def get_current_user_optional(
+    credentials: Annotated[HTTPAuthorizationCredentials | None, Depends(security)] = None,
+    db: Annotated[AsyncSession, Depends(get_db)] = None
+) -> User | None:
+    """Получить текущего пользователя (опционально, без ошибки)"""
+    if not credentials:
+        return None
+    
+    try:
+        return await get_current_user(credentials, db)
+    except HTTPException:
+        return None
+
+===== backend/app/core\security.py =====
+from datetime import datetime, timedelta
+# from jose import JWTError, jwt  # Временно отключено
+# import bcrypt  # Временно отключено
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select
+from app.models.user import User
+
+SECRET_KEY = "your-secret-key-change-this-in-production"
+ALGORITHM = "HS256"
+ACCESS_TOKEN_EXPIRE_MINUTES = 30
+
+
+def verify_password(plain_password: str, hashed_password: str) -> bool:
+    """Временная заглушка"""
+    # return bcrypt.checkpw(plain_password.encode('utf-8'), hashed_password.encode('utf-8'))
+    return plain_password == hashed_password  # ⚠️ Только для теста! Не используй в проде
+
+
+def get_password_hash(password: str) -> str:
+    """Временная заглушка"""
+    # salt = bcrypt.gensalt()
+    # return bcrypt.hashpw(password.encode('utf-8'), salt).decode('utf-8')
+    return password  # ⚠️ Только для теста! Не используй в проде
+
+
+# Алиас для совместимости
+hash_password = get_password_hash
+
+
+def create_access_token(data: dict, expires_delta: timedelta | None = None) -> str:
+    """Временная заглушка"""
+    # to_encode = data.copy()
+    # if expires_delta:
+    #     expire = datetime.utcnow() + expires_delta
+    # else:
+    #     expire = datetime.utcnow() + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+    # to_encode.update({"exp": expire})
+    # encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
+    # return encoded_jwt
+    return "fake-token-for-testing"
+
+
+def decode_token(token: str) -> dict | None:
+    """Временная заглушка"""
+    # try:
+    #     payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+    #     return payload
+    # except JWTError:
+    #     return None
+    return {"sub": "fake-user-id"}
+
+
+async def get_user_by_email(db: AsyncSession, email: str) -> User | None:
+    result = await db.execute(select(User).where(User.email == email))
+    return result.scalar_one_or_none()
+
+===== backend/app/core\__pycache__\deps.cpython-312.pyc =====
+�
+    Ö*j�  �            	       �  � d dl mZ d dlmZ d dlmZmZmZ d dlm	Z	m
+Z
+ d dlmZ d dlmZ d dlmZ d dlmZ d d	lmZ  e	�       Zd
+ee
+ ee�      f   dee ee�      f   defd�Z	 	 dd
+ee
+dz   ee�      f   dee ee�      f   dedz  fd�Zy)�    )�	Annotated)�UUID)�Depends�HTTPException�status)�
+HTTPBearer�HTTPAuthorizationCredentials)�AsyncSession)�select)�get_db)�decode_token)�User�credentials�db�returnc              �   �J  K  � | j                   }t        |�      }|�t        t        j                  dddi��      �|j                  d�      }|�t        t        j                  d��      �t        |t        �      r	 t        |�      }|j                  t        t        �      j                  t        j                  |k(  �      �      � d{  ��� }|j                  �       }|�t        t        j                  d
+��      �|S # t        $ r t        t        j                  d	��      �w xY w7 �[�w)uP   Получить текущего пользователя по JWT токенуNzInvalid tokenzWWW-Authenticate�Bearer)�status_code�detail�headers�subzInvalid token payload)r   r   zInvalid user ID formatzUser not found)r   r   r   r   �HTTP_401_UNAUTHORIZED�get�
+isinstance�strr   �
+ValueError�executer   r   �where�id�scalar_one_or_none)r   r   �token�payload�user_id�result�users          �/C:\Users\kleme\Syverro\backend\app\core\deps.py�get_current_userr'      s  � �� �
+ �#�#�E��5�!�G�����4�4�"�'��2�
+� 	
+� �k�k�%� �G�����4�4�*�
+� 	
+� �'�3��	��7�m�G� �:�:�f�T�l�0�0����G�1C�D�E�E�F��$�$�&�D��|���4�4�#�
+� 	
+�
+ �K�� � 	��"�8�8�/�� �	�� F�s+   �A6D#�9C9 �AD#�D!�3D#�9%D�D#Nc              �   �\   K  � | sy	 t        | |�      � d{  ��� S 7 �# t        $ r Y yw xY w�w)uh   Получить текущего пользователя (опционально, без ошибки)N)r'   r   )r   r   s     r&   �get_current_user_optionalr)   :   s7   � �� �
+ ���%�k�2�6�6�6�6��� ���s(   �,� �� �,� �	)�,�)�,)NN)�typingr   �uuidr   �fastapir   r   r   �fastapi.securityr   r	   �sqlalchemy.ext.asyncior
+   �
+sqlalchemyr   �app.databaser   �app.core.securityr   �app.models.userr   �securityr'   r)   � �    r&   �<module>r6      s�   �� � � 2� 2� E� /� � � *�  ��<��)��7���9J�J�K�)��,����/�0�)� 
+�)�Z VZ�37���7�$�>���@Q�Q�R���,����/�0�� 
+�D�[�r5   
+
+===== backend/app/core\__pycache__\security.cpython-312.pyc =====
+�
+    �)j�  �                   ��   � d dl m Z mZ d dlmZmZ d dlZd dlmZ d dlm	Z	 d dl
+mZ dZdZd	Zd
+ededefd�Zdedefd�ZeZddededz  defd�Zdededz  fd�Zdedededz  fd�Zy)�    )�datetime�	timedelta)�JWTError�jwtN)�AsyncSession)�select)�Userz)your-secret-key-change-this-in-production�HS256�   �plain_password�hashed_password�returnc                 �j   � t        j                  | j                  d�      |j                  d�      �      S )u   Проверить пароль�utf-8)�bcrypt�checkpw�encode)r   r   s     �3C:\Users\kleme\Syverro\backend\app\core\security.py�verify_passwordr      s*   � ��>�>�.�/�/��8�/�:P�:P�QX�:Y�Z�Z�    �passwordc                 �   � t        j                  �       }t        j                  | j                  d�      |�      j	                  d�      S )u$   Получить хеш пароляr   )r   �gensalt�hashpwr   �decode)r   �salts     r   �get_password_hashr      s3   � ��>�>��D��=�=�����1�4�8�?�?��H�Hr   �data�expires_deltac                 �
+  � | j                  �       }|rt        j                  �       |z   }n%t        j                  �       t        t        ��      z   }|j                  d|i�       t        j                  |t        t        ��      }|S )u   Создать JWT токен)�minutes�exp)�	algorithm)
+�copyr   �utcnowr   �ACCESS_TOKEN_EXPIRE_MINUTES�updater   r   �
+SECRET_KEY�	ALGORITHM)r   r   �	to_encode�expire�encoded_jwts        r   �create_access_tokenr-      sb   � ��	�	��I�����"�]�2�����"�Y�7R�%S�S�����e�V�_�%��*�*�Y�
+�i�H�K��r   �tokenc                 �h   � 	 t        j                  | t        t        g��      }|S # t        $ r Y yw xY w)u'   Декодировать JWT токен)�
+algorithmsN)r   r   r(   r)   r   )r.   �payloads     r   �decode_tokenr2   (   s2   � ���*�*�U�J�I�;�G������ ���s   �"% �	1�1�db�emailc              �   �   K  � | j                  t        t        �      j                  t        j                  |k(  �      �      � d{  ��� }|j                  �       S 7 ��w)u4   Получить пользователя по emailN)�executer   r	   �wherer4   �scalar_one_or_none)r3   r4   �results      r   �get_user_by_emailr:   1   sD   � �� ��:�:�f�T�l�0�0����u�1D�E�F�F�F��$�$�&�&� G�s   �AA�A�A)N)r   r   �joser   r   r   �sqlalchemy.ext.asyncior   �
+sqlalchemyr   �app.models.userr	   r(   r)   r&   �str�boolr   r   �hash_password�dictr-   r2   r:   � r   r   �<module>rD      s�   �� (� � � /� �  �8�
+��	� � �[�C� [�#� [�$� [�
+I�� I�� I� "��	�d� 	�9�t�3C� 	�s� 	��� ��t�� �'�� '�S� '�T�D�[� 'r   
+
+===== backend/app/models\book.py =====
+from sqlalchemy import Column, String, Integer, DateTime, ForeignKey, Boolean, JSON, UniqueConstraint
+from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy.sql import func
+from sqlalchemy.orm import relationship
+from app.database import Base
+import uuid
+
+
+class Book(Base):
+    __tablename__ = "books"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    title = Column(String, nullable=False)
+    author = Column(String, nullable=False)
+    cover = Column(String, nullable=True)
+    genres = Column(JSON, default=[])
+    total_pages = Column(Integer, nullable=True)
+    created_at = Column(DateTime, server_default=func.now())
+    updated_at = Column(DateTime, onupdate=func.now())
+    
+    # Relationships
+    user_books = relationship("UserBook", back_populates="book", cascade="all, delete-orphan")
+    
+    # Constraints
+    __table_args__ = (
+        UniqueConstraint('title', 'author', name='unique_book_title_author'),
+    )
+
+
+class UserBook(Base):
+    __tablename__ = "user_books"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    user_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False)
+    book_id = Column(UUID(as_uuid=True), ForeignKey("books.id"), nullable=False)
+    status = Column(String, default="planned")  # planned, reading, finished, postponed, abandoned
+    rating = Column(Integer, nullable=True)
+    current_page = Column(Integer, default=0)
+    start_date = Column(DateTime, nullable=True)
+    end_date = Column(DateTime, nullable=True)
+    notes = Column(String, nullable=True)
+    is_favorite = Column(Boolean, default=False)
+    created_at = Column(DateTime, server_default=func.now())
+    updated_at = Column(DateTime, onupdate=func.now())
+    
+    # Relationships
+    book = relationship("Book", back_populates="user_books")
+    user = relationship("User", back_populates="user_books")
+
+===== backend/app/models\user.py =====
+from sqlalchemy import Column, String, DateTime
+from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy.sql import func
+from sqlalchemy.orm import relationship
+from app.database import Base
+import uuid
+
+
+class User(Base):
+    __tablename__ = "users"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    email = Column(String, unique=True, nullable=False, index=True)
+    password_hash = Column(String, nullable=False)
+    created_at = Column(DateTime, server_default=func.now())
+    updated_at = Column(DateTime, onupdate=func.now())
+    
+    # Relationships
+    user_books = relationship("UserBook", back_populates="user", cascade="all, delete-orphan")
+
+===== backend/app/models\__pycache__\book.cpython-312.pyc =====
+�
+    ޖ*j�  �                   �   � d dl mZmZmZmZmZmZmZmZ d dl	m
+Z
+ d dlmZ d dlmZ d dlmZ d dlZ G d� de�      Z G d	� d
+e�      Zy)�    )�Column�String�Integer�DateTime�
+ForeignKey�Boolean�JSON�UniqueConstraint)�UUID)�func)�relationship)�BaseNc                   �>  � e Zd ZdZ e ed��      dej                  ��      Z ee	d��      Z
+ ee	d��      Z ee	d��      Z eeg ��      Z eed��      Z ee ej&                  �       ��      Z ee ej&                  �       �	�      Z ed
+dd��      Z eddd��      fZy)�Book�booksT��as_uuid��primary_key�defaultF��nullable�r   ��server_default��onupdate�UserBook�bookzall, delete-orphan)�back_populates�cascade�title�author�unique_book_title_author)�nameN)�__name__�
+__module__�__qualname__�__tablename__r   r   �uuid�uuid4�idr   r"   r#   �coverr	   �genresr   �total_pagesr   r   �now�
+created_at�
+updated_atr   �
+user_booksr
+   �__table_args__� �    �1C:\Users\kleme\Syverro\backend\app\models\book.pyr   r   	   s�   � ��M�	��T�"��d�j�j�	I�B��6�E�*�E��F�U�+�F��6�D�)�E��D�"�%�F���4�0�K��������<�J���8�4�8�8�:�6�J� �j��I]�^�J� 	��(�1K�L��Nr6   r   c                   ��  � e Zd ZdZ e ed��      dej                  ��      Z e ed��       e	d�      d��      Z
+ e ed��       e	d�      d��      Z eed	�
+�      Z eed��      Z eed�
+�      Z eed��      Z eed��      Z eed��      Z eed�
+�      Z ee ej0                  �       ��      Z ee ej0                  �       ��      Z edd��      Z edd��      Zy)r   r3   Tr   r   zusers.idFr   zbooks.id�plannedr   r   r   r   r   )r    �UserN)r&   r'   r(   r)   r   r   r*   r+   r,   r   �user_id�book_idr   �statusr   �rating�current_pager   �
+start_date�end_date�notesr   �is_favoriter   r0   r1   r2   r   r   �userr5   r6   r7   r   r      s�   � � �M�	��T�"��d�j�j�	I�B��T�$�'��J�)?�%�P�G��T�$�'��J�)?�%�P�G��F�I�.�F��G�d�+�F��'�1�-�L���4�0�J��h��.�H��6�D�)�E���%�0�K��������<�J���8�4�8�8�:�6�J� ��|�<�D���|�<�Dr6   r   )�
+sqlalchemyr   r   r   r   r   r   r	   r
+   �sqlalchemy.dialects.postgresqlr   �sqlalchemy.sqlr   �sqlalchemy.ormr   �app.databaser   r*   r   r   r5   r6   r7   �<module>rJ      s5   �� e� e� e� /� � '� � ��4� �*=�t� =r6   
+
+===== backend/app/models\__pycache__\user.cpython-312.pyc =====
+�
+    Ֆ*j�  �                   �f   � d dl mZmZmZ d dlmZ d dlmZ d dlm	Z	 d dl
+mZ d dlZ G d� de�      Zy)	�    )�Column�String�DateTime)�UUID)�func)�relationship)�BaseNc                   ��   � e Zd ZdZ e ed��      dej                  ��      Z ee	ddd��      Z
+ ee	d��      Z ee ej                  �       ��      Z ee ej                  �       �	�      Z ed
+dd��      Zy)�User�usersT)�as_uuid)�primary_key�defaultF)�unique�nullable�index)r   )�server_default)�onupdate�UserBook�userzall, delete-orphan)�back_populates�cascadeN)�__name__�
+__module__�__qualname__�__tablename__r   r   �uuid�uuid4�idr   �email�password_hashr   r   �now�
+created_at�
+updated_atr   �
+user_books� �    �1C:\Users\kleme\Syverro\backend\app\models\user.pyr   r   	   ss   � ��M�	��T�"��d�j�j�	I�B��6�$��d�C�E��6�E�2�M��������<�J���8�4�8�8�:�6�J� �j��I]�^�Jr'   r   )�
+sqlalchemyr   r   r   �sqlalchemy.dialects.postgresqlr   �sqlalchemy.sqlr   �sqlalchemy.ormr   �app.databaser	   r   r   r&   r'   r(   �<module>r.      s(   �� /� /� /� � '� � �
+_�4� 
+_r'   
+
+===== backend/app/schemas\book.py =====
+from pydantic import BaseModel
+from datetime import datetime
+from typing import Optional, List
+from uuid import UUID
+
+
+class BookBase(BaseModel):
+    title: str
+    author: str
+    cover: Optional[str] = None
+    genres: Optional[List[str]] = []
+    total_pages: Optional[int] = None
+
+
+class BookCreate(BookBase):
+    pass
+
+
+class BookResponse(BookBase):
+    id: UUID
+    created_at: datetime
+    updated_at: Optional[datetime]
+
+    class Config:
+        from_attributes = True
+
+
+class UserBookCreate(BaseModel):
+    book_id: UUID
+    status: str = "planned"
+    rating: Optional[int] = None
+    current_page: Optional[int] = 0
+    start_date: Optional[datetime] = None
+    notes: Optional[str] = None
+
+
+class UserBookResponse(BaseModel):
+    id: UUID
+    user_id: UUID
+    book_id: UUID
+    book: BookResponse
+    status: str
+    rating: Optional[int]
+    current_page: int
+    start_date: Optional[datetime]
+    end_date: Optional[datetime]
+    notes: Optional[str]
+    is_favorite: bool
+    created_at: datetime
+    updated_at: Optional[datetime]
+
+    class Config:
+        from_attributes = True
+
+===== backend/app/schemas\user.py =====
+from datetime import datetime
+from uuid import UUID
+from pydantic import BaseModel, EmailStr
+
+
+class UserCreate(BaseModel):
+    email: EmailStr
+    password: str
+
+
+class UserLogin(BaseModel):
+    email: EmailStr
+    password: str
+
+
+class UserResponse(BaseModel):
+    id: UUID
+    email: EmailStr
+    created_at: datetime
+
+
+class TokenResponse(BaseModel):
+    access_token: str
+    token_type: str = "bearer"
+
+===== backend/app/schemas\__pycache__\book.cpython-312.pyc =====
+�
+    ��)j  �                   �   � d dl mZ d dlmZ d dlmZmZ d dlmZ  G d� de�      Z G d� de�      Z	 G d	� d
+e�      Z
+ G d� de�      Z G d� de�      Zy)�    )�	BaseModel)�datetime)�Optional�List)�UUIDc                   �d   � e Zd ZU eed<   eed<   dZee   ed<   g Zeee      ed<   dZ	ee
+   ed<   y)�BookBase�title�authorN�cover�genres�total_pages)�__name__�
+__module__�__qualname__�str�__annotations__r   r   r   r   r   �int� �    �2C:\Users\kleme\Syverro\backend\app\schemas\book.pyr	   r	      s;   � ��J��K��E�8�C�=��"$�F�H�T�#�Y��$�!%�K��#��%r   r	   c                   �   � e Zd Zy)�
+BookCreateN)r   r   r   r   r   r   r   r      s   � �r   r   c                   �F   � e Zd ZU eed<   eed<   ee   ed<    G d� d�      Zy)�BookResponse�id�
+created_at�
+updated_atc                   �   � e Zd ZdZy)�BookResponse.ConfigTN�r   r   r   �from_attributesr   r   r   �Configr       �   � ��r   r#   N)r   r   r   r   r   r   r   r#   r   r   r   r   r      s"   � ��H�����"�"�� r   r   c                   �v   � e Zd ZU eed<   dZeed<   dZee	   ed<   dZ
+ee	   ed<   dZee   ed<   dZee   ed	<   y)
+�UserBookCreate�book_id�planned�statusN�ratingr   �current_page�
+start_date�notes)r   r   r   r   r   r)   r   r*   r   r   r+   r,   r   r-   r   r   r   r&   r&      sJ   � ��M��F�C�� �F�H�S�M� �"#�L�(�3�-�#�%)�J���"�)��E�8�C�=�r   r&   c                   ��   � e Zd ZU eed<   eed<   eed<   eed<   eed<   ee   ed<   eed<   ee	   ed<   ee	   ed	<   ee   ed
+<   e
+ed<   e	ed<   ee	   ed<    G d� d�      Zy)�UserBookResponser   �user_idr'   �bookr)   r*   r+   r,   �end_dater-   �is_favoriter   r   c                   �   � e Zd ZdZy)�UserBookResponse.ConfigTNr!   r   r   r   r#   r5   4   r$   r   r#   N)r   r   r   r   r   r   r   r   r   r   �boolr#   r   r   r   r/   r/   %   sm   � ��H��M��M�
+���K��S�M������"�"��x� � ��C�=��������"�"�� r   r/   N)�pydanticr   r   �typingr   r   �uuidr   r	   r   r   r&   r/   r   r   r   �<module>r:      sM   �� � � !� �&�y� &�	�� 	��8� � �Y�  ��y� r   
+
+===== backend/app/schemas\__pycache__\user.cpython-312.pyc =====
+�
+    P�*j�  �                   �   � d dl m Z  d dlmZ d dlmZmZ  G d� de�      Z G d� de�      Z G d� d	e�      Z G d
+� de�      Z	y)�    )�datetime)�UUID)�	BaseModel�EmailStrc                   �"   � e Zd ZU eed<   eed<   y)�
+UserCreate�email�passwordN��__name__�
+__module__�__qualname__�str�__annotations__� �    �2C:\Users\kleme\Syverro\backend\app\schemas\user.pyr   r      �   � ��J��Mr   r   c                   �@   � e Zd ZU eed<   eed<   eed<    G d� d�      Zy)�UserResponse�idr	   �
+created_atc                   �   � e Zd ZdZy)�UserResponse.ConfigTN)r   r   r   �from_attributesr   r   r   �Configr      s   � ��r   r   N)r   r   r   r   r   r   r   r   r   r   r   r   r   	   s   � ��H��J���� r   r   c                   �"   � e Zd ZU eed<   eed<   y)�	UserLoginr	   r
+   Nr   r   r   r   r   r      r   r   r   c                   �&   � e Zd ZU eed<   dZeed<   y)�TokenResponse�access_token�bearer�
+token_typeN)r   r   r   r   r   r#   r   r   r   r    r       s   � ����J��r   r    N)
+r   �uuidr   �pydanticr   r   r   r   r   r    r   r   r   �<module>r&      s>   �� � � (��� ��9� ��	� ��I� r   
+
+===== backend/app/__pycache__\config.cpython-312.pyc =====
+�
+    ��)j�  �                   �H   � d dl Z d dlmZ  e�         G d� d�      Z e�       Zy)�    N)�load_dotenvc                   �   � e Zd ZU  ej                  dd�      Zeed<    ej                  dd�      Zeed<   dZ	eed<   dZ
+eed<   y	)
+�Settings�DATABASE_URLz=postgresql+asyncpg://postgres:postgres@localhost:5432/syverro�
+SECRET_KEYz)your-secret-key-change-this-in-production�HS256�	ALGORITHM�   �ACCESS_TOKEN_EXPIRE_MINUTESN)�__name__�
+__module__�__qualname__�os�getenvr   �str�__annotations__r   r	   r   �int� �    �,C:\Users\kleme\Syverro\backend\app\config.pyr   r      sG   � �!��	�	�.�2q�r�L�#�r��b�i�i��.Y�Z�J��Z��I�s��')���)r   r   )r   �dotenvr   r   �settingsr   r   r   �<module>r      s#   �� 	� � ��*� *� �:�r   
+
+===== backend/app/__pycache__\database.cpython-312.pyc =====
+�
+    qw(j�  �                   �   � d dl mZmZmZ d dlmZ d dlmZ  eej                  dd��      Z	 ee	ed��      Z
+ e�       Zd� Zy	)
+�    )�create_async_engine�AsyncSession�async_sessionmaker)�declarative_base)�settingsT)�echo�futureF)�class_�expire_on_commitc                 �   K  � t        �       4 �d {  ��� } | ��� d d d �      �d {  ���  y 7 �7 �# 1 �d {  ���7  sw Y   y xY w�w)N)�AsyncSessionLocal)�sessions    �.C:\Users\kleme\Syverro\backend\app\database.py�get_dbr      s/   � �� � �"�"�g��� #�"�"��"��"�"�"�s8   �A�,�A�0�A�.�A�A�A�9�A�AN)�sqlalchemy.ext.asyncior   r   r   �sqlalchemy.ormr   �
+app.configr   �DATABASE_URL�enginer   �Baser   � �    r   �<module>r      sO   �� X� X� +� �	����	��
+�� '�
+���� � ���r   
+
+===== backend/app/__pycache__\main.cpython-312.pyc =====
+�
+    ?�)j�  �                   ��   � d dl mZ d dlmZ d dlmZ d dlmZmZ  edd��      Z	e	j                  edd	gd
+dgdg��       e	j                  d�      d� �       ZeD ]  Ze	j                  ed��       � y)�    )�FastAPI)�CORSMiddleware)�routers)�engine�BasezSyverro APIz0.1.0)�title�versionzhttp://localhost:3000zhttp://127.0.0.1:3000T�*)�allow_origins�allow_credentials�allow_methods�allow_headers�startupc               �   ��   K  � t        j                  �       4 �d {  ��� } | j                  t        j                  j
+                  �      � d {  ���  d d d �      �d {  ���  y 7 �F7 �7 �	# 1 �d {  ���7  sw Y   y xY w�w)N)r   �begin�run_syncr   �metadata�
+create_all)�conns    �*C:\Users\kleme\Syverro\backend\app\main.py�init_dbr      sI   � �� ��|�|�~�~���m�m�D�M�M�4�4�5�5�5� �~�~��5�� ��~�~�~�sV   �A=�A"�A=�-A(�A$�A(�A=�A&�A=�$A(�&A=�(A:�.A1�/A:�6A=z/api/v1)�prefixN)�fastapir   �fastapi.middleware.corsr   �
+app.api.v1r   �app.databaser   r   �app�add_middleware�on_eventr   �router�include_router� �    r   �<module>r$      s�   �� � 2� � %��M�7�3�� � � ��*�,C�D���%��%� � � ���i��6� �6�
+ �F����v�i��0� r#   

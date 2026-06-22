@@ -9,7 +9,7 @@ import BookCover from '../../components/BookCover';
 import { Text } from '../../components/Text';
 import { spacing, radii } from '../../theme/spacing';
 import OrbBackground from '../../components/OrbBackground';
-import type { Book } from '../../types/book.types';
+import type { Book } from '../../types/book';
 
 const { width } = Dimensions.get('window');
 const CARD_WIDTH = (width - 48 - 16) / 3;

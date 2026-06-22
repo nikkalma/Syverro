@@ -1,4 +1,5 @@
 // src/components/LibrarySidebar.tsx
+import { useState } from 'react';
 import type { EnrichedBook } from '../types/book';
 import { getABTestVariant } from '../utils/abTest';
 
@@ -29,64 +30,87 @@ export interface LibrarySidebarProps {
   onRandomClick?: () => void;
 }
 
-const FilterGroup = ({ 
-  title, 
-  items, 
-  selected, 
-  setSelected, 
-  toggleFilter, 
-  maxDisplay = 6 
-}: { 
+// Компонент группы-аккордеона
+const AccordionGroup = ({
+  title,
+  items,
+  selected,
+  setSelected,
+  toggleFilter,
+  defaultOpen = false,
+}: {
   title: string;
   items: string[];
   selected: string[];
   setSelected: (val: string[]) => void;
   toggleFilter: (item: string, selected: string[], setSelected: (val: string[]) => void) => void;
-  maxDisplay?: number;
-}) => (
-  <div>
-    <div style={{ fontSize: '11px', color: '#5B86A1', marginBottom: '8px', fontWeight: '500', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-      {title}
-    </div>
-    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
-      {items.slice(0, maxDisplay).map(item => (
-        <span 
-          key={item} 
-          onClick={() => toggleFilter(item, selected, setSelected)}
-          style={{ 
-            fontSize: '12px',
-            padding: '4px 12px',
-            background: selected.includes(item) ? '#5B86A1' : '#121C24',
-            border: selected.includes(item) ? '1px solid #5B86A1' : '1px solid #2A4B60',
-            borderRadius: '14px',
-            color: selected.includes(item) ? '#0A1118' : '#97A6BA',
-            cursor: 'pointer',
-            transition: 'all 0.2s ease',
-          }}
-          onMouseEnter={(e) => {
-            if (!selected.includes(item)) {
-              e.currentTarget.style.borderColor = '#5B86A1';
-              e.currentTarget.style.color = '#E6EDF3';
-            }
-          }}
-          onMouseLeave={(e) => {
-            if (!selected.includes(item)) {
-              e.currentTarget.style.borderColor = '#2A4B60';
-              e.currentTarget.style.color = '#97A6BA';
-            }
-          }}
-        >
-          {item}
+  defaultOpen?: boolean;
+}) => {
+  const [isOpen, setIsOpen] = useState(defaultOpen);
+
+  if (items.length === 0) return null;
+
+  return (
+    <div>
+      <div
+        onClick={() => setIsOpen(!isOpen)}
+        style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          cursor: 'pointer',
+          padding: '4px 0',
+          fontSize: '11px',
+          color: '#5B86A1',
+          fontWeight: '500',
+          textTransform: 'uppercase',
+          letterSpacing: '0.5px',
+          userSelect: 'none',
+        }}
+      >
+        <span>{title}</span>
+        <span style={{ fontSize: '10px', color: '#2A4B60' }}>
+          {isOpen ? '▾' : '▸'} {items.length}
         </span>
-      ))}
-      {items.length > maxDisplay && (
-        <span style={{ fontSize: '10px', color: '#5B86A1', padding: '4px 8px' }}>
-          +{items.length - maxDisplay}
-        </span>
+      </div>
+
+      {isOpen && (
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginTop: '8px' }}>
+          {items.map((item) => (
+            <span
+              key={item}
+              onClick={() => toggleFilter(item, selected, setSelected)}
+              style={{
+                fontSize: '12px',
+                padding: '4px 12px',
+                background: selected.includes(item) ? '#5B86A1' : '#121C24',
+                border: selected.includes(item) ? '1px solid #5B86A1' : '1px solid #2A4B60',
+                borderRadius: '14px',
+                color: selected.includes(item) ? '#0A1118' : '#97A6BA',
+                cursor: 'pointer',
+                transition: 'all 0.2s ease',
+              }}
+              onMouseEnter={(e) => {
+                if (!selected.includes(item)) {
+                  e.currentTarget.style.borderColor = '#5B86A1';
+                  e.currentTarget.style.color = '#E6EDF3';
+                }
+              }}
+              onMouseLeave={(e) => {
+                if (!selected.includes(item)) {
+                  e.currentTarget.style.borderColor = '#2A4B60';
+                  e.currentTarget.style.color = '#97A6BA';
+                }
+              }}
+            >
+              {item}
+            </span>
+          ))}
+        </div>
       )}
     </div>
-  </div>
-);
+  );
+};
 
 export default function LibrarySidebar({
   searchQuery,
@@ -121,15 +145,17 @@ export default function LibrarySidebar({
   );
 
   return (
-    <div style={{
-      display: 'flex',
-      flexDirection: 'column',
-      gap: '20px',
-      padding: '24px 20px',
-      width: '100%',
-      height: '100%',
-      overflowY: 'auto',
-    }}>
+    <div
+      style={{
+        display: 'flex',
+        flexDirection: 'column',
+        gap: '16px',
+        padding: '24px 20px',
+        width: '100%',
+        height: '100%',
+        overflowY: 'auto',
+      }}
+    >
       <input
         type="text"
         placeholder="🔍 Я найду..."
@@ -145,16 +171,63 @@ export default function LibrarySidebar({
           fontSize: '15px',
           outline: 'none',
           fontFamily: 'Inter, sans-serif',
-          fontWeight: '400'
+          fontWeight: '400',
         }}
       />
 
-      <FilterGroup title="Настроение" items={moodOptions} selected={selectedMoods} setSelected={setSelectedMoods} toggleFilter={toggleFilter} />
-      <FilterGroup title="Вайб" items={vibeOptions} selected={selectedVibes} setSelected={setSelectedVibes} toggleFilter={toggleFilter} />
-      <FilterGroup title="Темы" items={themeOptions} selected={selectedThemes} setSelected={setSelectedThemes} toggleFilter={toggleFilter} />
-      <FilterGroup title="Жанры" items={allGenres} selected={selectedGenres} setSelected={setSelectedGenres} toggleFilter={toggleFilter} />
-      <FilterGroup title="Страны" items={allCountries} selected={selectedCountries} setSelected={setSelectedCountries} toggleFilter={toggleFilter} />
-      <FilterGroup title="Эпоха" items={allCenturies} selected={selectedCenturies} setSelected={setSelectedCenturies} toggleFilter={toggleFilter} />
+      <AccordionGroup
+        title="Настроение"
+        items={moodOptions}
+        selected={selectedMoods}
+        setSelected={setSelectedMoods}
+        toggleFilter={toggleFilter}
+        defaultOpen={false}
+      />
+
+      <AccordionGroup
+        title="Вайб"
+        items={vibeOptions}
+        selected={selectedVibes}
+        setSelected={setSelectedVibes}
+        toggleFilter={toggleFilter}
+        defaultOpen={false}
+      />
+
+      <AccordionGroup
+        title="Темы"
+        items={themeOptions}
+        selected={selectedThemes}
+        setSelected={setSelectedThemes}
+        toggleFilter={toggleFilter}
+        defaultOpen={true}
+      />
+
+      <AccordionGroup
+        title="Жанры"
+        items={allGenres}
+        selected={selectedGenres}
+        setSelected={setSelectedGenres}
+        toggleFilter={toggleFilter}
+        defaultOpen={false}
+      />
+
+      <AccordionGroup
+        title="Страны"
+        items={allCountries}
+        selected={selectedCountries}
+        setSelected={setSelectedCountries}
+        toggleFilter={toggleFilter}
+        defaultOpen={false}
+      />
+
+      <AccordionGroup
+        title="Эпоха"
+        items={allCenturies}
+        selected={selectedCenturies}
+        setSelected={setSelectedCenturies}
+        toggleFilter={toggleFilter}
+        defaultOpen={false}
+      />
 
       <button
         onClick={handleFindForMe}
@@ -183,7 +256,6 @@ export default function LibrarySidebar({
         Найди для меня
       </button>
 
-      {/* Кнопка случайного выбора с A/B тестом (без блока с книгой) */}
       {onRandomClick && (
         <button
           onClick={onRandomClick}

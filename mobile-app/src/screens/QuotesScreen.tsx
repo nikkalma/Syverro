@@ -6,7 +6,7 @@ import { useLanguage } from '../context/LanguageContext';
 import { useStore } from '../store';
 import { spacing, radii } from '../theme/spacing';
 import type { Quote } from '../store/slices/quotesSlice';
-import type { Book } from '../types/book.types';
+import type { Book } from '../types/book';
 
 interface QuotesScreenProps {
   navigation: any;

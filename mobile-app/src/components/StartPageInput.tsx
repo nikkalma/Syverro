@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, Alert } from 'react-native';
 import { spacing, radii } from '../theme/spacing';
 import { useLanguage } from '../context/LanguageContext';
-import type { Book } from '../types/book.types';
+import type { Book } from '../types/book';
 
 interface StartPageInputProps {
   book: Book;

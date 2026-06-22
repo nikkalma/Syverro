@@ -1,0 +1,286 @@
+// src/pages/Settings.tsx
+import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useAuthStore } from '../store/authStore';
+import { storageService } from '../services/storageService';
+import { getLocaleData, getBrowserLocale, localePriority, Locale } from '../locales';
+
+export default function Settings() {
+  const logout = useAuthStore((state) => state.logout);
+  const navigate = useNavigate();
+  const profile = storageService.getReaderProfile();
+
+  const [displayName, setDisplayName] = useState(profile.displayName || '');
+  const [status, setStatus] = useState(profile.status || '');
+  const [theme, setTheme] = useState(localStorage.getItem('syverro_theme') || 'dark');
+  const [locale, setLocale] = useState<Locale>(() => {
+    const saved = localStorage.getItem('syverro_locale') as Locale | null;
+    return saved || getBrowserLocale();
+  });
+
+  const [isSaving, setIsSaving] = useState(false);
+  const [saveMessage, setSaveMessage] = useState('');
+
+  const t = getLocaleData(locale);
+
+  // Применяем тему при загрузке и при изменении
+  useEffect(() => {
+    document.documentElement.style.backgroundColor = theme === 'light' ? '#F5F5F5' : '#0B1220';
+    document.documentElement.style.color = theme === 'light' ? '#1A1A1A' : '#E6EDF3';
+    localStorage.setItem('syverro_theme', theme);
+  }, [theme]);
+
+  const handleSave = () => {
+    setIsSaving(true);
+    setSaveMessage('');
+
+    try {
+      // Сохраняем профиль
+      storageService.updateReaderProfile({
+        displayName: displayName.trim() || 'Читатель',
+        status: status.trim(),
+      });
+
+      // Сохраняем локаль
+      localStorage.setItem('syverro_locale', locale);
+
+      setSaveMessage('✅ Настройки сохранены');
+      setTimeout(() => setSaveMessage(''), 3000);
+    } catch (error) {
+      setSaveMessage('❌ Ошибка сохранения');
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleLogout = () => {
+    logout();
+    navigate('/login');
+  };
+
+  // Метки для языков
+  const localeLabels: Record<Locale, string> = {
+    ru: 'Русский',
+    en: 'English',
+    kk: 'Қазақша',
+    uk: 'Українська',
+    be: 'Беларуская',
+    sr: 'Српски',
+  };
+
+  return (
+    <div style={{ maxWidth: '800px', margin: '0 auto', padding: '40px 24px' }}>
+      <h1 style={{ fontSize: '28px', fontWeight: '300', color: '#E6EDF3', marginBottom: '32px' }}>
+        ⚙️ {t.settings?.title || 'Настройки'}
+      </h1>
+
+      <div
+        style={{
+          background: 'rgba(18, 28, 36, 0.6)',
+          backdropFilter: 'blur(12px)',
+          WebkitBackdropFilter: 'blur(12px)',
+          borderRadius: '16px',
+          border: '1px solid rgba(255, 255, 255, 0.08)',
+          padding: '24px',
+          marginBottom: '20px',
+        }}
+      >
+        {/* Имя */}
+        <div style={{ marginBottom: '20px' }}>
+          <label style={{ fontSize: '13px', color: '#97A6BA', display: 'block', marginBottom: '6px' }}>
+            Имя
+          </label>
+          <input
+            type="text"
+            value={displayName}
+            onChange={(e) => setDisplayName(e.target.value)}
+            placeholder="Читатель"
+            style={{
+              width: '100%',
+              padding: '10px 14px',
+              background: 'rgba(0,0,0,0.3)',
+              border: '1px solid rgba(255,255,255,0.08)',
+              borderRadius: '8px',
+              color: '#E6EDF3',
+              fontSize: '14px',
+              fontFamily: 'Inter, sans-serif',
+              outline: 'none',
+            }}
+          />
+        </div>
+
+        {/* Статус */}
+        <div style={{ marginBottom: '20px' }}>
+          <label style={{ fontSize: '13px', color: '#97A6BA', display: 'block', marginBottom: '6px' }}>
+            Статус
+          </label>
+          <input
+            type="text"
+            value={status}
+            onChange={(e) => setStatus(e.target.value)}
+            placeholder="Пришла читать"
+            style={{
+              width: '100%',
+              padding: '10px 14px',
+              background: 'rgba(0,0,0,0.3)',
+              border: '1px solid rgba(255,255,255,0.08)',
+              borderRadius: '8px',
+              color: '#E6EDF3',
+              fontSize: '14px',
+              fontFamily: 'Inter, sans-serif',
+              outline: 'none',
+            }}
+          />
+        </div>
+
+        {/* Тема */}
+        <div style={{ marginBottom: '20px' }}>
+          <label style={{ fontSize: '13px', color: '#97A6BA', display: 'block', marginBottom: '6px' }}>
+            Тема
+          </label>
+          <div style={{ display: 'flex', gap: '12px' }}>
+            <button
+              onClick={() => setTheme('dark')}
+              style={{
+                flex: 1,
+                padding: '10px',
+                background: theme === 'dark' ? 'rgba(91, 134, 161, 0.25)' : 'rgba(255,255,255,0.05)',
+                border: theme === 'dark' ? '1px solid rgba(91, 134, 161, 0.3)' : '1px solid rgba(255,255,255,0.08)',
+                borderRadius: '8px',
+                color: theme === 'dark' ? '#E6EDF3' : '#97A6BA',
+                fontSize: '14px',
+                cursor: 'pointer',
+                fontFamily: 'Inter, sans-serif',
+                transition: 'all 0.2s',
+              }}
+            >
+              🌙 Тёмная
+            </button>
+            <button
+              onClick={() => setTheme('light')}
+              style={{
+                flex: 1,
+                padding: '10px',
+                background: theme === 'light' ? 'rgba(91, 134, 161, 0.25)' : 'rgba(255,255,255,0.05)',
+                border: theme === 'light' ? '1px solid rgba(91, 134, 161, 0.3)' : '1px solid rgba(255,255,255,0.08)',
+                borderRadius: '8px',
+                color: theme === 'light' ? '#E6EDF3' : '#97A6BA',
+                fontSize: '14px',
+                cursor: 'pointer',
+                fontFamily: 'Inter, sans-serif',
+                transition: 'all 0.2s',
+              }}
+            >
+              ☀️ Светлая
+            </button>
+          </div>
+        </div>
+
+        {/* Язык */}
+        <div style={{ marginBottom: '20px' }}>
+          <label style={{ fontSize: '13px', color: '#97A6BA', display: 'block', marginBottom: '6px' }}>
+            Язык
+          </label>
+          <select
+            value={locale}
+            onChange={(e) => setLocale(e.target.value as Locale)}
+            className="syverro-select"
+            style={{ width: '100%' }}
+          >
+            {localePriority.map((l) => (
+              <option key={l} value={l}>
+                {localeLabels[l]}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        {/* Кнопка сохранения */}
+        <button
+          onClick={handleSave}
+          disabled={isSaving}
+          style={{
+            width: '100%',
+            padding: '12px',
+            background: '#5B86A1',
+            border: 'none',
+            borderRadius: '8px',
+            color: '#0A1118',
+            fontSize: '14px',
+            fontWeight: '600',
+            cursor: isSaving ? 'default' : 'pointer',
+            opacity: isSaving ? 0.6 : 1,
+            fontFamily: 'Inter, sans-serif',
+            transition: 'background 0.2s',
+          }}
+          onMouseEnter={(e) => {
+            if (!isSaving) e.currentTarget.style.background = '#4A7590';
+          }}
+          onMouseLeave={(e) => {
+            if (!isSaving) e.currentTarget.style.background = '#5B86A1';
+          }}
+        >
+          {isSaving ? '💾 Сохранение...' : '💾 Сохранить настройки'}
+        </button>
+
+        {saveMessage && (
+          <div style={{ marginTop: '12px', textAlign: 'center', fontSize: '14px', color: '#4CAF50' }}>
+            {saveMessage}
+          </div>
+        )}
+      </div>
+
+      {/* Аккаунт и выход */}
+      <div
+        style={{
+          background: 'rgba(18, 28, 36, 0.6)',
+          backdropFilter: 'blur(12px)',
+          WebkitBackdropFilter: 'blur(12px)',
+          borderRadius: '16px',
+          border: '1px solid rgba(255, 255, 255, 0.08)',
+          padding: '24px',
+        }}
+      >
+        <div
+          style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            padding: '12px 16px',
+            background: 'rgba(0,0,0,0.2)',
+            borderRadius: '8px',
+            border: '1px solid rgba(255, 255, 255, 0.06)',
+            marginBottom: '12px',
+          }}
+        >
+          <span style={{ color: '#97A6BA', fontSize: '14px' }}>Аккаунт</span>
+          <span style={{ color: '#E6EDF3', fontSize: '14px' }}>user@email.com</span>
+        </div>
+
+        <button
+          onClick={handleLogout}
+          style={{
+            width: '100%',
+            padding: '12px',
+            background: 'transparent',
+            border: '1px solid #EF5350',
+            borderRadius: '8px',
+            color: '#EF5350',
+            fontSize: '14px',
+            cursor: 'pointer',
+            transition: 'all 0.2s',
+            fontFamily: 'Inter, sans-serif',
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.background = 'rgba(239, 83, 80, 0.1)';
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.background = 'transparent';
+          }}
+        >
+          🚪 Выйти
+        </button>
+      </div>
+    </div>
+  );
+}

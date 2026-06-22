@@ -11,7 +11,7 @@ import { useLanguage } from '../context/LanguageContext';
 import BookCover from '../components/BookCover';
 import { Text } from '../components/Text';
 import { spacing, radii } from '../theme/spacing';
-import type { Book } from '../types/book.types';
+import type { Book } from '../types/book';
 
 const { width } = Dimensions.get('window');
 const CARD_WIDTH = (width - 48 - 32) / 3;

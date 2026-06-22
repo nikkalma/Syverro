@@ -14,7 +14,7 @@ import { useLanguage } from '../../context/LanguageContext';
 import { Ionicons } from '@expo/vector-icons';
 import ViewMode from './ViewMode';
 import EditMode from './EditMode';
-import type { Book } from '../../types/book.types';
+import type { Book } from '../../types/book';
 
 interface BookDetailsScreenProps {
   route: any;

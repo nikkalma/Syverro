@@ -4,7 +4,7 @@ import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Image } from 'rea
 import { useStore } from '../../store';
 import { useTheme } from '../../context/ThemeContext';
 import { useLanguage } from '../../context/LanguageContext';
-import type { Book } from '../../types/book.types';
+import type { Book } from '../../types/book';
 
 interface ViewModeProps {
   bookId: string;

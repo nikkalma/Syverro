@@ -395,7 +395,7 @@ export const ru: LocaleData = {
       India: 'Индия',
       Israel: 'Израиль',
       Turkey: 'Турция',
-      South_Korea: 'Южная Корея',
+      'South Korea': 'Южная Корея',
       Japan: 'Япония',
       Argentina: 'Аргентина',
       Brazil: 'Бразилия',
@@ -501,4 +501,8 @@ export const ru: LocaleData = {
     empty: 'Библиотека пуста. Добавьте первую книгу.',
     emptyFiltered: 'Нет книг по выбранным фильтрам',
   },
+
+  settings: {
+  title: 'Настройки',
+},
 };

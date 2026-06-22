@@ -33,6 +33,9 @@ export interface LocaleData {
   emptyProfile: string;
   title: string;
   editTitle: string;
+  settings?: {
+    title: string;
+  };
 
   // ===== TAXONOMY =====
   taxonomy: {

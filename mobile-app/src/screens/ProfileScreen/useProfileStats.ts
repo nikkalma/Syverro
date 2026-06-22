@@ -1,6 +1,6 @@
 // src/screens/ProfileScreen/useProfileStats.ts
 import { useStore } from '../../store';
-import type { Book } from '../../types/book.types';
+import type { Book } from '../../types/book';
 
 interface ProfileStats {
   books: Book[];

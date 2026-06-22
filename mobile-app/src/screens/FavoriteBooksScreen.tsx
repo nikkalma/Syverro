@@ -5,7 +5,7 @@ import { useTheme } from '../context/ThemeContext';
 import { useLanguage } from '../context/LanguageContext';
 import { useStore } from '../store';
 import BookCard from './HomeScreen/BookCard';
-import type { Book } from '../types/book.types';
+import type { Book } from '../types/book';
 
 const { width } = Dimensions.get('window');
 const CARD_WIDTH = (width - 48) / 2;

@@ -6,7 +6,7 @@ import { Text } from '../../components/Text';
 import { useTheme } from '../../context/ThemeContext';
 import { useStore }  from '../../store';
 import { spacing } from '../../theme/spacing';
-import type { Book } from '../../types/book.types';
+import type { Book } from '../../types/book';
 
 interface BookCardProps {
   item: Book;

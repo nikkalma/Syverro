@@ -37,8 +37,6 @@ export default function LibraryPage() {
     handleFindForMe,
   } = useLibraryFilters(books);
 
-  const randomBook = books.length > 0 ? books[Math.floor(Math.random() * books.length)] : null;
-
   if (loading) {
     return (
       <div style={{ color: '#E6EDF3', padding: '40px', textAlign: 'center' }}>Загрузка...</div>
@@ -47,7 +45,6 @@ export default function LibraryPage() {
 
   return (
     <div style={{ display: 'flex', flex: 1, position: 'relative' }}>
-      {/* Десктопный сайдбар */}
       <aside style={{
         width: '260px',
         borderRight: '1px solid #1A2832',
@@ -84,12 +81,16 @@ export default function LibraryPage() {
           allCenturies={allCenturies}
           toggleFilter={toggleFilter}
           handleFindForMe={handleFindForMe}
-          randomBook={randomBook}
           filteredBooks={filteredBooks}
+          onRandomClick={() => {
+            if (books.length === 0) return;
+            const randomIndex = Math.floor(Math.random() * books.length);
+            const randomBook = books[randomIndex];
+            navigate(`/book/${randomBook.id}`);
+          }}
         />
       </aside>
 
-      {/* Правая часть (книги) */}
       <div style={{
         flex: 1,
         padding: '24px 20px',
@@ -191,8 +192,13 @@ export default function LibraryPage() {
               allCenturies={allCenturies}
               toggleFilter={toggleFilter}
               handleFindForMe={handleFindForMe}
-              randomBook={randomBook}
               filteredBooks={filteredBooks}
+              onRandomClick={() => {
+                if (books.length === 0) return;
+                const randomIndex = Math.floor(Math.random() * books.length);
+                const randomBook = books[randomIndex];
+                navigate(`/book/${randomBook.id}`);
+              }}
             />
           </div>
         </>

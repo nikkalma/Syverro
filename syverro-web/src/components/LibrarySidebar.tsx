@@ -1,5 +1,6 @@
 // src/components/LibrarySidebar.tsx
 import type { EnrichedBook } from '../types/book';
+import { getABTestVariant } from '../utils/abTest';
 
 export interface LibrarySidebarProps {
   searchQuery: string;
@@ -24,8 +25,8 @@ export interface LibrarySidebarProps {
   allCenturies: string[];
   toggleFilter: (item: string, selected: string[], setSelected: (val: string[]) => void) => void;
   handleFindForMe: () => void;
-  randomBook: EnrichedBook | null;
   filteredBooks: EnrichedBook[];
+  onRandomClick?: () => void;
 }
 
 const FilterGroup = ({ 
@@ -110,8 +111,15 @@ export default function LibrarySidebar({
   allCenturies,
   toggleFilter,
   handleFindForMe,
-  randomBook,
+  onRandomClick,
 }: LibrarySidebarProps) {
+  // A/B тест для кнопки в сайдбаре
+  const randomButtonLabel = getABTestVariant(
+    'global_random_button',
+    'Шагнуть в неизвестность',
+    'Скрытый маршрут'
+  );
+
   return (
     <div style={{
       display: 'flex',
@@ -175,29 +183,32 @@ export default function LibrarySidebar({
         Найди для меня
       </button>
 
-      {randomBook && (
-        <div style={{ paddingTop: '20px', borderTop: '1px solid #1A2832' }}>
-          <div style={{ 
-            fontSize: '13px', 
-            color: '#5B86A1', 
-            marginBottom: '12px',
-            fontWeight: '500', 
-            textTransform: 'uppercase', 
-            letterSpacing: '0.5px',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '6px'
-          }}>
-            <span style={{ fontSize: '16px' }}>🎲</span> Игра с судьбой
-          </div>
-          <div style={{ padding: '12px', background: '#121C24', borderRadius: '12px', border: '1px solid #2A4B60' }}>
-            <div style={{ color: '#E6EDF3', fontSize: '14px', fontWeight: '500' }}>{randomBook.title}</div>
-            <div style={{ color: '#97A6BA', fontSize: '12px' }}>{randomBook.author}</div>
-            <div style={{ marginTop: '8px' }}>
-              <span style={{ fontSize: '11px', color: '#5B86A1', padding: '2px 10px', border: '1px solid #2A4B60', borderRadius: '8px', cursor: 'pointer' }}>Открыть</span>
-            </div>
-          </div>
-        </div>
+      {/* Кнопка случайного выбора с A/B тестом (без блока с книгой) */}
+      {onRandomClick && (
+        <button
+          onClick={onRandomClick}
+          style={{
+            width: '100%',
+            padding: '12px 16px',
+            background: 'rgba(91, 134, 161, 0.15)',
+            border: '1px solid rgba(91, 134, 161, 0.2)',
+            borderRadius: '12px',
+            color: '#5B86A1',
+            fontSize: '15px',
+            fontWeight: '500',
+            cursor: 'pointer',
+            transition: 'all 0.2s ease',
+            fontFamily: 'Inter, sans-serif',
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.background = 'rgba(91, 134, 161, 0.25)';
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.background = 'rgba(91, 134, 161, 0.15)';
+          }}
+        >
+          🎲 {randomButtonLabel}
+        </button>
       )}
     </div>
   );

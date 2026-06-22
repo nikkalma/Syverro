@@ -1,131 +1,232 @@
+// src/pages/LibraryPage.tsx
 import { useState } from 'react';
-import { useLibrary } from '../features/library/hooks/useLibrary';
+import { useNavigate } from 'react-router-dom';
+import { useLibrary } from '../hooks/useLibrary';
+import { useLibraryFilters } from '../hooks/useLibraryFilters';
 import BookGrid from '../widgets/BookGrid';
-import AddBookModal from '../components/AddBookModal';
-import type { BookStatus } from '../entities/book/book.types';
+import LibrarySidebar from '../components/LibrarySidebar';
 
 export default function LibraryPage() {
+  const navigate = useNavigate();
+  const { books, loading } = useLibrary();
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+
   const {
-    books,
-    loading,
-    error,
-    isAdding,
-    addBook,
-    addToMyLibrary,
-    updateStatus,
-    toggleFavorite,
-  } = useLibrary();
+    searchQuery,
+    setSearchQuery,
+    selectedMoods,
+    setSelectedMoods,
+    selectedVibes,
+    setSelectedVibes,
+    selectedThemes,
+    setSelectedThemes,
+    selectedGenres,
+    setSelectedGenres,
+    selectedCountries,
+    setSelectedCountries,
+    selectedCenturies,
+    setSelectedCenturies,
+    moodOptions,
+    vibeOptions,
+    themeOptions,
+    allGenres,
+    allCountries,
+    allCenturies,
+    filteredBooks,
+    toggleFilter,
+    handleFindForMe,
+  } = useLibraryFilters(books);
 
-  const [searchQuery, setSearchQuery] = useState('');
-  const [statusFilter, setStatusFilter] = useState<BookStatus | 'all' | 'not_in_library'>('all');
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
-
-  const handleAddBook = async (bookData: { title: string; author: string; status: BookStatus }) => {
-    const result = await addBook(bookData);
-    if (result.success) {
-      setIsModalOpen(false);
-      setToast({ message: 'Книга добавлена!', type: 'success' });
-      setTimeout(() => setToast(null), 3000);
-    } else {
-      setToast({ message: result.error || 'Ошибка добавления', type: 'error' });
-      setTimeout(() => setToast(null), 3000);
-    }
-  };
-
-  const filteredBooks = books.filter((book) => {
-    if (statusFilter === 'not_in_library') {
-      return book.userData === null;
-    }
-    if (statusFilter !== 'all') {
-      if (!book.userData || book.userData.status !== statusFilter) return false;
-    }
-    if (searchQuery) {
-      const query = searchQuery.toLowerCase();
-      return (
-        book.title?.toLowerCase().includes(query) ||
-        book.author?.toLowerCase().includes(query)
-      );
-    }
-    return true;
-  });
+  const randomBook = books.length > 0 ? books[Math.floor(Math.random() * books.length)] : null;
 
   if (loading) {
     return (
-      <div className="flex justify-center items-center py-20">
-        <div className="w-8 h-8 border-2 border-[#5B86A1] border-t-transparent rounded-full animate-spin" />
-      </div>
+      <div style={{ color: '#E6EDF3', padding: '40px', textAlign: 'center' }}>Загрузка...</div>
     );
   }
 
-  if (error) {
-    return <div className="text-center py-20 text-red-500">Ошибка: {error}</div>;
-  }
-
   return (
-    <div className="w-full">
-      {/* Шапка */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
-        <h1 className="text-3xl font-light text-[#E6EDF3]">Библиотека</h1>
-        <div className="flex flex-wrap gap-3 w-full sm:w-auto">
-          <input
-            type="text"
-            placeholder="🔍 Поиск..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="flex-1 sm:flex-none px-4 py-2 bg-[#121C24] border border-[#2A4B60] rounded-full text-[#E6EDF3] placeholder-[#5B86A1] focus:outline-none focus:border-[#5B86A1] min-w-[150px]"
-          />
-          <select
-            value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value as typeof statusFilter)}
-            className="px-4 py-2 bg-[#121C24] border border-[#2A4B60] rounded-full text-[#E6EDF3] focus:outline-none"
-          >
-            <option value="all">Все книги</option>
-            <option value="reading">Читаю</option>
-            <option value="completed">Прочитано</option>
-            <option value="want_to_read">Хочу прочитать</option>
-            <option value="postponed">Отложено</option>
-            <option value="abandoned">Брошено</option>
-            <option value="not_in_library">Не в библиотеке</option>
-          </select>
+    <div style={{ display: 'flex', flex: 1, position: 'relative' }}>
+      {/* Десктопный сайдбар */}
+      <aside style={{
+        width: '260px',
+        borderRight: '1px solid #1A2832',
+        flexShrink: 0,
+        display: 'flex',
+        flexDirection: 'column',
+        maxHeight: 'calc(100vh - 80px)',
+        position: 'sticky',
+        top: '80px',
+        background: '#0B1220',
+        zIndex: 5,
+        overflowY: 'auto',
+      }}>
+        <LibrarySidebar
+          searchQuery={searchQuery}
+          setSearchQuery={setSearchQuery}
+          selectedMoods={selectedMoods}
+          setSelectedMoods={setSelectedMoods}
+          selectedVibes={selectedVibes}
+          setSelectedVibes={setSelectedVibes}
+          selectedThemes={selectedThemes}
+          setSelectedThemes={setSelectedThemes}
+          selectedGenres={selectedGenres}
+          setSelectedGenres={setSelectedGenres}
+          selectedCountries={selectedCountries}
+          setSelectedCountries={setSelectedCountries}
+          selectedCenturies={selectedCenturies}
+          setSelectedCenturies={setSelectedCenturies}
+          moodOptions={moodOptions}
+          vibeOptions={vibeOptions}
+          themeOptions={themeOptions}
+          allGenres={allGenres}
+          allCountries={allCountries}
+          allCenturies={allCenturies}
+          toggleFilter={toggleFilter}
+          handleFindForMe={handleFindForMe}
+          randomBook={randomBook}
+          filteredBooks={filteredBooks}
+        />
+      </aside>
+
+      {/* Правая часть (книги) */}
+      <div style={{
+        flex: 1,
+        padding: '24px 20px',
+        overflowY: 'auto',
+        maxHeight: 'calc(100vh - 80px)',
+      }}>
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: '12px',
+          marginBottom: '24px',
+        }}>
           <button
-            onClick={() => setIsModalOpen(true)}
-            className="px-4 py-2 bg-[#2A4B60] hover:bg-[#3A5570] rounded-full text-[#E6EDF3] transition whitespace-nowrap"
+            onClick={() => setIsSidebarOpen(true)}
+            style={{
+              display: 'none',
+              background: 'none',
+              border: 'none',
+              color: '#E6EDF3',
+              fontSize: '24px',
+              cursor: 'pointer',
+              padding: '4px 8px',
+            }}
+            className="sidebar-toggle"
           >
-            + Добавить
+            ☰
           </button>
+          <div style={{ flex: 1 }} />
         </div>
+
+        <BookGrid books={filteredBooks} onBookClick={(id) => navigate(`/book/${id}`)} />
       </div>
 
-      {/* Книги */}
-      {filteredBooks.length === 0 ? (
-        <div className="text-center py-20 text-[#97A6BA]">
-          {searchQuery || statusFilter !== 'all' ? 'Ничего не найдено' : 'В библиотеке пока нет книг'}
-        </div>
-      ) : (
-        <BookGrid
-          books={filteredBooks}
-          onAddToMyLibrary={addToMyLibrary}
-          onUpdateStatus={updateStatus}
-          onToggleFavorite={toggleFavorite}
-        />
+      {/* Мобильный дравер */}
+      {isSidebarOpen && (
+        <>
+          <div
+            style={{
+              position: 'fixed',
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              background: 'rgba(0,0,0,0.6)',
+              zIndex: 100,
+              backdropFilter: 'blur(4px)',
+            }}
+            onClick={() => setIsSidebarOpen(false)}
+          />
+          <div style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            bottom: 0,
+            width: '300px',
+            background: '#0B1220',
+            zIndex: 101,
+            borderRight: '1px solid #1A2832',
+            boxShadow: '4px 0 24px rgba(0,0,0,0.5)',
+            overflowY: 'auto',
+            animation: 'slideIn 0.3s ease',
+          }}>
+            <button
+              onClick={() => setIsSidebarOpen(false)}
+              style={{
+                position: 'absolute',
+                top: '12px',
+                right: '16px',
+                background: 'none',
+                border: 'none',
+                color: '#97A6BA',
+                fontSize: '24px',
+                cursor: 'pointer',
+                zIndex: 102,
+              }}
+            >
+              ✕
+            </button>
+            <LibrarySidebar
+              searchQuery={searchQuery}
+              setSearchQuery={setSearchQuery}
+              selectedMoods={selectedMoods}
+              setSelectedMoods={setSelectedMoods}
+              selectedVibes={selectedVibes}
+              setSelectedVibes={setSelectedVibes}
+              selectedThemes={selectedThemes}
+              setSelectedThemes={setSelectedThemes}
+              selectedGenres={selectedGenres}
+              setSelectedGenres={setSelectedGenres}
+              selectedCountries={selectedCountries}
+              setSelectedCountries={setSelectedCountries}
+              selectedCenturies={selectedCenturies}
+              setSelectedCenturies={setSelectedCenturies}
+              moodOptions={moodOptions}
+              vibeOptions={vibeOptions}
+              themeOptions={themeOptions}
+              allGenres={allGenres}
+              allCountries={allCountries}
+              allCenturies={allCenturies}
+              toggleFilter={toggleFilter}
+              handleFindForMe={handleFindForMe}
+              randomBook={randomBook}
+              filteredBooks={filteredBooks}
+            />
+          </div>
+        </>
       )}
 
-      <AddBookModal
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-        onSave={handleAddBook}
-        isLoading={isAdding}
-      />
-
-      {toast && (
-        <div
-          className="fixed bottom-4 right-4 px-6 py-3 rounded-lg shadow-lg text-white z-50"
-          style={{ background: toast.type === 'success' ? '#5B86A1' : '#D32F2F' }}
-        >
-          {toast.message}
-        </div>
-      )}
+      <style>{`
+        @media (max-width: 768px) {
+          .sidebar-toggle {
+            display: block !important;
+          }
+          aside {
+            display: none !important;
+          }
+        }
+        @media (max-width: 1200px) {
+          .book-grid {
+            grid-template-columns: repeat(3, 1fr) !important;
+          }
+        }
+        @media (max-width: 900px) {
+          .book-grid {
+            grid-template-columns: repeat(2, 1fr) !important;
+          }
+        }
+        @media (max-width: 600px) {
+          .book-grid {
+            grid-template-columns: 1fr !important;
+          }
+        }
+        @keyframes slideIn {
+          from { transform: translateX(-100%); opacity: 0; }
+          to { transform: translateX(0); opacity: 1; }
+        }
+      `}</style>
     </div>
   );
 }

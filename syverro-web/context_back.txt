@@ -1,6 +1,5 @@
 ﻿
-
-========== src\api\books.ts ==========
+========== C:\Users\kleme\Syverro\syverro-web\src\api\books.ts ==========
 import { apiClient } from '../shared/api/client'
 
 export const booksApi = {
@@ -15,16 +14,94 @@ export const booksApi = {
   },
 }
 
+========== C:\Users\kleme\Syverro\syverro-web\src\api\insights.ts ==========
 
-========== src\api\insights.ts ==========
+========== C:\Users\kleme\Syverro\syverro-web\src\api\worlds.ts ==========
 
+========== C:\Users\kleme\Syverro\syverro-web\src\components\AddBookModal.tsx ==========
+import { useState } from 'react';
+import type { BookStatus } from '../entities/book/book';
 
+interface AddBookModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  onSave: (book: { title: string; author: string; status: BookStatus }) => void;
+  isLoading?: boolean;
+}
 
-========== src\api\worlds.ts ==========
+export default function AddBookModal({ isOpen, onClose, onSave, isLoading }: AddBookModalProps) {
+  const [title, setTitle] = useState('');
+  const [author, setAuthor] = useState('');
+  const [status, setStatus] = useState<BookStatus>('planned');
 
+  if (!isOpen) return null;
 
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!title.trim() || !author.trim()) return;
+    onSave({ title: title.trim(), author: author.trim(), status });
+    setTitle('');
+    setAuthor('');
+    setStatus('planned');
+  };
 
-========== src\components\BookCover.tsx ==========
+  return (
+    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
+      <div className="bg-[#121C24] rounded-2xl p-8 w-full max-w-md border border-[#2A4B60] shadow-2xl">
+        <h2 className="text-2xl font-light text-[#E6EDF3] mb-6">Р”РѕР±Р°РІРёС‚СЊ РєРЅРёРіСѓ</h2>
+        <form onSubmit={handleSubmit}>
+          <div className="space-y-4">
+            <input
+              type="text"
+              placeholder="РќР°Р·РІР°РЅРёРµ РєРЅРёРіРё *"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              className="w-full px-4 py-2 bg-[#0A1118] border border-[#2A4B60] rounded-lg text-[#E6EDF3] placeholder-[#5B86A1] focus:outline-none focus:border-[#5B86A1]"
+              required
+            />
+            <input
+              type="text"
+              placeholder="РђРІС‚РѕСЂ *"
+              value={author}
+              onChange={(e) => setAuthor(e.target.value)}
+              className="w-full px-4 py-2 bg-[#0A1118] border border-[#2A4B60] rounded-lg text-[#E6EDF3] placeholder-[#5B86A1] focus:outline-none focus:border-[#5B86A1]"
+              required
+            />
+            <select
+              value={status}
+              onChange={(e) => setStatus(e.target.value as BookStatus)}
+              className="w-full px-4 py-2 bg-[#0A1118] border border-[#2A4B60] rounded-lg text-[#E6EDF3] focus:outline-none focus:border-[#5B86A1]"
+            >
+              <option value="planned">рџ“… Р’ РїР»Р°РЅР°С…</option>
+              <option value="reading">рџ“– Р§РёС‚Р°СЋ</option>
+              <option value="finished">вњ… РџСЂРѕС‡РёС‚Р°РЅРѕ</option>
+              <option value="postponed">вЏё РћС‚Р»РѕР¶РµРЅРѕ</option>
+              <option value="abandoned">вќЊ Р‘СЂРѕС€РµРЅРѕ</option>
+            </select>
+          </div>
+          <div className="flex gap-3 mt-6">
+            <button
+              type="submit"
+              disabled={isLoading}
+              className="flex-1 px-4 py-2 bg-[#5B86A1] hover:bg-[#4A7590] rounded-full text-[#0A1118] font-medium transition disabled:opacity-50"
+            >
+              {isLoading ? 'РЎРѕС…СЂР°РЅРµРЅРёРµ...' : 'РЎРѕС…СЂР°РЅРёС‚СЊ'}
+            </button>
+            <button
+              type="button"
+              onClick={onClose}
+              className="flex-1 px-4 py-2 bg-[#2A4B60] hover:bg-[#3A5570] rounded-full text-[#E6EDF3] transition"
+            >
+              РћС‚РјРµРЅР°
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}
+
+========== C:\Users\kleme\Syverro\syverro-web\src\components\BookCover.tsx ==========
 // src/components/BookCover.tsx
 
 import { useState } from 'react';
@@ -96,183 +173,345 @@ export default function BookCover({
   );
 }
 
+========== C:\Users\kleme\Syverro\syverro-web\src\components\Layout.tsx ==========
+import { ReactNode } from 'react';
+import { Link, useLocation } from 'react-router-dom';
 
-========== src\components\Layout.tsx ==========
-import { useState } from 'react';
-
-interface BookCoverProps {
-  coverUrl: string | null;
-  title: string;
-  width?: number;
-  height?: number;
-  className?: string;
+interface LayoutProps {
+  children: ReactNode;
 }
 
-export default function BookCover({ 
-  coverUrl, 
-  title, 
-  width = 120, 
-  height = 168,
-  className = ''
-}: BookCoverProps) {
-  const [imageLoading, setImageLoading] = useState(true);
-  const [imageError, setImageError] = useState(false);
+const navItems = [
+  { path: '/', label: 'Р‘РёР±Р»РёРѕС‚РµРєР°', icon: 'рџ“љ' },
+  { path: '/insights', label: 'РРЅСЃР°Р№С‚С‹', icon: 'рџ’Ў' },
+  { path: '/worldmap', label: 'РљР°СЂС‚Р° РјРёСЂРѕРІ', icon: 'рџ—єпёЏ' },
+  { path: '/profile', label: 'РџСЂРѕС„РёР»СЊ', icon: 'рџ‘¤' },
+];
 
-  if (coverUrl && !imageError && (coverUrl.startsWith('http') || coverUrl.startsWith('data:'))) {
-    return (
-      <div 
-        className={`relative ${className}`} 
-        style={{ width, height }}
-      >
-        {imageLoading && (
-          <div 
-            className="absolute inset-0 bg-[#121C24] rounded-lg flex items-center justify-center"
-            style={{ width, height }}
-          >
-            <div className="w-6 h-6 border-2 border-[#5B86A1] border-t-transparent rounded-full animate-spin" />
-          </div>
-        )}
-        <img
-          src={coverUrl}
-          alt={title}
-          className="w-full h-full object-cover rounded-lg"
-          style={{ opacity: imageLoading ? 0 : 1 }}
-          onLoad={() => setImageLoading(false)}
-          onError={() => {
-            setImageError(true);
-            setImageLoading(false);
-          }}
-        />
-      </div>
-    );
-  }
-
-  const fontSize = Math.min(width / 6, 14);
+export default function Layout({ children }: LayoutProps) {
+  const location = useLocation();
 
   return (
-    <div
-      className="bg-[#121C24] rounded-lg flex items-center justify-center border border-[#2A4B60]"
-      style={{ width, height }}
-    >
-      <div className="text-center px-2">
-        <div 
-          className="text-[#E6EDF3] font-medium text-center line-clamp-4"
-          style={{ fontSize: `${fontSize}px`, lineHeight: `${fontSize + 4}px` }}
-        >
-          {title || '?'}
-        </div>
-      </div>
+    <div className="min-h-screen bg-[#0A1118] flex flex-col">
+      {/* РҐРµРґРµСЂ */}
+      <header className="fixed top-0 left-0 right-0 h-16 bg-[#0A1118]/95 backdrop-blur-sm border-b border-[#2A4B60] flex items-center justify-between px-4 md:px-8 z-50">
+        <h1 className="text-xl md:text-2xl font-light text-[#E6EDF3]">Syverro</h1>
+        <nav className="flex gap-2 md:gap-4">
+          {navItems.map((item) => (
+            <Link
+              key={item.path}
+              to={item.path}
+              className={`flex items-center gap-1 md:gap-2 px-3 md:px-4 py-2 rounded-xl text-sm md:text-base transition ${
+                location.pathname === item.path
+                  ? 'bg-[#5B86A1]/20 text-[#5B86A1]'
+                  : 'text-[#97A6BA] hover:text-[#E6EDF3] hover:bg-[#2A4B60]/30'
+              }`}
+            >
+              <span className="text-base md:text-xl">{item.icon}</span>
+              <span className="hidden sm:inline">{item.label}</span>
+            </Link>
+          ))}
+        </nav>
+      </header>
+
+      {/* РћСЃРЅРѕРІРЅРѕР№ РєРѕРЅС‚РµРЅС‚ вЂ” Р‘Р•Р— РћР“Р РђРќРР§Р•РќРР™ */}
+      <main className="flex-1 pt-20 px-4 md:px-8 pb-8 w-full">
+        {children}
+      </main>
     </div>
   );
 }
 
-
-========== src\entities\book\book.api.ts ==========
+========== C:\Users\kleme\Syverro\syverro-web\src\entities\book\book.api.ts ==========
 import { apiClient } from '../../shared/api/client';
-import type { Book, NewBook } from './book.types';
+import type { Book, BookCreate, UserBook, UserBookCreate, EnrichedBook } from './book';
 
 export const bookApi = {
+  // ============================================
+  // GLOBAL LIBRARY (Books)
+  // ============================================
+  
+  // РџРѕР»СѓС‡РёС‚СЊ РІСЃРµ РѕРґРѕР±СЂРµРЅРЅС‹Рµ РєРЅРёРіРё (РїСѓР±Р»РёС‡РЅС‹Р№ РєР°С‚Р°Р»РѕРі)
   getAll: async (): Promise<Book[]> => {
-    const response = await apiClient.get('/books/catalog/');
+    const response = await apiClient.get('/books/');
     return response.data;
   },
 
+  // РџРѕР»СѓС‡РёС‚СЊ РєРЅРёРіСѓ РїРѕ ID
   getById: async (id: string): Promise<Book> => {
     const response = await apiClient.get(`/books/${id}`);
     return response.data;
   },
 
-  create: async (data: NewBook): Promise<Book> => {
+  // РЎРѕР·РґР°С‚СЊ РЅРѕРІСѓСЋ РєРЅРёРіСѓ (СЃРѕР·РґР°С‚РµР»СЊ + РјРѕРґРµСЂР°С†РёСЏ)
+  create: async (data: BookCreate): Promise<Book> => {
     const response = await apiClient.post('/books/', data);
     return response.data;
   },
 
-  getUserBooks: async (): Promise<any[]> => {
+  // РџСЂРµРґР»РѕР¶РёС‚СЊ РїСЂР°РІРєСѓ РєРЅРёРіРё
+  suggestEdit: async (id: string, data: Partial<BookCreate>): Promise<void> => {
+    await apiClient.patch(`/books/${id}/suggest`, data);
+  },
+
+  // ============================================
+  // USER LIBRARY (UserBooks)
+  // ============================================
+  
+  // РџРѕР»СѓС‡РёС‚СЊ РІСЃРµ РєРЅРёРіРё РїРѕР»СЊР·РѕРІР°С‚РµР»СЏ СЃ РїСЂРѕРіСЂРµСЃСЃРѕРј
+  getUserBooks: async (): Promise<UserBook[]> => {
     const response = await apiClient.get('/books/user-books/');
     return response.data;
   },
 
+  // Р”РѕР±Р°РІРёС‚СЊ РєРЅРёРіСѓ РІ Р»РёС‡РЅСѓСЋ Р±РёР±Р»РёРѕС‚РµРєСѓ
+  addToLibrary: async (data: UserBookCreate): Promise<UserBook> => {
+    const response = await apiClient.post('/books/user-books/', data);
+    return response.data;
+  },
+
+  // РћР±РЅРѕРІРёС‚СЊ СЃС‚Р°С‚СѓСЃ РєРЅРёРіРё
   updateStatus: async (bookId: string, status: string): Promise<void> => {
     await apiClient.put(`/books/${bookId}/status?status_value=${status}`);
   },
+
+  // РћР±РЅРѕРІРёС‚СЊ РїСЂРѕРіСЂРµСЃСЃ
+  updateProgress: async (bookId: string, page: number): Promise<void> => {
+    await apiClient.patch(`/books/${bookId}/progress`, { current_page: page });
+  },
+
+  // РћР±РЅРѕРІРёС‚СЊ СЂРµР№С‚РёРЅРі
+  updateRating: async (bookId: string, rating: number): Promise<void> => {
+    await apiClient.patch(`/books/${bookId}/rating`, { rating });
+  },
+
+  // РџРµСЂРµРєР»СЋС‡РёС‚СЊ РёР·Р±СЂР°РЅРЅРѕРµ
+  toggleFavorite: async (bookId: string): Promise<void> => {
+    await apiClient.patch(`/books/${bookId}/favorite`);
+  },
+
+  // РЈРґР°Р»РёС‚СЊ РёР· Р»РёС‡РЅРѕР№ Р±РёР±Р»РёРѕС‚РµРєРё
+  removeFromLibrary: async (bookId: string): Promise<void> => {
+    await apiClient.delete(`/books/user-books/${bookId}`);
+  },
 };
 
-
-========== src\entities\book\book.types.ts ==========
-export type BookStatus = 'planned' | 'reading' | 'finished' | 'postponed' | 'abandoned' | 'rereading';
-export type ReadingFormat = 'reading' | 'listening';
-export type BookRating = 1 | 2 | 3 | 4 | 5 | null;
-
+========== C:\Users\kleme\Syverro\syverro-web\src\entities\book\book.ts ==========
+// ============================================
+// GLOBAL LIBRARY
+// ============================================
 export interface Book {
   id: string;
   title: string;
   author: string;
-  status: BookStatus;
-  rating: BookRating;
   cover: string | null;
-  section: string | null;
   genres: string[];
-  totalPages: number;
-  currentPage: number;
-  startDate: string | null;
-  endDate: string | null;
-  notes: string;
-  languages: string[];
-  review: string;
-  createdAt: number;
-  favorite: boolean;
-  authorCountry: string | null;
+  total_pages: number | null;
+  description: string | null;
   series: string | null;
-  seriesPosition: number | null;
-  originalYear: number | null;
-  readingFormat: ReadingFormat;
-  lastRead: string | null;
+  series_position: number | null;
+  isbn: string | null;
+  published_year: number | null;
+  status: 'pending_moderation' | 'approved';
+  created_by: string; // user_id
+  created_at: string;
+  updated_at: string | null;
 }
 
-export type NewBook = Omit<Book, 'id' | 'createdAt'>;
-export type BookUpdate = Partial<Book>;
+export interface BookCreate {
+  title: string;
+  author: string;
+  cover?: string | null;
+  genres?: string[];
+  total_pages?: number | null;
+  description?: string | null;
+  series?: string | null;
+  series_position?: number | null;
+  isbn?: string | null;
+  published_year?: number | null;
+}
 
+// ============================================
+// USER LIBRARY
+// ============================================
+export type BookStatus = 'reading' | 'completed' | 'want_to_read' | 'postponed' | 'abandoned';
 
-========== src\features\library\hooks\useLibrary.ts ==========
+export interface UserBook {
+  id: string;
+  user_id: string;
+  book_id: string;
+  book: Book; // РїРѕР»РЅР°СЏ РёРЅС„РѕСЂРјР°С†РёСЏ Рѕ РєРЅРёРіРµ
+  status: BookStatus;
+  current_page: number;
+  rating: number | null;
+  start_date: string | null;
+  end_date: string | null;
+  notes: string | null;
+  quotes: string[];
+  is_favorite: boolean;
+  created_at: string;
+  updated_at: string | null;
+}
+
+export interface UserBookCreate {
+  book_id: string;
+  status: BookStatus;
+  current_page?: number;
+  rating?: number | null;
+  start_date?: string | null;
+  end_date?: string | null;
+  notes?: string | null;
+  is_favorite?: boolean;
+}
+
+// ============================================
+// ENRICHED BOOK (РґР»СЏ РѕС‚РѕР±СЂР°Р¶РµРЅРёСЏ РІ UI)
+// ============================================
+export interface EnrichedBook extends Book {
+  userData: {
+    user_book_id: string;
+    status: BookStatus;
+    current_page: number;
+    rating: number | null;
+    is_favorite: boolean;
+    notes: string | null;
+  } | null; // null = РєРЅРёРіР° РЅРµ РґРѕР±Р°РІР»РµРЅР° РІ Р»РёС‡РЅСѓСЋ Р±РёР±Р»РёРѕС‚РµРєСѓ
+}
+
+========== C:\Users\kleme\Syverro\syverro-web\src\features\library\hooks\useLibrary.ts ==========
 import { useEffect, useState } from 'react';
-import { bookApi } from '../../../entities/book/book.api';
-import type { Book } from '../../../entities/book/book.types';
+import type { EnrichedBook, BookStatus } from '../../../entities/book/book';
+import mockBooks from '../../../data/books.json';
 
 export function useLibrary() {
-  const [books, setBooks] = useState<Book[]>([]);
+  const [books, setBooks] = useState<EnrichedBook[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [isAdding, setIsAdding] = useState(false);
+
+  const loadBooks = async () => {
+    try {
+      setLoading(true);
+      const data = mockBooks as EnrichedBook[];
+      setBooks(data);
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    console.log('рџ”Ќ useLibrary mounted');
-    bookApi.getAll()
-      .then((data) => {
-        console.log('рџ”Ќ books loaded:', data);
-        setBooks(data);
-      })
-      .catch((err) => {
-        console.error('вќЊ failed to load books:', err);
-        setError(err.message);
-      })
-      .finally(() => {
-        setLoading(false);
-        console.log('рџ”Ќ loading finished');
-      });
+    loadBooks();
   }, []);
 
-  const toggleFavorite = (bookId: string) => {
+  const addBook = async (bookData: {
+    title: string;
+    author: string;
+    status: BookStatus;
+  }) => {
+    setIsAdding(true);
+    try {
+      const newBook: EnrichedBook = {
+        id: Date.now().toString(),
+        title: bookData.title,
+        author: bookData.author,
+        cover: null,
+        genres: [],
+        total_pages: null,
+        description: null,
+        series: null,
+        series_position: null,
+        isbn: null,
+        published_year: null,
+        status: 'approved',
+        created_by: 'local',
+        created_at: new Date().toISOString(),
+        updated_at: null,
+        userData: {
+          user_book_id: Date.now().toString(),
+          status: bookData.status,
+          current_page: 0,
+          rating: null,
+          is_favorite: false,
+          notes: null,
+        },
+      };
+      setBooks((prev) => [...prev, newBook]);
+      return { success: true };
+    } catch (err: any) {
+      return { success: false, error: err.message };
+    } finally {
+      setIsAdding(false);
+    }
+  };
+
+  const addToMyLibrary = async (bookId: string, status: BookStatus): Promise<void> => {
     setBooks((prev) =>
       prev.map((book) =>
-        book.id === bookId ? { ...book, favorite: !book.favorite } : book
+        book.id === bookId && !book.userData
+          ? {
+              ...book,
+              userData: {
+                user_book_id: Date.now().toString(),
+                status,
+                current_page: 0,
+                rating: null,
+                is_favorite: false,
+                notes: null,
+              },
+            }
+          : book
       )
     );
   };
 
-  return { books, loading, error, toggleFavorite };
+  const updateStatus = async (bookId: string, status: BookStatus): Promise<void> => {
+    setBooks((prev) =>
+      prev.map((book) =>
+        book.id === bookId && book.userData
+          ? {
+              ...book,
+              userData: {
+                ...book.userData,
+                status,
+              },
+            }
+          : book
+      )
+    );
+  };
+
+  const toggleFavorite = async (bookId: string): Promise<void> => {
+    setBooks((prev) =>
+      prev.map((book) =>
+        book.id === bookId && book.userData
+          ? {
+              ...book,
+              userData: {
+                ...book.userData,
+                is_favorite: !book.userData.is_favorite,
+              },
+            }
+          : book
+      )
+    );
+  };
+
+  return {
+    books,
+    loading,
+    error,
+    isAdding,
+    addBook,
+    addToMyLibrary,
+    updateStatus,
+    toggleFavorite,
+    loadBooks,
+  };
 }
 
-
-========== src\pages\Insights.tsx ==========
+========== C:\Users\kleme\Syverro\syverro-web\src\pages\Insights.tsx ==========
 export default function Insights() {
   return (
     <div className="glass-card">
@@ -284,75 +523,58 @@ export default function Insights() {
   )
 }
 
-
-========== src\pages\LibraryPage.tsx ==========
+========== C:\Users\kleme\Syverro\syverro-web\src\pages\LibraryPage.tsx ==========
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { useLibrary } from '../features/library/hooks/useLibrary';
 import BookGrid from '../widgets/BookGrid';
-import { bookApi } from '../entities/book/book.api';
+import AddBookModal from '../components/AddBookModal';
+import type { BookStatus } from '../entities/book/book';
 
 export default function LibraryPage() {
-  const navigate = useNavigate();
-  const { books, loading, error, toggleFavorite } = useLibrary();
+  const {
+    books,
+    loading,
+    error,
+    isAdding,
+    addBook,
+    addToMyLibrary,
+    updateStatus,
+    toggleFavorite,
+  } = useLibrary();
+
   const [searchQuery, setSearchQuery] = useState('');
-  const [statusFilter, setStatusFilter] = useState('all');
+  const [statusFilter, setStatusFilter] = useState<BookStatus | 'all' | 'not_in_library'>('all');
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
 
-  console.log('рџ”Ґрџ”Ґрџ”Ґ LibraryPage render, books length:', books.length, books);
-
-  const handleBookPress = (bookId: string) => {
-    navigate(`/book/${bookId}`);
-  };
-
-  const handleAddBookManually = async () => {
-    const title = prompt('РќР°Р·РІР°РЅРёРµ РєРЅРёРіРё');
-    const author = prompt('РђРІС‚РѕСЂ');
-    if (title && author) {
-      try {
-        await bookApi.create({
-          title,
-          author,
-          status: 'planned',
-          rating: null,
-          cover: null,
-          section: null,
-          genres: [],
-          totalPages: 0,
-          currentPage: 0,
-          startDate: null,
-          endDate: null,
-          notes: '',
-          languages: [],
-          review: '',
-          favorite: false,
-          authorCountry: null,
-          series: null,
-          seriesPosition: null,
-          originalYear: null,
-          readingFormat: 'reading',
-          lastRead: null,
-        });
-        window.location.reload();
-      } catch (error) {
-        console.error('РћС€РёР±РєР° РґРѕР±Р°РІР»РµРЅРёСЏ:', error);
-        alert('РћС€РёР±РєР° РґРѕР±Р°РІР»РµРЅРёСЏ РєРЅРёРіРё');
-      }
+  const handleAddBook = async (bookData: { title: string; author: string; status: BookStatus }) => {
+    const result = await addBook(bookData);
+    if (result.success) {
+      setIsModalOpen(false);
+      setToast({ message: 'РљРЅРёРіР° РґРѕР±Р°РІР»РµРЅР°!', type: 'success' });
+      setTimeout(() => setToast(null), 3000);
+    } else {
+      setToast({ message: result.error || 'РћС€РёР±РєР° РґРѕР±Р°РІР»РµРЅРёСЏ', type: 'error' });
+      setTimeout(() => setToast(null), 3000);
     }
   };
 
   const filteredBooks = books.filter((book) => {
-    if (statusFilter !== 'all' && book.status !== statusFilter) return false;
+    if (statusFilter === 'not_in_library') {
+      return book.userData === null;
+    }
+    if (statusFilter !== 'all') {
+      if (!book.userData || book.userData.status !== statusFilter) return false;
+    }
     if (searchQuery) {
       const query = searchQuery.toLowerCase();
       return (
-        book.title.toLowerCase().includes(query) ||
-        book.author.toLowerCase().includes(query)
+        book.title?.toLowerCase().includes(query) ||
+        book.author?.toLowerCase().includes(query)
       );
     }
     return true;
   });
-
-  console.log('рџ”Ґрџ”Ґрџ”Ґ filteredBooks length:', filteredBooks.length);
 
   if (loading) {
     return (
@@ -363,48 +585,45 @@ export default function LibraryPage() {
   }
 
   if (error) {
-    return (
-      <div className="text-center py-20 text-red-500">
-        РћС€РёР±РєР°: {error}
-      </div>
-    );
+    return <div className="text-center py-20 text-red-500">РћС€РёР±РєР°: {error}</div>;
   }
 
   return (
-    <div>
-      <div className="flex justify-between items-center mb-8 flex-wrap gap-4">
+    <div className="w-full">
+      {/* РЁР°РїРєР° */}
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
         <h1 className="text-3xl font-light text-[#E6EDF3]">Р‘РёР±Р»РёРѕС‚РµРєР°</h1>
-        
-        <div className="flex gap-3">
+        <div className="flex flex-wrap gap-3 w-full sm:w-auto">
           <input
             type="text"
             placeholder="рџ”Ќ РџРѕРёСЃРє..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="px-4 py-2 bg-[#121C24] border border-[#2A4B60] rounded-full text-[#E6EDF3] placeholder-[#5B86A1] focus:outline-none focus:border-[#5B86A1]"
+            className="flex-1 sm:flex-none px-4 py-2 bg-[#121C24] border border-[#2A4B60] rounded-full text-[#E6EDF3] placeholder-[#5B86A1] focus:outline-none focus:border-[#5B86A1] min-w-[150px]"
           />
-          
           <select
             value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
+            onChange={(e) => setStatusFilter(e.target.value as typeof statusFilter)}
             className="px-4 py-2 bg-[#121C24] border border-[#2A4B60] rounded-full text-[#E6EDF3] focus:outline-none"
           >
-            <option value="all">Р’СЃРµ СЃС‚Р°С‚СѓСЃС‹</option>
+            <option value="all">Р’СЃРµ РєРЅРёРіРё</option>
             <option value="reading">Р§РёС‚Р°СЋ</option>
-            <option value="finished">РџСЂРѕС‡РёС‚Р°РЅРѕ</option>
-            <option value="planned">Р’ РїР»Р°РЅР°С…</option>
-            <option value="rereading">РџРµСЂРµС‡РёС‚С‹РІР°СЋ</option>
+            <option value="completed">РџСЂРѕС‡РёС‚Р°РЅРѕ</option>
+            <option value="want_to_read">РҐРѕС‡Сѓ РїСЂРѕС‡РёС‚Р°С‚СЊ</option>
+            <option value="postponed">РћС‚Р»РѕР¶РµРЅРѕ</option>
+            <option value="abandoned">Р‘СЂРѕС€РµРЅРѕ</option>
+            <option value="not_in_library">РќРµ РІ Р±РёР±Р»РёРѕС‚РµРєРµ</option>
           </select>
-
           <button
-            onClick={handleAddBookManually}
-            className="px-4 py-2 bg-[#2A4B60] hover:bg-[#3A5570] rounded-full text-[#E6EDF3] transition"
+            onClick={() => setIsModalOpen(true)}
+            className="px-4 py-2 bg-[#2A4B60] hover:bg-[#3A5570] rounded-full text-[#E6EDF3] transition whitespace-nowrap"
           >
             + Р”РѕР±Р°РІРёС‚СЊ
           </button>
         </div>
       </div>
 
+      {/* РљРЅРёРіРё */}
       {filteredBooks.length === 0 ? (
         <div className="text-center py-20 text-[#97A6BA]">
           {searchQuery || statusFilter !== 'all' ? 'РќРёС‡РµРіРѕ РЅРµ РЅР°Р№РґРµРЅРѕ' : 'Р’ Р±РёР±Р»РёРѕС‚РµРєРµ РїРѕРєР° РЅРµС‚ РєРЅРёРі'}
@@ -412,87 +631,165 @@ export default function LibraryPage() {
       ) : (
         <BookGrid
           books={filteredBooks}
-          onBookPress={handleBookPress}
+          onAddToMyLibrary={addToMyLibrary}
+          onUpdateStatus={updateStatus}
           onToggleFavorite={toggleFavorite}
-          showFavorite={true}
-          columns={4}
         />
+      )}
+
+      <AddBookModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        onSave={handleAddBook}
+        isLoading={isAdding}
+      />
+
+      {toast && (
+        <div
+          className="fixed bottom-4 right-4 px-6 py-3 rounded-lg shadow-lg text-white z-50"
+          style={{ background: toast.type === 'success' ? '#5B86A1' : '#D32F2F' }}
+        >
+          {toast.message}
+        </div>
       )}
     </div>
   );
 }
 
+========== C:\Users\kleme\Syverro\syverro-web\src\pages\Login.tsx ==========
+import { useState } from 'react';
+import { useLibrary } from '../features/library/hooks/useLibrary';
+import BookGrid from '../widgets/BookGrid';
+import AddBookModal from '../components/AddBookModal';
+import type { BookStatus } from '../entities/book/book';
 
-========== src\pages\Login.tsx ==========
-import React, { useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
-import { apiClient } from '../shared/api/client'
-import { useAuthStore } from '../store/authStore'
+export default function LibraryPage() {
+  const {
+    books,
+    loading,
+    error,
+    isAdding,
+    addBook,
+    addToMyLibrary,
+    updateStatus,
+    toggleFavorite
+  } = useLibrary();
 
-export default function Login() {
-  const navigate = useNavigate()
-  const setToken = useAuthStore((state) => state.setToken)
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-  const [error, setError] = useState('')
-  const [loading, setLoading] = useState(false)
+  const [searchQuery, setSearchQuery] = useState('');
+  const [statusFilter, setStatusFilter] = useState<BookStatus | 'all' | 'not_in_library'>('all');
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
 
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault()
-    setError('')
-    setLoading(true)
-
-    try {
-      const response = await apiClient.post('/auth/login', { email, password })
-      const { access_token } = response.data
-      setToken(access_token)
-      navigate('/')
-    } catch (err: any) {
-      setError(err.response?.data?.detail || 'РћС€РёР±РєР° РІС…РѕРґР°')
-    } finally {
-      setLoading(false)
+  const handleAddBook = async (bookData: { title: string; author: string; status: BookStatus }) => {
+    const result = await addBook(bookData);
+    if (result.success) {
+      setIsModalOpen(false);
+      setToast({ message: 'РљРЅРёРіР° РґРѕР±Р°РІР»РµРЅР°!', type: 'success' });
+      setTimeout(() => setToast(null), 3000);
+    } else {
+      setToast({ message: result.error || 'РћС€РёР±РєР° РґРѕР±Р°РІР»РµРЅРёСЏ', type: 'error' });
+      setTimeout(() => setToast(null), 3000);
     }
+  };
+
+  const filteredBooks = books.filter((book) => {
+    if (statusFilter === 'not_in_library') {
+      return book.userData === null;
+    }
+    if (statusFilter !== 'all') {
+      if (!book.userData || book.userData.status !== statusFilter) return false;
+    }
+    if (searchQuery) {
+      const query = searchQuery.toLowerCase();
+      return (
+        book.title?.toLowerCase().includes(query) ||
+        book.author?.toLowerCase().includes(query)
+      );
+    }
+    return true;
+  });
+
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center py-20">
+        <div className="w-8 h-8 border-2 border-[#5B86A1] border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
+  }
+
+  if (error) {
+    return <div className="text-center py-20 text-red-500">РћС€РёР±РєР°: {error}</div>;
   }
 
   return (
-    <div className="container">
-      <div className="orb"></div>
-      <div className="glass-card">
-        <h1>Syverro</h1>
-        <div className="tagline">РџР РћРЎРўР РђРќРЎРўР’Рћ Р”Р›РЇ Р§РўР•РќРРЇ</div>
-        <div style={{ width: 60, height: 2, background: '#2A4B60', margin: '1.5rem auto' }}></div>
-
-        <form onSubmit={handleSubmit}>
+    <div className="w-full">
+      {/* РЁР°РїРєР° */}
+      <div className="flex justify-between items-center mb-8 flex-wrap gap-4">
+        <h1 className="text-3xl font-light text-[#E6EDF3]">Р‘РёР±Р»РёРѕС‚РµРєР°</h1>
+        <div className="flex gap-3 flex-wrap">
           <input
-            type="email"
-            placeholder="Email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required
+            type="text"
+            placeholder="рџ”Ќ РџРѕРёСЃРє..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="px-4 py-2 bg-[#121C24] border border-[#2A4B60] rounded-full text-[#E6EDF3] placeholder-[#5B86A1] focus:outline-none focus:border-[#5B86A1] min-w-[200px]"
           />
-          <input
-            type="password"
-            placeholder="РџР°СЂРѕР»СЊ"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-          />
-          {error && <div className="error">{error}</div>}
-          <button type="submit" disabled={loading}>
-            {loading ? 'Р’С…РѕРґ...' : 'Р’РѕР№С‚Рё'}
+          <select
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value as typeof statusFilter)}
+            className="px-4 py-2 bg-[#121C24] border border-[#2A4B60] rounded-full text-[#E6EDF3] focus:outline-none"
+          >
+            <option value="all">Р’СЃРµ РєРЅРёРіРё</option>
+            <option value="reading">Р§РёС‚Р°СЋ</option>
+            <option value="completed">РџСЂРѕС‡РёС‚Р°РЅРѕ</option>
+            <option value="want_to_read">РҐРѕС‡Сѓ РїСЂРѕС‡РёС‚Р°С‚СЊ</option>
+            <option value="postponed">РћС‚Р»РѕР¶РµРЅРѕ</option>
+            <option value="abandoned">Р‘СЂРѕС€РµРЅРѕ</option>
+            <option value="not_in_library">РќРµ РІ Р±РёР±Р»РёРѕС‚РµРєРµ</option>
+          </select>
+          <button
+            onClick={() => setIsModalOpen(true)}
+            className="px-4 py-2 bg-[#2A4B60] hover:bg-[#3A5570] rounded-full text-[#E6EDF3] transition"
+          >
+            + Р”РѕР±Р°РІРёС‚СЊ
           </button>
-        </form>
-
-        <div style={{ marginTop: '1.5rem' }}>
-          <Link to="/register" className="link">РќРµС‚ Р°РєРєР°СѓРЅС‚Р°? Р—Р°СЂРµРіРёСЃС‚СЂРёСЂРѕРІР°С‚СЊСЃСЏ</Link>
         </div>
       </div>
+
+      {/* РЎРµС‚РєР° РєРЅРёРі */}
+      {filteredBooks.length === 0 ? (
+        <div className="text-center py-20 text-[#97A6BA]">
+          {searchQuery || statusFilter !== 'all' ? 'РќРёС‡РµРіРѕ РЅРµ РЅР°Р№РґРµРЅРѕ' : 'Р’ Р±РёР±Р»РёРѕС‚РµРєРµ РїРѕРєР° РЅРµС‚ РєРЅРёРі'}
+        </div>
+      ) : (
+        <BookGrid
+          books={filteredBooks}
+          onAddToMyLibrary={addToMyLibrary}
+          onUpdateStatus={updateStatus}
+          onToggleFavorite={toggleFavorite}
+        />
+      )}
+
+      <AddBookModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        onSave={handleAddBook}
+        isLoading={isAdding}
+      />
+
+      {toast && (
+        <div
+          className="fixed bottom-4 right-4 px-6 py-3 rounded-lg shadow-lg text-white z-50"
+          style={{ background: toast.type === 'success' ? '#5B86A1' : '#D32F2F' }}
+        >
+          {toast.message}
+        </div>
+      )}
     </div>
-  )
+  );
 }
 
-
-========== src\pages\Profile.tsx ==========
+========== C:\Users\kleme\Syverro\syverro-web\src\pages\Profile.tsx ==========
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuthStore } from '../store/authStore'
@@ -567,8 +864,7 @@ export default function Profile() {
   )
 }
 
-
-========== src\pages\Register.tsx ==========
+========== C:\Users\kleme\Syverro\syverro-web\src\pages\Register.tsx ==========
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { apiClient } from '../shared/api/client'
@@ -651,8 +947,7 @@ export default function Register() {
   )
 }
 
-
-========== src\pages\WorldMap.tsx ==========
+========== C:\Users\kleme\Syverro\syverro-web\src\pages\WorldMap.tsx ==========
 export default function WorldMap() {
   return (
     <div className="glass-card">
@@ -666,13 +961,10 @@ export default function WorldMap() {
   )
 }
 
-
-========== src\shared\api\client.ts ==========
+========== C:\Users\kleme\Syverro\syverro-web\src\shared\api\client.ts ==========
 import axios from 'axios';
 
 export const API_BASE_URL = 'https://api.syverro.com';
-
-console.log('API Client mode: production, baseURL:', API_BASE_URL);
 
 export const apiClient = axios.create({
   baseURL: API_BASE_URL,
@@ -681,34 +973,20 @@ export const apiClient = axios.create({
   },
 });
 
+// РўРѕРєРµРЅ РІСЂРµРјРµРЅРЅРѕ РѕС‚РєР»СЋС‡С‘РЅ
 apiClient.interceptors.request.use(
-  (config) => {
-    const token = localStorage.getItem('access_token');
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
-    }
-    return config;
-  },
+  (config) => config,
   (error) => Promise.reject(error)
 );
 
 apiClient.interceptors.response.use(
   (response) => response,
-  async (error) => {
-    const originalRequest = error.config;
-    if (error.response?.status === 401 && !originalRequest._retry) {
-      originalRequest._retry = true;
-      localStorage.removeItem('access_token');
-      window.location.href = '/login';
-    }
-    return Promise.reject(error);
-  }
+  (error) => Promise.reject(error)
 );
 
 export default apiClient;
 
-
-========== src\store\authStore.ts ==========
+========== C:\Users\kleme\Syverro\syverro-web\src\store\authStore.ts ==========
 // src/store/authStore.ts
 import { create } from 'zustand'
 
@@ -736,8 +1014,7 @@ export const useAuthStore = create<AuthState>((set) => ({
   },
 }))
 
-
-========== src\store\bookStore.ts ==========
+========== C:\Users\kleme\Syverro\syverro-web\src\store\bookStore.ts ==========
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import { Book, BookStatus } from '../types/book'
@@ -777,8 +1054,7 @@ export const useBookStore = create<BookState>()(
   )
 )
 
-
-========== src\types\auth.ts ==========
+========== C:\Users\kleme\Syverro\syverro-web\src\types\auth.ts ==========
 export interface LoginCredentials {
   email: string;
   password: string;
@@ -794,8 +1070,7 @@ export interface AuthResponse {
   token_type: string;
 }
 
-
-========== src\types\book.ts ==========
+========== C:\Users\kleme\Syverro\syverro-web\src\types\book.ts ==========
 export interface Book {
   id: string
   title: string
@@ -823,12 +1098,9 @@ export interface UserBook {
   isFavorite: boolean
 }
 
+========== C:\Users\kleme\Syverro\syverro-web\src\types\insight.ts ==========
 
-========== src\types\insight.ts ==========
-
-
-
-========== src\types\user.ts ==========
+========== C:\Users\kleme\Syverro\syverro-web\src\types\user.ts ==========
 export interface User {
   id: string
   email: string
@@ -840,164 +1112,252 @@ export interface User {
   }
 }
 
+========== C:\Users\kleme\Syverro\syverro-web\src\types\world.ts ==========
 
-========== src\types\world.ts ==========
-
-
-
-========== src\widgets\BookCard.tsx ==========
+========== C:\Users\kleme\Syverro\syverro-web\src\widgets\BookCard.tsx ==========
 import { useState } from 'react';
-import type { Book } from '../entities/book/book.types';
+import type { EnrichedBook, BookStatus } from '../entities/book/book';
 
 interface BookCardProps {
-  book: Book;
-  onPress?: (id: string) => void;
-  onToggleFavorite?: (id: string) => void;
-  showFavorite?: boolean;
+  book: EnrichedBook;
+  onAddToMyLibrary?: (bookId: string, status: BookStatus) => Promise<void>;
+  onUpdateStatus?: (bookId: string, status: BookStatus) => Promise<void>;
+  onToggleFavorite?: (bookId: string) => Promise<void>;
 }
 
-export default function BookCard({ book, onPress, onToggleFavorite, showFavorite = true }: BookCardProps) {
-  const [isHovered, setIsHovered] = useState(false);
+const statusLabels: Record<BookStatus, string> = {
+  reading: 'Р§РёС‚Р°СЋ',
+  completed: 'РџСЂРѕС‡РёС‚Р°РЅРѕ',
+  want_to_read: 'РҐРѕС‡Сѓ РїСЂРѕС‡РёС‚Р°С‚СЊ',
+  postponed: 'РћС‚Р»РѕР¶РµРЅРѕ',
+  abandoned: 'Р‘СЂРѕС€РµРЅРѕ',
+};
 
-  const getStatusBadge = () => {
-    const statusMap: Record<string, string> = {
-      reading: 'рџ“– Р§РёС‚Р°СЋ',
-      finished: 'вњ… РџСЂРѕС‡РёС‚Р°РЅРѕ',
-      planned: 'рџ“… Р’ РїР»Р°РЅР°С…',
-      postponed: 'вЏё РћС‚Р»РѕР¶РµРЅРѕ',
-      abandoned: 'вќЊ Р‘СЂРѕС€РµРЅРѕ',
-      rereading: 'рџ”„ РџРµСЂРµС‡РёС‚С‹РІР°СЋ',
-    };
-    return statusMap[book.status] || '';
+const statusColors: Record<BookStatus, string> = {
+  reading: 'bg-blue-500/20 text-blue-400 border-blue-500/30',
+  completed: 'bg-green-500/20 text-green-400 border-green-500/30',
+  want_to_read: 'bg-purple-500/20 text-purple-400 border-purple-500/30',
+  postponed: 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30',
+  abandoned: 'bg-red-500/20 text-red-400 border-red-500/30',
+};
+
+export default function BookCard({
+  book,
+  onAddToMyLibrary,
+  onUpdateStatus,
+  onToggleFavorite,
+}: BookCardProps) {
+  const [isAdding, setIsAdding] = useState(false);
+  const [showStatusMenu, setShowStatusMenu] = useState(false);
+
+  const userData = book.userData;
+  const hasUserData = userData !== null && userData !== undefined;
+
+  const allStatuses: BookStatus[] = ['reading', 'want_to_read', 'completed', 'postponed', 'abandoned'];
+
+  const handleAddToLibrary = async (status: BookStatus) => {
+    if (!onAddToMyLibrary) return;
+    setIsAdding(true);
+    try {
+      await onAddToMyLibrary(book.id, status);
+    } finally {
+      setIsAdding(false);
+      setShowStatusMenu(false);
+    }
   };
 
+  const handleUpdateStatus = async (status: BookStatus) => {
+    if (!onUpdateStatus || !hasUserData) return;
+    await onUpdateStatus(book.id, status);
+    setShowStatusMenu(false);
+  };
+
+  const handleToggleFavorite = async () => {
+    if (!onToggleFavorite || !hasUserData) return;
+    await onToggleFavorite(book.id);
+  };
+
+  const progress = hasUserData && book.total_pages
+    ? Math.round((userData.current_page / book.total_pages) * 100)
+    : 0;
+
   return (
-    <div
-      className="cursor-pointer transition-all duration-200"
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
-      onClick={() => onPress?.(book.id)}
-      style={{ transform: isHovered ? 'translateY(-4px)' : 'none' }}
-    >
-      <div className="relative">
+    <div className="group relative bg-[#121C24] border border-[#2A4B60] rounded-2xl overflow-hidden hover:border-[#5B86A1] hover:shadow-xl hover:shadow-[#5B86A1]/10 transition-all duration-300">
+      {/* РћР±Р»РѕР¶РєР° */}
+      <div className="aspect-[2/3] bg-gradient-to-br from-[#1A2832] to-[#0F1A22] flex items-center justify-center relative overflow-hidden">
         {book.cover ? (
           <img
             src={book.cover}
             alt={book.title}
-            className="w-full h-auto rounded-lg object-cover"
-            style={{ aspectRatio: '2/3' }}
+            className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
           />
         ) : (
-          <div className="bg-[#121C24] rounded-lg flex items-center justify-center border border-[#2A4B60]" style={{ aspectRatio: '2/3' }}>
-            <div className="text-center px-2">
-              <div className="text-[#E6EDF3] font-medium text-center line-clamp-4" style={{ fontSize: '14px', lineHeight: '18px' }}>
-                {book.title || 'РўР•РЎРў'}
-              </div>
-            </div>
+          <div className="text-[#5B86A1] text-center p-4">
+            <div className="text-6xl mb-3 opacity-50">рџ“–</div>
+            <div className="font-medium text-lg text-[#E6EDF3]">{book.title}</div>
+            <div className="text-sm">{book.author}</div>
           </div>
         )}
         
-        {showFavorite && (
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              onToggleFavorite?.(book.id);
-            }}
-            className="absolute top-2 right-2 bg-black/50 rounded-full w-6 h-6 flex items-center justify-center text-sm hover:scale-110 transition"
-          >
-            {book.favorite ? 'вќ¤пёЏ' : 'в™Ў'}
-          </button>
+        {/* РЎС‚Р°С‚СѓСЃ РЅР° РѕР±Р»РѕР¶РєРµ */}
+        {hasUserData && userData.status && (
+          <div className="absolute top-3 right-3">
+            <span className={`text-xs px-3 py-1 rounded-full border ${statusColors[userData.status]} backdrop-blur-sm`}>
+              {statusLabels[userData.status]}
+            </span>
+          </div>
+        )}
+
+        {/* РџСЂРѕРіСЂРµСЃСЃ-Р±Р°СЂ РЅР° РѕР±Р»РѕР¶РєРµ */}
+        {hasUserData && userData.current_page > 0 && book.total_pages && (
+          <div className="absolute bottom-0 left-0 right-0 h-1 bg-[#0A1118]">
+            <div
+              className="h-full bg-[#5B86A1] transition-all duration-500"
+              style={{ width: `${Math.min(progress, 100)}%` }}
+            />
+          </div>
         )}
       </div>
-      
-      <div className="mt-2 px-1">
-        <div className="text-[#E6EDF3] text-sm font-medium truncate">{book.title}</div>
-        <div className="text-[#5B86A1] text-xs truncate">{book.author}</div>
-        
-        {book.status && (
-          <div className="text-[10px] text-[#97A6BA] mt-1 truncate">
-            {getStatusBadge()}
+
+      {/* РРЅС„РѕСЂРјР°С†РёСЏ */}
+      <div className="p-4">
+        <h3 className="font-medium text-[#E6EDF3] truncate">{book.title}</h3>
+        <p className="text-sm text-[#97A6BA] truncate">{book.author}</p>
+
+        {/* Р–Р°РЅСЂС‹ */}
+        {book.genres && book.genres.length > 0 && (
+          <div className="mt-2 flex flex-wrap gap-1">
+            {book.genres.slice(0, 2).map((genre) => (
+              <span key={genre} className="text-xs text-[#5B86A1]">#{genre}</span>
+            ))}
+            {book.genres.length > 2 && (
+              <span className="text-xs text-[#5B86A1]">+{book.genres.length - 2}</span>
+            )}
           </div>
         )}
-        
-        {book.rating && (
-          <div className="text-xs text-yellow-500 mt-1">
-            {'в­ђ'.repeat(book.rating)}
+
+        {/* РџСЂРѕРіСЂРµСЃСЃ С‚РµРєСЃС‚РѕРј */}
+        {hasUserData && userData.current_page > 0 && book.total_pages && (
+          <div className="mt-2 text-xs text-[#97A6BA]">
+            {userData.current_page} / {book.total_pages} СЃС‚СЂ. ({progress}%)
           </div>
         )}
+
+        {/* РљРЅРѕРїРєРё */}
+        <div className="mt-3 flex gap-2">
+          {!hasUserData && onAddToMyLibrary && (
+            <div className="relative flex-1">
+              <button
+                onClick={() => setShowStatusMenu(!showStatusMenu)}
+                disabled={isAdding}
+                className="w-full px-3 py-2 text-xs font-medium bg-[#2A4B60] hover:bg-[#3A5570] text-[#E6EDF3] rounded-lg transition disabled:opacity-50"
+              >
+                {isAdding ? 'Р”РѕР±Р°РІР»РµРЅРёРµ...' : '+ Р’ Р±РёР±Р»РёРѕС‚РµРєСѓ'}
+              </button>
+              {showStatusMenu && (
+                <div className="absolute z-10 mt-1 w-full bg-[#1A2832] border border-[#2A4B60] rounded-lg shadow-xl py-1">
+                  {allStatuses.map((s) => (
+                    <button
+                      key={s}
+                      onClick={() => handleAddToLibrary(s)}
+                      className="w-full px-4 py-2 text-left text-sm text-[#E6EDF3] hover:bg-[#2A4B60] transition"
+                    >
+                      {statusLabels[s]}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+
+          {hasUserData && onToggleFavorite && (
+            <button
+              onClick={handleToggleFavorite}
+              className={`px-3 py-2 text-sm rounded-lg transition ${
+                userData.is_favorite
+                  ? 'bg-yellow-500/20 text-yellow-400'
+                  : 'bg-[#2A4B60] text-[#97A6BA] hover:text-[#E6EDF3]'
+              }`}
+            >
+              {userData.is_favorite ? 'в­ђ' : 'в†'}
+            </button>
+          )}
+
+          {hasUserData && onUpdateStatus && (
+            <div className="relative">
+              <button
+                onClick={() => setShowStatusMenu(!showStatusMenu)}
+                className="px-3 py-2 text-sm bg-[#2A4B60] hover:bg-[#3A5570] text-[#E6EDF3] rounded-lg transition"
+              >
+                рџ“ќ
+              </button>
+              {showStatusMenu && (
+                <div className="absolute z-10 mt-1 right-0 w-48 bg-[#1A2832] border border-[#2A4B60] rounded-lg shadow-xl py-1">
+                  {allStatuses.map((s) => (
+                    <button
+                      key={s}
+                      onClick={() => handleUpdateStatus(s)}
+                      className="w-full px-4 py-2 text-left text-sm text-[#E6EDF3] hover:bg-[#2A4B60] transition"
+                    >
+                      {statusLabels[s]}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
 }
 
-
-========== src\widgets\BookGrid.tsx ==========
-import type { Book } from '../entities/book/book.types';
+========== C:\Users\kleme\Syverro\syverro-web\src\widgets\BookGrid.tsx ==========
 import BookCard from './BookCard';
+import type { EnrichedBook } from '../entities/book/book';
+import type { BookStatus } from '../entities/book/book';
 
 interface BookGridProps {
-  books: Book[];
-  onBookPress?: (id: string) => void;
-  onToggleFavorite?: (id: string) => void;
-  showFavorite?: boolean;
-  columns?: 3 | 4 | 5;
+  books: EnrichedBook[];
+  onAddToMyLibrary?: (bookId: string, status: BookStatus) => Promise<void>;
+  onUpdateStatus?: (bookId: string, status: BookStatus) => Promise<void>;
+  onToggleFavorite?: (bookId: string) => Promise<void>;
 }
 
-export default function BookGrid({ 
-  books, 
-  onBookPress, 
-  onToggleFavorite, 
-  showFavorite = true,
-  columns = 4 
+export default function BookGrid({
+  books,
+  onAddToMyLibrary,
+  onUpdateStatus,
+  onToggleFavorite,
 }: BookGridProps) {
-  const gridCols = {
-    3: 'grid-cols-1 sm:grid-cols-2 md:grid-cols-3',
-    4: 'grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4',
-    5: 'grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5',
-  }[columns];
+  if (books.length === 0) {
+    return <div className="text-center py-20 text-[#97A6BA]">РљРЅРёРі РЅРµ РЅР°Р№РґРµРЅРѕ</div>;
+  }
 
   return (
-    <div className={`grid ${gridCols} gap-6`}>
+    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-7 gap-4 md:gap-6">
       {books.map((book) => (
         <BookCard
           key={book.id}
           book={book}
-          onPress={onBookPress}
+          onAddToMyLibrary={onAddToMyLibrary}
+          onUpdateStatus={onUpdateStatus}
           onToggleFavorite={onToggleFavorite}
-          showFavorite={showFavorite}
         />
       ))}
     </div>
   );
 }
 
-
-========== src\App.tsx ==========
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-import { useAuthStore } from './store/authStore';
+========== C:\Users\kleme\Syverro\syverro-web\src\App.tsx ==========
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import Layout from './components/Layout';
-import Login from './pages/Login';
-import Register from './pages/Register';
 import LibraryPage from './pages/LibraryPage';
 import Insights from './pages/Insights';
 import WorldMap from './pages/WorldMap';
 import Profile from './pages/Profile';
 
 function App() {
-  const token = useAuthStore((state) => state.token);
-
-  if (!token) {
-    return (
-      <BrowserRouter>
-        <Routes>
-          <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<Register />} />
-          <Route path="*" element={<Navigate to="/login" />} />
-        </Routes>
-      </BrowserRouter>
-    );
-  }
-
   return (
     <BrowserRouter>
       <Layout>
@@ -1006,7 +1366,6 @@ function App() {
           <Route path="/insights" element={<Insights />} />
           <Route path="/worldmap" element={<WorldMap />} />
           <Route path="/profile" element={<Profile />} />
-          <Route path="*" element={<Navigate to="/" />} />
         </Routes>
       </Layout>
     </BrowserRouter>
@@ -1015,8 +1374,7 @@ function App() {
 
 export default App;
 
-
-========== src\main.tsx ==========
+========== C:\Users\kleme\Syverro\syverro-web\src\main.tsx ==========
 import React from 'react'
 import ReactDOM from 'react-dom/client'
 import App from './App'
@@ -1028,6 +1386,6 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
   </React.StrictMode>,
 )
 
-
-========== src\vite-env.d.ts ==========
+========== C:\Users\kleme\Syverro\syverro-web\src\vite-env.d.ts ==========
 /// <reference types="vite/client" />
+

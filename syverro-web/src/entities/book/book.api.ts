@@ -1,5 +1,5 @@
 import { apiClient } from '../../shared/api/client';
-import type { Book, BookCreate, UserBook, UserBookCreate, EnrichedBook } from './book.types';
+import type { Book, BookCreate, UserBook, UserBookCreate, EnrichedBook } from './book';
 
 export const bookApi = {
   // ============================================

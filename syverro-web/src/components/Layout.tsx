@@ -1,47 +1,99 @@
+// src/components/Layout.tsx
 import { ReactNode } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 
 interface LayoutProps {
   children: ReactNode;
 }
 
 const navItems = [
-  { path: '/', label: 'Библиотека', icon: '📚' },
-  { path: '/insights', label: 'Инсайты', icon: '💡' },
-  { path: '/worldmap', label: 'Карта миров', icon: '🗺️' },
-  { path: '/profile', label: 'Профиль', icon: '👤' },
+  { path: '/insights', label: 'Инсайты' },
+  { path: '/worldmap', label: 'Карта миров' },
+  { path: '/profile', label: 'Профиль' },
 ];
 
 export default function Layout({ children }: LayoutProps) {
+  const navigate = useNavigate();
   const location = useLocation();
 
   return (
-    <div className="min-h-screen bg-[#0A1118] flex flex-col">
-      {/* Хедер */}
-      <header className="fixed top-0 left-0 right-0 h-16 bg-[#0A1118]/95 backdrop-blur-sm border-b border-[#2A4B60] flex items-center justify-between px-4 md:px-8 z-50">
-        <h1 className="text-xl md:text-2xl font-light text-[#E6EDF3]">Syverro</h1>
-        <nav className="flex gap-2 md:gap-4">
+    <div style={{
+      minHeight: '100vh',
+      background: '#0B1220',
+      display: 'flex',
+      flexDirection: 'column',
+    }}>
+      {/* ===== ХЕДЕР — ТОТ САМЫЙ, ЧТО РАБОТАЛ ===== */}
+      <header style={{
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        padding: '16px 24px',
+        borderBottom: '1px solid #1A2832',
+        background: '#0B1220',
+        position: 'sticky',
+        top: 0,
+        zIndex: 10,
+        flexShrink: 0,
+      }}>
+        <div
+          onClick={() => navigate('/')}
+          style={{
+            fontFamily: "'Playfair Display', serif",
+            fontSize: '28px',
+            fontWeight: '600',
+            color: '#E6EDF3',
+            letterSpacing: '6px', // увеличенное расстояние между буквами
+            whiteSpace: 'nowrap',
+            cursor: 'pointer',
+            textTransform: 'uppercase',
+          }}
+        >
+          Syverro
+        </div>
+
+        <nav style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: '32px',
+          fontSize: '15px',
+          flexWrap: 'nowrap',
+        }}>
           {navItems.map((item) => (
-            <Link
+            <span
               key={item.path}
-              to={item.path}
-              className={`flex items-center gap-1 md:gap-2 px-3 md:px-4 py-2 rounded-xl text-sm md:text-base transition ${
-                location.pathname === item.path
-                  ? 'bg-[#5B86A1]/20 text-[#5B86A1]'
-                  : 'text-[#97A6BA] hover:text-[#E6EDF3] hover:bg-[#2A4B60]/30'
-              }`}
+              onClick={() => navigate(item.path)}
+              style={{
+                color: location.pathname === item.path ? '#E6EDF3' : '#97A6BA',
+                fontWeight: location.pathname === item.path ? '500' : '400',
+                cursor: 'pointer',
+                whiteSpace: 'nowrap',
+                transition: 'color 0.2s',
+                fontFamily: 'Inter, sans-serif',
+              }}
+              onMouseEnter={(e) => {
+                if (location.pathname !== item.path) {
+                  e.currentTarget.style.color = '#E6EDF3';
+                }
+              }}
+              onMouseLeave={(e) => {
+                if (location.pathname !== item.path) {
+                  e.currentTarget.style.color = '#97A6BA';
+                }
+              }}
             >
-              <span className="text-base md:text-xl">{item.icon}</span>
-              <span className="hidden sm:inline">{item.label}</span>
-            </Link>
+              {item.label}
+            </span>
           ))}
         </nav>
+
+        <div style={{ width: '120px' }} />
       </header>
 
-      {/* Основной контент — БЕЗ ОГРАНИЧЕНИЙ */}
-      <main className="flex-1 pt-20 px-4 md:px-8 pb-8 w-full">
+      {/* ===== КОНТЕНТ ===== */}
+      <div style={{ flex: 1 }}>
         {children}
-      </main>
+      </div>
     </div>
   );
 }

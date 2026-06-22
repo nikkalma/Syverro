@@ -1,82 +1,3642 @@
 [
   {
-    "id": "1",
-    "title": "Дюна",
-    "author": "Фрэнк Герберт",
-    "cover": null,
-    "genres": ["Фантастика"],
-    "total_pages": 600,
-    "status": "approved",
-    "userData": {
-      "status": "reading",
-      "current_page": 150,
-      "rating": 5,
-      "is_favorite": true
-    }
-  },
+  "id": "book_0001",
+  "title": "Убить пересмешника",
+  "author": "Ли, Харпер",
+  "cover": null,
+  "genres": ["роман воспитания", "южная готика"],
+  "subgenres": ["южная готика", "роман воспитания"],
+  "vibe": ["южная готика", "атмосферный", "ностальгический"],
+  "themes": ["справедливость", "предрассудки", "взросление", "сострадание"],
+  "motifs": ["потеря невинности", "моральный выбор", "отцы и дети"],
+  "description": "Роман о справедливости, предрассудках и взрослении в маленьком американском городке...",
+  "totalPages": 416,
+  "authorCountry": "США",
+  "originalYear": 1960,
+  "originalLanguage": "английский",
+  "averageRating": 4.8,
+  "totalRatings": 1200,
+  "createdAt": 1234567890
+ },
   {
-    "id": "2",
-    "title": "1984",
-    "author": "Джордж Оруэлл",
+    "id": "book_0002",
+    "title": "Гордость и предубеждение",
+    "author": "Остин, Джейн",
     "cover": null,
-    "genres": ["Антиутопия"],
-    "total_pages": 328,
-    "status": "approved",
-    "userData": {
+    "genres": [
+      "эпоха регенства",
+      "любовный роман"
+    ],
+    "totalPages": 480,
+    "authorCountry": "Великобритания",
+    "originalYear": null,
+    "description": null,
+    "averageRating": null,
+    "totalRatings": 0,
+    "createdAt": 1781991748364,
+    "_personal": {
       "status": "completed",
-      "current_page": 328,
-      "rating": 4,
-      "is_favorite": false
-    }
-  },
-  {
-    "id": "3",
-    "title": "Мастер и Маргарита",
-    "author": "Михаил Булгаков",
-    "cover": null,
-    "genres": ["Классика"],
-    "total_pages": 480,
-    "status": "approved",
-    "userData": {
-      "status": "want_to_read",
-      "current_page": 0,
-      "rating": null,
-      "is_favorite": false
-    }
-  },
-  {
-    "id": "4",
-    "title": "Преступление и наказание",
-    "author": "Фёдор Достоевский",
-    "cover": null,
-    "genres": ["Классика"],
-    "total_pages": 670,
-    "status": "approved",
-    "userData": null
-  },
-  {
-    "id": "5",
-    "title": "Властелин колец",
-    "author": "Джон Р. Р. Толкин",
-    "cover": null,
-    "genres": ["Фэнтези"],
-    "total_pages": 1200,
-    "status": "approved",
-    "userData": null
-  },
-  {
-    "id": "6",
-    "title": "Гарри Поттер и философский камень",
-    "author": "Дж. К. Роулинг",
-    "cover": null,
-    "genres": ["Фэнтези"],
-    "total_pages": 432,
-    "status": "approved",
-    "userData": {
-      "status": "reading",
-      "current_page": 200,
       "rating": 5,
-      "is_favorite": true
+      "notes": "",
+      "startDate": "30.01.2025",
+      "endDate": "02.02.2025",
+      "language": "русский"
+    }
+  },
+  {
+    "id": "book_0003",
+    "title": "Дневник Анны Франк",
+    "author": "Франк, Анна",
+    "cover": null,
+    "genres": [
+      "автобиография",
+      "еврейская литература"
+    ],
+    "totalPages": 320,
+    "authorCountry": "Нидерланды",
+    "originalYear": null,
+    "description": null,
+    "averageRating": null,
+    "totalRatings": 0,
+    "createdAt": 1781991748364,
+    "_personal": {
+      "status": "completed",
+      "rating": 5,
+      "notes": "",
+      "startDate": "02.02.2025",
+      "endDate": "04.02.2025",
+      "language": "русский"
+    }
+  },
+  {
+    "id": "book_0004",
+    "title": "1984",
+    "author": "Оруэлл, Джордж",
+    "cover": null,
+    "genres": [
+      "антиутопия",
+      "социальная фантастика"
+    ],
+    "totalPages": 0,
+    "authorCountry": "Великобритания",
+    "originalYear": null,
+    "description": null,
+    "averageRating": null,
+    "totalRatings": 0,
+    "createdAt": 1781991748364,
+    "_personal": {
+      "status": "want_to_read",
+      "rating": null,
+      "notes": "",
+      "startDate": null,
+      "endDate": null,
+      "language": null
+    }
+  },
+  {
+    "id": "book_0005",
+    "title": "Гарри Поттер и Философский камень",
+    "author": "Роулинг, Дж. К.",
+    "cover": null,
+    "genres": [
+      "фэнтези"
+    ],
+    "totalPages": 0,
+    "authorCountry": "Великобритания",
+    "originalYear": null,
+    "description": null,
+    "averageRating": null,
+    "totalRatings": 0,
+    "createdAt": 1781991748364,
+    "_personal": {
+      "status": "want_to_read",
+      "rating": null,
+      "notes": "",
+      "startDate": null,
+      "endDate": null,
+      "language": null
+    }
+  },
+  {
+    "id": "book_0006",
+    "title": "Властелин Колец",
+    "author": "Толкин, Дж. Р. Р.",
+    "cover": null,
+    "genres": [
+      "высокое фэнтези",
+      "приключения"
+    ],
+    "totalPages": 890,
+    "authorCountry": "Великобритания",
+    "originalYear": null,
+    "description": null,
+    "averageRating": null,
+    "totalRatings": 0,
+    "createdAt": 1781991748364,
+    "_personal": {
+      "status": "reading",
+      "rating": null,
+      "notes": "",
+      "startDate": "30.04.2025 -",
+      "endDate": null,
+      "language": "русский"
+    }
+  },
+  {
+    "id": "book_0007",
+    "title": "Великий Гэтсби",
+    "author": "Фицджеральд, Фрэнсис Скотт",
+    "cover": null,
+    "genres": [
+      "трагедия"
+    ],
+    "totalPages": 0,
+    "authorCountry": "США",
+    "originalYear": null,
+    "description": null,
+    "averageRating": null,
+    "totalRatings": 0,
+    "createdAt": 1781991748364,
+    "_personal": {
+      "status": "want_to_read",
+      "rating": null,
+      "notes": "",
+      "startDate": null,
+      "endDate": null,
+      "language": null
+    }
+  },
+  {
+    "id": "book_0008",
+    "title": "Паутина Шарлотты",
+    "author": "Уайт, Элвин Брукс",
+    "cover": null,
+    "genres": [
+      "сказка"
+    ],
+    "totalPages": 0,
+    "authorCountry": "США",
+    "originalYear": null,
+    "description": null,
+    "averageRating": null,
+    "totalRatings": 0,
+    "createdAt": 1781991748364,
+    "_personal": {
+      "status": "want_to_read",
+      "rating": null,
+      "notes": "",
+      "startDate": null,
+      "endDate": null,
+      "language": null
+    }
+  },
+  {
+    "id": "book_0009",
+    "title": "Маленькие женщины",
+    "author": "Олкотт, Луиза Мэй",
+    "cover": null,
+    "genres": [
+      "роман воспитания"
+    ],
+    "totalPages": 0,
+    "authorCountry": "США",
+    "originalYear": null,
+    "description": null,
+    "averageRating": null,
+    "totalRatings": 0,
+    "createdAt": 1781991748364,
+    "_personal": {
+      "status": "want_to_read",
+      "rating": null,
+      "notes": "",
+      "startDate": null,
+      "endDate": null,
+      "language": null
+    }
+  },
+  {
+    "id": "book_0010",
+    "title": "Хоббит, или Туда и обратно",
+    "author": "Толкин, Дж. Р. Р.",
+    "cover": null,
+    "genres": [
+      "высокое фэнтези",
+      "детское фэнтези"
+    ],
+    "totalPages": 0,
+    "authorCountry": "Великобритания",
+    "originalYear": null,
+    "description": null,
+    "averageRating": null,
+    "totalRatings": 0,
+    "createdAt": 1781991748364,
+    "_personal": {
+      "status": "want_to_read",
+      "rating": null,
+      "notes": "",
+      "startDate": null,
+      "endDate": null,
+      "language": null
+    }
+  },
+  {
+    "id": "book_0011",
+    "title": "451° по Фаренгейту",
+    "author": "Брэдбери, Рэй",
+    "cover": null,
+    "genres": [
+      "антиутопия"
+    ],
+    "totalPages": 258,
+    "authorCountry": "США",
+    "originalYear": null,
+    "description": null,
+    "averageRating": null,
+    "totalRatings": 0,
+    "createdAt": 1781991748364,
+    "_personal": {
+      "status": "completed",
+      "rating": 4,
+      "notes": "цензура и меньшинства",
+      "startDate": "14.10.2025",
+      "endDate": "08.11.2025",
+      "language": "русский"
+    }
+  },
+  {
+    "id": "book_0012",
+    "title": "Джейн Эйр",
+    "author": "Бронте, Шарлотта",
+    "cover": null,
+    "genres": [
+      "любовный роман",
+      "готика"
+    ],
+    "totalPages": 0,
+    "authorCountry": "Великобритания",
+    "originalYear": null,
+    "description": null,
+    "averageRating": null,
+    "totalRatings": 0,
+    "createdAt": 1781991748364,
+    "_personal": {
+      "status": "want_to_read",
+      "rating": null,
+      "notes": "",
+      "startDate": null,
+      "endDate": null,
+      "language": null
+    }
+  },
+  {
+    "id": "book_0013",
+    "title": "Унесённые ветром",
+    "author": "Митчелл, Маргарет",
+    "cover": null,
+    "genres": [
+      "эпопея",
+      "исторический роман"
+    ],
+    "totalPages": 0,
+    "authorCountry": "США",
+    "originalYear": null,
+    "description": null,
+    "averageRating": null,
+    "totalRatings": 0,
+    "createdAt": 1781991748364,
+    "_personal": {
+      "status": "want_to_read",
+      "rating": null,
+      "notes": "",
+      "startDate": null,
+      "endDate": null,
+      "language": null
+    }
+  },
+  {
+    "id": "book_0014",
+    "title": "Скотный двор",
+    "author": "Оруэлл, Джордж",
+    "cover": null,
+    "genres": [
+      "антиутопия",
+      "сатира"
+    ],
+    "totalPages": 0,
+    "authorCountry": "Великобритания",
+    "originalYear": null,
+    "description": null,
+    "averageRating": null,
+    "totalRatings": 0,
+    "createdAt": 1781991748364,
+    "_personal": {
+      "status": "want_to_read",
+      "rating": null,
+      "notes": "",
+      "startDate": null,
+      "endDate": null,
+      "language": null
+    }
+  },
+  {
+    "id": "book_0015",
+    "title": "Над пропастью во ржи",
+    "author": "Сэлинджер, Джером",
+    "cover": null,
+    "genres": [
+      "реализм"
+    ],
+    "totalPages": 0,
+    "authorCountry": "США",
+    "originalYear": null,
+    "description": null,
+    "averageRating": null,
+    "totalRatings": 0,
+    "createdAt": 1781991748364,
+    "_personal": {
+      "status": "want_to_read",
+      "rating": null,
+      "notes": "",
+      "startDate": null,
+      "endDate": null,
+      "language": null
+    }
+  },
+  {
+    "id": "book_0016",
+    "title": "Приключения Гекльберри Финна",
+    "author": "Твен, Марк",
+    "cover": null,
+    "genres": [
+      "плутовской роман",
+      "сатира"
+    ],
+    "totalPages": 0,
+    "authorCountry": "США",
+    "originalYear": null,
+    "description": null,
+    "averageRating": null,
+    "totalRatings": 0,
+    "createdAt": 1781991748364,
+    "_personal": {
+      "status": "want_to_read",
+      "rating": null,
+      "notes": "",
+      "startDate": null,
+      "endDate": null,
+      "language": null
+    }
+  },
+  {
+    "id": "book_0017",
+    "title": "Прислуга",
+    "author": "Стокетт, Кэтрин",
+    "cover": null,
+    "genres": [
+      "исторический роман"
+    ],
+    "totalPages": 0,
+    "authorCountry": "США",
+    "originalYear": null,
+    "description": null,
+    "averageRating": null,
+    "totalRatings": 0,
+    "createdAt": 1781991748364,
+    "_personal": {
+      "status": "want_to_read",
+      "rating": null,
+      "notes": "",
+      "startDate": null,
+      "endDate": null,
+      "language": null
+    }
+  },
+  {
+    "id": "book_0018",
+    "title": "Гроздья гнева",
+    "author": "Стейнбек, Джон",
+    "cover": null,
+    "genres": [
+      "реализм"
+    ],
+    "totalPages": 0,
+    "authorCountry": "США",
+    "originalYear": null,
+    "description": null,
+    "averageRating": null,
+    "totalRatings": 0,
+    "createdAt": 1781991748364,
+    "_personal": {
+      "status": "want_to_read",
+      "rating": null,
+      "notes": "",
+      "startDate": null,
+      "endDate": null,
+      "language": null
+    }
+  },
+  {
+    "id": "book_0019",
+    "title": "Лев, Колдунья и Платяной шкаф",
+    "author": "Льюис, Клайв Стейплз",
+    "cover": null,
+    "genres": [
+      "фэнтези"
+    ],
+    "totalPages": 0,
+    "authorCountry": "Великобритания",
+    "originalYear": null,
+    "description": null,
+    "averageRating": null,
+    "totalRatings": 0,
+    "createdAt": 1781991748364,
+    "_personal": {
+      "status": "want_to_read",
+      "rating": null,
+      "notes": "",
+      "startDate": null,
+      "endDate": null,
+      "language": null
+    }
+  },
+  {
+    "id": "book_0020",
+    "title": "Голодные игры",
+    "author": "Коллинз, Сьюзен",
+    "cover": null,
+    "genres": [
+      "антиутопия",
+      "научная фантастика"
+    ],
+    "totalPages": 0,
+    "authorCountry": "США",
+    "originalYear": null,
+    "description": null,
+    "averageRating": null,
+    "totalRatings": 0,
+    "createdAt": 1781991748364,
+    "_personal": {
+      "status": "want_to_read",
+      "rating": null,
+      "notes": "",
+      "startDate": null,
+      "endDate": null,
+      "language": null
+    }
+  },
+  {
+    "id": "book_0021",
+    "title": "Книжный вор",
+    "author": "Зусак, Маркус",
+    "cover": null,
+    "genres": [
+      "исторический роман",
+      "роман воспитания"
+    ],
+    "totalPages": 0,
+    "authorCountry": "Австралия",
+    "originalYear": null,
+    "description": null,
+    "averageRating": null,
+    "totalRatings": 0,
+    "createdAt": 1781991748364,
+    "_personal": {
+      "status": "want_to_read",
+      "rating": null,
+      "notes": "",
+      "startDate": null,
+      "endDate": null,
+      "language": null
+    }
+  },
+  {
+    "id": "book_0022",
+    "title": "Повелитель мух",
+    "author": "Голдинг, Уильям",
+    "cover": null,
+    "genres": [
+      "антиутопия",
+      "аллегорический роман"
+    ],
+    "totalPages": 0,
+    "authorCountry": "Великобритания",
+    "originalYear": null,
+    "description": null,
+    "averageRating": null,
+    "totalRatings": 0,
+    "createdAt": 1781991748364,
+    "_personal": {
+      "status": "want_to_read",
+      "rating": null,
+      "notes": "",
+      "startDate": null,
+      "endDate": null,
+      "language": null
+    }
+  },
+  {
+    "id": "book_0023",
+    "title": "Бегущий за ветром",
+    "author": "Хоссейни, Халед",
+    "cover": null,
+    "genres": [
+      "реализм",
+      "исторический роман"
+    ],
+    "totalPages": 0,
+    "authorCountry": "США",
+    "originalYear": null,
+    "description": null,
+    "averageRating": null,
+    "totalRatings": 0,
+    "createdAt": 1781991748364,
+    "_personal": {
+      "status": "want_to_read",
+      "rating": null,
+      "notes": "",
+      "startDate": null,
+      "endDate": null,
+      "language": null
+    }
+  },
+  {
+    "id": "book_0024",
+    "title": "Ночь",
+    "author": "Визель, Эли",
+    "cover": null,
+    "genres": [
+      "мемуары",
+      "еврейская литература"
+    ],
+    "totalPages": 0,
+    "authorCountry": "США",
+    "originalYear": null,
+    "description": null,
+    "averageRating": null,
+    "totalRatings": 0,
+    "createdAt": 1781991748364,
+    "_personal": {
+      "status": "want_to_read",
+      "rating": null,
+      "notes": "",
+      "startDate": null,
+      "endDate": null,
+      "language": null
+    }
+  },
+  {
+    "id": "book_0025",
+    "title": "Гамлет",
+    "author": "Шекспир, Уильям",
+    "cover": null,
+    "genres": [
+      "трагедия"
+    ],
+    "totalPages": 0,
+    "authorCountry": "Англия",
+    "originalYear": null,
+    "description": null,
+    "averageRating": null,
+    "totalRatings": 0,
+    "createdAt": 1781991748364,
+    "_personal": {
+      "status": "want_to_read",
+      "rating": null,
+      "notes": "",
+      "startDate": null,
+      "endDate": null,
+      "language": null
+    }
+  },
+  {
+    "id": "book_0026",
+    "title": "Повесть о двух городах",
+    "author": "Диккенс, Чарльз",
+    "cover": null,
+    "genres": [
+      "исторический роман"
+    ],
+    "totalPages": 0,
+    "authorCountry": "Великобритания",
+    "originalYear": null,
+    "description": null,
+    "averageRating": null,
+    "totalRatings": 0,
+    "createdAt": 1781991748364,
+    "_personal": {
+      "status": "want_to_read",
+      "rating": null,
+      "notes": "",
+      "startDate": null,
+      "endDate": null,
+      "language": null
+    }
+  },
+  {
+    "id": "book_0027",
+    "title": "Излом времени",
+    "author": "Л’Энгль, Мадлен",
+    "cover": null,
+    "genres": [
+      "young adult",
+      "научная фантастика"
+    ],
+    "totalPages": 0,
+    "authorCountry": "США",
+    "originalYear": null,
+    "description": null,
+    "averageRating": null,
+    "totalRatings": 0,
+    "createdAt": 1781991748364,
+    "_personal": {
+      "status": "want_to_read",
+      "rating": null,
+      "notes": "",
+      "startDate": null,
+      "endDate": null,
+      "language": null
+    }
+  },
+  {
+    "id": "book_0028",
+    "title": "Автостопом по Галактике",
+    "author": "Адамс, Дуглас",
+    "cover": null,
+    "genres": [
+      "юмор",
+      "научная фантастика"
+    ],
+    "totalPages": 0,
+    "authorCountry": "Великобритания",
+    "originalYear": null,
+    "description": null,
+    "averageRating": null,
+    "totalRatings": 0,
+    "createdAt": 1781991748364,
+    "_personal": {
+      "status": "want_to_read",
+      "rating": null,
+      "notes": "",
+      "startDate": null,
+      "endDate": null,
+      "language": null
+    }
+  },
+  {
+    "id": "book_0029",
+    "title": "Рождественская песнь в прозе",
+    "author": "Диккенс, Чарльз",
+    "cover": null,
+    "genres": [
+      "сказка"
+    ],
+    "totalPages": 0,
+    "authorCountry": "Великобритания",
+    "originalYear": null,
+    "description": null,
+    "averageRating": null,
+    "totalRatings": 0,
+    "createdAt": 1781991748364,
+    "_personal": {
+      "status": "want_to_read",
+      "rating": null,
+      "notes": "",
+      "startDate": null,
+      "endDate": null,
+      "language": null
+    }
+  },
+  {
+    "id": "book_0030",
+    "title": "О мышах и людях",
+    "author": "Стейнбек, Джон",
+    "cover": null,
+    "genres": [
+      "трагедия"
+    ],
+    "totalPages": 0,
+    "authorCountry": "США",
+    "originalYear": null,
+    "description": null,
+    "averageRating": null,
+    "totalRatings": 0,
+    "createdAt": 1781991748364,
+    "_personal": {
+      "status": "want_to_read",
+      "rating": null,
+      "notes": "",
+      "startDate": null,
+      "endDate": null,
+      "language": null
+    }
+  },
+  {
+    "id": "book_0031",
+    "title": "Таинственный сад",
+    "author": "Бёрнетт, Фрэнсис Элиза",
+    "cover": null,
+    "genres": [
+      "детский роман"
+    ],
+    "totalPages": 0,
+    "authorCountry": "США",
+    "originalYear": null,
+    "description": null,
+    "averageRating": null,
+    "totalRatings": 0,
+    "createdAt": 1781991748364,
+    "_personal": {
+      "status": "want_to_read",
+      "rating": null,
+      "notes": "",
+      "startDate": null,
+      "endDate": null,
+      "language": null
+    }
+  },
+  {
+    "id": "book_0032",
+    "title": "Ромео и Джульетта",
+    "author": "Шекспир, Уильям",
+    "cover": null,
+    "genres": [
+      "трагедия"
+    ],
+    "totalPages": 0,
+    "authorCountry": "Англия",
+    "originalYear": null,
+    "description": null,
+    "averageRating": null,
+    "totalRatings": 0,
+    "createdAt": 1781991748364,
+    "_personal": {
+      "status": "want_to_read",
+      "rating": null,
+      "notes": "",
+      "startDate": null,
+      "endDate": null,
+      "language": null
+    }
+  },
+  {
+    "id": "book_0033",
+    "title": "Рассказ Служанки",
+    "author": "Этвуд, Маргарет",
+    "cover": null,
+    "genres": [
+      "антиутопия",
+      "социальная фантастика"
+    ],
+    "totalPages": 0,
+    "authorCountry": "Канада",
+    "originalYear": null,
+    "description": null,
+    "averageRating": null,
+    "totalRatings": 0,
+    "createdAt": 1781991748364,
+    "_personal": {
+      "status": "want_to_read",
+      "rating": null,
+      "notes": "",
+      "startDate": null,
+      "endDate": null,
+      "language": null
+    }
+  },
+  {
+    "id": "book_0034",
+    "title": "О дивный новый мир",
+    "author": "Хаксли, Олдос",
+    "cover": null,
+    "genres": [
+      "антиутопия",
+      "научная фантастика"
+    ],
+    "totalPages": 0,
+    "authorCountry": "Великобритания",
+    "originalYear": null,
+    "description": null,
+    "averageRating": null,
+    "totalRatings": 0,
+    "createdAt": 1781991748364,
+    "_personal": {
+      "status": "want_to_read",
+      "rating": null,
+      "notes": "",
+      "startDate": null,
+      "endDate": null,
+      "language": null
+    }
+  },
+  {
+    "id": "book_0035",
+    "title": "Маленький принц",
+    "author": "Сент-Экзюпери, Антуан де",
+    "cover": null,
+    "genres": [
+      "сказка"
+    ],
+    "totalPages": 0,
+    "authorCountry": "Франция",
+    "originalYear": null,
+    "description": null,
+    "averageRating": null,
+    "totalRatings": 0,
+    "createdAt": 1781991748364,
+    "_personal": {
+      "status": "want_to_read",
+      "rating": null,
+      "notes": "",
+      "startDate": null,
+      "endDate": null,
+      "language": null
+    }
+  },
+  {
+    "id": "book_0036",
+    "title": "Там, где кончается тротуар",
+    "author": "Сильверстайн, Шел",
+    "cover": null,
+    "genres": [
+      "детские стихи"
+    ],
+    "totalPages": 0,
+    "authorCountry": "США",
+    "originalYear": null,
+    "description": null,
+    "averageRating": null,
+    "totalRatings": 0,
+    "createdAt": 1781991748364,
+    "_personal": {
+      "status": "want_to_read",
+      "rating": null,
+      "notes": "",
+      "startDate": null,
+      "endDate": null,
+      "language": null
+    }
+  },
+  {
+    "id": "book_0037",
+    "title": "Грозовой перевал",
+    "author": "Бронте, Эмили",
+    "cover": null,
+    "genres": [
+      "трагедия",
+      "готика"
+    ],
+    "totalPages": 0,
+    "authorCountry": "Великобритания",
+    "originalYear": null,
+    "description": null,
+    "averageRating": null,
+    "totalRatings": 0,
+    "createdAt": 1781991748364,
+    "_personal": {
+      "status": "want_to_read",
+      "rating": null,
+      "notes": "",
+      "startDate": null,
+      "endDate": null,
+      "language": null
+    }
+  },
+  {
+    "id": "book_0038",
+    "title": "Дающий",
+    "author": "Лоури, Лоис",
+    "cover": null,
+    "genres": [
+      "антиутопия",
+      "социальная фантастика"
+    ],
+    "totalPages": 0,
+    "authorCountry": "США",
+    "originalYear": null,
+    "description": null,
+    "averageRating": null,
+    "totalRatings": 0,
+    "createdAt": 1781991748364,
+    "_personal": {
+      "status": "want_to_read",
+      "rating": null,
+      "notes": "",
+      "startDate": null,
+      "endDate": null,
+      "language": null
+    }
+  },
+  {
+    "id": "book_0039",
+    "title": "Аня из Зелёных Мезонинов",
+    "author": "Монтгомери, Люси Мод",
+    "cover": null,
+    "genres": [
+      "роман воспитания"
+    ],
+    "totalPages": 0,
+    "authorCountry": "Канада",
+    "originalYear": null,
+    "description": null,
+    "averageRating": null,
+    "totalRatings": 0,
+    "createdAt": 1781991748364,
+    "_personal": {
+      "status": "want_to_read",
+      "rating": null,
+      "notes": "",
+      "startDate": null,
+      "endDate": null,
+      "language": null
+    }
+  },
+  {
+    "id": "book_0040",
+    "title": "Макбет",
+    "author": "Шекспир, Уильям",
+    "cover": null,
+    "genres": [
+      "трагедия"
+    ],
+    "totalPages": 0,
+    "authorCountry": "Англия",
+    "originalYear": null,
+    "description": null,
+    "averageRating": null,
+    "totalRatings": 0,
+    "createdAt": 1781991748364,
+    "_personal": {
+      "status": "want_to_read",
+      "rating": null,
+      "notes": "",
+      "startDate": null,
+      "endDate": null,
+      "language": null
+    }
+  },
+  {
+    "id": "book_0041",
+    "title": "Приключения Тома Сойера",
+    "author": "Твен, Марк",
+    "cover": null,
+    "genres": [
+      "роман воспитания",
+      "плутовской роман",
+      "приключения"
+    ],
+    "totalPages": 0,
+    "authorCountry": "США",
+    "originalYear": null,
+    "description": null,
+    "averageRating": null,
+    "totalRatings": 0,
+    "createdAt": 1781991748364,
+    "_personal": {
+      "status": "want_to_read",
+      "rating": null,
+      "notes": "",
+      "startDate": null,
+      "endDate": null,
+      "language": null
+    }
+  },
+  {
+    "id": "book_0042",
+    "title": "Гарри Поттер и Дары Смерти",
+    "author": "Роулинг, Дж. К.",
+    "cover": null,
+    "genres": [
+      "фэнтези",
+      "драма"
+    ],
+    "totalPages": 0,
+    "authorCountry": "Великобритания",
+    "originalYear": null,
+    "description": null,
+    "averageRating": null,
+    "totalRatings": 0,
+    "createdAt": 1781991748364,
+    "_personal": {
+      "status": "want_to_read",
+      "rating": null,
+      "notes": "",
+      "startDate": null,
+      "endDate": null,
+      "language": null
+    }
+  },
+  {
+    "id": "book_0043",
+    "title": "Франкенштейн, или Современный Прометей",
+    "author": "Шелли, Мэри",
+    "cover": null,
+    "genres": [
+      "ужасы",
+      "готика",
+      "эпистолярный"
+    ],
+    "totalPages": 0,
+    "authorCountry": "Великобритания",
+    "originalYear": null,
+    "description": null,
+    "averageRating": null,
+    "totalRatings": 0,
+    "createdAt": 1781991748364,
+    "_personal": {
+      "status": "want_to_read",
+      "rating": null,
+      "notes": "",
+      "startDate": null,
+      "endDate": null,
+      "language": null
+    }
+  },
+  {
+    "id": "book_0044",
+    "title": "Библия",
+    "author": "Неизвестный автор",
+    "cover": null,
+    "genres": [
+      "религия"
+    ],
+    "totalPages": 0,
+    "authorCountry": null,
+    "originalYear": null,
+    "description": null,
+    "averageRating": null,
+    "totalRatings": 0,
+    "createdAt": 1781991748364,
+    "_personal": {
+      "status": "want_to_read",
+      "rating": null,
+      "notes": "",
+      "startDate": null,
+      "endDate": null,
+      "language": null
+    }
+  },
+  {
+    "id": "book_0045",
+    "title": "Девушка с татуировкой дракона",
+    "author": "Ларссон, Стиг",
+    "cover": null,
+    "genres": [
+      "скандинавский нуар",
+      "триллер",
+      "детектив"
+    ],
+    "totalPages": 0,
+    "authorCountry": "Швеция",
+    "originalYear": null,
+    "description": null,
+    "averageRating": null,
+    "totalRatings": 0,
+    "createdAt": 1781991748364,
+    "_personal": {
+      "status": "want_to_read",
+      "rating": null,
+      "notes": "",
+      "startDate": null,
+      "endDate": null,
+      "language": null
+    }
+  },
+  {
+    "id": "book_0046",
+    "title": "Граф Монте-Кристо",
+    "author": "Дюма, Александр (отец)",
+    "cover": null,
+    "genres": [
+      "исторический роман",
+      "приключения"
+    ],
+    "totalPages": 0,
+    "authorCountry": "Франция",
+    "originalYear": null,
+    "description": null,
+    "averageRating": null,
+    "totalRatings": 0,
+    "createdAt": 1781991748364,
+    "_personal": {
+      "status": "want_to_read",
+      "rating": null,
+      "notes": "",
+      "startDate": null,
+      "endDate": null,
+      "language": null
+    }
+  },
+  {
+    "id": "book_0047",
+    "title": "Виноваты звёзды",
+    "author": "Грин, Джон",
+    "cover": null,
+    "genres": [
+      "реализм",
+      "young adult"
+    ],
+    "totalPages": 0,
+    "authorCountry": "США",
+    "originalYear": null,
+    "description": null,
+    "averageRating": null,
+    "totalRatings": 0,
+    "createdAt": 1781991748364,
+    "_personal": {
+      "status": "want_to_read",
+      "rating": null,
+      "notes": "",
+      "startDate": null,
+      "endDate": null,
+      "language": null
+    }
+  },
+  {
+    "id": "book_0048",
+    "title": "Цвет пурпурный",
+    "author": "Уокер, Элис",
+    "cover": null,
+    "genres": [
+      "эпистолярный"
+    ],
+    "totalPages": 0,
+    "authorCountry": "США",
+    "originalYear": null,
+    "description": null,
+    "averageRating": null,
+    "totalRatings": 0,
+    "createdAt": 1781991748364,
+    "_personal": {
+      "status": "want_to_read",
+      "rating": null,
+      "notes": "",
+      "startDate": null,
+      "endDate": null,
+      "language": null
+    }
+  },
+  {
+    "id": "book_0049",
+    "title": "К востоку от рая",
+    "author": "Стейнбек, Джон",
+    "cover": null,
+    "genres": [
+      "семейная сага"
+    ],
+    "totalPages": 0,
+    "authorCountry": "США",
+    "originalYear": null,
+    "description": null,
+    "averageRating": null,
+    "totalRatings": 0,
+    "createdAt": 1781991748364,
+    "_personal": {
+      "status": "want_to_read",
+      "rating": null,
+      "notes": "",
+      "startDate": null,
+      "endDate": null,
+      "language": null
+    }
+  },
+  {
+    "id": "book_0050",
+    "title": "Дерево растет в Бруклине",
+    "author": "Смит, Бетти",
+    "cover": null,
+    "genres": [
+      "роман воспитания"
+    ],
+    "totalPages": 0,
+    "authorCountry": "США",
+    "originalYear": null,
+    "description": null,
+    "averageRating": null,
+    "totalRatings": 0,
+    "createdAt": 1781991748364,
+    "_personal": {
+      "status": "want_to_read",
+      "rating": null,
+      "notes": "",
+      "startDate": null,
+      "endDate": null,
+      "language": null
+    }
+  },
+  {
+    "id": "book_0051",
+    "title": "Уловка-22",
+    "author": "Хеллер, Джозеф",
+    "cover": null,
+    "genres": [
+      "исторический роман",
+      "сатира",
+      "абсурдистская фантастика",
+      "черная комедия",
+      "военная"
+    ],
+    "totalPages": 0,
+    "authorCountry": "США",
+    "originalYear": null,
+    "description": null,
+    "averageRating": null,
+    "totalRatings": 0,
+    "createdAt": 1781991748364,
+    "_personal": {
+      "status": "want_to_read",
+      "rating": null,
+      "notes": "",
+      "startDate": null,
+      "endDate": null,
+      "language": null
+    }
+  },
+  {
+    "id": "book_0052",
+    "title": "Хладнокровное убийство",
+    "author": "Капоте, Трумен",
+    "cover": null,
+    "genres": [
+      "журналистика"
+    ],
+    "totalPages": 0,
+    "authorCountry": "США",
+    "originalYear": null,
+    "description": null,
+    "averageRating": null,
+    "totalRatings": 0,
+    "createdAt": 1781991748364,
+    "_personal": {
+      "status": "want_to_read",
+      "rating": null,
+      "notes": "",
+      "startDate": null,
+      "endDate": null,
+      "language": null
+    }
+  },
+  {
+    "id": "book_0053",
+    "title": "Противостояние",
+    "author": "Кинг, Стивен",
+    "cover": null,
+    "genres": [
+      "дарк фэнтези",
+      "постапокалипсис"
+    ],
+    "totalPages": 0,
+    "authorCountry": "США",
+    "originalYear": null,
+    "description": null,
+    "averageRating": null,
+    "totalRatings": 0,
+    "createdAt": 1781991748364,
+    "_personal": {
+      "status": "want_to_read",
+      "rating": null,
+      "notes": "",
+      "startDate": null,
+      "endDate": null,
+      "language": null
+    }
+  },
+  {
+    "id": "book_0054",
+    "title": "Алиса в Стране чудес и в Зазеркалье",
+    "author": "Кэролл, Льюис",
+    "cover": null,
+    "genres": [
+      "сказка",
+      "абсурдистская фантастика"
+    ],
+    "totalPages": 0,
+    "authorCountry": "Великобритания",
+    "originalYear": null,
+    "description": null,
+    "averageRating": null,
+    "totalRatings": 0,
+    "createdAt": 1781991748364,
+    "_personal": {
+      "status": "want_to_read",
+      "rating": null,
+      "notes": "",
+      "startDate": null,
+      "endDate": null,
+      "language": null
+    }
+  },
+  {
+    "id": "book_0055",
+    "title": "Обитатели холмов",
+    "author": "Адамс, Ричард",
+    "cover": null,
+    "genres": [
+      "фэнтези",
+      "сказка"
+    ],
+    "totalPages": 0,
+    "authorCountry": "Великобритания",
+    "originalYear": null,
+    "description": null,
+    "averageRating": null,
+    "totalRatings": 0,
+    "createdAt": 1781991748364,
+    "_personal": {
+      "status": "want_to_read",
+      "rating": null,
+      "notes": "",
+      "startDate": null,
+      "endDate": null,
+      "language": null
+    }
+  },
+  {
+    "id": "book_0056",
+    "title": "Анна Каренина",
+    "author": "Толстой, Лев Николаевич",
+    "cover": null,
+    "genres": [
+      "реализм",
+      "социально-психологический роман"
+    ],
+    "totalPages": 0,
+    "authorCountry": "Россия",
+    "originalYear": null,
+    "description": null,
+    "averageRating": null,
+    "totalRatings": 0,
+    "createdAt": 1781991748364,
+    "_personal": {
+      "status": "want_to_read",
+      "rating": null,
+      "notes": "",
+      "startDate": null,
+      "endDate": null,
+      "language": null
+    }
+  },
+  {
+    "id": "book_0057",
+    "title": "Игра Эндера",
+    "author": "Кард, Орсон Скотт",
+    "cover": null,
+    "genres": [
+      "научная фантастика"
+    ],
+    "totalPages": 0,
+    "authorCountry": "США",
+    "originalYear": null,
+    "description": null,
+    "averageRating": null,
+    "totalRatings": 0,
+    "createdAt": 1781991748364,
+    "_personal": {
+      "status": "want_to_read",
+      "rating": null,
+      "notes": "",
+      "startDate": null,
+      "endDate": null,
+      "language": null
+    }
+  },
+  {
+    "id": "book_0058",
+    "title": "Большие надежды",
+    "author": "Диккенс, Чарльз",
+    "cover": null,
+    "genres": [
+      "автобиография",
+      "роман воспитания"
+    ],
+    "totalPages": 0,
+    "authorCountry": "Великобритания",
+    "originalYear": null,
+    "description": null,
+    "averageRating": null,
+    "totalRatings": 0,
+    "createdAt": 1781991748364,
+    "_personal": {
+      "status": "want_to_read",
+      "rating": null,
+      "notes": "",
+      "startDate": null,
+      "endDate": null,
+      "language": null
+    }
+  },
+  {
+    "id": "book_0059",
+    "title": "Ребекка",
+    "author": "Дюморье, Дафна",
+    "cover": null,
+    "genres": [
+      "детектив",
+      "готика"
+    ],
+    "totalPages": 0,
+    "authorCountry": "Великобритания",
+    "originalYear": null,
+    "description": null,
+    "averageRating": null,
+    "totalRatings": 0,
+    "createdAt": 1781991748364,
+    "_personal": {
+      "status": "want_to_read",
+      "rating": null,
+      "notes": "",
+      "startDate": null,
+      "endDate": null,
+      "language": null
+    }
+  },
+  {
+    "id": "book_0060",
+    "title": "Мемуары гейши",
+    "author": "Голден, Артур",
+    "cover": null,
+    "genres": [
+      "исторический роман"
+    ],
+    "totalPages": 0,
+    "authorCountry": "США",
+    "originalYear": null,
+    "description": null,
+    "averageRating": null,
+    "totalRatings": 0,
+    "createdAt": 1781991748364,
+    "_personal": {
+      "status": "want_to_read",
+      "rating": null,
+      "notes": "",
+      "startDate": null,
+      "endDate": null,
+      "language": null
+    }
+  },
+  {
+    "id": "book_0061",
+    "title": "Приключения Шерлока Холмса",
+    "author": "Дойл, Артур Конан",
+    "cover": null,
+    "genres": [
+      "детектив"
+    ],
+    "totalPages": 0,
+    "authorCountry": "Великобритания",
+    "originalYear": null,
+    "description": null,
+    "averageRating": null,
+    "totalRatings": 0,
+    "createdAt": 1781991748364,
+    "_personal": {
+      "status": "want_to_read",
+      "rating": null,
+      "notes": "",
+      "startDate": null,
+      "endDate": null,
+      "language": null
+    }
+  },
+  {
+    "id": "book_0062",
+    "title": "Гарри Поттер и узник Азкабана",
+    "author": "Роулинг, Дж. К.",
+    "cover": null,
+    "genres": [
+      "фэнтези"
+    ],
+    "totalPages": 0,
+    "authorCountry": "Великобритания",
+    "originalYear": null,
+    "description": null,
+    "averageRating": null,
+    "totalRatings": 0,
+    "createdAt": 1781991748364,
+    "_personal": {
+      "status": "want_to_read",
+      "rating": null,
+      "notes": "",
+      "startDate": null,
+      "endDate": null,
+      "language": null
+    }
+  },
+  {
+    "id": "book_0063",
+    "title": "Старик и море",
+    "author": "Хемингуэй, Эрнест",
+    "cover": null,
+    "genres": [
+      "морская"
+    ],
+    "totalPages": 0,
+    "authorCountry": "США",
+    "originalYear": null,
+    "description": null,
+    "averageRating": null,
+    "totalRatings": 0,
+    "createdAt": 1781991748364,
+    "_personal": {
+      "status": "want_to_read",
+      "rating": null,
+      "notes": "",
+      "startDate": null,
+      "endDate": null,
+      "language": null
+    }
+  },
+  {
+    "id": "book_0064",
+    "title": "Песнь льда и огня",
+    "author": "Мартин, Дж. Р. Р.",
+    "cover": null,
+    "genres": [
+      "высокое фэнтези"
+    ],
+    "totalPages": 0,
+    "authorCountry": "США",
+    "originalYear": null,
+    "description": null,
+    "averageRating": null,
+    "totalRatings": 0,
+    "createdAt": 1781991748364,
+    "_personal": {
+      "status": "want_to_read",
+      "rating": null,
+      "notes": "",
+      "startDate": null,
+      "endDate": null,
+      "language": null
+    }
+  },
+  {
+    "id": "book_0065",
+    "title": "Принцесса-невеста",
+    "author": "Голдман, Уильям",
+    "cover": null,
+    "genres": [
+      "фэнтези",
+      "любовный роман",
+      "исторический роман"
+    ],
+    "totalPages": 0,
+    "authorCountry": "США",
+    "originalYear": null,
+    "description": null,
+    "averageRating": null,
+    "totalRatings": 0,
+    "createdAt": 1781991748364,
+    "_personal": {
+      "status": "want_to_read",
+      "rating": null,
+      "notes": "",
+      "startDate": null,
+      "endDate": null,
+      "language": null
+    }
+  },
+  {
+    "id": "book_0066",
+    "title": "Чарли и Шоколадная фабрика",
+    "author": "Даль, Роальд",
+    "cover": null,
+    "genres": [
+      "сказка"
+    ],
+    "totalPages": 0,
+    "authorCountry": "Великобритания",
+    "originalYear": null,
+    "description": null,
+    "averageRating": null,
+    "totalRatings": 0,
+    "createdAt": 1781991748364,
+    "_personal": {
+      "status": "want_to_read",
+      "rating": null,
+      "notes": "",
+      "startDate": null,
+      "endDate": null,
+      "language": null
+    }
+  },
+  {
+    "id": "book_0067",
+    "title": "Жизнь Пи",
+    "author": "Мартел, Янн",
+    "cover": null,
+    "genres": [
+      "приключения"
+    ],
+    "totalPages": 0,
+    "authorCountry": "Канада",
+    "originalYear": null,
+    "description": null,
+    "averageRating": null,
+    "totalRatings": 0,
+    "createdAt": 1781991748364,
+    "_personal": {
+      "status": "want_to_read",
+      "rating": null,
+      "notes": "",
+      "startDate": null,
+      "endDate": null,
+      "language": null
+    }
+  },
+  {
+    "id": "book_0068",
+    "title": "Столпы Земли",
+    "author": "Фоллетт, Кен",
+    "cover": null,
+    "genres": [
+      "исторический роман"
+    ],
+    "totalPages": 0,
+    "authorCountry": "Великобритания",
+    "originalYear": null,
+    "description": null,
+    "averageRating": null,
+    "totalRatings": 0,
+    "createdAt": 1781991748364,
+    "_personal": {
+      "status": "want_to_read",
+      "rating": null,
+      "notes": "",
+      "startDate": null,
+      "endDate": null,
+      "language": null
+    }
+  },
+  {
+    "id": "book_0069",
+    "title": "Отверженные",
+    "author": "Гюго, Виктор",
+    "cover": null,
+    "genres": [
+      "эпопея",
+      "исторический роман",
+      "трагедия"
+    ],
+    "totalPages": 0,
+    "authorCountry": "Франция",
+    "originalYear": null,
+    "description": null,
+    "averageRating": null,
+    "totalRatings": 0,
+    "createdAt": 1781991748364,
+    "_personal": {
+      "status": "want_to_read",
+      "rating": null,
+      "notes": "",
+      "startDate": null,
+      "endDate": null,
+      "language": null
+    }
+  },
+  {
+    "id": "book_0070",
+    "title": "Алая буква",
+    "author": "Готорн, Натаниэль",
+    "cover": null,
+    "genres": [
+      "любовный роман",
+      "исторический роман"
+    ],
+    "totalPages": 318,
+    "authorCountry": "США",
+    "originalYear": null,
+    "description": null,
+    "averageRating": null,
+    "totalRatings": 0,
+    "createdAt": 1781991748364,
+    "_personal": {
+      "status": "completed",
+      "rating": 3,
+      "notes": "Мужики дурные драматичные идиоты, один вообще от угрызений совести умер",
+      "startDate": "28.04.2025",
+      "endDate": "30.04.2025",
+      "language": "русский"
+    }
+  },
+  {
+    "id": "book_0071",
+    "title": "Дракула",
+    "author": "Стокер, Брэм",
+    "cover": null,
+    "genres": [
+      "ужасы",
+      "готика"
+    ],
+    "totalPages": 0,
+    "authorCountry": "Ирландия",
+    "originalYear": null,
+    "description": null,
+    "averageRating": null,
+    "totalRatings": 0,
+    "createdAt": 1781991748364,
+    "_personal": {
+      "status": "want_to_read",
+      "rating": null,
+      "notes": "",
+      "startDate": null,
+      "endDate": null,
+      "language": null
+    }
+  },
+  {
+    "id": "book_0072",
+    "title": "Гарри Поттер и Принц-полукровка",
+    "author": "Роулинг, Дж. К.",
+    "cover": null,
+    "genres": [
+      "фэнтези"
+    ],
+    "totalPages": 0,
+    "authorCountry": "Великобритания",
+    "originalYear": null,
+    "description": null,
+    "averageRating": null,
+    "totalRatings": 0,
+    "createdAt": 1781991748364,
+    "_personal": {
+      "status": "want_to_read",
+      "rating": null,
+      "notes": "",
+      "startDate": null,
+      "endDate": null,
+      "language": null
+    }
+  },
+  {
+    "id": "book_0073",
+    "title": "И вспыхнет пламя",
+    "author": "Коллинз, Сьюзен",
+    "cover": null,
+    "genres": [
+      "постапокалипсис",
+      "young adult",
+      "антиутопия",
+      "научная фантастика"
+    ],
+    "totalPages": 0,
+    "authorCountry": "США",
+    "originalYear": null,
+    "description": null,
+    "averageRating": null,
+    "totalRatings": 0,
+    "createdAt": 1781991748364,
+    "_personal": {
+      "status": "want_to_read",
+      "rating": null,
+      "notes": "",
+      "startDate": null,
+      "endDate": null,
+      "language": null
+    }
+  },
+  {
+    "id": "book_0074",
+    "title": "Воды слонам",
+    "author": "Груэн, Сара",
+    "cover": null,
+    "genres": [
+      "любовный роман",
+      "исторический роман"
+    ],
+    "totalPages": 0,
+    "authorCountry": "Канада",
+    "originalYear": null,
+    "description": null,
+    "averageRating": null,
+    "totalRatings": 0,
+    "createdAt": 1781991748364,
+    "_personal": {
+      "status": "want_to_read",
+      "rating": null,
+      "notes": "",
+      "startDate": null,
+      "endDate": null,
+      "language": null
+    }
+  },
+  {
+    "id": "book_0075",
+    "title": "Ворон",
+    "author": "По, Эдгар Алан",
+    "cover": null,
+    "genres": [
+      "поэзия"
+    ],
+    "totalPages": 0,
+    "authorCountry": "США",
+    "originalYear": null,
+    "description": null,
+    "averageRating": null,
+    "totalRatings": 0,
+    "createdAt": 1781991748364,
+    "_personal": {
+      "status": "want_to_read",
+      "rating": null,
+      "notes": "",
+      "startDate": null,
+      "endDate": null,
+      "language": null
+    }
+  },
+  {
+    "id": "book_0076",
+    "title": "Тайная жизнь пчёл",
+    "author": "Кидд, Сью Монк",
+    "cover": null,
+    "genres": [
+      "исторический роман"
+    ],
+    "totalPages": 0,
+    "authorCountry": "США",
+    "originalYear": null,
+    "description": null,
+    "averageRating": null,
+    "totalRatings": 0,
+    "createdAt": 1781991748364,
+    "_personal": {
+      "status": "want_to_read",
+      "rating": null,
+      "notes": "",
+      "startDate": null,
+      "endDate": null,
+      "language": null
+    }
+  },
+  {
+    "id": "book_0077",
+    "title": "Чужестранка",
+    "author": "Гэблдон, Диана",
+    "cover": null,
+    "genres": [
+      "исторический роман",
+      "любовный роман",
+      "научная фантастика"
+    ],
+    "totalPages": 0,
+    "authorCountry": "США",
+    "originalYear": null,
+    "description": null,
+    "averageRating": null,
+    "totalRatings": 0,
+    "createdAt": 1781991748364,
+    "_personal": {
+      "status": "want_to_read",
+      "rating": null,
+      "notes": "",
+      "startDate": null,
+      "endDate": null,
+      "language": null
+    }
+  },
+  {
+    "id": "book_0078",
+    "title": "Сто лет одиночества",
+    "author": "Гарсиа Маркес, Габриэль",
+    "cover": null,
+    "genres": [
+      "магический реализм",
+      "социально-психологический роман"
+    ],
+    "totalPages": 0,
+    "authorCountry": "Колумбия",
+    "originalYear": null,
+    "description": null,
+    "averageRating": null,
+    "totalRatings": 0,
+    "createdAt": 1781991748364,
+    "_personal": {
+      "status": "want_to_read",
+      "rating": null,
+      "notes": "",
+      "startDate": null,
+      "endDate": null,
+      "language": null
+    }
+  },
+  {
+    "id": "book_0079",
+    "title": "Библия ядовитого леса",
+    "author": "Кингсолвер, Барбара",
+    "cover": null,
+    "genres": [
+      "исторический роман"
+    ],
+    "totalPages": 0,
+    "authorCountry": "США",
+    "originalYear": null,
+    "description": null,
+    "averageRating": null,
+    "totalRatings": 0,
+    "createdAt": 1781991748364,
+    "_personal": {
+      "status": "want_to_read",
+      "rating": null,
+      "notes": "",
+      "startDate": null,
+      "endDate": null,
+      "language": null
+    }
+  },
+  {
+    "id": "book_0080",
+    "title": "Земля",
+    "author": "Бак, Перл",
+    "cover": null,
+    "genres": [
+      "исторический роман"
+    ],
+    "totalPages": 0,
+    "authorCountry": "Великобритания",
+    "originalYear": null,
+    "description": null,
+    "averageRating": null,
+    "totalRatings": 0,
+    "createdAt": 1781991748364,
+    "_personal": {
+      "status": "want_to_read",
+      "rating": null,
+      "notes": "",
+      "startDate": null,
+      "endDate": null,
+      "language": null
+    }
+  },
+  {
+    "id": "book_0081",
+    "title": "Жена путешественника во времени",
+    "author": "Ниффенеггер, Одри",
+    "cover": null,
+    "genres": [
+      "научная фантастика",
+      "любовный роман"
+    ],
+    "totalPages": 0,
+    "authorCountry": "США",
+    "originalYear": null,
+    "description": null,
+    "averageRating": null,
+    "totalRatings": 0,
+    "createdAt": 1781991748364,
+    "_personal": {
+      "status": "want_to_read",
+      "rating": null,
+      "notes": "",
+      "startDate": null,
+      "endDate": null,
+      "language": null
+    }
+  },
+  {
+    "id": "book_0082",
+    "title": "Празднуя тишину",
+    "author": "Шри Шри Рави Шанкар",
+    "cover": null,
+    "genres": [
+      "религия"
+    ],
+    "totalPages": 0,
+    "authorCountry": "Индия",
+    "originalYear": null,
+    "description": null,
+    "averageRating": null,
+    "totalRatings": 0,
+    "createdAt": 1781991748364,
+    "_personal": {
+      "status": "want_to_read",
+      "rating": null,
+      "notes": "",
+      "startDate": null,
+      "endDate": null,
+      "language": null
+    }
+  },
+  {
+    "id": "book_0083",
+    "title": "Молитва об Оуэне Мини",
+    "author": "Ирвинг, Джон",
+    "cover": null,
+    "genres": [
+      "роман воспитания"
+    ],
+    "totalPages": 0,
+    "authorCountry": "США",
+    "originalYear": null,
+    "description": null,
+    "averageRating": null,
+    "totalRatings": 0,
+    "createdAt": 1781991748364,
+    "_personal": {
+      "status": "want_to_read",
+      "rating": null,
+      "notes": "",
+      "startDate": null,
+      "endDate": null,
+      "language": null
+    }
+  },
+  {
+    "id": "book_0084",
+    "title": "Десять негритят",
+    "author": "Кристи, Агата",
+    "cover": null,
+    "genres": [
+      "детектив"
+    ],
+    "totalPages": 0,
+    "authorCountry": "Великобритания",
+    "originalYear": null,
+    "description": null,
+    "averageRating": null,
+    "totalRatings": 0,
+    "createdAt": 1781991748364,
+    "_personal": {
+      "status": "want_to_read",
+      "rating": null,
+      "notes": "",
+      "startDate": null,
+      "endDate": null,
+      "language": null
+    }
+  },
+  {
+    "id": "book_0085",
+    "title": "Бессмертная жизнь Генриетты Лакс",
+    "author": "Склут, Ребекка",
+    "cover": null,
+    "genres": [
+      "журналистика"
+    ],
+    "totalPages": 0,
+    "authorCountry": "США",
+    "originalYear": null,
+    "description": null,
+    "averageRating": null,
+    "totalRatings": 0,
+    "createdAt": 1781991748364,
+    "_personal": {
+      "status": "want_to_read",
+      "rating": null,
+      "notes": "",
+      "startDate": null,
+      "endDate": null,
+      "language": null
+    }
+  },
+  {
+    "id": "book_0086",
+    "title": "Поющие в терновнике",
+    "author": "Маккалоу, Колин",
+    "cover": null,
+    "genres": [
+      "семейная сага"
+    ],
+    "totalPages": 0,
+    "authorCountry": "Австралия",
+    "originalYear": null,
+    "description": null,
+    "averageRating": null,
+    "totalRatings": 0,
+    "createdAt": 1781991748364,
+    "_personal": {
+      "status": "want_to_read",
+      "rating": null,
+      "notes": "",
+      "startDate": null,
+      "endDate": null,
+      "language": null
+    }
+  },
+  {
+    "id": "book_0087",
+    "title": "Замок из стекла",
+    "author": "Уоллс, Джаннетт",
+    "cover": null,
+    "genres": [
+      "мемуары"
+    ],
+    "totalPages": 0,
+    "authorCountry": "США",
+    "originalYear": null,
+    "description": null,
+    "averageRating": null,
+    "totalRatings": 0,
+    "createdAt": 1781991748364,
+    "_personal": {
+      "status": "want_to_read",
+      "rating": null,
+      "notes": "",
+      "startDate": null,
+      "endDate": null,
+      "language": null
+    }
+  },
+  {
+    "id": "book_0088",
+    "title": "Сойка-пересмешница",
+    "author": "Коллинз, Сьюзен",
+    "cover": null,
+    "genres": [
+      "постапокалипсис",
+      "young adult",
+      "научная фантастика"
+    ],
+    "totalPages": 0,
+    "authorCountry": "США",
+    "originalYear": null,
+    "description": null,
+    "averageRating": null,
+    "totalRatings": 0,
+    "createdAt": 1781991748364,
+    "_personal": {
+      "status": "want_to_read",
+      "rating": null,
+      "notes": "",
+      "startDate": null,
+      "endDate": null,
+      "language": null
+    }
+  },
+  {
+    "id": "book_0089",
+    "title": "Вещи, которые они несли с собой",
+    "author": "О’Брайен, Тим",
+    "cover": null,
+    "genres": [
+      "исторический роман"
+    ],
+    "totalPages": 0,
+    "authorCountry": "США",
+    "originalYear": null,
+    "description": null,
+    "averageRating": null,
+    "totalRatings": 0,
+    "createdAt": 1781991748364,
+    "_personal": {
+      "status": "want_to_read",
+      "rating": null,
+      "notes": "",
+      "startDate": null,
+      "endDate": null,
+      "language": null
+    }
+  },
+  {
+    "id": "book_0090",
+    "title": "Дорога",
+    "author": "Маккарти, Кормак",
+    "cover": null,
+    "genres": [
+      "исторический роман"
+    ],
+    "totalPages": 0,
+    "authorCountry": "США",
+    "originalYear": null,
+    "description": null,
+    "averageRating": null,
+    "totalRatings": 0,
+    "createdAt": 1781991748364,
+    "_personal": {
+      "status": "want_to_read",
+      "rating": null,
+      "notes": "",
+      "startDate": null,
+      "endDate": null,
+      "language": null
+    }
+  },
+  {
+    "id": "book_0091",
+    "title": "Рассечение Стоуна",
+    "author": "Вергезе, Абрахам",
+    "cover": null,
+    "genres": [
+      "городская проза"
+    ],
+    "totalPages": 0,
+    "authorCountry": "США",
+    "originalYear": null,
+    "description": null,
+    "averageRating": null,
+    "totalRatings": 0,
+    "createdAt": 1781991748364,
+    "_personal": {
+      "status": "want_to_read",
+      "rating": null,
+      "notes": "",
+      "startDate": null,
+      "endDate": null,
+      "language": null
+    }
+  },
+  {
+    "id": "book_0092",
+    "title": "Братья Карамазовы",
+    "author": "Достоевский, Фёдор Михайлович",
+    "cover": null,
+    "genres": [
+      "детектив",
+      "философский роман",
+      "религия"
+    ],
+    "totalPages": 0,
+    "authorCountry": "Россия",
+    "originalYear": null,
+    "description": null,
+    "averageRating": null,
+    "totalRatings": 0,
+    "createdAt": 1781991748364,
+    "_personal": {
+      "status": "want_to_read",
+      "rating": null,
+      "notes": "",
+      "startDate": null,
+      "endDate": null,
+      "language": null
+    }
+  },
+  {
+    "id": "book_0093",
+    "title": "Сиддхартха",
+    "author": "Гессе, Герман",
+    "cover": null,
+    "genres": [
+      "философский роман"
+    ],
+    "totalPages": 0,
+    "authorCountry": "Германия",
+    "originalYear": null,
+    "description": null,
+    "averageRating": null,
+    "totalRatings": 0,
+    "createdAt": 1781991748364,
+    "_personal": {
+      "status": "want_to_read",
+      "rating": null,
+      "notes": "",
+      "startDate": null,
+      "endDate": null,
+      "language": null
+    }
+  },
+  {
+    "id": "book_0094",
+    "title": "Возлюбленная",
+    "author": "Моррисон, Тони",
+    "cover": null,
+    "genres": [
+      "магический реализм",
+      "исторический роман"
+    ],
+    "totalPages": 0,
+    "authorCountry": "США",
+    "originalYear": null,
+    "description": null,
+    "averageRating": null,
+    "totalRatings": 0,
+    "createdAt": 1781991748364,
+    "_personal": {
+      "status": "want_to_read",
+      "rating": null,
+      "notes": "",
+      "startDate": null,
+      "endDate": null,
+      "language": null
+    }
+  },
+  {
+    "id": "book_0095",
+    "title": "История моей жизни",
+    "author": "Келлер, Хелен",
+    "cover": null,
+    "genres": [
+      "мемуары"
+    ],
+    "totalPages": 0,
+    "authorCountry": "США",
+    "originalYear": null,
+    "description": null,
+    "averageRating": null,
+    "totalRatings": 0,
+    "createdAt": 1781991748364,
+    "_personal": {
+      "status": "want_to_read",
+      "rating": null,
+      "notes": "",
+      "startDate": null,
+      "endDate": null,
+      "language": null
+    }
+  },
+  {
+    "id": "book_0096",
+    "title": "Призрачная будка",
+    "author": "Джастер, Нортон",
+    "cover": null,
+    "genres": [
+      "детский роман"
+    ],
+    "totalPages": 0,
+    "authorCountry": "США",
+    "originalYear": null,
+    "description": null,
+    "averageRating": null,
+    "totalRatings": 0,
+    "createdAt": 1781991748364,
+    "_personal": {
+      "status": "want_to_read",
+      "rating": null,
+      "notes": "",
+      "startDate": null,
+      "endDate": null,
+      "language": null
+    }
+  },
+  {
+    "id": "book_0097",
+    "title": "Из архива миссис Базиль Э. Франквайлер, самого запутанного в мире",
+    "author": "Конигсбург, Элейн",
+    "cover": null,
+    "genres": [
+      "детский роман"
+    ],
+    "totalPages": 0,
+    "authorCountry": "США",
+    "originalYear": null,
+    "description": null,
+    "averageRating": null,
+    "totalRatings": 0,
+    "createdAt": 1781991748364,
+    "_personal": {
+      "status": "want_to_read",
+      "rating": null,
+      "notes": "",
+      "startDate": null,
+      "endDate": null,
+      "language": null
+    }
+  },
+  {
+    "id": "book_0098",
+    "title": "Исчезнувшая",
+    "author": "Флинн, Гиллиан",
+    "cover": null,
+    "genres": [
+      "триллер"
+    ],
+    "totalPages": 0,
+    "authorCountry": "США",
+    "originalYear": null,
+    "description": null,
+    "averageRating": null,
+    "totalRatings": 0,
+    "createdAt": 1781991748364,
+    "_personal": {
+      "status": "want_to_read",
+      "rating": null,
+      "notes": "",
+      "startDate": null,
+      "endDate": null,
+      "language": null
+    }
+  },
+  {
+    "id": "book_0099",
+    "title": "Преступление и наказание",
+    "author": "Достоевский, Фёдор Михайлович",
+    "cover": null,
+    "genres": [
+      "реализм",
+      "философский роман",
+      "социально-психологический роман"
+    ],
+    "totalPages": 0,
+    "authorCountry": "Россия",
+    "originalYear": null,
+    "description": null,
+    "averageRating": null,
+    "totalRatings": 0,
+    "createdAt": 1781991748364,
+    "_personal": {
+      "status": "want_to_read",
+      "rating": null,
+      "notes": "",
+      "startDate": null,
+      "endDate": null,
+      "language": null
+    }
+  },
+  {
+    "id": "book_0100",
+    "title": "Одиссея",
+    "author": "Гомер",
+    "cover": null,
+    "genres": [
+      "поэма"
+    ],
+    "totalPages": 0,
+    "authorCountry": "Античная Греция",
+    "originalYear": null,
+    "description": null,
+    "averageRating": null,
+    "totalRatings": 0,
+    "createdAt": 1781991748364,
+    "_personal": {
+      "status": "want_to_read",
+      "rating": null,
+      "notes": "",
+      "startDate": null,
+      "endDate": null,
+      "language": null
+    }
+  },
+  {
+    "id": "book_0101",
+    "title": "Любовь и дружба",
+    "author": "Остин, Джейн",
+    "cover": null,
+    "genres": [
+      "эпистолярный"
+    ],
+    "totalPages": 47,
+    "authorCountry": "Англия",
+    "originalYear": null,
+    "description": null,
+    "averageRating": null,
+    "totalRatings": 0,
+    "createdAt": 1781991748364,
+    "_personal": {
+      "status": "completed",
+      "rating": 1,
+      "notes": "Переоцененный гений сатиры являющийся пробой пера и фанфиком плохого качества",
+      "startDate": "04.02.2025",
+      "endDate": "04.02.2025",
+      "language": "русский"
+    }
+  },
+  {
+    "id": "book_0102",
+    "title": "История Англии",
+    "author": "Остин, Джейн",
+    "cover": null,
+    "genres": [
+      "бурлеск"
+    ],
+    "totalPages": 15,
+    "authorCountry": "Англия",
+    "originalYear": null,
+    "description": null,
+    "averageRating": null,
+    "totalRatings": 0,
+    "createdAt": 1781991748364,
+    "_personal": {
+      "status": "completed",
+      "rating": 4,
+      "notes": "",
+      "startDate": "04.02.2025",
+      "endDate": "04.02.2025",
+      "language": "русский"
+    }
+  },
+  {
+    "id": "book_0103",
+    "title": "Чувство и чувствительность",
+    "author": "Остин, Джейн",
+    "cover": null,
+    "genres": [
+      "любовный роман"
+    ],
+    "totalPages": 383,
+    "authorCountry": "Великобритания",
+    "originalYear": null,
+    "description": null,
+    "averageRating": null,
+    "totalRatings": 0,
+    "createdAt": 1781991748364,
+    "_personal": {
+      "status": "completed",
+      "rating": 4,
+      "notes": "У всех все хорошо, даже у нравственно плохих людей; герои переженились, друзья счастливы; конец скомканый",
+      "startDate": "05.02.2025",
+      "endDate": "03.06.2025",
+      "language": "русский"
+    }
+  },
+  {
+    "id": "book_0104",
+    "title": "Мэнсфилд-парк",
+    "author": "Остин, Джейн",
+    "cover": null,
+    "genres": [
+      "любовный роман",
+      "роман воспитания"
+    ],
+    "totalPages": 480,
+    "authorCountry": "Великобритания",
+    "originalYear": null,
+    "description": null,
+    "averageRating": null,
+    "totalRatings": 0,
+    "createdAt": 1781991748364,
+    "_personal": {
+      "status": "reading",
+      "rating": null,
+      "notes": "",
+      "startDate": "03.06.2025 -",
+      "endDate": null,
+      "language": "русский"
+    }
+  },
+  {
+    "id": "book_0105",
+    "title": "Эмма",
+    "author": "Остин, Джейн",
+    "cover": null,
+    "genres": [
+      "роман нравов"
+    ],
+    "totalPages": 0,
+    "authorCountry": "Великобритания",
+    "originalYear": null,
+    "description": null,
+    "averageRating": null,
+    "totalRatings": 0,
+    "createdAt": 1781991748364,
+    "_personal": {
+      "status": "want_to_read",
+      "rating": null,
+      "notes": "",
+      "startDate": null,
+      "endDate": null,
+      "language": null
+    }
+  },
+  {
+    "id": "book_0106",
+    "title": "Доводы рассудка",
+    "author": "Остин, Джейн",
+    "cover": null,
+    "genres": [
+      "любовный роман"
+    ],
+    "totalPages": 0,
+    "authorCountry": "Великобритания",
+    "originalYear": null,
+    "description": null,
+    "averageRating": null,
+    "totalRatings": 0,
+    "createdAt": 1781991748364,
+    "_personal": {
+      "status": "want_to_read",
+      "rating": null,
+      "notes": "",
+      "startDate": null,
+      "endDate": null,
+      "language": null
+    }
+  },
+  {
+    "id": "book_0107",
+    "title": "Нортенгерское аббатство",
+    "author": "Остин, Джейн",
+    "cover": null,
+    "genres": [
+      "готика",
+      "любовный роман",
+      "сатира"
+    ],
+    "totalPages": 0,
+    "authorCountry": "Великобритания",
+    "originalYear": null,
+    "description": null,
+    "averageRating": null,
+    "totalRatings": 0,
+    "createdAt": 1781991748364,
+    "_personal": {
+      "status": "want_to_read",
+      "rating": null,
+      "notes": "",
+      "startDate": null,
+      "endDate": null,
+      "language": null
+    }
+  },
+  {
+    "id": "book_0108",
+    "title": "Замок Лесли",
+    "author": "Остин, Джейн",
+    "cover": null,
+    "genres": [
+      "эпистолярный"
+    ],
+    "totalPages": 39,
+    "authorCountry": "Великобритания",
+    "originalYear": null,
+    "description": null,
+    "averageRating": null,
+    "totalRatings": 0,
+    "createdAt": 1781991748364,
+    "_personal": {
+      "status": "completed",
+      "rating": 3,
+      "notes": "",
+      "startDate": "04.02.2025",
+      "endDate": "04.02.2025",
+      "language": "русский"
+    }
+  },
+  {
+    "id": "book_0109",
+    "title": "Собрание писем",
+    "author": "Остин, Джейн",
+    "cover": null,
+    "genres": [
+      "эпистолярный"
+    ],
+    "totalPages": 29,
+    "authorCountry": "Великобритания",
+    "originalYear": null,
+    "description": null,
+    "averageRating": null,
+    "totalRatings": 0,
+    "createdAt": 1781991748364,
+    "_personal": {
+      "status": "completed",
+      "rating": 5,
+      "notes": "",
+      "startDate": "04.02.2025",
+      "endDate": "04.02.2025",
+      "language": "русский"
+    }
+  },
+  {
+    "id": "book_0110",
+    "title": "Вегетерианка",
+    "author": "Хан Ган",
+    "cover": null,
+    "genres": [
+      "философский роман",
+      "реализм"
+    ],
+    "totalPages": 318,
+    "authorCountry": "Южная Корея",
+    "originalYear": null,
+    "description": null,
+    "averageRating": null,
+    "totalRatings": 0,
+    "createdAt": 1781991748364,
+    "_personal": {
+      "status": "completed",
+      "rating": 4,
+      "notes": "",
+      "startDate": "25.04.2025",
+      "endDate": "28.04.2025",
+      "language": "русский"
+    }
+  },
+  {
+    "id": "book_0111",
+    "title": "Карточный дом. Психотерапевтическая помощь клиентам с пограничными расстройствами",
+    "author": "Млодик, Ирина Юрьевна",
+    "cover": null,
+    "genres": [
+      "публицистика",
+      "психология"
+    ],
+    "totalPages": 160,
+    "authorCountry": "Россия",
+    "originalYear": null,
+    "description": null,
+    "averageRating": null,
+    "totalRatings": 0,
+    "createdAt": 1781991748364,
+    "_personal": {
+      "status": "completed",
+      "rating": 5,
+      "notes": "Признаки ПРЛ и принципы работы психотерапевта с ПРЛ",
+      "startDate": "27.05.2025",
+      "endDate": "27.05.2025",
+      "language": "русский"
+    }
+  },
+  {
+    "id": "book_0112",
+    "title": "Приключения майора Звягина",
+    "author": "Веллер, Михаил Иосифович",
+    "cover": null,
+    "genres": [
+      "роман воспитания"
+    ],
+    "totalPages": 544,
+    "authorCountry": "Россия",
+    "originalYear": null,
+    "description": null,
+    "averageRating": null,
+    "totalRatings": 0,
+    "createdAt": 1781991748364,
+    "_personal": {
+      "status": "completed",
+      "rating": 4,
+      "notes": "Идеалистичное представление расписанной по пунктам жизни от человека, который знает как людям жить правильнее, нужнее и грамотнее. Deus ex machina в лице Звягина.",
+      "startDate": "27.05.2025",
+      "endDate": "17.06.2025",
+      "language": "русский"
+    }
+  },
+  {
+    "id": "book_0113",
+    "title": "Серпентариум",
+    "author": "Alissa Raut",
+    "cover": null,
+    "genres": [
+      "фанфикшн"
+    ],
+    "totalPages": 635,
+    "authorCountry": null,
+    "originalYear": null,
+    "description": null,
+    "averageRating": null,
+    "totalRatings": 0,
+    "createdAt": 1781991748364,
+    "_personal": {
+      "status": "completed",
+      "rating": 3,
+      "notes": "Претенциозная Драмиона с громкой заявкой на оригинальность (за счет новой общей цели - маледиктус), внесенная в фандомные списки маст хэва. Очередной fetl троп с непрописанными персонажами. Концовку слили: антагонист не раскрыт, побочная линия бесцельно стреляет в финале (бессмысленно и пусто)",
+      "startDate": "18.05.2025",
+      "endDate": "26.06.2025",
+      "language": "русский"
+    }
+  },
+  {
+    "id": "book_0114",
+    "title": "Мартин Иден",
+    "author": "Лондон, Джек",
+    "cover": null,
+    "genres": [
+      "драма",
+      "реализм"
+    ],
+    "totalPages": 416,
+    "authorCountry": "США",
+    "originalYear": null,
+    "description": null,
+    "averageRating": null,
+    "totalRatings": 0,
+    "createdAt": 1781991748364,
+    "_personal": {
+      "status": "completed",
+      "rating": 3,
+      "notes": "Неверная мотивация (Руфь), которая иссякла, стоило только ей отказать Мартину, его депрессия - лучшая часть книги, но самая короткая",
+      "startDate": "17.06.2025",
+      "endDate": "26.06.2025",
+      "language": "русский"
+    }
+  },
+  {
+    "id": "book_0115",
+    "title": "Морской волк",
+    "author": "Лондон, Джек",
+    "cover": null,
+    "genres": [
+      "приключения"
+    ],
+    "totalPages": 0,
+    "authorCountry": "США",
+    "originalYear": null,
+    "description": null,
+    "averageRating": null,
+    "totalRatings": 0,
+    "createdAt": 1781991748364,
+    "_personal": {
+      "status": "want_to_read",
+      "rating": null,
+      "notes": "",
+      "startDate": null,
+      "endDate": null,
+      "language": null
+    }
+  },
+  {
+    "id": "book_0116",
+    "title": "Овод",
+    "author": "Войнич, Этель Лилиан",
+    "cover": null,
+    "genres": [
+      "любовный роман"
+    ],
+    "totalPages": 0,
+    "authorCountry": "США",
+    "originalYear": null,
+    "description": null,
+    "averageRating": null,
+    "totalRatings": 0,
+    "createdAt": 1781991748364,
+    "_personal": {
+      "status": "want_to_read",
+      "rating": null,
+      "notes": "",
+      "startDate": null,
+      "endDate": null,
+      "language": null
+    }
+  },
+  {
+    "id": "book_0117",
+    "title": "Повесть о настоящем человеке",
+    "author": "Полевой, Борис Николаевич",
+    "cover": null,
+    "genres": [
+      "повесть"
+    ],
+    "totalPages": 0,
+    "authorCountry": "Россия",
+    "originalYear": null,
+    "description": null,
+    "averageRating": null,
+    "totalRatings": 0,
+    "createdAt": 1781991748364,
+    "_personal": {
+      "status": "want_to_read",
+      "rating": null,
+      "notes": "",
+      "startDate": null,
+      "endDate": null,
+      "language": null
+    }
+  },
+  {
+    "id": "book_0118",
+    "title": "В августе сорок четвертого",
+    "author": "Богомолов, Владимир Осипович",
+    "cover": null,
+    "genres": [
+      "военная"
+    ],
+    "totalPages": 0,
+    "authorCountry": "Россия",
+    "originalYear": null,
+    "description": null,
+    "averageRating": null,
+    "totalRatings": 0,
+    "createdAt": 1781991748364,
+    "_personal": {
+      "status": "want_to_read",
+      "rating": null,
+      "notes": "",
+      "startDate": null,
+      "endDate": null,
+      "language": null
+    }
+  },
+  {
+    "id": "book_0119",
+    "title": "Наполеон",
+    "author": "Тарле, Евгений Викторович",
+    "cover": null,
+    "genres": [
+      "монография"
+    ],
+    "totalPages": 0,
+    "authorCountry": "Украина",
+    "originalYear": null,
+    "description": null,
+    "averageRating": null,
+    "totalRatings": 0,
+    "createdAt": 1781991748364,
+    "_personal": {
+      "status": "want_to_read",
+      "rating": null,
+      "notes": "",
+      "startDate": null,
+      "endDate": null,
+      "language": null
+    }
+  },
+  {
+    "id": "book_0120",
+    "title": "Талейран",
+    "author": "Тарле, Евгений Викторович",
+    "cover": null,
+    "genres": [
+      "монография"
+    ],
+    "totalPages": 0,
+    "authorCountry": "Украина",
+    "originalYear": null,
+    "description": null,
+    "averageRating": null,
+    "totalRatings": 0,
+    "createdAt": 1781991748364,
+    "_personal": {
+      "status": "want_to_read",
+      "rating": null,
+      "notes": "",
+      "startDate": null,
+      "endDate": null,
+      "language": null
+    }
+  },
+  {
+    "id": "book_0121",
+    "title": "Жизнь и деятельность Балтазара Коссы",
+    "author": "Парадисис, Александр",
+    "cover": null,
+    "genres": [
+      "мемуары",
+      "исторический роман"
+    ],
+    "totalPages": 0,
+    "authorCountry": "Турция",
+    "originalYear": null,
+    "description": null,
+    "averageRating": null,
+    "totalRatings": 0,
+    "createdAt": 1781991748364,
+    "_personal": {
+      "status": "want_to_read",
+      "rating": null,
+      "notes": "",
+      "startDate": null,
+      "endDate": null,
+      "language": null
+    }
+  },
+  {
+    "id": "book_0122",
+    "title": "Одиссея капитана Блада",
+    "author": "Сабатини, Рафаэль",
+    "cover": null,
+    "genres": [
+      "приключения"
+    ],
+    "totalPages": 0,
+    "authorCountry": "Великобритания",
+    "originalYear": null,
+    "description": null,
+    "averageRating": null,
+    "totalRatings": 0,
+    "createdAt": 1781991748364,
+    "_personal": {
+      "status": "want_to_read",
+      "rating": null,
+      "notes": "",
+      "startDate": null,
+      "endDate": null,
+      "language": null
+    }
+  },
+  {
+    "id": "book_0123",
+    "title": "Три мушкетера",
+    "author": "Дюма, Александр (отец)",
+    "cover": null,
+    "genres": [
+      "приключения",
+      "исторический роман"
+    ],
+    "totalPages": 0,
+    "authorCountry": "Франция",
+    "originalYear": null,
+    "description": null,
+    "averageRating": null,
+    "totalRatings": 0,
+    "createdAt": 1781991748364,
+    "_personal": {
+      "status": "want_to_read",
+      "rating": null,
+      "notes": "",
+      "startDate": null,
+      "endDate": null,
+      "language": null
+    }
+  },
+  {
+    "id": "book_0124",
+    "title": "Звёздные часы человечества",
+    "author": "Цвейг, Стефан",
+    "cover": null,
+    "genres": [
+      "очерк"
+    ],
+    "totalPages": 0,
+    "authorCountry": "Австрия",
+    "originalYear": null,
+    "description": null,
+    "averageRating": null,
+    "totalRatings": 0,
+    "createdAt": 1781991748364,
+    "_personal": {
+      "status": "want_to_read",
+      "rating": null,
+      "notes": "",
+      "startDate": null,
+      "endDate": null,
+      "language": null
+    }
+  },
+  {
+    "id": "book_0125",
+    "title": "Адмирал Нельсон",
+    "author": "Трухановский, Владимир Григорьевич",
+    "cover": null,
+    "genres": [
+      "мемуары"
+    ],
+    "totalPages": 0,
+    "authorCountry": "Россия",
+    "originalYear": null,
+    "description": null,
+    "averageRating": null,
+    "totalRatings": 0,
+    "createdAt": 1781991748364,
+    "_personal": {
+      "status": "want_to_read",
+      "rating": null,
+      "notes": "",
+      "startDate": null,
+      "endDate": null,
+      "language": null
+    }
+  },
+  {
+    "id": "book_0126",
+    "title": "Спартак",
+    "author": "Джованьоли, Рафаэлло",
+    "cover": null,
+    "genres": [
+      "исторический роман"
+    ],
+    "totalPages": 0,
+    "authorCountry": "Италия",
+    "originalYear": null,
+    "description": null,
+    "averageRating": null,
+    "totalRatings": 0,
+    "createdAt": 1781991748364,
+    "_personal": {
+      "status": "want_to_read",
+      "rating": null,
+      "notes": "",
+      "startDate": null,
+      "endDate": null,
+      "language": null
+    }
+  },
+  {
+    "id": "book_0127",
+    "title": "Павел Чжан и прочие речные твари",
+    "author": "Богданова, Вера Олеговна",
+    "cover": null,
+    "genres": [
+      "антиутопия",
+      "психология"
+    ],
+    "totalPages": 448,
+    "authorCountry": "Россия",
+    "originalYear": null,
+    "description": null,
+    "averageRating": null,
+    "totalRatings": 0,
+    "createdAt": 1781991748364,
+    "_personal": {
+      "status": "reading",
+      "rating": null,
+      "notes": "",
+      "startDate": "20.06.2025 -",
+      "endDate": null,
+      "language": "русский"
+    }
+  },
+  {
+    "id": "book_0128",
+    "title": "Красное и черное",
+    "author": "Стендаль",
+    "cover": null,
+    "genres": [
+      "психология",
+      "исторический роман",
+      "роман воспитания",
+      "социально-психологический роман"
+    ],
+    "totalPages": 592,
+    "authorCountry": "Франция",
+    "originalYear": null,
+    "description": null,
+    "averageRating": null,
+    "totalRatings": 0,
+    "createdAt": 1781991748364,
+    "_personal": {
+      "status": "postponed",
+      "rating": null,
+      "notes": "Очень тяжело читается, медленно. Жюльен Сорель очень непоследовательный и странный",
+      "startDate": "30.07.2025 -",
+      "endDate": null,
+      "language": "русский"
+    }
+  },
+  {
+    "id": "book_0129",
+    "title": "О любви",
+    "author": "Стендаль",
+    "cover": null,
+    "genres": [
+      "эссе"
+    ],
+    "totalPages": 0,
+    "authorCountry": "Франция",
+    "originalYear": null,
+    "description": null,
+    "averageRating": null,
+    "totalRatings": 0,
+    "createdAt": 1781991748364,
+    "_personal": {
+      "status": "want_to_read",
+      "rating": null,
+      "notes": "",
+      "startDate": null,
+      "endDate": null,
+      "language": null
+    }
+  },
+  {
+    "id": "book_0130",
+    "title": "Герой нашего времени",
+    "author": "Лермонтов, Михаил Юрьевич",
+    "cover": null,
+    "genres": [
+      "социально-психологический роман"
+    ],
+    "totalPages": 0,
+    "authorCountry": "Россия",
+    "originalYear": null,
+    "description": null,
+    "averageRating": null,
+    "totalRatings": 0,
+    "createdAt": 1781991748364,
+    "_personal": {
+      "status": "want_to_read",
+      "rating": null,
+      "notes": "",
+      "startDate": null,
+      "endDate": null,
+      "language": null
+    }
+  },
+  {
+    "id": "book_0131",
+    "title": "Любовь Свана",
+    "author": "Пруст, Марсель",
+    "cover": null,
+    "genres": [
+      "реализм",
+      "любовный роман"
+    ],
+    "totalPages": 0,
+    "authorCountry": "Франция",
+    "originalYear": null,
+    "description": null,
+    "averageRating": null,
+    "totalRatings": 0,
+    "createdAt": 1781991748364,
+    "_personal": {
+      "status": "want_to_read",
+      "rating": null,
+      "notes": "",
+      "startDate": null,
+      "endDate": null,
+      "language": null
+    }
+  },
+  {
+    "id": "book_0132",
+    "title": "Пан",
+    "author": "Гамсун, Кнут",
+    "cover": null,
+    "genres": [
+      "реализм",
+      "психология",
+      "приключения"
+    ],
+    "totalPages": 0,
+    "authorCountry": "Норвегия",
+    "originalYear": null,
+    "description": null,
+    "averageRating": null,
+    "totalRatings": 0,
+    "createdAt": 1781991748364,
+    "_personal": {
+      "status": "want_to_read",
+      "rating": null,
+      "notes": "",
+      "startDate": null,
+      "endDate": null,
+      "language": null
+    }
+  },
+  {
+    "id": "book_0133",
+    "title": "Бесы",
+    "author": "Достоевский, Фёдор Михайлович",
+    "cover": null,
+    "genres": [
+      "реализм",
+      "психология",
+      "социально-психологический роман"
+    ],
+    "totalPages": 0,
+    "authorCountry": "Россия",
+    "originalYear": null,
+    "description": null,
+    "averageRating": null,
+    "totalRatings": 0,
+    "createdAt": 1781991748364,
+    "_personal": {
+      "status": "want_to_read",
+      "rating": null,
+      "notes": "",
+      "startDate": null,
+      "endDate": null,
+      "language": null
+    }
+  },
+  {
+    "id": "book_0134",
+    "title": "Мост короля Людовика Святого",
+    "author": "Уайлдер, Торнтон",
+    "cover": null,
+    "genres": [
+      "философский роман",
+      "психология",
+      "исторический роман",
+      "повесть"
+    ],
+    "totalPages": 0,
+    "authorCountry": "США",
+    "originalYear": null,
+    "description": null,
+    "averageRating": null,
+    "totalRatings": 0,
+    "createdAt": 1781991748364,
+    "_personal": {
+      "status": "want_to_read",
+      "rating": null,
+      "notes": "",
+      "startDate": null,
+      "endDate": null,
+      "language": null
+    }
+  },
+  {
+    "id": "book_0135",
+    "title": "Диалоги",
+    "author": "Платон",
+    "cover": null,
+    "genres": [
+      "философский роман"
+    ],
+    "totalPages": 0,
+    "authorCountry": "Античная Греция",
+    "originalYear": null,
+    "description": null,
+    "averageRating": null,
+    "totalRatings": 0,
+    "createdAt": 1781991748364,
+    "_personal": {
+      "status": "want_to_read",
+      "rating": null,
+      "notes": "",
+      "startDate": null,
+      "endDate": null,
+      "language": null
+    }
+  },
+  {
+    "id": "book_0136",
+    "title": "Война и мир",
+    "author": "Толстой, Лев Николаевич",
+    "cover": null,
+    "genres": [
+      "эпопея",
+      "исторический роман",
+      "любовный роман",
+      "военная"
+    ],
+    "totalPages": 0,
+    "authorCountry": "Россия",
+    "originalYear": null,
+    "description": null,
+    "averageRating": null,
+    "totalRatings": 0,
+    "createdAt": 1781991748364,
+    "_personal": {
+      "status": "want_to_read",
+      "rating": null,
+      "notes": "",
+      "startDate": null,
+      "endDate": null,
+      "language": null
+    }
+  },
+  {
+    "id": "book_0137",
+    "title": "БВЛ. Том 1: Поэзия и проза Древнего Востока",
+    "author": "Неизвестный автор",
+    "cover": null,
+    "genres": [
+      "сборник"
+    ],
+    "totalPages": 0,
+    "authorCountry": null,
+    "originalYear": null,
+    "description": null,
+    "averageRating": null,
+    "totalRatings": 0,
+    "createdAt": 1781991748364,
+    "_personal": {
+      "status": "want_to_read",
+      "rating": null,
+      "notes": "",
+      "startDate": null,
+      "endDate": null,
+      "language": null
+    }
+  },
+  {
+    "id": "book_0138",
+    "title": "Колыбель для кошки",
+    "author": "Воннегут, Курт",
+    "cover": null,
+    "genres": [
+      "философский роман",
+      "сатира",
+      "научный роман"
+    ],
+    "totalPages": 281,
+    "authorCountry": "США",
+    "originalYear": null,
+    "description": null,
+    "averageRating": null,
+    "totalRatings": 0,
+    "createdAt": 1781991748364,
+    "_personal": {
+      "status": "completed",
+      "rating": 4,
+      "notes": "Концовка хороша",
+      "startDate": "21.07.2025",
+      "endDate": "24.07.2025",
+      "language": "русский"
+    }
+  },
+  {
+    "id": "book_0139",
+    "title": "Демиан",
+    "author": "Гессе, Герман",
+    "cover": null,
+    "genres": [
+      "роман воспитания"
+    ],
+    "totalPages": 220,
+    "authorCountry": "Германия",
+    "originalYear": null,
+    "description": null,
+    "averageRating": null,
+    "totalRatings": 0,
+    "createdAt": 1781991748364,
+    "_personal": {
+      "status": "completed",
+      "rating": 4,
+      "notes": "",
+      "startDate": "25.07.2025",
+      "endDate": "06.09.2025",
+      "language": "русский"
+    }
+  },
+  {
+    "id": "book_0140",
+    "title": "Феномен пропаганды",
+    "author": "Эллюль, Жак",
+    "cover": null,
+    "genres": [
+      "психология",
+      "социология",
+      "исследование"
+    ],
+    "totalPages": 0,
+    "authorCountry": "Франция",
+    "originalYear": null,
+    "description": null,
+    "averageRating": null,
+    "totalRatings": 0,
+    "createdAt": 1781991748364,
+    "_personal": {
+      "status": "want_to_read",
+      "rating": null,
+      "notes": "",
+      "startDate": null,
+      "endDate": null,
+      "language": null
+    }
+  },
+  {
+    "id": "book_0141",
+    "title": "Цветы смерти",
+    "author": "Ли Тонгон",
+    "cover": null,
+    "genres": [
+      "триллер",
+      "иямису"
+    ],
+    "totalPages": 288,
+    "authorCountry": "Южная Корея",
+    "originalYear": null,
+    "description": null,
+    "averageRating": null,
+    "totalRatings": 0,
+    "createdAt": 1781991748364,
+    "_personal": {
+      "status": "completed",
+      "rating": 5,
+      "notes": "",
+      "startDate": "15.04.2026",
+      "endDate": "22.05.2026",
+      "language": "русский"
+    }
+  },
+  {
+    "id": "book_0142",
+    "title": "Anne of Green Gables",
+    "author": "Монтгомери, Люси Мод",
+    "cover": null,
+    "genres": [
+      "роман воспитания"
+    ],
+    "totalPages": 378,
+    "authorCountry": "Канада",
+    "originalYear": null,
+    "description": null,
+    "averageRating": null,
+    "totalRatings": 0,
+    "createdAt": 1781991748364,
+    "_personal": {
+      "status": "reading",
+      "rating": null,
+      "notes": "",
+      "startDate": "14.03.2026 -",
+      "endDate": null,
+      "language": "английский"
+    }
+  },
+  {
+    "id": "book_0143",
+    "title": "Художник зыбкого мира",
+    "author": "Исигуро, Кадзуо",
+    "cover": null,
+    "genres": [
+      "исторический роман"
+    ],
+    "totalPages": 278,
+    "authorCountry": "Япония",
+    "originalYear": null,
+    "description": null,
+    "averageRating": null,
+    "totalRatings": 0,
+    "createdAt": 1781991748364,
+    "_personal": {
+      "status": "completed",
+      "rating": 1,
+      "notes": "Читала давно",
+      "startDate": "-",
+      "endDate": null,
+      "language": "русский"
+    }
+  },
+  {
+    "id": "book_0144",
+    "title": "Вдохновленный",
+    "author": "Неизвестный автор",
+    "cover": null,
+    "genres": [],
+    "totalPages": 0,
+    "authorCountry": null,
+    "originalYear": null,
+    "description": null,
+    "averageRating": null,
+    "totalRatings": 0,
+    "createdAt": 1781991748364,
+    "_personal": {
+      "status": "want_to_read",
+      "rating": null,
+      "notes": "",
+      "startDate": null,
+      "endDate": null,
+      "language": null
+    }
+  },
+  {
+    "id": "book_0145",
+    "title": "Все",
+    "author": "что нужно знать продакт-менеджеру,Каган",
+    "cover": null,
+    "genres": [
+      "XXI",
+      "деловая литература",
+      "русский",
+      "Прочитано",
+      "5",
+      "352",
+      "21.05.2026 - 27.05.2026",
+      ""
+    ],
+    "totalPages": 0,
+    "authorCountry": "Марти",
+    "originalYear": null,
+    "description": null,
+    "averageRating": null,
+    "totalRatings": 0,
+    "createdAt": 1781991748364,
+    "_personal": {
+      "status": "want_to_read",
+      "rating": null,
+      "notes": "",
+      "startDate": null,
+      "endDate": null,
+      "language": null
+    }
+  },
+  {
+    "id": "book_0146",
+    "title": "Спроси маму: Как общаться с клиентами и подтвердить правоту своей бизнес-идеи, если все кругом врут?",
+    "author": "Фитцпатрик, Роберт",
+    "cover": null,
+    "genres": [
+      "деловая литература"
+    ],
+    "totalPages": 134,
+    "authorCountry": "Великобритания",
+    "originalYear": null,
+    "description": null,
+    "averageRating": null,
+    "totalRatings": 0,
+    "createdAt": 1781991748364,
+    "_personal": {
+      "status": "abandoned",
+      "rating": 1,
+      "notes": "Для меня бесполезна, я ее переросла ещё в университете",
+      "startDate": "28.05.2026-28.05.2026",
+      "endDate": null,
+      "language": "русский"
+    }
+  },
+  {
+    "id": "book_0147",
+    "title": "Бизнес с нуля. Метод Lean Startup для быстрого тестирования идей и выбора бизнес-модели",
+    "author": "Рис, Эрик",
+    "cover": null,
+    "genres": [
+      "деловая литература"
+    ],
+    "totalPages": 209,
+    "authorCountry": "США",
+    "originalYear": null,
+    "description": null,
+    "averageRating": null,
+    "totalRatings": 0,
+    "createdAt": 1781991748364,
+    "_personal": {
+      "status": "reading",
+      "rating": 4,
+      "notes": "",
+      "startDate": "28.05.2026-11.06.2026",
+      "endDate": null,
+      "language": "русский"
+    }
+  },
+  {
+    "id": "book_0148",
+    "title": "Product management",
+    "author": "Трутненко, Сергей",
+    "cover": null,
+    "genres": [
+      "деловая литература"
+    ],
+    "totalPages": 0,
+    "authorCountry": "Россия",
+    "originalYear": null,
+    "description": null,
+    "averageRating": null,
+    "totalRatings": 0,
+    "createdAt": 1781991748364,
+    "_personal": {
+      "status": "reading",
+      "rating": null,
+      "notes": "",
+      "startDate": "08.06.2026-",
+      "endDate": null,
+      "language": "русский"
     }
   }
 ]

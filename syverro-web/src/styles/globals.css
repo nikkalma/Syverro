@@ -13,7 +13,6 @@ body {
   font-family: 'Inter', sans-serif;
   color: #E7EDF5;
   min-height: 100vh;
-  overflow-y: auto; /* ← СКРОЛЛ РАБОТАЕТ */
 }
 
 /* Атмосферный шар (Орб) */
@@ -37,16 +36,8 @@ body {
   50% { transform: translate(-50%, -50%) scale(1.2); opacity: 0.9; }
 }
 
-.container {
-  max-width: 600px;
-  width: 90%;
-  padding: 2rem;
-  text-align: center;
-  position: relative;
-  z-index: 2;
-  pointer-events: auto;
-  backdrop-filter: blur(2px);
-}
+/* Убираем конфликтующий .container — Tailwind уже имеет свой */
+/* Если нужен контейнер для страниц входа/регистрации — используй отдельный класс */
 
 .glass-card {
   background: rgba(14, 26, 38, 0.6);
@@ -120,4 +111,151 @@ button:hover {
 
 .link:hover {
   text-decoration: underline;
+}
+
+/* ===== СКРОЛЛБАРЫ ===== */
+
+/* Глобальный скролл для всего приложения */
+*::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+}
+*::-webkit-scrollbar-track {
+  background: #0A1118;
+  border-radius: 4px;
+}
+*::-webkit-scrollbar-thumb {
+  background: #2A4B60;
+  border-radius: 4px;
+}
+*::-webkit-scrollbar-thumb:hover {
+  background: #5B86A1;
+}
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #2A4B60 #0A1118;
+}
+
+/* Десктопный сайдбар */
+aside::-webkit-scrollbar {
+  width: 4px;
+}
+aside::-webkit-scrollbar-track {
+  background: #0A1118;
+  border-radius: 4px;
+}
+aside::-webkit-scrollbar-thumb {
+  background: #2A4B60;
+  border-radius: 4px;
+}
+aside::-webkit-scrollbar-thumb:hover {
+  background: #5B86A1;
+}
+aside {
+  scrollbar-width: thin;
+  scrollbar-color: #2A4B60 #0A1118;
+}
+
+/* Мобильный дравер (фиксированная панель) */
+.sidebar-drawer::-webkit-scrollbar {
+  width: 4px;
+}
+.sidebar-drawer::-webkit-scrollbar-track {
+  background: #0A1118;
+  border-radius: 4px;
+}
+.sidebar-drawer::-webkit-scrollbar-thumb {
+  background: #2A4B60;
+  border-radius: 4px;
+}
+.sidebar-drawer::-webkit-scrollbar-thumb:hover {
+  background: #5B86A1;
+}
+.sidebar-drawer {
+  scrollbar-width: thin;
+  scrollbar-color: #2A4B60 #0A1118;
+}
+
+/* Любой блок с прокруткой внутри сайдбара (на случай, если стили не применились) */
+.sidebar-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: #2A4B60 #0A1118;
+}
+.sidebar-scroll::-webkit-scrollbar {
+  width: 4px;
+}
+.sidebar-scroll::-webkit-scrollbar-track {
+  background: #0A1118;
+  border-radius: 4px;
+}
+.sidebar-scroll::-webkit-scrollbar-thumb {
+  background: #2A4B60;
+  border-radius: 4px;
+}
+.sidebar-scroll::-webkit-scrollbar-thumb:hover {
+  background: #5B86A1;
+}
+
+/* ===== СТЕКЛЯННЫЙ SELECT В СТИЛЕ SYVERRO ===== */
+.syverro-select {
+  width: 100%;
+  padding: 10px 36px 10px 14px;
+  background: rgba(18, 28, 36, 0.5);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 10px;
+  color: #E6EDF3;
+  font-size: 13px;
+  font-family: 'Inter', sans-serif;
+  appearance: none;
+  -webkit-appearance: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  outline: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%235B86A1' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 14px center;
+  background-size: 12px;
+}
+
+.syverro-select:hover {
+  border-color: rgba(255, 255, 255, 0.18);
+  background: rgba(18, 28, 36, 0.7);
+}
+
+.syverro-select:focus {
+  border-color: rgba(91, 134, 161, 0.4);
+  box-shadow: 0 0 0 3px rgba(91, 134, 161, 0.1);
+}
+
+/* Опции внутри select */
+.syverro-select option {
+  background: #121C24;
+  color: #E6EDF3;
+  padding: 10px 14px;
+  font-family: 'Inter', sans-serif;
+}
+
+/* Для Firefox */
+.syverro-select:-moz-focusring {
+  color: transparent;
+  text-shadow: 0 0 0 #E6EDF3;
+}
+
+/* Убираем стандартную стрелку в IE */
+.syverro-select::-ms-expand {
+  display: none;
+}
+
+/* ===== УБИРАЕМ СТРЕЛКИ У NUMBER INPUT ===== */
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+input[type="number"] {
+  -moz-appearance: textfield;
+  appearance: textfield;
 }

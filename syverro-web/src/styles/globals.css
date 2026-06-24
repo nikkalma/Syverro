@@ -259,3 +259,118 @@ input[type="number"] {
   -moz-appearance: textfield;
   appearance: textfield;
 }
+
+/* src/globals.css — добавьте в конец файла */
+
+/* ===== СИНХРОНИЗАЦИЯ: БАННЕР ===== */
+.sync-banner {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 9999;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  padding: 10px 16px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.25);
+  animation: slideDown 0.3s ease-out;
+}
+
+.sync-banner-content {
+  max-width: 1200px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  font-size: 14px;
+}
+
+.sync-banner-icon {
+  font-size: 18px;
+}
+
+.sync-banner-text {
+  font-weight: 500;
+}
+
+.sync-spinner {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  margin-left: 8px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top: 2px solid white;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+  vertical-align: middle;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-100%);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.sync-banner-button {
+  background: rgba(255, 255, 255, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  color: white;
+  padding: 5px 16px;
+  border-radius: 20px;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 500;
+  transition: background 0.2s;
+}
+
+.sync-banner-button:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+.sync-banner-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.sync-banner-close {
+  background: none;
+  border: none;
+  color: rgba(255, 255, 255, 0.7);
+  cursor: pointer;
+  font-size: 18px;
+  padding: 0 4px;
+  transition: color 0.2s;
+}
+
+.sync-banner-close:hover {
+  color: white;
+}
+
+/* ===== АДАПТИВ ===== */
+@media (max-width: 640px) {
+  .sync-banner {
+    padding: 8px 12px;
+  }
+  
+  .sync-banner-content {
+    font-size: 12px;
+    gap: 8px;
+  }
+  
+  .sync-banner-button {
+    font-size: 12px;
+    padding: 4px 12px;
+  }
+}

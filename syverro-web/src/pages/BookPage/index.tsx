@@ -1,4 +1,5 @@
 // src/pages/BookPage/index.tsx
+
 import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useLibrary } from '../../hooks/useLibrary';
@@ -8,6 +9,9 @@ import { EditModal } from './EditModal';
 import { AddToLibraryModal } from './AddToLibraryModal';
 import type { UserBookStatus } from '../../types/userBook';
 
+// ===== ОФФЛАЙН-СЛОЙ =====
+import { useOffline } from '@/lib/offline';
+
 const CURRENT_USER_ID = 'user_1';
 
 export default function BookPage() {
@@ -16,6 +20,9 @@ export default function BookPage() {
   const { books, loadBooks } = useLibrary();
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+
+  // ===== ОФФЛАЙН-ХУК =====
+  const { trackReadingStart, trackReadingFinish, trackNote } = useOffline();
 
   const book = books.find((b) => b.id === id);
   const isInLibrary = book ? !!userBookService.getByBook(CURRENT_USER_ID, book.id) : false;
@@ -54,23 +61,45 @@ export default function BookPage() {
     userBookService.add(CURRENT_USER_ID, book.id, status);
     setIsAddModalOpen(false);
     loadBooks();
+
+    // ===== ТРЕКИНГ: НАЧАЛО ЧТЕНИЯ =====
+    if (status === 'reading') {
+      trackReadingStart(book.id, {
+        title: book.title,
+        author: book.author,
+      });
+    }
+    // ==================================
   };
 
   const handleRemoveFromLibrary = () => {
+    // ===== ТРЕКИНГ: ЗАВЕРШЕНИЕ ЧТЕНИЯ =====
+    if (userBook?.status === 'reading') {
+      trackReadingFinish(book.id, 0);
+    }
+    // ======================================
+
     userBookService.remove(CURRENT_USER_ID, book.id);
     loadBooks();
   };
 
   const userBook = userBookService.getByBook(CURRENT_USER_ID, book.id);
 
-  // Фильтрация по тегу
   const handleTagClick = (type: 'genre' | 'theme', value: string) => {
     navigate(`/?${type}=${encodeURIComponent(value)}`);
   };
 
+  // ===== ЗАМЕТКИ (временная заглушка) =====
+  const handleSaveNote = (text: string) => {
+    if (text.trim()) {
+      trackNote(book.id, text.trim());
+      console.log('📝 Заметка сохранена локально:', text);
+    }
+  };
+  // ========================================
+
   return (
     <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '40px 24px' }}>
-      {/* Назад */}
       <button
         onClick={() => navigate('/')}
         style={{
@@ -169,26 +198,6 @@ export default function BookPage() {
           <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '12px' }}>
             {isInLibrary ? (
               <>
-                {/* Читать — закомментировано, пока закрытая комната */}
-                {/*
-                <button
-                  onClick={() => navigate(`/reader/${book.id}`)}
-                  style={{
-                    width: '100%',
-                    padding: '8px 16px',
-                    background: '#5B86A1',
-                    border: 'none',
-                    borderRadius: '8px',
-                    color: '#0A1118',
-                    fontSize: '13px',
-                    fontWeight: '500',
-                    cursor: 'pointer',
-                    fontFamily: 'Inter, sans-serif',
-                  }}
-                >
-                  📖 Читать
-                </button>
-                */}
                 <button
                   onClick={handleRemoveFromLibrary}
                   style={{
@@ -458,7 +467,7 @@ export default function BookPage() {
         </>
       )}
 
-      {/* Читалка (заглушка) */}
+      {/* ===== ЧИТАЛКА И ЗАМЕТКИ (С ОФФЛАЙН-ТРЕКИНГОМ) ===== */}
       <div style={{ marginTop: '24px' }}>
         <h3 style={{ fontSize: '14px', color: '#5B86A1', marginBottom: '8px' }}>Чтение внутри Syverro</h3>
         <div
@@ -475,7 +484,7 @@ export default function BookPage() {
         </div>
       </div>
 
-      {/* Заметки (заглушка) */}
+      {/* ===== ЗАМЕТКИ С ТРЕКИНГОМ ===== */}
       <div style={{ marginTop: '16px', marginBottom: '40px' }}>
         <h3 style={{ fontSize: '14px', color: '#5B86A1', marginBottom: '8px' }}>Мои заметки</h3>
         <div
@@ -484,11 +493,33 @@ export default function BookPage() {
             borderRadius: '12px',
             border: '1px solid rgba(255,255,255,0.06)',
             padding: '16px 20px',
-            color: '#5B86A1',
-            fontSize: '14px',
           }}
         >
-          Функция находится в разработке
+          <textarea
+            placeholder="Напишите заметку о книге..."
+            style={{
+              width: '100%',
+              minHeight: '80px',
+              background: 'rgba(0,0,0,0.2)',
+              border: '1px solid rgba(255,255,255,0.08)',
+              borderRadius: '8px',
+              padding: '12px',
+              color: '#E6EDF3',
+              fontSize: '14px',
+              fontFamily: 'Inter, sans-serif',
+              resize: 'vertical',
+            }}
+            onBlur={(e) => {
+              const text = e.target.value;
+              if (text.trim()) {
+                handleSaveNote(text);
+                e.target.value = '';
+              }
+            }}
+          />
+          <div style={{ fontSize: '12px', color: '#5B86A1', marginTop: '8px' }}>
+            Заметка сохранится локально и синхронизируется при подключении к интернету
+          </div>
         </div>
       </div>
 

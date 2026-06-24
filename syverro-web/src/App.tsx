@@ -1,4 +1,5 @@
 // src/App.tsx
+
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import Layout from './components/Layout';
 import LibraryPage from './pages/LibraryPage';
@@ -8,11 +9,15 @@ import WorldMap from './pages/WorldMap';
 import Profile from './pages/Profile';
 import MyLibraryPage from './pages/MyLibraryPage';
 import Settings from './pages/Settings';
+import Login from './pages/Login';
+import Register from './pages/Register';
 
 function App() {
   return (
     <BrowserRouter>
       <Routes>
+        <Route path="/login" element={<Login />} />
+        <Route path="/register" element={<Register />} />
         <Route path="/" element={<Layout><LibraryPage /></Layout>} />
         <Route path="/book/:id" element={<Layout><BookPage /></Layout>} />
         <Route path="/insights" element={<Layout><Insights /></Layout>} />

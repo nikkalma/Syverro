@@ -64,6 +64,8 @@ export interface GlobalBook {
   moderationStatus?: 'pending' | 'approved' | 'rejected';
   moderationReason?: string;
   triggerWarnings?: string[];
+   series?: string;          // ← добавить
+  seriesPosition?: number;
 }
 
 export interface EnrichedBook extends GlobalBook {

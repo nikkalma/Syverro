@@ -1,4 +1,5 @@
 // src/components/Layout.tsx
+
 import { ReactNode, useState, useRef, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuthStore } from '../store/authStore';
@@ -16,7 +17,10 @@ const navItems = [
 export default function Layout({ children }: LayoutProps) {
   const navigate = useNavigate();
   const location = useLocation();
-  const logout = useAuthStore((state) => state.logout);
+  const { user, logout } = useAuthStore((state) => ({
+    user: state.user,
+    logout: state.logout,
+  }));
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
@@ -33,6 +37,7 @@ export default function Layout({ children }: LayoutProps) {
   const handleLogout = () => {
     logout();
     navigate('/login');
+    setIsDropdownOpen(false);
   };
 
   const toggleDropdown = () => {
@@ -60,6 +65,7 @@ export default function Layout({ children }: LayoutProps) {
         zIndex: 10,
         flexShrink: 0,
       }}>
+        {/* ЛОГО */}
         <div
           onClick={() => navigate('/')}
           style={{
@@ -76,6 +82,7 @@ export default function Layout({ children }: LayoutProps) {
           Syverro
         </div>
 
+        {/* НАВИГАЦИЯ */}
         <nav style={{
           display: 'flex',
           alignItems: 'center',
@@ -223,7 +230,55 @@ export default function Layout({ children }: LayoutProps) {
           })}
         </nav>
 
-        <div style={{ width: '120px' }} />
+        {/* ===== ПРАВАЯ ЧАСТЬ: КНОПКА "НАЧАТЬ ПУТЬ" ===== */}
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: '16px',
+          minWidth: '120px',
+          justifyContent: 'flex-end',
+        }}>
+          {user ? (
+            // Если пользователь авторизован — показываем email и кнопку выхода
+            <>
+              <span style={{
+                color: '#97A6BA',
+                fontSize: '14px',
+                fontFamily: 'Inter, sans-serif',
+              }}>
+                {user.email}
+              </span>
+            </>
+          ) : (
+            // Если не авторизован — кнопка "Начать путь"
+            <button
+              onClick={() => navigate('/login')}
+              style={{
+                padding: '8px 20px',
+                background: 'linear-gradient(135deg, #5B86A1, #4A6F8A)',
+                border: 'none',
+                borderRadius: '20px',
+                color: '#0A1118',
+                fontSize: '14px',
+                fontWeight: '500',
+                cursor: 'pointer',
+                transition: 'all 0.3s ease',
+                fontFamily: 'Inter, sans-serif',
+                whiteSpace: 'nowrap',
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.transform = 'scale(1.05)';
+                e.currentTarget.style.boxShadow = '0 4px 20px rgba(91, 134, 161, 0.3)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.transform = 'scale(1)';
+                e.currentTarget.style.boxShadow = 'none';
+              }}
+            >
+              🚀 Начать путь
+            </button>
+          )}
+        </div>
       </header>
 
       <div style={{ flex: 1 }}>

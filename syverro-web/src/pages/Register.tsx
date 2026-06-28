@@ -1,16 +1,16 @@
 // src/pages/Register.tsx
 
 import { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
-import { useAuth } from '../contexts/AuthContext';
+import { Link, useNavigate } from 'react-router-dom';
+import { useAuthStore } from '../store/authStore';
 
 export default function Register() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
-  const { register } = useAuth();
+  const [loading, setLoading] = useState(false);
+  const register = useAuthStore((state) => state.register);
   const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -27,21 +27,21 @@ export default function Register() {
       return;
     }
 
-    setIsLoading(true);
+    setLoading(true);
 
     try {
       await register(email, password);
       navigate('/');
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Ошибка регистрации');
+    } catch (err: any) {
+      setError(err.message || 'Ошибка регистрации');
     } finally {
-      setIsLoading(false);
+      setLoading(false);
     }
   };
 
   return (
-    <div style={{ maxWidth: '400px', margin: '80px auto', padding: '0 20px' }}>
-      <h1 style={{ color: '#E6EDF3', fontSize: '28px', marginBottom: '8px' }}>Регистрация</h1>
+    <div style={{ maxWidth: '400px', margin: '80px auto', padding: '0 20px', color: '#E6EDF3' }}>
+      <h1 style={{ fontSize: '28px', marginBottom: '8px' }}>Регистрация</h1>
       <p style={{ color: '#97A6BA', marginBottom: '32px' }}>
         Уже есть аккаунт? <Link to="/login" style={{ color: '#5B86A1' }}>Войти</Link>
       </p>
@@ -119,7 +119,7 @@ export default function Register() {
 
         <button
           type="submit"
-          disabled={isLoading}
+          disabled={loading}
           style={{
             width: '100%',
             padding: '12px',
@@ -129,11 +129,11 @@ export default function Register() {
             color: '#0A1118',
             fontSize: '16px',
             fontWeight: '500',
-            cursor: isLoading ? 'not-allowed' : 'pointer',
-            opacity: isLoading ? 0.6 : 1,
+            cursor: loading ? 'not-allowed' : 'pointer',
+            opacity: loading ? 0.6 : 1,
           }}
         >
-          {isLoading ? 'Регистрация...' : 'Зарегистрироваться'}
+          {loading ? 'Регистрация...' : 'Зарегистрироваться'}
         </button>
       </form>
     </div>

@@ -1,4 +1,5 @@
 // src/pages/Settings.tsx
+
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../store/authStore';
@@ -6,10 +7,11 @@ import { storageService } from '../services/storageService';
 import { getLocaleData, getBrowserLocale, localePriority, Locale } from '../locales';
 
 export default function Settings() {
-  const logout = useAuthStore((state) => state.logout);
+  const { user, logout } = useAuthStore();
   const navigate = useNavigate();
   const profile = storageService.getReaderProfile();
 
+  // ===== СОСТОЯНИЯ =====
   const [displayName, setDisplayName] = useState(profile.displayName || '');
   const [status, setStatus] = useState(profile.status || '');
   const [theme, setTheme] = useState(localStorage.getItem('syverro_theme') || 'dark');
@@ -23,25 +25,24 @@ export default function Settings() {
 
   const t = getLocaleData(locale);
 
-  // Применяем тему при загрузке и при изменении
+  // ===== ТЕМА =====
   useEffect(() => {
     document.documentElement.style.backgroundColor = theme === 'light' ? '#F5F5F5' : '#0B1220';
     document.documentElement.style.color = theme === 'light' ? '#1A1A1A' : '#E6EDF3';
     localStorage.setItem('syverro_theme', theme);
   }, [theme]);
 
+  // ===== СОХРАНЕНИЕ ПРОФИЛЯ =====
   const handleSave = () => {
     setIsSaving(true);
     setSaveMessage('');
 
     try {
-      // Сохраняем профиль
       storageService.updateReaderProfile({
         displayName: displayName.trim() || 'Читатель',
         status: status.trim(),
       });
 
-      // Сохраняем локаль
       localStorage.setItem('syverro_locale', locale);
 
       setSaveMessage('✅ Настройки сохранены');
@@ -53,12 +54,13 @@ export default function Settings() {
     }
   };
 
+  // ===== ВЫХОД =====
   const handleLogout = () => {
     logout();
     navigate('/login');
   };
 
-  // Метки для языков
+  // ===== ЯЗЫКИ =====
   const localeLabels: Record<Locale, string> = {
     ru: 'Русский',
     en: 'English',
@@ -74,6 +76,7 @@ export default function Settings() {
         ⚙️ {t.settings?.title || 'Настройки'}
       </h1>
 
+      {/* ===== ОСНОВНЫЕ НАСТРОЙКИ ===== */}
       <div
         style={{
           background: 'rgba(18, 28, 36, 0.6)',
@@ -85,6 +88,10 @@ export default function Settings() {
           marginBottom: '20px',
         }}
       >
+        <h2 style={{ fontSize: '18px', color: '#E6EDF3', marginBottom: '20px' }}>
+          👤 Профиль
+        </h2>
+
         {/* Имя */}
         <div style={{ marginBottom: '20px' }}>
           <label style={{ fontSize: '13px', color: '#97A6BA', display: 'block', marginBottom: '6px' }}>
@@ -184,8 +191,17 @@ export default function Settings() {
           <select
             value={locale}
             onChange={(e) => setLocale(e.target.value as Locale)}
-            className="syverro-select"
-            style={{ width: '100%' }}
+            style={{
+              width: '100%',
+              padding: '10px 14px',
+              background: 'rgba(0,0,0,0.3)',
+              border: '1px solid rgba(255,255,255,0.08)',
+              borderRadius: '8px',
+              color: '#E6EDF3',
+              fontSize: '14px',
+              fontFamily: 'Inter, sans-serif',
+              outline: 'none',
+            }}
           >
             {localePriority.map((l) => (
               <option key={l} value={l}>
@@ -195,7 +211,6 @@ export default function Settings() {
           </select>
         </div>
 
-        {/* Кнопка сохранения */}
         <button
           onClick={handleSave}
           disabled={isSaving}
@@ -224,13 +239,20 @@ export default function Settings() {
         </button>
 
         {saveMessage && (
-          <div style={{ marginTop: '12px', textAlign: 'center', fontSize: '14px', color: '#4CAF50' }}>
+          <div
+            style={{
+              marginTop: '12px',
+              textAlign: 'center',
+              fontSize: '14px',
+              color: saveMessage.includes('✅') ? '#4CAF50' : '#EF5350',
+            }}
+          >
             {saveMessage}
           </div>
         )}
       </div>
 
-      {/* Аккаунт и выход */}
+      {/* ===== АККАУНТ ===== */}
       <div
         style={{
           background: 'rgba(18, 28, 36, 0.6)',
@@ -241,6 +263,10 @@ export default function Settings() {
           padding: '24px',
         }}
       >
+        <h2 style={{ fontSize: '18px', color: '#E6EDF3', marginBottom: '20px' }}>
+          🔐 Аккаунт
+        </h2>
+
         <div
           style={{
             display: 'flex',
@@ -249,12 +275,32 @@ export default function Settings() {
             padding: '12px 16px',
             background: 'rgba(0,0,0,0.2)',
             borderRadius: '8px',
-            border: '1px solid rgba(255, 255, 255, 0.06)',
+            border: '1px solid rgba(255,255,255,0.06)',
             marginBottom: '12px',
           }}
         >
-          <span style={{ color: '#97A6BA', fontSize: '14px' }}>Аккаунт</span>
-          <span style={{ color: '#E6EDF3', fontSize: '14px' }}>user@email.com</span>
+          <span style={{ color: '#97A6BA', fontSize: '14px' }}>Email</span>
+          <span style={{ color: '#E6EDF3', fontSize: '14px' }}>
+            {user?.email || '—'}
+          </span>
+        </div>
+
+        <div
+          style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            padding: '12px 16px',
+            background: 'rgba(0,0,0,0.2)',
+            borderRadius: '8px',
+            border: '1px solid rgba(255,255,255,0.06)',
+            marginBottom: '20px',
+          }}
+        >
+          <span style={{ color: '#97A6BA', fontSize: '14px' }}>ID пользователя</span>
+          <span style={{ color: '#E6EDF3', fontSize: '14px', fontFamily: 'monospace' }}>
+            {user?.id?.slice(0, 8) || '-'}…
+          </span>
         </div>
 
         <button
@@ -278,7 +324,7 @@ export default function Settings() {
             e.currentTarget.style.background = 'transparent';
           }}
         >
-          🚪 Выйти
+          🚪 Выйти из аккаунта
         </button>
       </div>
     </div>

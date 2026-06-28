@@ -5,6 +5,10 @@
   "installCommand": "npm install",
   "rewrites": [
     {
+      "source": "/(api|auth|books|admin|sync|health|users|stats|logs|settings|authors|genres|phone)(.*)",
+      "destination": "http://77.233.220.197:8000/$1$2"
+    },
+    {
       "source": "/(.*)",
       "destination": "/index.html"
     }

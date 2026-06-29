@@ -57,16 +57,32 @@ body {
 }
 
 [data-theme="light"] {
-  --bg: #E0D4C3;
-  --surface: #D4C7B4;
-  --surface-alt: #C8BAA6;
-  --surface-hover: #DDD0BE;
-  --text-primary: #2A2622;
+  /* Основные фоны — больше контраста */
+  --bg: #ECE3D5;
+  --surface: #DDD0BE;
+  --surface-alt: #F2EBE0;
+  --surface-hover: #E8DDCE;
+
+  /* Карточки — отделяются тенью */
+  --card: #D7C8B5;
+  --card-hover: #E0D2C0;
+  --card-active: #CFC0AC;
+
+  /* Текст — темнее, чтобы читался */
+  --text-primary: #1A1614;
   --text-secondary: #6B6358;
   --text-muted: #948A7C;
-  --primary: #4A5A6A;
-  --primary-soft: #6B7A88;
-  --primary-hover: #3A4A5A;
+
+  /* Акцент — мягкий, но заметный */
+  --primary: #6B7A88;
+  --primary-soft: #8A9AA8;
+  --primary-hover: #5A6A78;
+
+  /* Границы — для разделения */
+  --border: #BEB09C;
+  --border-soft: #D4C7B4;
+
+  /* Остальное — без изменений */
   --accent: #B8A99A;
   --accent-soft: #D1C6BA;
   --success: #6B8F7A;
@@ -74,20 +90,15 @@ body {
   --error: #C47A7A;
   --info: #7A8FC4;
   --status: #4A5A6A;
-  --border: #BEB09C;
-  --border-soft: #D4C7B4;
-  --card: #D4C7B4;
-  --card-hover: #DDD0BE;
-  --card-active: #C8BAA6;
   --chip: #C8BAA6;
   --chip-active: #BEB09C;
-  --glass-bg: rgba(212, 199, 180, 0.7);
-  --glass-border: rgba(190, 176, 156, 0.5);
+  --glass-bg: rgba(255, 255, 255, 0.6);
+  --glass-border: rgba(190, 176, 156, 0.3);
   --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
   --orb: rgba(176, 162, 144, 0.7);
   --current-book-glow: #4A5A6A;
   --neon-glow: #4A5A6A;
-  --input-bg: rgba(255, 255, 255, 0.3);
+  --input-bg: rgba(255, 255, 255, 0.4);
 }
 
 /* ===== СТЕКЛЯННЫЕ КНОПКИ ===== */

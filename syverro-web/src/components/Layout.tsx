@@ -15,7 +15,6 @@ export default function Layout({ children }: LayoutProps) {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
-  // ===== ПРОВЕРКА РОЛИ ДЛЯ АДМИНКИ =====
   const isAdmin = user?.role === 'owner' || user?.role === 'admin' || user?.role === 'moderator';
 
   useEffect(() => {
@@ -41,14 +40,20 @@ export default function Layout({ children }: LayoutProps) {
   const isProfileActive = location.pathname === '/profile' || location.pathname === '/settings';
 
   return (
-    <div style={{ minHeight: '100vh', background: '#0B1220', display: 'flex', flexDirection: 'column' }}>
+    <div style={{
+      minHeight: '100vh',
+      background: 'var(--bg)',
+      display: 'flex',
+      flexDirection: 'column',
+      color: 'var(--text-primary)',
+    }}>
       <header style={{
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',
         padding: '16px 24px',
-        borderBottom: '1px solid #1A2832',
-        background: '#0B1220',
+        borderBottom: '1px solid var(--border)',
+        background: 'var(--surface)',
         position: 'sticky',
         top: 0,
         zIndex: 10,
@@ -61,7 +66,7 @@ export default function Layout({ children }: LayoutProps) {
             fontFamily: "'Playfair Display', serif",
             fontSize: '28px',
             fontWeight: '600',
-            color: '#E6EDF3',
+            color: 'var(--text-primary)',
             letterSpacing: '6px',
             whiteSpace: 'nowrap',
             cursor: 'pointer',
@@ -71,7 +76,7 @@ export default function Layout({ children }: LayoutProps) {
           Syverro
         </div>
 
-        {/* ===== НАВИГАЦИЯ (ТОЛЬКО ИНСАЙТЫ И КАРТА МИРОВ) ===== */}
+        {/* НАВИГАЦИЯ */}
         <nav style={{
           display: 'flex',
           alignItems: 'center',
@@ -82,7 +87,7 @@ export default function Layout({ children }: LayoutProps) {
           <span
             onClick={() => navigate('/insights')}
             style={{
-              color: location.pathname === '/insights' ? '#E6EDF3' : '#97A6BA',
+              color: location.pathname === '/insights' ? 'var(--text-primary)' : 'var(--text-secondary)',
               cursor: 'pointer',
               fontFamily: 'Inter, sans-serif',
               transition: 'color 0.2s',
@@ -93,7 +98,7 @@ export default function Layout({ children }: LayoutProps) {
           <span
             onClick={() => navigate('/worldmap')}
             style={{
-              color: location.pathname === '/worldmap' ? '#E6EDF3' : '#97A6BA',
+              color: location.pathname === '/worldmap' ? 'var(--text-primary)' : 'var(--text-secondary)',
               cursor: 'pointer',
               fontFamily: 'Inter, sans-serif',
               transition: 'color 0.2s',
@@ -103,7 +108,7 @@ export default function Layout({ children }: LayoutProps) {
           </span>
         </nav>
 
-        {/* ===== ПРАВАЯ ЧАСТЬ ===== */}
+        {/* ПРАВАЯ ЧАСТЬ */}
         <div style={{
           display: 'flex',
           alignItems: 'center',
@@ -116,7 +121,7 @@ export default function Layout({ children }: LayoutProps) {
               <span
                 onClick={toggleDropdown}
                 style={{
-                  color: isProfileActive ? '#E6EDF3' : '#97A6BA',
+                  color: isProfileActive ? 'var(--text-primary)' : 'var(--text-secondary)',
                   cursor: 'pointer',
                   fontFamily: 'Inter, sans-serif',
                   display: 'flex',
@@ -135,10 +140,10 @@ export default function Layout({ children }: LayoutProps) {
                   top: '100%',
                   right: 0,
                   marginTop: '8px',
-                  background: 'rgba(18, 28, 36, 0.95)',
+                  background: 'var(--surface)',
                   backdropFilter: 'blur(20px)',
                   borderRadius: '12px',
-                  border: '1px solid rgba(255,255,255,0.08)',
+                  border: '1px solid var(--border)',
                   padding: '8px 0',
                   minWidth: '180px',
                   boxShadow: '0 12px 48px rgba(0,0,0,0.5)',
@@ -151,7 +156,7 @@ export default function Layout({ children }: LayoutProps) {
                     }}
                     style={{
                       padding: '10px 20px',
-                      color: '#E6EDF3',
+                      color: 'var(--text-primary)',
                       fontSize: '14px',
                       cursor: 'pointer',
                       fontFamily: 'Inter, sans-serif',
@@ -162,7 +167,6 @@ export default function Layout({ children }: LayoutProps) {
                     🌍 Мой мир
                   </div>
 
-                  {/* ===== АДМИНКА (ТОЛЬКО ДЛЯ owner/admin/moderator) ===== */}
                   {isAdmin && (
                     <div
                       onClick={() => {
@@ -171,7 +175,7 @@ export default function Layout({ children }: LayoutProps) {
                       }}
                       style={{
                         padding: '10px 20px',
-                        color: '#5B86A1',
+                        color: 'var(--primary)',
                         fontSize: '14px',
                         cursor: 'pointer',
                         fontFamily: 'Inter, sans-serif',
@@ -190,7 +194,7 @@ export default function Layout({ children }: LayoutProps) {
                     }}
                     style={{
                       padding: '10px 20px',
-                      color: '#E6EDF3',
+                      color: 'var(--text-primary)',
                       fontSize: '14px',
                       cursor: 'pointer',
                       fontFamily: 'Inter, sans-serif',
@@ -201,13 +205,13 @@ export default function Layout({ children }: LayoutProps) {
                     ⚙️ Настройки
                   </div>
 
-                  <div style={{ height: '1px', background: 'rgba(255,255,255,0.06)', margin: '4px 12px' }} />
+                  <div style={{ height: '1px', background: 'var(--border)', margin: '4px 12px' }} />
 
                   <div
                     onClick={handleLogout}
                     style={{
                       padding: '10px 20px',
-                      color: '#EF5350',
+                      color: 'var(--error)',
                       fontSize: '14px',
                       cursor: 'pointer',
                       fontFamily: 'Inter, sans-serif',
@@ -224,21 +228,21 @@ export default function Layout({ children }: LayoutProps) {
             <span
               onClick={() => navigate('/login')}
               style={{
-                color: '#97A6BA',
+                color: 'var(--text-secondary)',
                 cursor: 'pointer',
                 fontSize: '15px',
                 fontFamily: 'Inter, sans-serif',
                 transition: 'color 0.2s',
               }}
-              onMouseEnter={(e) => { e.currentTarget.style.color = '#E6EDF3'; }}
-              onMouseLeave={(e) => { e.currentTarget.style.color = '#97A6BA'; }}
+              onMouseEnter={(e) => { e.currentTarget.style.color = 'var(--text-primary)'; }}
+              onMouseLeave={(e) => { e.currentTarget.style.color = 'var(--text-secondary)'; }}
             >
               Начать путь
             </span>
           )}
         </div>
       </header>
-      <div style={{ flex: 1 }}>{children}</div>
+      <div style={{ flex: 1, background: 'var(--bg)' }}>{children}</div>
     </div>
   );
 }

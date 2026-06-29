@@ -1,6 +1,7 @@
 // src/widgets/BookCard.tsx
 import type { EnrichedBook } from '../types/book';
 import type { UserBook } from '../types/userBook';
+import { BookOpen, CheckCircle, RotateCcw } from 'lucide-react';
 
 interface BookCardProps {
   book: EnrichedBook;
@@ -27,16 +28,6 @@ export default function BookCard({ book, userBook, onClick }: BookCardProps) {
         overflow: 'hidden',
         position: 'relative',
       }}
-      onMouseEnter={(e) => {
-        if (onClick) {
-          e.currentTarget.style.borderColor = 'var(--primary)';
-          e.currentTarget.style.boxShadow = '0 8px 24px rgba(91, 134, 161, 0.15)';
-        }
-      }}
-      onMouseLeave={(e) => {
-        e.currentTarget.style.borderColor = 'var(--border-soft)';
-        e.currentTarget.style.boxShadow = 'none';
-      }}
     >
       {rereadCount > 0 && (
         <div
@@ -53,8 +44,12 @@ export default function BookCard({ book, userBook, onClick }: BookCardProps) {
             backdropFilter: 'blur(4px)',
             color: '#fff',
             border: '1px solid rgba(255,255,255,0.1)',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '4px',
           }}
         >
+          <RotateCcw size={12} />
           Вернулся {rereadCount > 1 && `#${rereadCount}`}
         </div>
       )}
@@ -83,7 +78,7 @@ export default function BookCard({ book, userBook, onClick }: BookCardProps) {
           />
         ) : (
           <div style={{ textAlign: 'center', color: 'var(--text-muted)', padding: '16px' }}>
-            <div style={{ fontSize: '48px', marginBottom: '8px', opacity: 0.4 }}>📖</div>
+            <BookOpen size={48} style={{ opacity: 0.4, marginBottom: '8px' }} />
             <div style={{ fontSize: '14px', color: 'var(--text-secondary)' }}>{book.title}</div>
           </div>
         )}
@@ -144,6 +139,22 @@ export default function BookCard({ book, userBook, onClick }: BookCardProps) {
                 }}
               />
             </div>
+          </div>
+        )}
+
+        {userBook?.status === 'completed' && (
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '4px',
+              marginTop: '6px',
+              fontSize: '11px',
+              color: 'var(--success)',
+            }}
+          >
+            <CheckCircle size={14} />
+            Прочитано
           </div>
         )}
       </div>

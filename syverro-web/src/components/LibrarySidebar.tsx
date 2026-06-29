@@ -2,6 +2,7 @@
 import { useState } from 'react';
 import type { EnrichedBook } from '../types/book';
 import { getABTestVariant } from '../utils/abTest';
+import { Search, Sparkles, Shuffle, BookOpen, Globe2, Clock, Tag, FolderOpen } from 'lucide-react';
 
 export interface LibrarySidebarProps {
   searchQuery: string;
@@ -46,8 +47,19 @@ const AccordionGroup = ({
   defaultOpen?: boolean;
 }) => {
   const [isOpen, setIsOpen] = useState(defaultOpen);
-
   if (items.length === 0) return null;
+
+  const getIcon = () => {
+    switch (title) {
+      case 'Настроение': return <Sparkles size={14} />;
+      case 'Вайб': return <BookOpen size={14} />;
+      case 'Темы': return <Tag size={14} />;
+      case 'Жанры': return <FolderOpen size={14} />;
+      case 'Страны': return <Globe2 size={14} />;
+      case 'Эпоха': return <Clock size={14} />;
+      default: return null;
+    }
+  };
 
   return (
     <div>
@@ -67,7 +79,10 @@ const AccordionGroup = ({
           userSelect: 'none',
         }}
       >
-        <span>{title}</span>
+        <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+          {getIcon()}
+          {title}
+        </span>
         <span style={{ fontSize: '10px', color: 'var(--text-muted)' }}>
           {isOpen ? '▾' : '▸'} {items.length}
         </span>
@@ -88,18 +103,6 @@ const AccordionGroup = ({
                 color: selected.includes(item) ? '#FFFFFF' : 'var(--text-secondary)',
                 cursor: 'pointer',
                 transition: 'all 0.2s ease',
-              }}
-              onMouseEnter={(e) => {
-                if (!selected.includes(item)) {
-                  e.currentTarget.style.borderColor = 'var(--primary)';
-                  e.currentTarget.style.color = 'var(--text-primary)';
-                }
-              }}
-              onMouseLeave={(e) => {
-                if (!selected.includes(item)) {
-                  e.currentTarget.style.borderColor = 'var(--border-soft)';
-                  e.currentTarget.style.color = 'var(--text-secondary)';
-                }
               }}
             >
               {item}
@@ -155,24 +158,37 @@ export default function LibrarySidebar({
         background: 'var(--bg)',
       }}
     >
-      <input
-        type="text"
-        placeholder="🔍 Я найду..."
-        value={searchQuery}
-        onChange={(e) => setSearchQuery(e.target.value)}
-        style={{
-          width: '100%',
-          padding: '12px 16px',
-          background: 'var(--surface-alt)',
-          border: '1px solid var(--border-soft)',
-          borderRadius: '12px',
-          color: 'var(--text-primary)',
-          fontSize: '15px',
-          outline: 'none',
-          fontFamily: 'Inter, sans-serif',
-          fontWeight: '400',
-        }}
-      />
+      <div style={{ position: 'relative' }}>
+        <Search 
+          size={18} 
+          style={{ 
+            position: 'absolute', 
+            left: '14px', 
+            top: '50%', 
+            transform: 'translateY(-50%)',
+            color: 'var(--text-muted)',
+            pointerEvents: 'none',
+          }} 
+        />
+        <input
+          type="text"
+          placeholder="Я найду..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          style={{
+            width: '100%',
+            padding: '12px 16px 12px 40px',
+            background: 'var(--surface-alt)',
+            border: '1px solid var(--border-soft)',
+            borderRadius: '12px',
+            color: 'var(--text-primary)',
+            fontSize: '15px',
+            outline: 'none',
+            fontFamily: 'Inter, sans-serif',
+            fontWeight: '400',
+          }}
+        />
+      </div>
 
       <AccordionGroup
         title="Настроение"
@@ -242,16 +258,13 @@ export default function LibrarySidebar({
           cursor: 'pointer',
           transition: 'all 0.2s ease',
           fontFamily: 'Inter, sans-serif',
-        }}
-        onMouseEnter={(e) => {
-          e.currentTarget.style.background = 'var(--primary-soft)';
-          e.currentTarget.style.transform = 'scale(1.02)';
-        }}
-        onMouseLeave={(e) => {
-          e.currentTarget.style.background = 'var(--primary)';
-          e.currentTarget.style.transform = 'scale(1)';
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          gap: '8px',
         }}
       >
+        <Sparkles size={18} />
         Найди для меня
       </button>
 
@@ -270,15 +283,14 @@ export default function LibrarySidebar({
             cursor: 'pointer',
             transition: 'all 0.2s ease',
             fontFamily: 'Inter, sans-serif',
-          }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.background = 'rgba(91, 134, 161, 0.25)';
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.background = 'rgba(91, 134, 161, 0.15)';
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: '8px',
           }}
         >
-          🎲 {randomButtonLabel}
+          <Shuffle size={18} />
+          {randomButtonLabel}
         </button>
       )}
     </div>

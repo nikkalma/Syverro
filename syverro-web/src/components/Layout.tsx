@@ -3,6 +3,21 @@
 import { ReactNode, useState, useRef, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuthStore } from '../store/authStore';
+import { 
+  BookOpen, 
+  Globe, 
+  User, 
+  Settings, 
+  LogOut, 
+  Shield, 
+  Sun, 
+  Moon,
+  Menu,
+  LayoutDashboard,
+  Sparkles,
+  UserCircle,
+  Crown
+} from 'lucide-react';
 
 interface LayoutProps {
   children: ReactNode;
@@ -78,8 +93,12 @@ export default function Layout({ children }: LayoutProps) {
             whiteSpace: 'nowrap',
             cursor: 'pointer',
             textTransform: 'uppercase',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '12px',
           }}
         >
+          <BookOpen size={28} color="var(--primary)" />
           Syverro
         </div>
 
@@ -97,8 +116,12 @@ export default function Layout({ children }: LayoutProps) {
               cursor: 'pointer',
               fontFamily: 'Inter, sans-serif',
               transition: 'color 0.2s',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px',
             }}
           >
+            <Sparkles size={18} />
             Инсайты
           </span>
           <span
@@ -108,8 +131,12 @@ export default function Layout({ children }: LayoutProps) {
               cursor: 'pointer',
               fontFamily: 'Inter, sans-serif',
               transition: 'color 0.2s',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px',
             }}
           >
+            <Globe size={18} />
             Карта миров
           </span>
         </nav>
@@ -128,12 +155,13 @@ export default function Layout({ children }: LayoutProps) {
               border: 'none',
               color: 'var(--text-secondary)',
               cursor: 'pointer',
-              fontSize: '20px',
               padding: '4px 8px',
               transition: 'color 0.2s',
+              display: 'flex',
+              alignItems: 'center',
             }}
           >
-            {theme === 'dark' ? '☀️' : '🌙'}
+            {theme === 'dark' ? <Sun size={20} /> : <Moon size={20} />}
           </button>
 
           {user ? (
@@ -146,11 +174,12 @@ export default function Layout({ children }: LayoutProps) {
                   fontFamily: 'Inter, sans-serif',
                   display: 'flex',
                   alignItems: 'center',
-                  gap: '4px',
+                  gap: '6px',
                   fontSize: '15px',
                   transition: 'color 0.2s',
                 }}
               >
+                <User size={18} />
                 Профиль ▾
               </span>
 
@@ -165,7 +194,7 @@ export default function Layout({ children }: LayoutProps) {
                   borderRadius: '12px',
                   border: '1px solid var(--border-soft)',
                   padding: '8px 0',
-                  minWidth: '180px',
+                  minWidth: '200px',
                   boxShadow: '0 12px 48px rgba(0,0,0,0.5)',
                   zIndex: 100,
                 }}>
@@ -180,11 +209,15 @@ export default function Layout({ children }: LayoutProps) {
                       fontSize: '14px',
                       cursor: 'pointer',
                       fontFamily: 'Inter, sans-serif',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '10px',
                     }}
                     onMouseEnter={(e) => (e.currentTarget.style.background = 'rgba(255,255,255,0.06)')}
                     onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
                   >
-                    🌍 Мой мир
+                    <UserCircle size={18} />
+                    Мой мир
                   </div>
 
                   {isAdmin && (
@@ -199,11 +232,15 @@ export default function Layout({ children }: LayoutProps) {
                         fontSize: '14px',
                         cursor: 'pointer',
                         fontFamily: 'Inter, sans-serif',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '10px',
                       }}
                       onMouseEnter={(e) => (e.currentTarget.style.background = 'rgba(91,134,161,0.1)')}
                       onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
                     >
-                      ⚙️ Админка
+                      <Crown size={18} />
+                      Админка
                     </div>
                   )}
 
@@ -218,11 +255,15 @@ export default function Layout({ children }: LayoutProps) {
                       fontSize: '14px',
                       cursor: 'pointer',
                       fontFamily: 'Inter, sans-serif',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '10px',
                     }}
                     onMouseEnter={(e) => (e.currentTarget.style.background = 'rgba(255,255,255,0.06)')}
                     onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
                   >
-                    ⚙️ Настройки
+                    <Settings size={18} />
+                    Настройки
                   </div>
 
                   <div style={{ height: '1px', background: 'var(--border-soft)', margin: '4px 12px' }} />
@@ -235,11 +276,15 @@ export default function Layout({ children }: LayoutProps) {
                       fontSize: '14px',
                       cursor: 'pointer',
                       fontFamily: 'Inter, sans-serif',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '10px',
                     }}
                     onMouseEnter={(e) => (e.currentTarget.style.background = 'rgba(239,83,80,0.1)')}
                     onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
                   >
-                    🚪 Выйти
+                    <LogOut size={18} />
+                    Выйти
                   </div>
                 </div>
               )}
@@ -253,10 +298,14 @@ export default function Layout({ children }: LayoutProps) {
                 fontSize: '15px',
                 fontFamily: 'Inter, sans-serif',
                 transition: 'color 0.2s',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px',
               }}
               onMouseEnter={(e) => { e.currentTarget.style.color = 'var(--text-primary)'; }}
               onMouseLeave={(e) => { e.currentTarget.style.color = 'var(--text-secondary)'; }}
             >
+              <User size={18} />
               Начать путь
             </span>
           )}

@@ -55,17 +55,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
         <p style={{ color: 'var(--text-secondary)' }}>У вас нет прав для доступа к административной панели.</p>
         <button
           onClick={() => navigate('/')}
-          style={{
-            padding: '10px 24px',
-            background: 'var(--primary)',
-            border: 'none',
-            borderRadius: '8px',
-            color: '#FFFFFF',
-            fontSize: '14px',
-            fontWeight: '500',
-            cursor: 'pointer',
-            fontFamily: 'Inter, sans-serif',
-          }}
+          className="glass-button glass-button-primary"
         >
           Вернуться на главную
         </button>
@@ -91,7 +81,6 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
       display: 'flex', 
       color: 'var(--text-primary)',
     }}>
-      {/* ===== БОКОВОЕ МЕНЮ ===== */}
       <aside className={`admin-sidebar ${isMobileMenuOpen ? 'open' : ''}`} style={{
         width: '240px',
         background: 'var(--surface)',
@@ -195,26 +184,17 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
           </div>
           <button
             onClick={handleLogout}
+            className="glass-button"
             style={{
-              padding: '8px 16px',
-              background: 'rgba(239, 83, 80, 0.1)',
-              border: '1px solid rgba(239, 83, 80, 0.2)',
-              borderRadius: '8px',
               color: 'var(--error)',
-              fontSize: '13px',
-              cursor: 'pointer',
-              fontFamily: 'Inter, sans-serif',
-              transition: 'background 0.2s',
+              borderColor: 'rgba(239, 83, 80, 0.3)',
             }}
-            onMouseEnter={(e) => (e.currentTarget.style.background = 'rgba(239, 83, 80, 0.2)')}
-            onMouseLeave={(e) => (e.currentTarget.style.background = 'rgba(239, 83, 80, 0.1)')}
           >
             🚪 Выйти
           </button>
         </div>
       </aside>
 
-      {/* ===== ОСНОВНОЙ КОНТЕНТ ===== */}
       <div className="admin-content" style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
         <header style={{
           display: 'flex',
@@ -252,17 +232,8 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
             <button
               onClick={toggleTheme}
-              style={{
-                background: 'none',
-                border: 'none',
-                color: 'var(--text-secondary)',
-                fontSize: '20px',
-                cursor: 'pointer',
-                padding: '4px',
-                transition: 'color 0.2s',
-              }}
-              onMouseEnter={(e) => (e.currentTarget.style.color = 'var(--text-primary)')}
-              onMouseLeave={(e) => (e.currentTarget.style.color = 'var(--text-secondary)')}
+              className="glass-button"
+              style={{ padding: '8px 12px' }}
             >
               {theme === 'dark' ? <Sun size={20} /> : <Moon size={20} />}
             </button>

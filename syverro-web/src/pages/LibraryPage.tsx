@@ -7,6 +7,7 @@ import { useLibraryFilters } from '../hooks/useLibraryFilters';
 import BookGrid from '../widgets/BookGrid';
 import LibrarySidebar from '../components/LibrarySidebar';
 import { Hero } from '../components/Hero';
+import { SuggestBook } from '../components/SuggestBook';
 
 export default function LibraryPage() {
   const navigate = useNavigate();
@@ -49,6 +50,7 @@ export default function LibraryPage() {
 
   return (
     <div style={{ display: 'flex', flex: 1, position: 'relative' }}>
+      {/* Сайдбар */}
       <aside style={{
         width: '260px',
         borderRight: '1px solid var(--border-soft)',
@@ -95,42 +97,24 @@ export default function LibraryPage() {
         />
       </aside>
 
+      {/* Основной контент */}
       <div style={{
         flex: 1,
         padding: '24px 20px',
         overflowY: 'auto',
         maxHeight: 'calc(100vh - 80px)',
       }}>
-        {/* ===== HERO ===== */}
+        {/* Hero */}
         <Hero />
 
-        <div style={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: '12px',
-          marginBottom: '24px',
-        }}>
-          <button
-            onClick={() => setIsSidebarOpen(true)}
-            style={{
-              display: 'none',
-              background: 'none',
-              border: 'none',
-              color: 'var(--text-primary)',
-              fontSize: '24px',
-              cursor: 'pointer',
-              padding: '4px 8px',
-            }}
-            className="sidebar-toggle"
-          >
-            ☰
-          </button>
-          <div style={{ flex: 1 }} />
-        </div>
+        {/* ===== БЛОК "ПРЕДЛОЖИТЬ КНИГУ" ===== */}
+        <SuggestBook />
 
+        {/* Книги */}
         <BookGrid books={filteredBooks} onBookClick={(id) => navigate(`/book/${id}`)} />
       </div>
 
+      {/* Мобильный оверлей */}
       {isSidebarOpen && (
         <>
           <div

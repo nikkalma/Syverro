@@ -25,7 +25,7 @@ export function Hero() {
   const [quoteIndex, setQuoteIndex] = useState(0);
 
   const profile = storageService.getReaderProfile();
-  const displayName = profile?.displayName || user?.email?.split('@')[0] || 'Читатель';
+  const displayName = profile?.displayName || 'Читатель';
 
   useEffect(() => {
     const interval = setInterval(() => {

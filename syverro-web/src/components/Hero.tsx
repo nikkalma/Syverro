@@ -38,11 +38,10 @@ export function Hero() {
       style={{
         position: 'relative',
         width: '100%',
-        minHeight: '320px',
+        minHeight: '280px',
         borderRadius: '24px',
         overflow: 'hidden',
-        background: 'linear-gradient(135deg, var(--surface) 0%, var(--bg) 100%)',
-        border: '1px solid var(--border-soft)',
+        background: 'transparent',
         padding: '40px 48px',
         display: 'flex',
         alignItems: 'center',
@@ -51,34 +50,28 @@ export function Hero() {
         transition: 'all 0.4s ease',
       }}
     >
-      {/* ===== ПЛАНЕТА (БОЛЬШАЯ, ВЫХОДИТ ЗА РАМКИ) ===== */}
+      {/* ===== АТМОСФЕРА / ТУМАННОСТЬ (размытая планета) ===== */}
       <div
         style={{
           position: 'absolute',
-          right: '-40px',
+          right: '-60px',
           top: '50%',
           transform: 'translateY(-50%)',
-          width: '320px',
-          height: '320px',
-          opacity: 0.6,
+          width: '400px',
+          height: '400px',
+          opacity: 0.25,
           pointerEvents: 'none',
+          filter: 'blur(40px)',
+          background: 'radial-gradient(circle at 35% 35%, var(--primary), var(--bg))',
+          borderRadius: '50%',
+          boxShadow: '0 0 120px var(--primary)',
+          transition: 'all 0.6s ease',
         }}
-        className="planet-container"
-      >
-        <div className="planet">
-          <div className="planet-ring ring-1"></div>
-          <div className="planet-ring ring-2"></div>
-          <div className="planet-core"></div>
-          <div className="planet-spot spot-1"></div>
-          <div className="planet-spot spot-2"></div>
-          <div className="planet-spot spot-3"></div>
-          <div className="planet-spot spot-4"></div>
-        </div>
-      </div>
+        className="planet-atmosphere"
+      />
 
       {/* ===== ТЕКСТОВАЯ ЧАСТЬ ===== */}
-      <div style={{ position: 'relative', zIndex: 2, maxWidth: '65%' }}>
-        {/* Приветствие */}
+      <div style={{ position: 'relative', zIndex: 2, maxWidth: '70%' }}>
         <h1
           style={{
             fontSize: '32px',
@@ -103,7 +96,6 @@ export function Hero() {
           )}
         </h1>
 
-        {/* Цитата дня */}
         <div className="quote-block" style={{ marginTop: '12px' }}>
           <p
             className="quote-text"
@@ -134,7 +126,6 @@ export function Hero() {
           </p>
         </div>
 
-        {/* Индикаторы цитат */}
         <div style={{ display: 'flex', gap: '8px', marginTop: '16px' }}>
           {QUOTES.map((_, index) => (
             <span
@@ -152,7 +143,6 @@ export function Hero() {
           ))}
         </div>
 
-        {/* Кнопка (если не авторизован) */}
         {!user && (
           <button
             onClick={() => navigate('/login')}
@@ -169,108 +159,23 @@ export function Hero() {
         )}
       </div>
 
-      {/* ===== СТИЛИ ДЛЯ ПЛАНЕТЫ (внутри компонента) ===== */}
+      {/* ===== СТИЛИ ===== */}
       <style>{`
         .hero-container {
           position: relative;
           overflow: hidden;
+          background: var(--bg);
         }
 
-        .planet-container {
-          animation: float 6s ease-in-out infinite;
+        .planet-atmosphere {
+          animation: floatAtmosphere 8s ease-in-out infinite;
+          will-change: transform;
         }
 
-        @keyframes float {
-          0% { transform: translateY(-50%) translateX(0); }
-          50% { transform: translateY(-55%) translateX(-10px); }
-          100% { transform: translateY(-50%) translateX(0); }
-        }
-
-        .planet {
-          width: 100%;
-          height: 100%;
-          position: relative;
-          animation: rotatePlanet 30s linear infinite;
-        }
-
-        @keyframes rotatePlanet {
-          0% { transform: rotate(0deg); }
-          100% { transform: rotate(360deg); }
-        }
-
-        .planet-core {
-          position: absolute;
-          top: 50%;
-          left: 50%;
-          transform: translate(-50%, -50%);
-          width: 60%;
-          height: 60%;
-          border-radius: 50%;
-          background: radial-gradient(circle at 35% 35%, var(--primary), var(--bg));
-          box-shadow: inset -10px -10px 30px rgba(0,0,0,0.6),
-                      inset 10px 10px 30px rgba(91, 134, 161, 0.2);
-        }
-
-        .planet-ring {
-          position: absolute;
-          top: 50%;
-          left: 50%;
-          transform: translate(-50%, -50%);
-          border-radius: 50%;
-          border: 1.5px solid var(--glass-border);
-        }
-
-        .ring-1 {
-          width: 110%;
-          height: 110%;
-          animation: ringPulse 4s ease-in-out infinite alternate;
-        }
-
-        .ring-2 {
-          width: 130%;
-          height: 130%;
-          border-style: dashed;
-          animation: ringPulse 6s ease-in-out infinite alternate-reverse;
-        }
-
-        @keyframes ringPulse {
-          0% { transform: translate(-50%, -50%) scale(1); opacity: 0.3; }
-          100% { transform: translate(-50%, -50%) scale(1.05); opacity: 0.1; }
-        }
-
-        .planet-spot {
-          position: absolute;
-          border-radius: 50%;
-          background: rgba(91, 134, 161, 0.15);
-        }
-
-        .spot-1 {
-          width: 18%;
-          height: 18%;
-          top: 22%;
-          left: 28%;
-          background: rgba(91, 134, 161, 0.2);
-        }
-        .spot-2 {
-          width: 12%;
-          height: 12%;
-          top: 55%;
-          left: 15%;
-          background: rgba(97, 166, 161, 0.15);
-        }
-        .spot-3 {
-          width: 20%;
-          height: 20%;
-          top: 60%;
-          left: 60%;
-          background: rgba(91, 134, 161, 0.12);
-        }
-        .spot-4 {
-          width: 8%;
-          height: 8%;
-          top: 30%;
-          left: 70%;
-          background: rgba(151, 166, 186, 0.15);
+        @keyframes floatAtmosphere {
+          0% { transform: translateY(-50%) translateX(0) scale(1); }
+          50% { transform: translateY(-55%) translateX(-10px) scale(1.05); }
+          100% { transform: translateY(-50%) translateX(0) scale(1); }
         }
 
         .quote-text {
@@ -286,21 +191,14 @@ export function Hero() {
             min-height: auto;
           }
 
-          .hero-container .planet-container {
-            width: 140px;
-            height: 140px;
-            align-self: center;
-            position: relative;
-            right: auto;
-            top: auto;
-            transform: none;
+          .hero-container .planet-atmosphere {
+            width: 300px;
+            height: 300px;
+            right: -40px;
+            filter: blur(50px);
           }
 
-          .hero-container .planet-container .planet {
-            animation: rotatePlanet 20s linear infinite;
-          }
-
-          .hero-container div[style*="maxWidth: 65%"] {
+          .hero-container div[style*="maxWidth: 70%"] {
             max-width: 100%;
             width: 100%;
           }
@@ -312,10 +210,6 @@ export function Hero() {
           .hero-container .quote-text {
             font-size: 14px;
             min-height: 40px;
-          }
-
-          .hero-container .planet-container {
-            animation: none;
           }
         }
 
@@ -334,9 +228,11 @@ export function Hero() {
             padding-left: 12px;
           }
 
-          .hero-container .planet-container {
-            width: 100px;
-            height: 100px;
+          .hero-container .planet-atmosphere {
+            width: 200px;
+            height: 200px;
+            right: -30px;
+            filter: blur(40px);
           }
         }
       `}</style>

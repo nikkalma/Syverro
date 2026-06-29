@@ -84,19 +84,20 @@ export default function BookCard({ book, userBook, onClick }: BookCardProps) {
         )}
       </div>
 
-      <div style={{ padding: '12px 14px' }}>
-        <div
-          style={{
-            fontSize: '14px',
-            fontWeight: '500',
-            color: 'var(--text-primary)',
-            overflow: 'hidden',
-            textOverflow: 'ellipsis',
-            whiteSpace: 'nowrap',
-          }}
-        >
-          {book.title}
-        </div>
+
+// Найди блок с названием и замени:
+<div
+  style={{
+    fontSize: '14px',
+    fontWeight: '500',
+    color: 'var(--text-primary)',
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
+    whiteSpace: 'nowrap',
+  }}
+>
+  {book.title}
+</div>
         <div
           style={{
             fontSize: '13px',

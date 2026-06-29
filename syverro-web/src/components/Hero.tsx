@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useAuthStore } from '../store/authStore';
 import { useNavigate } from 'react-router-dom';
 import { Sparkles } from 'lucide-react';
+import { storageService } from '../services/storageService';
 
 const QUOTES = [
   { text: "Книга — это мечта, которую ты держишь в руках.", author: "Нил Гейман" },
@@ -22,6 +23,9 @@ export function Hero() {
   const { user } = useAuthStore();
   const navigate = useNavigate();
   const [quoteIndex, setQuoteIndex] = useState(0);
+
+  const profile = storageService.getReaderProfile();
+  const displayName = profile?.displayName || user?.email?.split('@')[0] || 'Читатель';
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -50,7 +54,7 @@ export function Hero() {
         transition: 'all 0.4s ease',
       }}
     >
-      {/* ===== АТМОСФЕРА / ТУМАННОСТЬ (размытая планета) ===== */}
+      {/* Атмосфера */}
       <div
         style={{
           position: 'absolute',
@@ -70,7 +74,6 @@ export function Hero() {
         className="planet-atmosphere"
       />
 
-      {/* ===== ТЕКСТОВАЯ ЧАСТЬ ===== */}
       <div style={{ position: 'relative', zIndex: 2, maxWidth: '70%' }}>
         <h1
           style={{
@@ -87,7 +90,7 @@ export function Hero() {
             <>
               Добро пожаловать,{' '}
               <span style={{ color: 'var(--primary)', fontWeight: '500' }}>
-                {user.email?.split('@')[0]}
+                {displayName}
               </span>
               👋
             </>
@@ -159,7 +162,6 @@ export function Hero() {
         )}
       </div>
 
-      {/* ===== СТИЛИ ===== */}
       <style>{`
         .hero-container {
           position: relative;

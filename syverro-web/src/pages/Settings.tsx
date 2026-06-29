@@ -5,16 +5,17 @@ import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../store/authStore';
 import { storageService } from '../services/storageService';
 import { getLocaleData, getBrowserLocale, localePriority, Locale } from '../locales';
+import { useTheme } from '../contexts/ThemeContext';
 
 export default function Settings() {
   const { user, logout } = useAuthStore();
   const navigate = useNavigate();
   const profile = storageService.getReaderProfile();
+  const { theme, toggleTheme } = useTheme();
 
   // ===== СОСТОЯНИЯ =====
   const [displayName, setDisplayName] = useState(profile.displayName || '');
   const [status, setStatus] = useState(profile.status || '');
-  const [theme, setTheme] = useState(localStorage.getItem('syverro_theme') || 'dark');
   const [locale, setLocale] = useState<Locale>(() => {
     const saved = localStorage.getItem('syverro_locale') as Locale | null;
     return saved || getBrowserLocale();
@@ -24,13 +25,6 @@ export default function Settings() {
   const [saveMessage, setSaveMessage] = useState('');
 
   const t = getLocaleData(locale);
-
-  // ===== ТЕМА =====
-  useEffect(() => {
-    document.documentElement.style.backgroundColor = theme === 'light' ? '#F5F5F5' : '#0B1220';
-    document.documentElement.style.color = theme === 'light' ? '#1A1A1A' : '#E6EDF3';
-    localStorage.setItem('syverro_theme', theme);
-  }, [theme]);
 
   // ===== СОХРАНЕНИЕ ПРОФИЛЯ =====
   const handleSave = () => {
@@ -72,29 +66,29 @@ export default function Settings() {
 
   return (
     <div style={{ maxWidth: '800px', margin: '0 auto', padding: '40px 24px' }}>
-      <h1 style={{ fontSize: '28px', fontWeight: '300', color: '#E6EDF3', marginBottom: '32px' }}>
+      <h1 style={{ fontSize: '28px', fontWeight: '300', color: 'var(--text-primary)', marginBottom: '32px' }}>
         ⚙️ {t.settings?.title || 'Настройки'}
       </h1>
 
       {/* ===== ОСНОВНЫЕ НАСТРОЙКИ ===== */}
       <div
         style={{
-          background: 'rgba(18, 28, 36, 0.6)',
+          background: 'var(--glass-bg)',
           backdropFilter: 'blur(12px)',
           WebkitBackdropFilter: 'blur(12px)',
           borderRadius: '16px',
-          border: '1px solid rgba(255, 255, 255, 0.08)',
+          border: '1px solid var(--glass-border)',
           padding: '24px',
           marginBottom: '20px',
         }}
       >
-        <h2 style={{ fontSize: '18px', color: '#E6EDF3', marginBottom: '20px' }}>
+        <h2 style={{ fontSize: '18px', color: 'var(--text-primary)', marginBottom: '20px' }}>
           👤 Профиль
         </h2>
 
         {/* Имя */}
         <div style={{ marginBottom: '20px' }}>
-          <label style={{ fontSize: '13px', color: '#97A6BA', display: 'block', marginBottom: '6px' }}>
+          <label style={{ fontSize: '13px', color: 'var(--text-secondary)', display: 'block', marginBottom: '6px' }}>
             Имя
           </label>
           <input
@@ -106,9 +100,9 @@ export default function Settings() {
               width: '100%',
               padding: '10px 14px',
               background: 'rgba(0,0,0,0.3)',
-              border: '1px solid rgba(255,255,255,0.08)',
+              border: '1px solid var(--border)',
               borderRadius: '8px',
-              color: '#E6EDF3',
+              color: 'var(--text-primary)',
               fontSize: '14px',
               fontFamily: 'Inter, sans-serif',
               outline: 'none',
@@ -118,7 +112,7 @@ export default function Settings() {
 
         {/* Статус */}
         <div style={{ marginBottom: '20px' }}>
-          <label style={{ fontSize: '13px', color: '#97A6BA', display: 'block', marginBottom: '6px' }}>
+          <label style={{ fontSize: '13px', color: 'var(--text-secondary)', display: 'block', marginBottom: '6px' }}>
             Статус
           </label>
           <input
@@ -130,9 +124,9 @@ export default function Settings() {
               width: '100%',
               padding: '10px 14px',
               background: 'rgba(0,0,0,0.3)',
-              border: '1px solid rgba(255,255,255,0.08)',
+              border: '1px solid var(--border)',
               borderRadius: '8px',
-              color: '#E6EDF3',
+              color: 'var(--text-primary)',
               fontSize: '14px',
               fontFamily: 'Inter, sans-serif',
               outline: 'none',
@@ -140,21 +134,21 @@ export default function Settings() {
           />
         </div>
 
-        {/* Тема */}
+        {/* ===== ТЕМА (РАБОЧИЙ ПЕРЕКЛЮЧАТЕЛЬ) ===== */}
         <div style={{ marginBottom: '20px' }}>
-          <label style={{ fontSize: '13px', color: '#97A6BA', display: 'block', marginBottom: '6px' }}>
+          <label style={{ fontSize: '13px', color: 'var(--text-secondary)', display: 'block', marginBottom: '6px' }}>
             Тема
           </label>
           <div style={{ display: 'flex', gap: '12px' }}>
             <button
-              onClick={() => setTheme('dark')}
+              onClick={() => toggleTheme()}
               style={{
                 flex: 1,
                 padding: '10px',
                 background: theme === 'dark' ? 'rgba(91, 134, 161, 0.25)' : 'rgba(255,255,255,0.05)',
-                border: theme === 'dark' ? '1px solid rgba(91, 134, 161, 0.3)' : '1px solid rgba(255,255,255,0.08)',
+                border: theme === 'dark' ? '1px solid rgba(91, 134, 161, 0.3)' : '1px solid var(--border)',
                 borderRadius: '8px',
-                color: theme === 'dark' ? '#E6EDF3' : '#97A6BA',
+                color: theme === 'dark' ? 'var(--text-primary)' : 'var(--text-secondary)',
                 fontSize: '14px',
                 cursor: 'pointer',
                 fontFamily: 'Inter, sans-serif',
@@ -164,14 +158,14 @@ export default function Settings() {
               🌙 Тёмная
             </button>
             <button
-              onClick={() => setTheme('light')}
+              onClick={() => toggleTheme()}
               style={{
                 flex: 1,
                 padding: '10px',
                 background: theme === 'light' ? 'rgba(91, 134, 161, 0.25)' : 'rgba(255,255,255,0.05)',
-                border: theme === 'light' ? '1px solid rgba(91, 134, 161, 0.3)' : '1px solid rgba(255,255,255,0.08)',
+                border: theme === 'light' ? '1px solid rgba(91, 134, 161, 0.3)' : '1px solid var(--border)',
                 borderRadius: '8px',
-                color: theme === 'light' ? '#E6EDF3' : '#97A6BA',
+                color: theme === 'light' ? 'var(--text-primary)' : 'var(--text-secondary)',
                 fontSize: '14px',
                 cursor: 'pointer',
                 fontFamily: 'Inter, sans-serif',
@@ -185,7 +179,7 @@ export default function Settings() {
 
         {/* Язык */}
         <div style={{ marginBottom: '20px' }}>
-          <label style={{ fontSize: '13px', color: '#97A6BA', display: 'block', marginBottom: '6px' }}>
+          <label style={{ fontSize: '13px', color: 'var(--text-secondary)', display: 'block', marginBottom: '6px' }}>
             Язык
           </label>
           <select
@@ -195,9 +189,9 @@ export default function Settings() {
               width: '100%',
               padding: '10px 14px',
               background: 'rgba(0,0,0,0.3)',
-              border: '1px solid rgba(255,255,255,0.08)',
+              border: '1px solid var(--border)',
               borderRadius: '8px',
-              color: '#E6EDF3',
+              color: 'var(--text-primary)',
               fontSize: '14px',
               fontFamily: 'Inter, sans-serif',
               outline: 'none',
@@ -217,10 +211,10 @@ export default function Settings() {
           style={{
             width: '100%',
             padding: '12px',
-            background: '#5B86A1',
+            background: 'var(--primary)',
             border: 'none',
             borderRadius: '8px',
-            color: '#0A1118',
+            color: 'var(--text-primary)',
             fontSize: '14px',
             fontWeight: '600',
             cursor: isSaving ? 'default' : 'pointer',
@@ -229,10 +223,10 @@ export default function Settings() {
             transition: 'background 0.2s',
           }}
           onMouseEnter={(e) => {
-            if (!isSaving) e.currentTarget.style.background = '#4A7590';
+            if (!isSaving) e.currentTarget.style.background = 'var(--primary-soft)';
           }}
           onMouseLeave={(e) => {
-            if (!isSaving) e.currentTarget.style.background = '#5B86A1';
+            if (!isSaving) e.currentTarget.style.background = 'var(--primary)';
           }}
         >
           {isSaving ? '💾 Сохранение...' : '💾 Сохранить настройки'}
@@ -244,7 +238,7 @@ export default function Settings() {
               marginTop: '12px',
               textAlign: 'center',
               fontSize: '14px',
-              color: saveMessage.includes('✅') ? '#4CAF50' : '#EF5350',
+              color: saveMessage.includes('✅') ? 'var(--success)' : 'var(--error)',
             }}
           >
             {saveMessage}
@@ -255,15 +249,15 @@ export default function Settings() {
       {/* ===== АККАУНТ ===== */}
       <div
         style={{
-          background: 'rgba(18, 28, 36, 0.6)',
+          background: 'var(--glass-bg)',
           backdropFilter: 'blur(12px)',
           WebkitBackdropFilter: 'blur(12px)',
           borderRadius: '16px',
-          border: '1px solid rgba(255, 255, 255, 0.08)',
+          border: '1px solid var(--glass-border)',
           padding: '24px',
         }}
       >
-        <h2 style={{ fontSize: '18px', color: '#E6EDF3', marginBottom: '20px' }}>
+        <h2 style={{ fontSize: '18px', color: 'var(--text-primary)', marginBottom: '20px' }}>
           🔐 Аккаунт
         </h2>
 
@@ -275,12 +269,12 @@ export default function Settings() {
             padding: '12px 16px',
             background: 'rgba(0,0,0,0.2)',
             borderRadius: '8px',
-            border: '1px solid rgba(255,255,255,0.06)',
+            border: '1px solid var(--border)',
             marginBottom: '12px',
           }}
         >
-          <span style={{ color: '#97A6BA', fontSize: '14px' }}>Email</span>
-          <span style={{ color: '#E6EDF3', fontSize: '14px' }}>
+          <span style={{ color: 'var(--text-secondary)', fontSize: '14px' }}>Email</span>
+          <span style={{ color: 'var(--text-primary)', fontSize: '14px' }}>
             {user?.email || '—'}
           </span>
         </div>
@@ -293,12 +287,12 @@ export default function Settings() {
             padding: '12px 16px',
             background: 'rgba(0,0,0,0.2)',
             borderRadius: '8px',
-            border: '1px solid rgba(255,255,255,0.06)',
+            border: '1px solid var(--border)',
             marginBottom: '20px',
           }}
         >
-          <span style={{ color: '#97A6BA', fontSize: '14px' }}>ID пользователя</span>
-          <span style={{ color: '#E6EDF3', fontSize: '14px', fontFamily: 'monospace' }}>
+          <span style={{ color: 'var(--text-secondary)', fontSize: '14px' }}>ID пользователя</span>
+          <span style={{ color: 'var(--text-primary)', fontSize: '14px', fontFamily: 'monospace' }}>
             {user?.id?.slice(0, 8) || '-'}…
           </span>
         </div>
@@ -309,9 +303,9 @@ export default function Settings() {
             width: '100%',
             padding: '12px',
             background: 'transparent',
-            border: '1px solid #EF5350',
+            border: '1px solid var(--error)',
             borderRadius: '8px',
-            color: '#EF5350',
+            color: 'var(--error)',
             fontSize: '14px',
             cursor: 'pointer',
             transition: 'all 0.2s',

@@ -24,18 +24,48 @@ export function SuggestBook() {
 
     try {
       const suggestions = JSON.parse(localStorage.getItem('syverro_book_suggestions') || '[]');
-      suggestions.push({
+      const now = new Date().toISOString();
+      
+      const newSuggestion = {
         id: `suggestion_${Date.now()}`,
         title: title.trim(),
         author: author.trim(),
         type: type,
         userId: user?.id || 'anonymous',
         userEmail: user?.email || 'anonymous',
-        status: type === 'book' ? 'pending' : 'internal', // ← важное отличие!
-        createdAt: new Date().toISOString(),
+        createdAt: now,
         reviewedAt: null,
         moderatorComment: null,
-      });
+      };
+
+      if (type === 'book') {
+        // Книга → на модерацию
+        suggestions.push({
+          ...newSuggestion,
+          status: 'pending',
+        });
+      } else {
+        // Неофициальная литература → сразу в личную библиотеку
+        suggestions.push({
+          ...newSuggestion,
+          status: 'internal',
+        });
+
+        // ===== ДОБАВЛЯЕМ В ЛИЧНУЮ БИБЛИОТЕКУ ПОЛЬЗОВАТЕЛЯ =====
+        const userId = user?.id || 'anonymous';
+        const personalBooks = JSON.parse(localStorage.getItem(`syverro_personal_books_${userId}`) || '[]');
+        personalBooks.push({
+          id: `internal_${Date.now()}`,
+          title: title.trim(),
+          author: author.trim(),
+          type: 'fanfiction',
+          source: 'suggestion',
+          addedAt: now,
+          status: 'shelf', // или 'reading' — как хочешь
+        });
+        localStorage.setItem(`syverro_personal_books_${userId}`, JSON.stringify(personalBooks));
+      }
+
       localStorage.setItem('syverro_book_suggestions', JSON.stringify(suggestions));
 
       setStatus('success');
@@ -63,7 +93,7 @@ export function SuggestBook() {
           Предложить книгу
         </h3>
         <span style={{ fontSize: '12px', color: 'var(--text-muted)', marginLeft: 'auto' }}>
-          {type === 'book' ? 'После модерации появится в каталоге' : 'Сохранится в архиве'}
+          {type === 'book' ? 'После модерации появится в каталоге' : 'Сразу появится в вашей библиотеке'}
         </span>
       </div>
 
@@ -71,7 +101,7 @@ export function SuggestBook() {
         <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
           <input
             type="text"
-            placeholder="Название книги"
+            placeholder="Название"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             className="syverro-input"
@@ -106,7 +136,7 @@ export function SuggestBook() {
               onChange={() => setType('book')}
             />
             <Library size={16} />
-            Книга
+            Книга (на модерацию)
           </label>
           <label
             style={{
@@ -126,7 +156,7 @@ export function SuggestBook() {
               onChange={() => setType('fanfiction')}
             />
             <FileText size={16} />
-            Неофициальная литература (фанфикшн, рукописи, черновики)
+            Неофициальная литература (сразу в вашу библиотеку)
           </label>
         </div>
 
@@ -145,7 +175,7 @@ export function SuggestBook() {
           <CheckCircle size={18} />
           {type === 'book'
             ? 'Спасибо! Книга отправлена на модерацию.'
-            : 'Спасибо! Материал сохранён в архиве.'}
+            : 'Материал добавлен в вашу библиотеку.'}
         </div>
       )}
 

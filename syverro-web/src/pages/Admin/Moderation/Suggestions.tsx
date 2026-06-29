@@ -1,7 +1,7 @@
 // src/pages/Admin/Moderation/Suggestions.tsx
 
 import { useState, useEffect } from 'react';
-import { CheckCircle, XCircle, Clock, User, Mail, BookOpen, RefreshCw, FileText, Library, Archive } from 'lucide-react';
+import { CheckCircle, XCircle, Clock, User, BookOpen, RefreshCw, FileText, Library, Archive, Trash2 } from 'lucide-react';
 
 type SuggestionType = 'book' | 'fanfiction';
 
@@ -55,6 +55,13 @@ export default function Suggestions() {
     localStorage.setItem('syverro_book_suggestions', JSON.stringify(updated));
   };
 
+  const handleDelete = (id: string) => {
+    if (!confirm('Удалить предложение навсегда?')) return;
+    const updated = suggestions.filter((s) => s.id !== id);
+    setSuggestions(updated);
+    localStorage.setItem('syverro_book_suggestions', JSON.stringify(updated));
+  };
+
   const pendingBooks = suggestions.filter((s) => s.type === 'book' && s.status === 'pending');
   const internalItems = suggestions.filter((s) => s.type === 'fanfiction' || s.status === 'internal');
   const approvedBooks = suggestions.filter((s) => s.type === 'book' && s.status === 'approved');
@@ -87,7 +94,6 @@ export default function Suggestions() {
         </button>
       </div>
 
-      {/* Вкладки */}
       <div style={{ display: 'flex', gap: '4px', borderBottom: '1px solid var(--border-soft)', paddingBottom: '4px' }}>
         <button
           onClick={() => setActiveTab('moderation')}
@@ -182,7 +188,6 @@ export default function Suggestions() {
             </div>
           )}
 
-          {/* История модерации */}
           {(approvedBooks.length > 0 || rejectedBooks.length > 0) && (
             <details style={{ marginTop: '8px' }}>
               <summary style={{ cursor: 'pointer', color: 'var(--text-muted)', fontSize: '14px' }}>
@@ -266,19 +271,33 @@ export default function Suggestions() {
                         </span>
                       </div>
                     </div>
-                    <span
-                      style={{
-                        padding: '4px 14px',
-                        borderRadius: '12px',
-                        fontSize: '12px',
-                        fontWeight: '500',
-                        background: 'rgba(91, 134, 161, 0.15)',
-                        color: 'var(--primary)',
-                        border: '1px solid rgba(91, 134, 161, 0.2)',
-                      }}
-                    >
-                      {s.status === 'internal' ? '📂 В архиве' : s.status}
-                    </span>
+                    <div style={{ display: 'flex', gap: '8px' }}>
+                      <span
+                        style={{
+                          padding: '4px 14px',
+                          borderRadius: '12px',
+                          fontSize: '12px',
+                          fontWeight: '500',
+                          background: 'rgba(91, 134, 161, 0.15)',
+                          color: 'var(--primary)',
+                          border: '1px solid rgba(91, 134, 161, 0.2)',
+                        }}
+                      >
+                        {s.status === 'internal' ? '📂 В архиве' : s.status}
+                      </span>
+                      <button
+                        onClick={() => handleDelete(s.id)}
+                        className="glass-btn"
+                        style={{
+                          padding: '4px 10px',
+                          fontSize: '12px',
+                          color: 'var(--error)',
+                          borderColor: 'rgba(239, 83, 80, 0.2)',
+                        }}
+                      >
+                        <Trash2 size={14} />
+                      </button>
+                    </div>
                   </div>
                 </div>
               ))}

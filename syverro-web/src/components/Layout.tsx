@@ -15,6 +15,9 @@ export default function Layout({ children }: LayoutProps) {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
+  // ===== ПРОВЕРКА РОЛИ ДЛЯ АДМИНКИ =====
+  const isAdmin = user?.role === 'owner' || user?.role === 'admin' || user?.role === 'moderator';
+
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
       if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
@@ -158,6 +161,28 @@ export default function Layout({ children }: LayoutProps) {
                   >
                     🌍 Мой мир
                   </div>
+
+                  {/* ===== АДМИНКА (ТОЛЬКО ДЛЯ owner/admin/moderator) ===== */}
+                  {isAdmin && (
+                    <div
+                      onClick={() => {
+                        setIsDropdownOpen(false);
+                        navigate('/admin');
+                      }}
+                      style={{
+                        padding: '10px 20px',
+                        color: '#5B86A1',
+                        fontSize: '14px',
+                        cursor: 'pointer',
+                        fontFamily: 'Inter, sans-serif',
+                      }}
+                      onMouseEnter={(e) => (e.currentTarget.style.background = 'rgba(91,134,161,0.1)')}
+                      onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
+                    >
+                      ⚙️ Админка
+                    </div>
+                  )}
+
                   <div
                     onClick={() => {
                       setIsDropdownOpen(false);
@@ -175,7 +200,9 @@ export default function Layout({ children }: LayoutProps) {
                   >
                     ⚙️ Настройки
                   </div>
+
                   <div style={{ height: '1px', background: 'rgba(255,255,255,0.06)', margin: '4px 12px' }} />
+
                   <div
                     onClick={handleLogout}
                     style={{

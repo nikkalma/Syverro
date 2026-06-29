@@ -358,4 +358,13 @@ h6 { font-size: 16px; }
     padding: 8px 16px;
     font-size: 13px;
   }
+
+  /* Плавный переход для темы */
+body {
+  transition: background 0.4s ease, color 0.4s ease;
+}
+
+.glass-card, .glass-btn, .hero-container {
+  transition: all 0.4s ease;
+}
 }

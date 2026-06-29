@@ -1,10 +1,12 @@
 // src/pages/LibraryPage.tsx
+
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useLibrary } from '../hooks/useLibrary';
 import { useLibraryFilters } from '../hooks/useLibraryFilters';
 import BookGrid from '../widgets/BookGrid';
 import LibrarySidebar from '../components/LibrarySidebar';
+import { Hero } from '../components/Hero';
 
 export default function LibraryPage() {
   const navigate = useNavigate();
@@ -99,6 +101,9 @@ export default function LibraryPage() {
         overflowY: 'auto',
         maxHeight: 'calc(100vh - 80px)',
       }}>
+        {/* ===== HERO ===== */}
+        <Hero />
+
         <div style={{
           display: 'flex',
           alignItems: 'center',

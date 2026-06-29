@@ -51,15 +51,15 @@ export function Hero() {
         transition: 'all 0.4s ease',
       }}
     >
-      {/* ===== ПЛАНЕТА (анимированная) ===== */}
+      {/* ===== ПЛАНЕТА (БОЛЬШАЯ, ВЫХОДИТ ЗА РАМКИ) ===== */}
       <div
         style={{
           position: 'absolute',
-          right: '40px',
+          right: '-40px',
           top: '50%',
           transform: 'translateY(-50%)',
-          width: '160px',
-          height: '160px',
+          width: '320px',
+          height: '320px',
           opacity: 0.6,
           pointerEvents: 'none',
         }}
@@ -171,6 +171,11 @@ export function Hero() {
 
       {/* ===== СТИЛИ ДЛЯ ПЛАНЕТЫ (внутри компонента) ===== */}
       <style>{`
+        .hero-container {
+          position: relative;
+          overflow: hidden;
+        }
+
         .planet-container {
           animation: float 6s ease-in-out infinite;
         }
@@ -282,8 +287,8 @@ export function Hero() {
           }
 
           .hero-container .planet-container {
-            width: 100px;
-            height: 100px;
+            width: 140px;
+            height: 140px;
             align-self: center;
             position: relative;
             right: auto;
@@ -330,8 +335,8 @@ export function Hero() {
           }
 
           .hero-container .planet-container {
-            width: 70px;
-            height: 70px;
+            width: 100px;
+            height: 100px;
           }
         }
       `}</style>

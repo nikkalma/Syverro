@@ -1,0 +1,816 @@
+﻿===== C:\Users\kleme\Syverro\backend\app\api\auth.py =====
+from fastapi import APIRouter, Depends, HTTPException, status
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select
+from app.core.deps import get_current_user, get_db
+from app.core.security import (
+    hash_password, verify_password, create_access_token,
+    get_user_by_email, get_user_by_telegram_id, get_user_by_phone
+)
+from app.models.user import User
+from app.schemas.user import (
+    UserCreate, UserLogin, UserResponse, TokenResponse,
+    TelegramAuthData, PhoneRequest, PhoneVerifyRequest
+)
+import logging
+import random
+from datetime import datetime, timedelta
+
+logger = logging.getLogger(__name__)
+router = APIRouter(prefix="/auth", tags=["auth"])
+
+# ===== Р’Р Р•РњР•РќРќРћР• РҐР РђРќРР›РР©Р• Р”Р›РЇ РљРћР”РћР’ (РІ РїСЂРѕРґР°РєС€РµРЅРµ РёСЃРїРѕР»СЊР·РѕРІР°С‚СЊ Redis) =====
+verification_codes = {}
+
+
+# ===== REGISTER (EMAIL) =====
+@router.post("/register", response_model=UserResponse)
+async def register(user_data: UserCreate, db: AsyncSession = Depends(get_db)):
+    logger.info(f"рџ”Ќ REGISTER ATTEMPT: {user_data.email}")
+
+    try:
+        result = await db.execute(select(User).where(User.email == user_data.email))
+        existing = result.scalar_one_or_none()
+        if existing:
+            logger.warning(f"вќЊ Email already registered: {user_data.email}")
+            raise HTTPException(status_code=400, detail="Email already registered")
+
+        user = User(
+            email=user_data.email,
+            password_hash=hash_password(user_data.password)
+        )
+        db.add(user)
+        await db.commit()
+        await db.refresh(user)
+
+        logger.info(f"вњ… User created: {user.id} - {user.email}")
+
+        return UserResponse(
+            id=user.id,
+            email=user.email,
+            created_at=user.created_at
+        )
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"рџ”Ґ REGISTER ERROR: {type(e).__name__} - {str(e)}")
+        await db.rollback()
+        raise HTTPException(status_code=500, detail=f"Internal error: {str(e)}")
+
+
+# ===== LOGIN (EMAIL) =====
+@router.post("/login", response_model=TokenResponse)
+async def login(user_data: UserLogin, db: AsyncSession = Depends(get_db)):
+    logger.info(f"рџ”Ќ LOGIN ATTEMPT: {user_data.email}")
+
+    try:
+        user = await get_user_by_email(db, user_data.email)
+        if not user or not verify_password(user_data.password, user.password_hash):
+            logger.warning(f"вќЊ Login failed: {user_data.email}")
+            raise HTTPException(status_code=401, detail="Invalid email or password")
+
+        access_token = create_access_token({"sub": str(user.id)})
+        logger.info(f"вњ… Login success: {user.id} - {user.email}")
+
+        return TokenResponse(access_token=access_token)
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"рџ”Ґ LOGIN ERROR: {type(e).__name__} - {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Internal error: {str(e)}")
+
+
+# ===== ME (РџР РћР’Р•Р РљРђ РўРћРљР•РќРђ) =====
+@router.get("/me", response_model=UserResponse)
+async def get_current_user_info(
+    current_user: User = Depends(get_current_user),
+):
+    logger.info(f"рџ”Ќ ME request for user: {current_user.id}")
+    return UserResponse(
+        id=current_user.id,
+        email=current_user.email,
+        phone=current_user.phone,
+        telegram_id=current_user.telegram_id,
+        first_name=current_user.first_name,
+        last_name=current_user.last_name,
+        username=current_user.username,
+        photo_url=current_user.photo_url,
+        created_at=current_user.created_at
+    )
+
+
+# ===== TELEGRAM LOGIN =====
+@router.post("/telegram", response_model=TokenResponse)
+async def telegram_login(
+    telegram_data: TelegramAuthData,
+    db: AsyncSession = Depends(get_db)
+):
+    logger.info(f"рџ”Ќ TELEGRAM LOGIN ATTEMPT: {telegram_data.id}")
+
+    try:
+        # Р’ РїСЂРѕРґР°РєС€РµРЅРµ РЅСѓР¶РЅРѕ РїСЂРѕРІРµСЂСЏС‚СЊ hash
+        # hash = telegram_data.hash
+        # bot_token = settings.TELEGRAM_BOT_TOKEN
+        # check_hash = hashlib.sha256(...)
+        # if check_hash != hash: raise HTTPException(401, "Invalid hash")
+
+        user = await get_user_by_telegram_id(db, telegram_data.id)
+
+        if not user:
+            # РЎРѕР·РґР°С‘Рј РЅРѕРІРѕРіРѕ РїРѕР»СЊР·РѕРІР°С‚РµР»СЏ
+            user = User(
+                telegram_id=telegram_data.id,
+                first_name=telegram_data.first_name,
+                last_name=telegram_data.last_name,
+                username=telegram_data.username,
+                photo_url=telegram_data.photo_url,
+            )
+            db.add(user)
+            await db.commit()
+            await db.refresh(user)
+            logger.info(f"вњ… New user created via Telegram: {user.id} - {telegram_data.username}")
+
+        access_token = create_access_token({"sub": str(user.id)})
+        logger.info(f"вњ… Telegram login success: {user.id}")
+
+        return TokenResponse(access_token=access_token)
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"рџ”Ґ TELEGRAM ERROR: {type(e).__name__} - {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Internal error: {str(e)}")
+
+
+# ===== PHONE: SEND CODE =====
+@router.post("/phone/send-code")
+async def send_phone_code(
+    phone_data: PhoneRequest,
+    db: AsyncSession = Depends(get_db)
+):
+    logger.info(f"рџ“± PHONE CODE REQUEST: {phone_data.phone}")
+
+    try:
+        # Р“РµРЅРµСЂРёСЂСѓРµРј РєРѕРґ
+        code = str(random.randint(1000, 9999))
+
+        # РЎРѕС…СЂР°РЅСЏРµРј РєРѕРґ (РІСЂРµРјРµРЅРЅРѕРµ С…СЂР°РЅРёР»РёС‰Рµ)
+        verification_codes[phone_data.phone] = {
+            "code": code,
+            "expires_at": datetime.utcnow() + timedelta(minutes=5)
+        }
+
+        # Р’ РїСЂРѕРґР°РєС€РµРЅРµ РѕС‚РїСЂР°РІР»СЏС‚СЊ SMS С‡РµСЂРµР· СЃРµСЂРІРёСЃ
+        logger.info(f"рџ“± Code for {phone_data.phone}: {code}")
+
+        return {"message": "Code sent", "phone": phone_data.phone}
+    except Exception as e:
+        logger.error(f"рџ”Ґ PHONE CODE ERROR: {type(e).__name__} - {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Internal error: {str(e)}")
+
+
+# ===== PHONE: VERIFY CODE =====
+@router.post("/phone/verify", response_model=TokenResponse)
+async def verify_phone_code(
+    verify_data: PhoneVerifyRequest,
+    db: AsyncSession = Depends(get_db)
+):
+    logger.info(f"рџ“± PHONE VERIFY: {verify_data.phone}")
+
+    try:
+        # РџСЂРѕРІРµСЂСЏРµРј РєРѕРґ
+        stored = verification_codes.get(verify_data.phone)
+
+        if not stored:
+            raise HTTPException(status_code=400, detail="Code not found or expired")
+
+        if stored["expires_at"] < datetime.utcnow():
+            del verification_codes[verify_data.phone]
+            raise HTTPException(status_code=400, detail="Code expired")
+
+        if stored["code"] != verify_data.code:
+            raise HTTPException(status_code=400, detail="Invalid code")
+
+        # РЈРґР°Р»СЏРµРј РєРѕРґ РїРѕСЃР»Рµ СѓСЃРїРµС€РЅРѕР№ РїСЂРѕРІРµСЂРєРё
+        del verification_codes[verify_data.phone]
+
+        # РќР°С…РѕРґРёРј РёР»Рё СЃРѕР·РґР°С‘Рј РїРѕР»СЊР·РѕРІР°С‚РµР»СЏ
+        user = await get_user_by_phone(db, verify_data.phone)
+
+        if not user:
+            user = User(phone=verify_data.phone)
+            db.add(user)
+            await db.commit()
+            await db.refresh(user)
+            logger.info(f"вњ… New user created via phone: {user.id} - {verify_data.phone}")
+
+        access_token = create_access_token({"sub": str(user.id)})
+        logger.info(f"вњ… Phone login success: {user.id}")
+
+        return TokenResponse(access_token=access_token)
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"рџ”Ґ PHONE VERIFY ERROR: {type(e).__name__} - {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Internal error: {str(e)}")
+===== C:\Users\kleme\Syverro\backend\app\api\books.py =====
+from fastapi import APIRouter, Depends, HTTPException, status
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select
+from app.core.deps import get_current_user, get_db
+from app.models.user import User
+from app.models.book import Book, UserBook
+from app.schemas.book import BookCreate, BookResponse, UserBookResponse
+from uuid import UUID
+
+router = APIRouter(prefix="/books", tags=["books"])
+
+# ========== Р“Р›РћР‘РђР›Р¬РќР«Р™ РљРђРўРђР›РћР“ (Р’РЎР• РљРќРР“Р РњРР Рђ) ==========
+@router.get("/catalog/", response_model=list[BookResponse])
+async def get_catalog(
+    db: AsyncSession = Depends(get_db)
+):
+    """Р’СЃРµ РєРЅРёРіРё РёР· РіР»РѕР±Р°Р»СЊРЅРѕРіРѕ РєР°С‚Р°Р»РѕРіР° (Р±РµР· Р°РІС‚РѕСЂРёР·Р°С†РёРё)"""
+    try:
+        result = await db.execute(select(Book))
+        books = result.scalars().all()
+        return books
+    except Exception as e:
+        print(f"Error: {e}")
+        return []
+
+# ========== РњРћР РљРќРР“Р (РўРћР›Р¬РљРћ Р”РћР‘РђР’Р›Р•РќРќР«Р• РџРћР›Р¬Р—РћР’РђРўР•Р›Р•Рњ) ==========
+@router.get("/", response_model=list[BookResponse])
+async def get_user_books(
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    try:
+        result = await db.execute(
+            select(Book).join(UserBook).where(UserBook.user_id == current_user.id)
+        )
+        books = result.scalars().all()
+        return books
+    except Exception as e:
+        print(f"Error: {e}")
+        return []
+
+# ========== Р”РћР‘РђР’РРўР¬ РљРќРР“РЈ (РЎРћР—Р”РђРЃРў РЎР’РЇР—Р¬ Р’ USERBOOK) ==========
+@router.post("/", response_model=BookResponse)
+async def create_book(
+    book_data: BookCreate,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    try:
+        existing = await db.execute(
+            select(Book).where(
+                Book.title == book_data.title,
+                Book.author == book_data.author
+            )
+        )
+        existing_book = existing.scalar_one_or_none()
+
+        if existing_book:
+            user_book_exists = await db.execute(
+                select(UserBook).where(
+                    UserBook.user_id == current_user.id,
+                    UserBook.book_id == existing_book.id
+                )
+            )
+            if not user_book_exists.scalar_one_or_none():
+                user_book = UserBook(
+                    user_id=current_user.id,
+                    book_id=existing_book.id,
+                    status="planned"
+                )
+                db.add(user_book)
+                await db.commit()
+            return existing_book
+
+        new_book = Book(**book_data.model_dump())
+        db.add(new_book)
+        await db.flush()
+
+        user_book = UserBook(
+            user_id=current_user.id,
+            book_id=new_book.id,
+            status="planned"
+        )
+        db.add(user_book)
+
+        await db.commit()
+        await db.refresh(new_book)
+
+        return new_book
+    except Exception as e:
+        print(f"Error: {e}")
+        await db.rollback()
+        raise HTTPException(status_code=500, detail=str(e))
+
+# ========== РњРћР РљРќРР“Р РЎРћ РЎРўРђРўРЈРЎРђРњР (Р”Р›РЇ РџР РћР¤РР›РЇ) ==========
+@router.get("/user-books/", response_model=list[UserBookResponse])
+async def get_user_books_with_status(
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    try:
+        result = await db.execute(
+            select(UserBook).where(UserBook.user_id == current_user.id)
+        )
+        user_books = result.scalars().all()
+        for ub in user_books:
+            await db.refresh(ub, attribute_names=["book"])
+        return user_books
+    except Exception as e:
+        print(f"Error: {e}")
+        return []
+
+# ========== РћР‘РќРћР’РРўР¬ РЎРўРђРўРЈРЎ РљРќРР“Р ==========
+@router.put("/{book_id}/status")
+async def update_book_status(
+    book_id: UUID,
+    status_value: str,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    result = await db.execute(
+        select(UserBook).where(
+            UserBook.user_id == current_user.id,
+            UserBook.book_id == book_id
+        )
+    )
+    user_book = result.scalar_one_or_none()
+
+    if not user_book:
+        raise HTTPException(status_code=404, detail="Book not found")
+
+    user_book.status = status_value
+    await db.commit()
+
+    return {"message": "Status updated"}
+===== C:\Users\kleme\Syverro\backend\app\api\sync.py =====
+from fastapi import APIRouter, Depends
+from sqlalchemy.ext.asyncio import AsyncSession
+from app.core.deps import get_current_user, get_db
+from app.models.user import User
+
+router = APIRouter(prefix="/sync", tags=["sync"])
+
+
+@router.get("/")
+async def get_sync_data(
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    """РџРѕР»СѓС‡РёС‚СЊ РґР°РЅРЅС‹Рµ РґР»СЏ СЃРёРЅС…СЂРѕРЅРёР·Р°С†РёРё (GET)"""
+    return {
+        "books": [],
+        "sessions": [],
+        "quotes": [],
+        "server_time": "2026-01-15T10:00:00Z"
+    }
+
+
+@router.post("/")
+async def sync_data(
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    """РћС‚РїСЂР°РІРёС‚СЊ РґР°РЅРЅС‹Рµ РґР»СЏ СЃРёРЅС…СЂРѕРЅРёР·Р°С†РёРё (POST)"""
+    return {
+        "books": [],
+        "sessions": [],
+        "quotes": [],
+        "server_time": "2026-01-15T10:00:00Z"
+    }
+===== C:\Users\kleme\Syverro\backend\app\api\__init__.py =====
+from .auth import router as auth_router
+from .sync import router as sync_router
+from .books import router as books_router
+
+routers = [
+    auth_router,
+    sync_router,
+    books_router,
+]
+===== C:\Users\kleme\Syverro\backend\app\core\deps.py =====
+from typing import Annotated
+from uuid import UUID
+from fastapi import Depends, HTTPException, status
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select
+from app.database import get_db
+from app.core.security import decode_token
+from app.models.user import User
+
+security = HTTPBearer()
+
+
+async def get_current_user(
+    credentials: Annotated[HTTPAuthorizationCredentials, Depends(security)],
+    db: Annotated[AsyncSession, Depends(get_db)]
+) -> User:
+    """РџРѕР»СѓС‡РёС‚СЊ С‚РµРєСѓС‰РµРіРѕ РїРѕР»СЊР·РѕРІР°С‚РµР»СЏ РїРѕ JWT С‚РѕРєРµРЅСѓ (РІСЂРµРјРµРЅРЅРѕ СѓРїСЂРѕС‰РµРЅРѕ)"""
+    token = credentials.credentials
+    payload = decode_token(token)
+    
+    if payload is None:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid token",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+    
+    user_id = payload.get("sub")
+    if user_id is None:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid token payload",
+        )
+    
+    # Р’СЂРµРјРµРЅРЅРѕ: РІРѕР·РІСЂР°С‰Р°РµРј РїРµСЂРІРѕРіРѕ РїРѕР»СЊР·РѕРІР°С‚РµР»СЏ (С‚РѕР»СЊРєРѕ РґР»СЏ С‚РµСЃС‚Р°!)
+    # РџСЂРµРѕР±СЂР°Р·СѓРµРј СЃС‚СЂРѕРєСѓ РІ UUID, РµСЃР»Рё РЅСѓР¶РЅРѕ
+    if isinstance(user_id, str):
+        try:
+            user_id = UUID(user_id)
+        except ValueError:
+            # Р•СЃР»Рё РЅРµ UUID, РёС‰РµРј РїРѕ email РёР»Рё СЃРѕР·РґР°С‘Рј С„РµР№РєРѕРІРѕРіРѕ
+            result = await db.execute(select(User).limit(1))
+            user = result.scalar_one_or_none()
+            if user:
+                return user
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Invalid user ID format",
+            )
+    
+    result = await db.execute(select(User).where(User.id == user_id))
+    user = result.scalar_one_or_none()
+    
+    if user is None:
+        # Р’СЂРµРјРµРЅРЅРѕ: РµСЃР»Рё РїРѕР»СЊР·РѕРІР°С‚РµР»СЊ РЅРµ РЅР°Р№РґРµРЅ, РІРѕР·РІСЂР°С‰Р°РµРј РїРµСЂРІРѕРіРѕ (С‚РѕР»СЊРєРѕ РґР»СЏ С‚РµСЃС‚Р°!)
+        result = await db.execute(select(User).limit(1))
+        user = result.scalar_one_or_none()
+        if user:
+            return user
+        
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="User not found",
+        )
+    
+    return user
+
+
+async def get_current_user_optional(
+    credentials: Annotated[HTTPAuthorizationCredentials | None, Depends(security)] = None,
+    db: Annotated[AsyncSession, Depends(get_db)] = None
+) -> User | None:
+    """РџРѕР»СѓС‡РёС‚СЊ С‚РµРєСѓС‰РµРіРѕ РїРѕР»СЊР·РѕРІР°С‚РµР»СЏ (РѕРїС†РёРѕРЅР°Р»СЊРЅРѕ, Р±РµР· РѕС€РёР±РєРё)"""
+    if not credentials:
+        return None
+    
+    try:
+        return await get_current_user(credentials, db)
+    except HTTPException:
+        return None
+===== C:\Users\kleme\Syverro\backend\app\core\security.py =====
+from datetime import datetime, timedelta
+# from jose import JWTError, jwt  # Р’СЂРµРјРµРЅРЅРѕ РѕС‚РєР»СЋС‡РµРЅРѕ
+# import bcrypt  # Р’СЂРµРјРµРЅРЅРѕ РѕС‚РєР»СЋС‡РµРЅРѕ
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select
+from app.models.user import User
+
+SECRET_KEY = "your-secret-key-change-this-in-production"
+ALGORITHM = "HS256"
+ACCESS_TOKEN_EXPIRE_MINUTES = 30
+
+
+def verify_password(plain_password: str, hashed_password: str) -> bool:
+    """Р’СЂРµРјРµРЅРЅР°СЏ Р·Р°РіР»СѓС€РєР°"""
+    # return bcrypt.checkpw(plain_password.encode('utf-8'), hashed_password.encode('utf-8'))
+    return plain_password == hashed_password  # вљ пёЏ РўРѕР»СЊРєРѕ РґР»СЏ С‚РµСЃС‚Р°! РќРµ РёСЃРїРѕР»СЊР·СѓР№ РІ РїСЂРѕРґРµ
+
+
+def get_password_hash(password: str) -> str:
+    """Р’СЂРµРјРµРЅРЅР°СЏ Р·Р°РіР»СѓС€РєР°"""
+    # salt = bcrypt.gensalt()
+    # return bcrypt.hashpw(password.encode('utf-8'), salt).decode('utf-8')
+    return password  # вљ пёЏ РўРѕР»СЊРєРѕ РґР»СЏ С‚РµСЃС‚Р°! РќРµ РёСЃРїРѕР»СЊР·СѓР№ РІ РїСЂРѕРґРµ
+
+
+# РђР»РёР°СЃ РґР»СЏ СЃРѕРІРјРµСЃС‚РёРјРѕСЃС‚Рё
+hash_password = get_password_hash
+
+
+def create_access_token(data: dict, expires_delta: timedelta | None = None) -> str:
+    """Р’СЂРµРјРµРЅРЅР°СЏ Р·Р°РіР»СѓС€РєР°"""
+    # to_encode = data.copy()
+    # if expires_delta:
+    #     expire = datetime.utcnow() + expires_delta
+    # else:
+    #     expire = datetime.utcnow() + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+    # to_encode.update({"exp": expire})
+    # encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
+    # return encoded_jwt
+    return "fake-token-for-testing"
+
+
+def decode_token(token: str) -> dict | None:
+    """Р’СЂРµРјРµРЅРЅР°СЏ Р·Р°РіР»СѓС€РєР°"""
+    # try:
+    #     payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+    #     return payload
+    # except JWTError:
+    #     return None
+    return {"sub": "fake-user-id"}
+
+
+async def get_user_by_email(db: AsyncSession, email: str) -> User | None:
+    result = await db.execute(select(User).where(User.email == email))
+    return result.scalar_one_or_none()
+
+# Р”РѕР±Р°РІРёС‚СЊ РІ РєРѕРЅРµС† С„Р°Р№Р»Р°
+
+async def get_user_by_telegram_id(db: AsyncSession, telegram_id: str) -> User | None:
+    result = await db.execute(select(User).where(User.telegram_id == telegram_id))
+    return result.scalar_one_or_none()
+
+
+async def get_user_by_phone(db: AsyncSession, phone: str) -> User | None:
+    result = await db.execute(select(User).where(User.phone == phone))
+    return result.scalar_one_or_none()
+===== C:\Users\kleme\Syverro\backend\app\models\book.py =====
+from sqlalchemy import Column, String, Integer, DateTime, ForeignKey, Boolean, JSON, UniqueConstraint
+from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy.sql import func
+from sqlalchemy.orm import relationship
+from app.database import Base
+import uuid
+
+
+class Book(Base):
+    __tablename__ = "books"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    title = Column(String, nullable=False)
+    author = Column(String, nullable=False)
+    cover = Column(String, nullable=True)
+    genres = Column(JSON, default=[])
+    total_pages = Column(Integer, nullable=True)
+    created_at = Column(DateTime, server_default=func.now())
+    updated_at = Column(DateTime, onupdate=func.now())
+    
+    # Relationships
+    user_books = relationship("UserBook", back_populates="book", cascade="all, delete-orphan")
+    
+    # Constraints
+    __table_args__ = (
+        UniqueConstraint('title', 'author', name='unique_book_title_author'),
+    )
+
+
+class UserBook(Base):
+    __tablename__ = "user_books"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    user_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False)
+    book_id = Column(UUID(as_uuid=True), ForeignKey("books.id"), nullable=False)
+    status = Column(String, default="planned")  # planned, reading, finished, postponed, abandoned
+    rating = Column(Integer, nullable=True)
+    current_page = Column(Integer, default=0)
+    start_date = Column(DateTime, nullable=True)
+    end_date = Column(DateTime, nullable=True)
+    notes = Column(String, nullable=True)
+    is_favorite = Column(Boolean, default=False)
+    created_at = Column(DateTime, server_default=func.now())
+    updated_at = Column(DateTime, onupdate=func.now())
+    
+    # Relationships
+    book = relationship("Book", back_populates="user_books")
+    user = relationship("User", back_populates="user_books")
+===== C:\Users\kleme\Syverro\backend\app\models\user.py =====
+from sqlalchemy import Column, String, DateTime
+from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy.sql import func
+from sqlalchemy.orm import relationship
+from app.database import Base
+import uuid
+
+
+class User(Base):
+    __tablename__ = "users"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    email = Column(String, unique=True, nullable=True, index=True)  # nullable=True
+    phone = Column(String, unique=True, nullable=True, index=True)  # РќРћР’РћР•
+    telegram_id = Column(String, unique=True, nullable=True, index=True)  # РќРћР’РћР•
+    password_hash = Column(String, nullable=True)  # nullable=True (РґР»СЏ Telegram/С‚РµР»РµС„РѕРЅР°)
+    first_name = Column(String, nullable=True)  # РќРћР’РћР•
+    last_name = Column(String, nullable=True)  # РќРћР’РћР•
+    username = Column(String, nullable=True)  # РќРћР’РћР•
+    photo_url = Column(String, nullable=True)  # РќРћР’РћР•
+    created_at = Column(DateTime, server_default=func.now())
+    updated_at = Column(DateTime, onupdate=func.now())
+    
+    # Relationships
+    user_books = relationship("UserBook", back_populates="user", cascade="all, delete-orphan")
+===== C:\Users\kleme\Syverro\backend\app\schemas\book.py =====
+from pydantic import BaseModel
+from datetime import datetime
+from typing import Optional, List
+from uuid import UUID
+
+
+class BookBase(BaseModel):
+    title: str
+    author: str
+    cover: Optional[str] = None
+    genres: Optional[List[str]] = []
+    total_pages: Optional[int] = None
+
+
+class BookCreate(BookBase):
+    pass
+
+
+class BookResponse(BookBase):
+    id: UUID
+    created_at: datetime
+    updated_at: Optional[datetime]
+
+    class Config:
+        from_attributes = True
+
+
+class UserBookCreate(BaseModel):
+    book_id: UUID
+    status: str = "planned"
+    rating: Optional[int] = None
+    current_page: Optional[int] = 0
+    start_date: Optional[datetime] = None
+    notes: Optional[str] = None
+
+
+class UserBookResponse(BaseModel):
+    id: UUID
+    user_id: UUID
+    book_id: UUID
+    book: BookResponse
+    status: str
+    rating: Optional[int]
+    current_page: int
+    start_date: Optional[datetime]
+    end_date: Optional[datetime]
+    notes: Optional[str]
+    is_favorite: bool
+    created_at: datetime
+    updated_at: Optional[datetime]
+
+    class Config:
+        from_attributes = True
+===== C:\Users\kleme\Syverro\backend\app\schemas\user.py =====
+from datetime import datetime
+from uuid import UUID
+from pydantic import BaseModel, EmailStr
+from typing import Optional
+
+
+class UserCreate(BaseModel):
+    email: EmailStr
+    password: str
+
+
+class UserLogin(BaseModel):
+    email: EmailStr
+    password: str
+
+
+class UserResponse(BaseModel):
+    id: UUID
+    email: Optional[EmailStr] = None
+    phone: Optional[str] = None
+    telegram_id: Optional[str] = None
+    first_name: Optional[str] = None
+    last_name: Optional[str] = None
+    username: Optional[str] = None
+    photo_url: Optional[str] = None
+    created_at: datetime
+
+    class Config:
+        from_attributes = True
+
+
+class TokenResponse(BaseModel):
+    access_token: str
+    token_type: str = "bearer"
+
+
+# ===== РќРћР’Р«Р• РЎРҐР•РњР« =====
+
+class TelegramAuthData(BaseModel):
+    id: str
+    first_name: str
+    last_name: Optional[str] = None
+    username: Optional[str] = None
+    photo_url: Optional[str] = None
+    auth_date: int
+    hash: str
+
+
+class PhoneRequest(BaseModel):
+    phone: str
+
+
+class PhoneVerifyRequest(BaseModel):
+    phone: str
+    code: str
+===== C:\Users\kleme\Syverro\backend\app\config.py =====
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
+
+class Settings:
+    DATABASE_URL: str = os.getenv("DATABASE_URL", "")
+    SECRET_KEY: str = os.getenv("SECRET_KEY", "your-secret-key-change-this-in-production")
+    ALGORITHM: str = "HS256"
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
+    
+    def __init__(self):
+        # РџСЂРѕРІРµСЂСЏРµРј Рё РєРѕРЅРІРµСЂС‚РёСЂСѓРµРј URL
+        if self.DATABASE_URL:
+            print(f"рџ”Ќ Original DATABASE_URL: {self.DATABASE_URL[:60]}...")
+            # РљРѕРЅРІРµСЂС‚РёСЂСѓРµРј postgres:// в†’ postgresql+asyncpg://
+            if self.DATABASE_URL.startswith("postgres://"):
+                self.DATABASE_URL = self.DATABASE_URL.replace("postgres://", "postgresql+asyncpg://", 1)
+                print(f"вњ… Converted to asyncpg: {self.DATABASE_URL[:60]}...")
+            elif self.DATABASE_URL.startswith("postgresql://") and "+asyncpg" not in self.DATABASE_URL:
+                self.DATABASE_URL = self.DATABASE_URL.replace("postgresql://", "postgresql+asyncpg://", 1)
+                print(f"вњ… Added asyncpg driver: {self.DATABASE_URL[:60]}...")
+        else:
+            print("вќЊ DATABASE_URL is not set in environment!")
+
+settings = Settings()
+===== C:\Users\kleme\Syverro\backend\app\database.py =====
+from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sessionmaker
+from sqlalchemy.orm import declarative_base
+from app.config import settings
+
+# РџРµС‡Р°С‚СЊ РёРЅС„РѕСЂРјР°С†РёРё Рѕ РїРѕРґРєР»СЋС‡РµРЅРёРё
+print(f"рџ”Ќ Creating database engine with URL: {settings.DATABASE_URL[:80]}..." if settings.DATABASE_URL else "вќЊ DATABASE_URL not set!")
+
+engine = create_async_engine(
+    settings.DATABASE_URL,
+    echo=True,  # Р’СЂРµРјРµРЅРЅРѕ РІРєР»СЋС‡Р°РµРј SQL-Р»РѕРіРё РґР»СЏ РѕС‚Р»Р°РґРєРё
+    future=True
+)
+
+AsyncSessionLocal = async_sessionmaker(
+    engine,
+    class_=AsyncSession,
+    expire_on_commit=False
+)
+
+Base = declarative_base()
+
+async def get_db():
+    print("рџџў get_db() called - creating session")
+    async with AsyncSessionLocal() as session:
+        yield session
+    print("рџ”ґ Session closed")
+===== C:\Users\kleme\Syverro\backend\app\main.py =====
+cat > /opt/syverro/backend/app/main.py << 'EOF'
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+
+app = FastAPI()
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+@app.get("/health")
+async def health():
+    return {"status": "ok"}
+
+@app.get("/books/")
+async def get_books():
+    return [
+        {"id": "1", "title": "Р”СЋРЅР°", "author": "Р¤СЂСЌРЅРє Р“РµСЂР±РµСЂС‚"},
+        {"id": "2", "title": "1984", "author": "Р”Р¶РѕСЂРґР¶ РћСЂСѓСЌР»Р»"},
+    ]
+
+@app.get("/books/catalog/")
+async def get_catalog():
+    return [
+        {"id": "3", "title": "РњР°СЃС‚РµСЂ Рё РњР°СЂРіР°СЂРёС‚Р°", "author": "РњРёС…Р°РёР» Р‘СѓР»РіР°РєРѕРІ"},
+        {"id": "4", "title": "РџСЂРµСЃС‚СѓРїР»РµРЅРёРµ Рё РЅР°РєР°Р·Р°РЅРёРµ", "author": "Р¤С‘РґРѕСЂ Р”РѕСЃС‚РѕРµРІСЃРєРёР№"},
+    ]
+EOF

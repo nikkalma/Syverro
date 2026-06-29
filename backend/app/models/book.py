@@ -15,6 +15,8 @@ class Book(Base):
     cover = Column(String, nullable=True)
     genres = Column(JSON, default=[])
     total_pages = Column(Integer, nullable=True)
+    is_published = Column(Boolean, default=False)
+    created_by = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=True)
     created_at = Column(DateTime, server_default=func.now())
     updated_at = Column(DateTime, onupdate=func.now())
     
@@ -33,7 +35,7 @@ class UserBook(Base):
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     user_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False)
     book_id = Column(UUID(as_uuid=True), ForeignKey("books.id"), nullable=False)
-    status = Column(String, default="planned")  # planned, reading, finished, postponed, abandoned
+    status = Column(String, default="planned")
     rating = Column(Integer, nullable=True)
     current_page = Column(Integer, default=0)
     start_date = Column(DateTime, nullable=True)

@@ -1,7 +1,66 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+/* ===== ПЕРЕМЕННЫЕ ТЕМ (ДОБАВЛЯЕМ В НАЧАЛО) ===== */
+:root {
+  /* Тёмная тема (по умолчанию) */
+  --bg: #0B1220;
+  --surface: #0E1A26;
+  --surface-alt: #121F2E;
+  --text-primary: #E7EDF5;
+  --text-secondary: #97A6BA;
+  --text-muted: #6E7C90;
+  --primary: #5C7C9A;
+  --primary-soft: #3A5570;
+  --accent: #A8B0BA;
+  --accent-soft: #2C3F55;
+  --success: #6B9B7A;
+  --warning: #D4A76A;
+  --error: #C47A7A;
+  --info: #7A9BC4;
+  --status: #5C7C9A;
+  --border: rgba(140, 170, 200, 0.12);
+  --border-soft: #16232E;
+  --card: #0E1A26;
+  --card-hover: #15263A;
+  --card-active: #121F2E;
+  --chip: #1B2A3A;
+  --chip-active: #2C3F55;
+  --glass-bg: rgba(14, 26, 38, 0.7);
+  --glass-border: rgba(140, 170, 200, 0.12);
+  --orb: rgba(28, 40, 58, 0.72);
+  --current-book-glow: #5C7C9A;
+  --neon-glow: #5C7C9A;
+}
 
+[data-theme="light"] {
+  --bg: #E0D4C3;
+  --surface: #D4C7B4;
+  --surface-alt: #C8BAA6;
+  --text-primary: #2A2622;
+  --text-secondary: #6B6358;
+  --text-muted: #948A7C;
+  --primary: #4A5A6A;
+  --primary-soft: #6B7A88;
+  --accent: #B8A99A;
+  --accent-soft: #D1C6BA;
+  --success: #6B8F7A;
+  --warning: #D4A76A;
+  --error: #C47A7A;
+  --info: #7A8FC4;
+  --status: #4A5A6A;
+  --border: #BEB09C;
+  --border-soft: #D4C7B4;
+  --card: #D4C7B4;
+  --card-hover: #DDD0BE;
+  --card-active: #C8BAA6;
+  --chip: #C8BAA6;
+  --chip-active: #BEB09C;
+  --glass-bg: rgba(212, 199, 180, 0.7);
+  --glass-border: rgba(190, 176, 156, 0.5);
+  --orb: rgba(176, 162, 144, 0.7);
+  --current-book-glow: #4A5A6A;
+  --neon-glow: #4A5A6A;
+}
+
+/* ===== ОСТАЛЬНОЙ КОД БЕЗ ИЗМЕНЕНИЙ ===== */
 * {
   margin: 0;
   padding: 0;
@@ -9,9 +68,9 @@
 }
 
 body {
-  background-color: #0B1220;
+  background-color: var(--bg);
   font-family: 'Inter', sans-serif;
-  color: #E7EDF5;
+  color: var(--text-primary);
   min-height: 100vh;
 }
 
@@ -36,14 +95,11 @@ body {
   50% { transform: translate(-50%, -50%) scale(1.2); opacity: 0.9; }
 }
 
-/* Убираем конфликтующий .container — Tailwind уже имеет свой */
-/* Если нужен контейнер для страниц входа/регистрации — используй отдельный класс */
-
 .glass-card {
-  background: rgba(14, 26, 38, 0.6);
+  background: var(--glass-bg);
   border-radius: 32px;
   padding: 3rem 2rem;
-  border: 1px solid rgba(174, 198, 207, 0.2);
+  border: 1px solid var(--glass-border);
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
 }
 
@@ -51,7 +107,7 @@ h1 {
   font-size: 4.5rem;
   font-weight: 600;
   letter-spacing: -2px;
-  color: #E7EDF5;
+  color: var(--text-primary);
   margin-bottom: 0.5rem;
 }
 
@@ -60,33 +116,33 @@ h1 {
   font-weight: 400;
   text-transform: uppercase;
   letter-spacing: 4px;
-  color: #5B86A1;
+  color: var(--primary);
 }
 
 input {
   width: 100%;
   padding: 12px 16px;
-  background: #121C24;
-  border: 1px solid #2A4B60;
+  background: var(--surface);
+  border: 1px solid var(--border);
   border-radius: 40px;
-  color: white;
+  color: var(--text-primary);
   font-family: 'Inter', sans-serif;
   outline: none;
   margin-bottom: 12px;
 }
 
 input:focus {
-  border-color: #AEC6CF;
+  border-color: var(--accent);
   box-shadow: 0 0 8px rgba(174, 198, 207, 0.3);
 }
 
 button {
   width: 100%;
   padding: 12px;
-  background: #2A4B60;
+  background: var(--primary);
   border: none;
   border-radius: 40px;
-  color: white;
+  color: var(--text-primary);
   font-weight: 600;
   font-family: 'Inter', sans-serif;
   cursor: pointer;
@@ -94,17 +150,17 @@ button {
 }
 
 button:hover {
-  background: #5B86A1;
+  background: var(--primary-soft);
 }
 
 .error {
-  color: #C47A7A;
+  color: var(--error);
   font-size: 0.875rem;
   margin-top: 8px;
 }
 
 .link {
-  color: #5B86A1;
+  color: var(--primary);
   text-decoration: none;
   cursor: pointer;
 }
@@ -114,98 +170,74 @@ button:hover {
 }
 
 /* ===== СКРОЛЛБАРЫ ===== */
-
-/* Глобальный скролл для всего приложения */
 *::-webkit-scrollbar {
   width: 4px;
   height: 4px;
 }
 *::-webkit-scrollbar-track {
-  background: #0A1118;
+  background: var(--bg);
   border-radius: 4px;
 }
 *::-webkit-scrollbar-thumb {
-  background: #2A4B60;
+  background: var(--border);
   border-radius: 4px;
 }
 *::-webkit-scrollbar-thumb:hover {
-  background: #5B86A1;
+  background: var(--primary);
 }
 * {
   scrollbar-width: thin;
-  scrollbar-color: #2A4B60 #0A1118;
+  scrollbar-color: var(--border) var(--bg);
 }
 
-/* Десктопный сайдбар */
 aside::-webkit-scrollbar {
   width: 4px;
 }
 aside::-webkit-scrollbar-track {
-  background: #0A1118;
+  background: var(--bg);
   border-radius: 4px;
 }
 aside::-webkit-scrollbar-thumb {
-  background: #2A4B60;
+  background: var(--border);
   border-radius: 4px;
 }
 aside::-webkit-scrollbar-thumb:hover {
-  background: #5B86A1;
+  background: var(--primary);
 }
 aside {
   scrollbar-width: thin;
-  scrollbar-color: #2A4B60 #0A1118;
+  scrollbar-color: var(--border) var(--bg);
 }
 
-/* Мобильный дравер (фиксированная панель) */
-.sidebar-drawer::-webkit-scrollbar {
-  width: 4px;
-}
-.sidebar-drawer::-webkit-scrollbar-track {
-  background: #0A1118;
-  border-radius: 4px;
-}
-.sidebar-drawer::-webkit-scrollbar-thumb {
-  background: #2A4B60;
-  border-radius: 4px;
-}
-.sidebar-drawer::-webkit-scrollbar-thumb:hover {
-  background: #5B86A1;
-}
-.sidebar-drawer {
-  scrollbar-width: thin;
-  scrollbar-color: #2A4B60 #0A1118;
-}
-
-/* Любой блок с прокруткой внутри сайдбара (на случай, если стили не применились) */
 .sidebar-scroll {
   scrollbar-width: thin;
-  scrollbar-color: #2A4B60 #0A1118;
+  scrollbar-color: var(--border) var(--bg);
 }
 .sidebar-scroll::-webkit-scrollbar {
   width: 4px;
 }
 .sidebar-scroll::-webkit-scrollbar-track {
-  background: #0A1118;
+  background: var(--bg);
   border-radius: 4px;
 }
 .sidebar-scroll::-webkit-scrollbar-thumb {
-  background: #2A4B60;
+  background: var(--border);
   border-radius: 4px;
 }
 .sidebar-scroll::-webkit-scrollbar-thumb:hover {
-  background: #5B86A1;
+  background: var(--primary);
 }
 
-/* ===== СТЕКЛЯННЫЙ SELECT В СТИЛЕ SYVERRO ===== */
+/* ===== СТЕКЛЯННЫЙ SELECT ===== */
 .syverro-select {
   width: 100%;
   padding: 10px 36px 10px 14px;
-  background: rgba(18, 28, 36, 0.5);
+  background: var(--glass-bg);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  border: 1px solid var(--glass-border);
   border-radius: 10px;
-  color: #E6EDF3;
+  color: var(--text-primary);
   font-size: 13px;
   font-family: 'Inter', sans-serif;
   appearance: none;
@@ -220,32 +252,18 @@ aside {
 }
 
 .syverro-select:hover {
-  border-color: rgba(255, 255, 255, 0.18);
-  background: rgba(18, 28, 36, 0.7);
+  border-color: var(--accent);
 }
 
 .syverro-select:focus {
-  border-color: rgba(91, 134, 161, 0.4);
+  border-color: var(--primary);
   box-shadow: 0 0 0 3px rgba(91, 134, 161, 0.1);
 }
 
-/* Опции внутри select */
 .syverro-select option {
-  background: #121C24;
-  color: #E6EDF3;
+  background: var(--surface);
+  color: var(--text-primary);
   padding: 10px 14px;
-  font-family: 'Inter', sans-serif;
-}
-
-/* Для Firefox */
-.syverro-select:-moz-focusring {
-  color: transparent;
-  text-shadow: 0 0 0 #E6EDF3;
-}
-
-/* Убираем стандартную стрелку в IE */
-.syverro-select::-ms-expand {
-  display: none;
 }
 
 /* ===== УБИРАЕМ СТРЕЛКИ У NUMBER INPUT ===== */
@@ -254,13 +272,10 @@ input[type="number"]::-webkit-inner-spin-button {
   -webkit-appearance: none;
   margin: 0;
 }
-
 input[type="number"] {
   -moz-appearance: textfield;
   appearance: textfield;
 }
-
-/* src/globals.css — добавьте в конец файла */
 
 /* ===== СИНХРОНИЗАЦИЯ: БАННЕР ===== */
 .sync-banner {
@@ -275,7 +290,6 @@ input[type="number"] {
   box-shadow: 0 2px 12px rgba(0, 0, 0, 0.25);
   animation: slideDown 0.3s ease-out;
 }
-
 .sync-banner-content {
   max-width: 1200px;
   margin: 0 auto;
@@ -286,15 +300,8 @@ input[type="number"] {
   flex-wrap: wrap;
   font-size: 14px;
 }
-
-.sync-banner-icon {
-  font-size: 18px;
-}
-
-.sync-banner-text {
-  font-weight: 500;
-}
-
+.sync-banner-icon { font-size: 18px; }
+.sync-banner-text { font-weight: 500; }
 .sync-spinner {
   display: inline-block;
   width: 16px;
@@ -306,23 +313,14 @@ input[type="number"] {
   animation: spin 0.8s linear infinite;
   vertical-align: middle;
 }
-
 @keyframes spin {
   from { transform: rotate(0deg); }
   to { transform: rotate(360deg); }
 }
-
 @keyframes slideDown {
-  from {
-    opacity: 0;
-    transform: translateY(-100%);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+  from { opacity: 0; transform: translateY(-100%); }
+  to { opacity: 1; transform: translateY(0); }
 }
-
 .sync-banner-button {
   background: rgba(255, 255, 255, 0.2);
   border: 1px solid rgba(255, 255, 255, 0.3);
@@ -334,16 +332,13 @@ input[type="number"] {
   font-weight: 500;
   transition: background 0.2s;
 }
-
 .sync-banner-button:hover:not(:disabled) {
   background: rgba(255, 255, 255, 0.3);
 }
-
 .sync-banner-button:disabled {
   opacity: 0.6;
   cursor: not-allowed;
 }
-
 .sync-banner-close {
   background: none;
   border: none;
@@ -353,7 +348,6 @@ input[type="number"] {
   padding: 0 4px;
   transition: color 0.2s;
 }
-
 .sync-banner-close:hover {
   color: white;
 }
@@ -363,12 +357,10 @@ input[type="number"] {
   .sync-banner {
     padding: 8px 12px;
   }
-  
   .sync-banner-content {
     font-size: 12px;
     gap: 8px;
   }
-  
   .sync-banner-button {
     font-size: 12px;
     padding: 4px 12px;

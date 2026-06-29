@@ -30,7 +30,6 @@ export interface LibrarySidebarProps {
   onRandomClick?: () => void;
 }
 
-// Компонент группы-аккордеона
 const AccordionGroup = ({
   title,
   items,
@@ -61,7 +60,7 @@ const AccordionGroup = ({
           cursor: 'pointer',
           padding: '4px 0',
           fontSize: '11px',
-          color: '#5B86A1',
+          color: 'var(--text-muted)',
           fontWeight: '500',
           textTransform: 'uppercase',
           letterSpacing: '0.5px',
@@ -69,7 +68,7 @@ const AccordionGroup = ({
         }}
       >
         <span>{title}</span>
-        <span style={{ fontSize: '10px', color: '#2A4B60' }}>
+        <span style={{ fontSize: '10px', color: 'var(--text-muted)' }}>
           {isOpen ? '▾' : '▸'} {items.length}
         </span>
       </div>
@@ -83,23 +82,23 @@ const AccordionGroup = ({
               style={{
                 fontSize: '12px',
                 padding: '4px 12px',
-                background: selected.includes(item) ? '#5B86A1' : '#121C24',
-                border: selected.includes(item) ? '1px solid #5B86A1' : '1px solid #2A4B60',
+                background: selected.includes(item) ? 'var(--primary)' : 'var(--chip)',
+                border: selected.includes(item) ? '1px solid var(--primary)' : '1px solid var(--border-soft)',
                 borderRadius: '14px',
-                color: selected.includes(item) ? '#0A1118' : '#97A6BA',
+                color: selected.includes(item) ? '#FFFFFF' : 'var(--text-secondary)',
                 cursor: 'pointer',
                 transition: 'all 0.2s ease',
               }}
               onMouseEnter={(e) => {
                 if (!selected.includes(item)) {
-                  e.currentTarget.style.borderColor = '#5B86A1';
-                  e.currentTarget.style.color = '#E6EDF3';
+                  e.currentTarget.style.borderColor = 'var(--primary)';
+                  e.currentTarget.style.color = 'var(--text-primary)';
                 }
               }}
               onMouseLeave={(e) => {
                 if (!selected.includes(item)) {
-                  e.currentTarget.style.borderColor = '#2A4B60';
-                  e.currentTarget.style.color = '#97A6BA';
+                  e.currentTarget.style.borderColor = 'var(--border-soft)';
+                  e.currentTarget.style.color = 'var(--text-secondary)';
                 }
               }}
             >
@@ -137,7 +136,6 @@ export default function LibrarySidebar({
   handleFindForMe,
   onRandomClick,
 }: LibrarySidebarProps) {
-  // A/B тест для кнопки в сайдбаре
   const randomButtonLabel = getABTestVariant(
     'global_random_button',
     'Шагнуть в неизвестность',
@@ -154,6 +152,7 @@ export default function LibrarySidebar({
         width: '100%',
         height: '100%',
         overflowY: 'auto',
+        background: 'var(--bg)',
       }}
     >
       <input
@@ -164,10 +163,10 @@ export default function LibrarySidebar({
         style={{
           width: '100%',
           padding: '12px 16px',
-          background: '#121C24',
-          border: '1px solid #2A4B60',
+          background: 'var(--surface-alt)',
+          border: '1px solid var(--border-soft)',
           borderRadius: '12px',
-          color: '#E6EDF3',
+          color: 'var(--text-primary)',
           fontSize: '15px',
           outline: 'none',
           fontFamily: 'Inter, sans-serif',
@@ -234,10 +233,10 @@ export default function LibrarySidebar({
         style={{
           width: '100%',
           padding: '12px 16px',
-          background: '#5B86A1',
+          background: 'var(--primary)',
           border: 'none',
           borderRadius: '12px',
-          color: '#0A1118',
+          color: '#FFFFFF',
           fontSize: '15px',
           fontWeight: '600',
           cursor: 'pointer',
@@ -245,11 +244,11 @@ export default function LibrarySidebar({
           fontFamily: 'Inter, sans-serif',
         }}
         onMouseEnter={(e) => {
-          e.currentTarget.style.background = '#4A7590';
+          e.currentTarget.style.background = 'var(--primary-soft)';
           e.currentTarget.style.transform = 'scale(1.02)';
         }}
         onMouseLeave={(e) => {
-          e.currentTarget.style.background = '#5B86A1';
+          e.currentTarget.style.background = 'var(--primary)';
           e.currentTarget.style.transform = 'scale(1)';
         }}
       >
@@ -265,7 +264,7 @@ export default function LibrarySidebar({
             background: 'rgba(91, 134, 161, 0.15)',
             border: '1px solid rgba(91, 134, 161, 0.2)',
             borderRadius: '12px',
-            color: '#5B86A1',
+            color: 'var(--primary)',
             fontSize: '15px',
             fontWeight: '500',
             cursor: 'pointer',

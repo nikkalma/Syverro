@@ -19,9 +19,9 @@ export default function BookCard({ book, userBook, onClick }: BookCardProps) {
     <div
       onClick={onClick}
       style={{
-        background: '#121C24',
+        background: 'var(--card)',
         borderRadius: '16px',
-        border: '1px solid #2A4B60',
+        border: '1px solid var(--border-soft)',
         transition: 'all 0.2s ease',
         cursor: onClick ? 'pointer' : 'default',
         overflow: 'hidden',
@@ -29,16 +29,15 @@ export default function BookCard({ book, userBook, onClick }: BookCardProps) {
       }}
       onMouseEnter={(e) => {
         if (onClick) {
-          e.currentTarget.style.borderColor = '#5B86A1';
+          e.currentTarget.style.borderColor = 'var(--primary)';
           e.currentTarget.style.boxShadow = '0 8px 24px rgba(91, 134, 161, 0.15)';
         }
       }}
       onMouseLeave={(e) => {
-        e.currentTarget.style.borderColor = '#2A4B60';
+        e.currentTarget.style.borderColor = 'var(--border-soft)';
         e.currentTarget.style.boxShadow = 'none';
       }}
     >
-      {/* Badge "Вернулся" для перечитывания */}
       {rereadCount > 0 && (
         <div
           style={{
@@ -60,12 +59,11 @@ export default function BookCard({ book, userBook, onClick }: BookCardProps) {
         </div>
       )}
 
-      {/* Обложка */}
       <div
         style={{
           width: '100%',
           aspectRatio: '2/3',
-          background: 'linear-gradient(135deg, #1A2832, #0F1A22)',
+          background: 'linear-gradient(135deg, var(--surface-alt), var(--bg))',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
@@ -84,20 +82,19 @@ export default function BookCard({ book, userBook, onClick }: BookCardProps) {
             }}
           />
         ) : (
-          <div style={{ textAlign: 'center', color: '#5B86A1', padding: '16px' }}>
+          <div style={{ textAlign: 'center', color: 'var(--text-muted)', padding: '16px' }}>
             <div style={{ fontSize: '48px', marginBottom: '8px', opacity: 0.4 }}>📖</div>
-            <div style={{ fontSize: '14px', color: '#97A6BA' }}>{book.title}</div>
+            <div style={{ fontSize: '14px', color: 'var(--text-secondary)' }}>{book.title}</div>
           </div>
         )}
       </div>
 
-      {/* Информация */}
       <div style={{ padding: '12px 14px' }}>
         <div
           style={{
             fontSize: '14px',
             fontWeight: '500',
-            color: '#E6EDF3',
+            color: 'var(--text-primary)',
             overflow: 'hidden',
             textOverflow: 'ellipsis',
             whiteSpace: 'nowrap',
@@ -108,7 +105,7 @@ export default function BookCard({ book, userBook, onClick }: BookCardProps) {
         <div
           style={{
             fontSize: '13px',
-            color: '#97A6BA',
+            color: 'var(--text-secondary)',
             overflow: 'hidden',
             textOverflow: 'ellipsis',
             whiteSpace: 'nowrap',
@@ -117,13 +114,12 @@ export default function BookCard({ book, userBook, onClick }: BookCardProps) {
           {book.author}
         </div>
 
-        {/* Прогресс (только для статуса "reading") */}
         {userBook?.status === 'reading' && progress > 0 && (
           <div style={{ marginTop: '6px' }}>
             <div
               style={{
                 fontSize: '11px',
-                color: '#5B86A1',
+                color: 'var(--primary)',
                 marginBottom: '2px',
               }}
             >
@@ -142,7 +138,7 @@ export default function BookCard({ book, userBook, onClick }: BookCardProps) {
                 style={{
                   width: `${progress}%`,
                   height: '100%',
-                  background: '#5B86A1',
+                  background: 'var(--primary)',
                   borderRadius: '4px',
                   transition: 'width 0.3s',
                 }}

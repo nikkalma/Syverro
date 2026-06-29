@@ -39,7 +39,9 @@ export default function LibraryPage() {
 
   if (loading) {
     return (
-      <div style={{ color: '#E6EDF3', padding: '40px', textAlign: 'center' }}>Загрузка...</div>
+      <div style={{ color: 'var(--text-secondary)', padding: '40px', textAlign: 'center' }}>
+        Загрузка...
+      </div>
     );
   }
 
@@ -47,14 +49,14 @@ export default function LibraryPage() {
     <div style={{ display: 'flex', flex: 1, position: 'relative' }}>
       <aside style={{
         width: '260px',
-        borderRight: '1px solid #1A2832',
+        borderRight: '1px solid var(--border-soft)',
         flexShrink: 0,
         display: 'flex',
         flexDirection: 'column',
         maxHeight: 'calc(100vh - 80px)',
         position: 'sticky',
         top: '80px',
-        background: '#0B1220',
+        background: 'var(--bg)',
         zIndex: 5,
         overflowY: 'auto',
       }}>
@@ -109,7 +111,7 @@ export default function LibraryPage() {
               display: 'none',
               background: 'none',
               border: 'none',
-              color: '#E6EDF3',
+              color: 'var(--text-primary)',
               fontSize: '24px',
               cursor: 'pointer',
               padding: '4px 8px',
@@ -124,7 +126,6 @@ export default function LibraryPage() {
         <BookGrid books={filteredBooks} onBookClick={(id) => navigate(`/book/${id}`)} />
       </div>
 
-      {/* Мобильный дравер */}
       {isSidebarOpen && (
         <>
           <div
@@ -146,9 +147,9 @@ export default function LibraryPage() {
             left: 0,
             bottom: 0,
             width: '300px',
-            background: '#0B1220',
+            background: 'var(--bg)',
             zIndex: 101,
-            borderRight: '1px solid #1A2832',
+            borderRight: '1px solid var(--border-soft)',
             boxShadow: '4px 0 24px rgba(0,0,0,0.5)',
             overflowY: 'auto',
             animation: 'slideIn 0.3s ease',
@@ -161,7 +162,7 @@ export default function LibraryPage() {
                 right: '16px',
                 background: 'none',
                 border: 'none',
-                color: '#97A6BA',
+                color: 'var(--text-secondary)',
                 fontSize: '24px',
                 cursor: 'pointer',
                 zIndex: 102,

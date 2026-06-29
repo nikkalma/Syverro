@@ -14,7 +14,7 @@ export default function BookGrid({ books, userBooks = [], onBookClick }: BookGri
 
   if (books.length === 0) {
     return (
-      <div style={{ textAlign: 'center', padding: '40px 0', color: '#97A6BA' }}>
+      <div style={{ textAlign: 'center', padding: '40px 0', color: 'var(--text-secondary)' }}>
         Книг не найдено
       </div>
     );

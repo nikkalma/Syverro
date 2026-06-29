@@ -14,6 +14,14 @@ export default function Layout({ children }: LayoutProps) {
   const { user, logout } = useAuthStore();
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const [theme, setTheme] = useState(() => {
+    return localStorage.getItem('syverro_theme') || 'dark';
+  });
+
+  useEffect(() => {
+    document.documentElement.setAttribute('data-theme', theme);
+    localStorage.setItem('syverro_theme', theme);
+  }, [theme]);
 
   const isAdmin = user?.role === 'owner' || user?.role === 'admin' || user?.role === 'moderator';
 
@@ -52,14 +60,13 @@ export default function Layout({ children }: LayoutProps) {
         alignItems: 'center',
         justifyContent: 'space-between',
         padding: '16px 24px',
-        borderBottom: '1px solid var(--border)',
+        borderBottom: '1px solid var(--border-soft)',
         background: 'var(--surface)',
         position: 'sticky',
         top: 0,
         zIndex: 10,
         flexShrink: 0,
       }}>
-        {/* ЛОГО */}
         <div
           onClick={() => navigate('/')}
           style={{
@@ -76,7 +83,6 @@ export default function Layout({ children }: LayoutProps) {
           Syverro
         </div>
 
-        {/* НАВИГАЦИЯ */}
         <nav style={{
           display: 'flex',
           alignItems: 'center',
@@ -108,7 +114,6 @@ export default function Layout({ children }: LayoutProps) {
           </span>
         </nav>
 
-        {/* ПРАВАЯ ЧАСТЬ */}
         <div style={{
           display: 'flex',
           alignItems: 'center',
@@ -116,6 +121,21 @@ export default function Layout({ children }: LayoutProps) {
           minWidth: '120px',
           justifyContent: 'flex-end',
         }}>
+          <button
+            onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+            style={{
+              background: 'none',
+              border: 'none',
+              color: 'var(--text-secondary)',
+              cursor: 'pointer',
+              fontSize: '20px',
+              padding: '4px 8px',
+              transition: 'color 0.2s',
+            }}
+          >
+            {theme === 'dark' ? '☀️' : '🌙'}
+          </button>
+
           {user ? (
             <div ref={dropdownRef} style={{ position: 'relative' }}>
               <span
@@ -143,7 +163,7 @@ export default function Layout({ children }: LayoutProps) {
                   background: 'var(--surface)',
                   backdropFilter: 'blur(20px)',
                   borderRadius: '12px',
-                  border: '1px solid var(--border)',
+                  border: '1px solid var(--border-soft)',
                   padding: '8px 0',
                   minWidth: '180px',
                   boxShadow: '0 12px 48px rgba(0,0,0,0.5)',
@@ -205,7 +225,7 @@ export default function Layout({ children }: LayoutProps) {
                     ⚙️ Настройки
                   </div>
 
-                  <div style={{ height: '1px', background: 'var(--border)', margin: '4px 12px' }} />
+                  <div style={{ height: '1px', background: 'var(--border-soft)', margin: '4px 12px' }} />
 
                   <div
                     onClick={handleLogout}

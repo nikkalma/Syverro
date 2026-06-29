@@ -4,7 +4,8 @@ export type UserBookStatus =
   | 'shelf'
   | 'completed'
   | 'paused'
-  | 'abandoned';
+  | 'abandoned'
+  | 'rereading'; 
 
 export interface UserBook {
   id: string;
@@ -25,6 +26,7 @@ export const statusLabels: Record<UserBookStatus, string> = {
   completed: 'Завершено',
   paused: 'Отложено',
   abandoned: 'Брошено',
+  rereading: 'Перечитываю',
 };
 
 export const statusOrder: UserBookStatus[] = [
@@ -33,4 +35,5 @@ export const statusOrder: UserBookStatus[] = [
   'completed',
   'paused',
   'abandoned',
+  'rereading',
 ];

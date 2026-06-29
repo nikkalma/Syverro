@@ -6,7 +6,6 @@ interface QuoteOfTheDayProps {
   t: LocaleData;
 }
 
-// Пока статичная цитата, потом можно сделать из профиля
 const DEFAULT_QUOTE = '«Книги — это корабли мысли, странствующие по волнам времени» — Фрэнсис Бэкон';
 
 export function QuoteOfTheDay({ profile, t }: QuoteOfTheDayProps) {
@@ -15,9 +14,9 @@ export function QuoteOfTheDay({ profile, t }: QuoteOfTheDayProps) {
   return (
     <div
       style={{
-        background: 'rgba(18, 28, 36, 0.5)',
+        background: 'var(--surface-alt)',
         borderRadius: '12px',
-        border: '1px solid rgba(255,255,255,0.06)',
+        border: '1px solid var(--border-soft)',
         padding: '16px 20px',
         height: '100%',
         display: 'flex',
@@ -28,7 +27,7 @@ export function QuoteOfTheDay({ profile, t }: QuoteOfTheDayProps) {
       <div
         style={{
           fontSize: '11px',
-          color: '#5B86A1',
+          color: 'var(--text-muted)',
           textTransform: 'uppercase',
           letterSpacing: '0.5px',
           marginBottom: '8px',
@@ -39,7 +38,7 @@ export function QuoteOfTheDay({ profile, t }: QuoteOfTheDayProps) {
       <div
         style={{
           fontSize: '13px',
-          color: '#97A6BA',
+          color: 'var(--text-secondary)',
           fontStyle: 'italic',
           lineHeight: '1.5',
         }}

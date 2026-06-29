@@ -1,7 +1,7 @@
 // src/pages/Profile/index.tsx
 import { useLibrary } from '../../hooks/useLibrary';
 import ProfileHeader from './ProfileHeader';
-import ReaderIdentitySection from './ReaderIdentitySection'; // ← папка рядом
+import ReaderIdentitySection from './ReaderIdentitySection';
 import LibrarySection from './LibrarySection';
 
 export default function Profile() {
@@ -9,7 +9,7 @@ export default function Profile() {
 
   if (loading) {
     return (
-      <div style={{ color: '#E6EDF3', padding: '40px', textAlign: 'center' }}>
+      <div style={{ color: 'var(--text-secondary)', padding: '40px', textAlign: 'center' }}>
         Загрузка...
       </div>
     );

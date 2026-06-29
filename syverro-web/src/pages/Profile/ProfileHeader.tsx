@@ -15,7 +15,6 @@ export default function ProfileHeader({ books }: ProfileHeaderProps) {
   const [tempName, setTempName] = useState(displayName);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Статус и уровень (пока хардкод)
   const status = profile.status || 'Пришла читать';
   const level = profile.level || 'Демиург Сиверро';
   const readingGoals = profile.readingGoals || [];
@@ -58,7 +57,6 @@ export default function ProfileHeader({ books }: ProfileHeaderProps) {
         textAlign: 'center',
       }}
     >
-      {/* Аватар — 120px */}
       <div
         style={{
           position: 'relative',
@@ -68,8 +66,8 @@ export default function ProfileHeader({ books }: ProfileHeaderProps) {
           flexShrink: 0,
           cursor: 'pointer',
           overflow: 'hidden',
-          background: 'rgba(91, 134, 161, 0.15)',
-          border: '2px solid rgba(255, 255, 255, 0.08)',
+          background: 'var(--surface-alt)',
+          border: '2px solid var(--border-soft)',
           marginBottom: '16px',
         }}
         onClick={() => fileInputRef.current?.click()}
@@ -85,7 +83,7 @@ export default function ProfileHeader({ books }: ProfileHeaderProps) {
               alignItems: 'center',
               justifyContent: 'center',
               fontSize: '48px',
-              color: '#5B86A1',
+              color: 'var(--text-muted)',
             }}
           >
             👤
@@ -102,7 +100,7 @@ export default function ProfileHeader({ books }: ProfileHeaderProps) {
             justifyContent: 'center',
             opacity: 0,
             transition: 'opacity 0.2s',
-            color: '#E6EDF3',
+            color: 'var(--text-primary)',
             fontSize: '11px',
             fontWeight: '400',
           }}
@@ -113,9 +111,7 @@ export default function ProfileHeader({ books }: ProfileHeaderProps) {
         </div>
       </div>
 
-      {/* Информация — всё по центру */}
       <div style={{ width: '100%' }}>
-        {/* Имя */}
         {isEditingName ? (
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
             <input
@@ -127,12 +123,10 @@ export default function ProfileHeader({ books }: ProfileHeaderProps) {
               autoFocus
               style={{
                 padding: '4px 8px',
-                background: 'rgba(18, 28, 36, 0.6)',
-                backdropFilter: 'blur(8px)',
-                WebkitBackdropFilter: 'blur(8px)',
-                border: '1px solid rgba(91, 134, 161, 0.3)',
+                background: 'var(--surface-alt)',
+                border: '1px solid var(--primary)',
                 borderRadius: '6px',
-                color: '#E6EDF3',
+                color: 'var(--text-primary)',
                 fontSize: '28px',
                 fontWeight: '500',
                 fontFamily: 'Inter, sans-serif',
@@ -147,10 +141,10 @@ export default function ProfileHeader({ books }: ProfileHeaderProps) {
               onClick={handleNameSave}
               style={{
                 padding: '4px 12px',
-                background: '#5B86A1',
+                background: 'var(--primary)',
                 border: 'none',
                 borderRadius: '6px',
-                color: '#0A1118',
+                color: '#FFFFFF',
                 fontSize: '12px',
                 fontWeight: '500',
                 cursor: 'pointer',
@@ -166,7 +160,7 @@ export default function ProfileHeader({ books }: ProfileHeaderProps) {
             style={{
               fontSize: '28px',
               fontWeight: '500',
-              color: '#E6EDF3',
+              color: 'var(--text-primary)',
               cursor: 'pointer',
               transition: 'color 0.2s',
             }}
@@ -174,36 +168,33 @@ export default function ProfileHeader({ books }: ProfileHeaderProps) {
               setTempName(displayName);
               setIsEditingName(true);
             }}
-            onMouseEnter={(e) => (e.currentTarget.style.color = '#5B86A1')}
-            onMouseLeave={(e) => (e.currentTarget.style.color = '#E6EDF3')}
+            onMouseEnter={(e) => (e.currentTarget.style.color = 'var(--primary)')}
+            onMouseLeave={(e) => (e.currentTarget.style.color = 'var(--text-primary)')}
           >
             {displayName}
           </div>
         )}
 
-        {/* Статус */}
         <div
           style={{
             fontSize: '14px',
-            color: '#97A6BA',
+            color: 'var(--text-secondary)',
             marginTop: '4px',
           }}
         >
           Статус: {status}
         </div>
 
-        {/* Уровень */}
         <div
           style={{
             fontSize: '13px',
-            color: '#5B86A1',
+            color: 'var(--primary)',
             marginBottom: '12px',
           }}
         >
           Уровень: {level}
         </div>
 
-        {/* Цели чтения (теги) — по центру */}
         {readingGoals.length > 0 && (
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', justifyContent: 'center' }}>
             {readingGoals.map((goal) => (
@@ -212,10 +203,10 @@ export default function ProfileHeader({ books }: ProfileHeaderProps) {
                 style={{
                   fontSize: '12px',
                   padding: '2px 12px',
-                  background: 'rgba(91, 134, 161, 0.15)',
+                  background: 'var(--chip)',
                   borderRadius: '12px',
-                  color: '#5B86A1',
-                  border: '1px solid rgba(91, 134, 161, 0.15)',
+                  color: 'var(--text-secondary)',
+                  border: '1px solid var(--border-soft)',
                 }}
               >
                 {readingGoalLabels[goal as ReadingGoal] || goal}

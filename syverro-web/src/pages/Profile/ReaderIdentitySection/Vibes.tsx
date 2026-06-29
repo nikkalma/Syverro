@@ -12,9 +12,9 @@ export function Vibes({ profile, t }: VibesProps) {
   return (
     <div
       style={{
-        background: 'rgba(18, 28, 36, 0.5)',
+        background: 'var(--surface-alt)',
         borderRadius: '12px',
-        border: '1px solid rgba(255,255,255,0.06)',
+        border: '1px solid var(--border-soft)',
         padding: '16px 20px',
         height: '100%',
       }}
@@ -22,7 +22,7 @@ export function Vibes({ profile, t }: VibesProps) {
       <div
         style={{
           fontSize: '11px',
-          color: '#5B86A1',
+          color: 'var(--text-muted)',
           textTransform: 'uppercase',
           letterSpacing: '0.5px',
           marginBottom: '12px',
@@ -38,7 +38,7 @@ export function Vibes({ profile, t }: VibesProps) {
             flexWrap: 'wrap',
             gap: '4px 8px',
             fontSize: '13px',
-            color: '#E6EDF3',
+            color: 'var(--text-primary)',
           }}
         >
           {vibes.map((v: string) => (
@@ -46,7 +46,7 @@ export function Vibes({ profile, t }: VibesProps) {
           ))}
         </div>
       ) : (
-        <div style={{ color: '#5B86A1', fontSize: '12px' }}>Не заполнено</div>
+        <div style={{ color: 'var(--text-muted)', fontSize: '12px' }}>Не заполнено</div>
       )}
     </div>
   );

@@ -12,9 +12,9 @@ export function MyRoots({ profile, t }: MyRootsProps) {
   return (
     <div
       style={{
-        background: 'rgba(18, 28, 36, 0.5)',
+        background: 'var(--surface-alt)',
         borderRadius: '12px',
-        border: '1px solid rgba(255,255,255,0.06)',
+        border: '1px solid var(--border-soft)',
         padding: '16px 20px',
         height: '100%',
       }}
@@ -22,20 +22,20 @@ export function MyRoots({ profile, t }: MyRootsProps) {
       <div
         style={{
           fontSize: '11px',
-          color: '#5B86A1',
+          color: 'var(--text-muted)',
           textTransform: 'uppercase',
           letterSpacing: '0.5px',
           marginBottom: '12px',
         }}
       >
         Мои корни
-        <span style={{ fontSize: '10px', color: '#2A4B60', marginLeft: '6px' }}>
+        <span style={{ fontSize: '10px', color: 'var(--text-muted)', marginLeft: '6px' }}>
           (века, авторы)
         </span>
       </div>
 
       {hasData ? (
-        <div style={{ fontSize: '13px', color: '#E6EDF3' }}>
+        <div style={{ fontSize: '13px', color: 'var(--text-primary)' }}>
           {profile.favoriteEras?.length > 0 && (
             <div style={{ marginBottom: '4px' }}>
               {profile.favoriteEras
@@ -44,13 +44,13 @@ export function MyRoots({ profile, t }: MyRootsProps) {
             </div>
           )}
           {profile.favoriteAuthors?.length > 0 && (
-            <div style={{ color: '#97A6BA', fontSize: '12px' }}>
+            <div style={{ color: 'var(--text-secondary)', fontSize: '12px' }}>
               {profile.favoriteAuthors.join(' • ')}
             </div>
           )}
         </div>
       ) : (
-        <div style={{ color: '#5B86A1', fontSize: '12px' }}>Не заполнено</div>
+        <div style={{ color: 'var(--text-muted)', fontSize: '12px' }}>Не заполнено</div>
       )}
     </div>
   );

@@ -29,7 +29,6 @@ export default function ReaderIdentitySection() {
 
   return (
     <>
-      {/* Строка 1: без подложки */}
       <div
         style={{
           display: 'grid',
@@ -43,14 +42,13 @@ export default function ReaderIdentitySection() {
         <QuoteOfTheDay profile={profile} t={t} />
       </div>
 
-      {/* Строка 2: с общей подложкой */}
       <div
         style={{
-          background: 'rgba(18, 28, 36, 0.4)',
+          background: 'var(--glass-bg)',
           backdropFilter: 'blur(12px)',
           WebkitBackdropFilter: 'blur(12px)',
           borderRadius: '16px',
-          border: '1px solid rgba(255, 255, 255, 0.06)',
+          border: '1px solid var(--glass-border)',
           padding: '20px',
           marginBottom: '24px',
         }}
@@ -69,28 +67,28 @@ export default function ReaderIdentitySection() {
         </div>
       </div>
 
-      {/* Кнопка редактирования */}
       <button
         onClick={() => setIsEditing(true)}
         style={{
           padding: '8px 20px',
-          background: 'rgba(255,255,255,0.05)',
-          border: '1px solid rgba(255,255,255,0.08)',
+          background: 'var(--surface-alt)',
+          border: '1px solid var(--border-soft)',
           borderRadius: '8px',
-          color: '#97A6BA',
+          color: 'var(--text-secondary)',
           fontSize: '13px',
           cursor: 'pointer',
           fontFamily: 'Inter, sans-serif',
           width: 'auto',
           marginBottom: '32px',
+          transition: 'all 0.2s',
         }}
         onMouseEnter={(e) => {
-          e.currentTarget.style.background = 'rgba(255,255,255,0.1)';
-          e.currentTarget.style.color = '#E6EDF3';
+          e.currentTarget.style.background = 'var(--card-hover)';
+          e.currentTarget.style.color = 'var(--text-primary)';
         }}
         onMouseLeave={(e) => {
-          e.currentTarget.style.background = 'rgba(255,255,255,0.05)';
-          e.currentTarget.style.color = '#97A6BA';
+          e.currentTarget.style.background = 'var(--surface-alt)';
+          e.currentTarget.style.color = 'var(--text-secondary)';
         }}
       >
         ✏️ Редактировать ориентиры

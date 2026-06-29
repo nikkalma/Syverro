@@ -25,22 +25,20 @@ function BookCard({ book, userBook, onClick }: {
       style={{
         flexShrink: 0,
         width: '140px',
-        background: 'rgba(10, 17, 24, 0.6)',
-        backdropFilter: 'blur(8px)',
-        WebkitBackdropFilter: 'blur(8px)',
+        background: 'var(--card)',
         borderRadius: '12px',
-        border: '1px solid rgba(255, 255, 255, 0.06)',
+        border: '1px solid var(--border-soft)',
         overflow: 'hidden',
         cursor: 'pointer',
         transition: 'all 0.2s',
       }}
       onMouseEnter={(e) => {
-        e.currentTarget.style.borderColor = 'rgba(255,255,255,0.15)';
+        e.currentTarget.style.borderColor = 'var(--primary)';
         e.currentTarget.style.transform = 'translateY(-4px)';
         e.currentTarget.style.boxShadow = '0 8px 24px rgba(0,0,0,0.3)';
       }}
       onMouseLeave={(e) => {
-        e.currentTarget.style.borderColor = 'rgba(255,255,255,0.06)';
+        e.currentTarget.style.borderColor = 'var(--border-soft)';
         e.currentTarget.style.transform = 'translateY(0)';
         e.currentTarget.style.boxShadow = 'none';
       }}
@@ -49,7 +47,7 @@ function BookCard({ book, userBook, onClick }: {
         style={{
           width: '100%',
           aspectRatio: '2/3',
-          background: 'linear-gradient(135deg, rgba(26, 40, 50, 0.8), rgba(15, 26, 34, 0.8))',
+          background: 'linear-gradient(135deg, var(--surface-alt), var(--bg))',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
@@ -66,7 +64,6 @@ function BookCard({ book, userBook, onClick }: {
           <span style={{ fontSize: '48px', opacity: 0.3 }}>📖</span>
         )}
         
-        {/* Прогресс */}
         {progress > 0 && (
           <div
             style={{
@@ -82,7 +79,7 @@ function BookCard({ book, userBook, onClick }: {
               style={{
                 width: `${progress}%`,
                 height: '100%',
-                background: '#5B86A1',
+                background: 'var(--primary)',
                 transition: 'width 0.3s',
               }}
             />
@@ -95,7 +92,7 @@ function BookCard({ book, userBook, onClick }: {
           style={{
             fontSize: '12px',
             fontWeight: '500',
-            color: '#E6EDF3',
+            color: 'var(--text-primary)',
             overflow: 'hidden',
             textOverflow: 'ellipsis',
             whiteSpace: 'nowrap',
@@ -106,7 +103,7 @@ function BookCard({ book, userBook, onClick }: {
         <div
           style={{
             fontSize: '11px',
-            color: '#97A6BA',
+            color: 'var(--text-secondary)',
             overflow: 'hidden',
             textOverflow: 'ellipsis',
             whiteSpace: 'nowrap',
@@ -117,7 +114,7 @@ function BookCard({ book, userBook, onClick }: {
         <div
           style={{
             fontSize: '10px',
-            color: '#5B86A1',
+            color: 'var(--primary)',
             marginTop: '2px',
           }}
         >
@@ -135,23 +132,15 @@ export default function LibrarySection({ books }: LibrarySectionProps) {
   const userBooks = userBookService.getByUser(CURRENT_USER_ID);
   const userBookMap = new Map(userBooks.map((ub) => [ub.bookId, ub]));
 
-  // Книги в библиотеке
   const libraryBooks = books.filter((b) => userBookMap.has(b.id));
   const totalBooks = libraryBooks.length;
-
-  // Читаю сейчас (статус 'reading')
   const readingBooks = libraryBooks.filter(
     (b) => userBookMap.get(b.id)?.status === 'reading'
   );
-
-  // Прочитано (статус 'completed')
   const completedBooks = libraryBooks.filter(
     (b) => userBookMap.get(b.id)?.status === 'completed'
   );
 
-  // ============================================
-  // РАСЧЁТ СТАТИСТИКИ ТОЛЬКО ПО АКТУАЛЬНЫМ КНИГАМ
-  // ============================================
   const relevantBooks = libraryBooks.filter(
     (b) => {
       const status = userBookMap.get(b.id)?.status;
@@ -159,7 +148,6 @@ export default function LibrarySection({ books }: LibrarySectionProps) {
     }
   );
 
-  // Самый частый жанр
   const allGenres = relevantBooks.flatMap((b) => b.genres || []);
   const genreCounts: Record<string, number> = {};
   allGenres.forEach((g) => {
@@ -174,7 +162,6 @@ export default function LibrarySection({ books }: LibrarySectionProps) {
     }
   }
 
-  // Самая частая страна автора
   const allCountries = relevantBooks
     .map((b) => b.authorCountry)
     .filter((c): c is string => c !== null && c !== undefined);
@@ -191,7 +178,6 @@ export default function LibrarySection({ books }: LibrarySectionProps) {
     }
   }
 
-  // Прокрутка колесиком
   const handleWheel = (e: React.WheelEvent) => {
     if (scrollRef.current) {
       scrollRef.current.scrollLeft += e.deltaY;
@@ -202,16 +188,15 @@ export default function LibrarySection({ books }: LibrarySectionProps) {
   return (
     <div
       style={{
-        background: 'rgba(18, 28, 36, 0.6)',
+        background: 'var(--glass-bg)',
         backdropFilter: 'blur(12px)',
         WebkitBackdropFilter: 'blur(12px)',
         borderRadius: '16px',
-        border: '1px solid rgba(255, 255, 255, 0.08)',
+        border: '1px solid var(--glass-border)',
         padding: '20px 24px',
         marginBottom: '32px',
       }}
     >
-      {/* Заголовок */}
       <div
         style={{
           display: 'flex',
@@ -224,7 +209,7 @@ export default function LibrarySection({ books }: LibrarySectionProps) {
           style={{
             fontSize: '16px',
             fontWeight: '400',
-            color: '#E6EDF3',
+            color: 'var(--text-primary)',
           }}
         >
           📚 Читаю сейчас
@@ -232,20 +217,19 @@ export default function LibrarySection({ books }: LibrarySectionProps) {
         <span
           style={{
             fontSize: '12px',
-            color: '#5B86A1',
+            color: 'var(--text-muted)',
           }}
         >
           {readingBooks.length} книг
         </span>
       </div>
 
-      {/* Горизонтальный скролл книг */}
       {readingBooks.length === 0 ? (
         <div
           style={{
             textAlign: 'center',
             padding: '20px',
-            color: '#5B86A1',
+            color: 'var(--text-muted)',
             fontSize: '13px',
           }}
         >
@@ -261,7 +245,7 @@ export default function LibrarySection({ books }: LibrarySectionProps) {
             overflowX: 'auto',
             padding: '4px 4px 12px 4px',
             scrollbarWidth: 'thin',
-            scrollbarColor: '#2A4B60 transparent',
+            scrollbarColor: 'var(--primary) transparent',
             cursor: 'grab',
             scrollBehavior: 'smooth',
           }}
@@ -277,7 +261,6 @@ export default function LibrarySection({ books }: LibrarySectionProps) {
         </div>
       )}
 
-      {/* Статистика */}
       <div
         style={{
           display: 'grid',
@@ -285,10 +268,9 @@ export default function LibrarySection({ books }: LibrarySectionProps) {
           gap: '16px',
           marginTop: '16px',
           paddingTop: '16px',
-          borderTop: '1px solid rgba(255, 255, 255, 0.06)',
+          borderTop: '1px solid var(--border-soft)',
         }}
       >
-        {/* Всего книг — ссылка на библиотеку */}
         <div
           onClick={() => navigate('/my-library')}
           style={{
@@ -303,13 +285,12 @@ export default function LibrarySection({ books }: LibrarySectionProps) {
           onMouseEnter={(e) => (e.currentTarget.style.opacity = '0.7')}
           onMouseLeave={(e) => (e.currentTarget.style.opacity = '1')}
         >
-          <div style={{ fontSize: '20px', fontWeight: '300', color: '#E6EDF3' }}>
+          <div style={{ fontSize: '20px', fontWeight: '300', color: 'var(--text-primary)' }}>
             {totalBooks}
           </div>
-          <div style={{ fontSize: '12px', color: '#97A6BA' }}>Всего книг</div>
+          <div style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>Всего книг</div>
         </div>
 
-        {/* Прочитано */}
         <div
           style={{
             display: 'flex',
@@ -319,13 +300,12 @@ export default function LibrarySection({ books }: LibrarySectionProps) {
             textAlign: 'center',
           }}
         >
-          <div style={{ fontSize: '20px', fontWeight: '300', color: '#4CAF50' }}>
+          <div style={{ fontSize: '20px', fontWeight: '300', color: 'var(--success)' }}>
             {completedBooks.length}
           </div>
-          <div style={{ fontSize: '12px', color: '#97A6BA' }}>Прочитано</div>
+          <div style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>Прочитано</div>
         </div>
 
-        {/* Главный жанр */}
         <div
           style={{
             display: 'flex',
@@ -335,13 +315,12 @@ export default function LibrarySection({ books }: LibrarySectionProps) {
             textAlign: 'center',
           }}
         >
-          <div style={{ fontSize: '20px', fontWeight: '300', color: '#5B86A1' }}>
+          <div style={{ fontSize: '20px', fontWeight: '300', color: 'var(--primary)' }}>
             {topGenre}
           </div>
-          <div style={{ fontSize: '12px', color: '#97A6BA' }}>Главный жанр</div>
+          <div style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>Главный жанр</div>
         </div>
 
-        {/* Главная страна */}
         <div
           style={{
             display: 'flex',
@@ -351,10 +330,10 @@ export default function LibrarySection({ books }: LibrarySectionProps) {
             textAlign: 'center',
           }}
         >
-          <div style={{ fontSize: '20px', fontWeight: '300', color: '#5B86A1' }}>
+          <div style={{ fontSize: '20px', fontWeight: '300', color: 'var(--primary)' }}>
             {topCountry}
           </div>
-          <div style={{ fontSize: '12px', color: '#97A6BA' }}>Главная страна</div>
+          <div style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>Главная страна</div>
         </div>
       </div>
     </div>

@@ -5,6 +5,7 @@ import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { useAuthStore } from '../../store/authStore';
 import { useAdminTheme } from '../../store/adminStore';
 import { ADMIN_ROLES } from '../../types/admin';
+import { Sun, Moon, Menu, X } from 'lucide-react';
 import './AdminLayout.css';
 
 interface AdminLayoutProps {
@@ -34,7 +35,6 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
   const { theme, toggleTheme } = useAdminTheme();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
-  // Проверка прав доступа к админке
   const userRole = user?.role || 'user';
   const hasAccess = ADMIN_ROLES.includes(userRole as any);
 
@@ -45,22 +45,22 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        background: '#0B1220',
-        color: '#E6EDF3',
+        background: 'var(--bg)',
+        color: 'var(--text-primary)',
         flexDirection: 'column',
         gap: '16px',
       }}>
         <div style={{ fontSize: '64px' }}>🚫</div>
         <h1 style={{ fontSize: '24px', fontWeight: '400' }}>Доступ запрещён</h1>
-        <p style={{ color: '#97A6BA' }}>У вас нет прав для доступа к административной панели.</p>
+        <p style={{ color: 'var(--text-secondary)' }}>У вас нет прав для доступа к административной панели.</p>
         <button
           onClick={() => navigate('/')}
           style={{
             padding: '10px 24px',
-            background: '#5B86A1',
+            background: 'var(--primary)',
             border: 'none',
             borderRadius: '8px',
-            color: '#0A1118',
+            color: '#FFFFFF',
             fontSize: '14px',
             fontWeight: '500',
             cursor: 'pointer',
@@ -84,38 +84,41 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
     return false;
   };
 
-  const bgColor = theme === 'dark' ? '#0B1220' : '#F5F5F5';
-  const textColor = theme === 'dark' ? '#E6EDF3' : '#1A1A1A';
-  const sidebarBg = theme === 'dark' ? '#121C24' : '#FFFFFF';
-  const borderColor = theme === 'dark' ? '#1A2832' : '#E0E0E0';
-  const hoverBg = theme === 'dark' ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)';
-  const activeBg = theme === 'dark' ? 'rgba(91, 134, 161, 0.2)' : 'rgba(91, 134, 161, 0.1)';
-
   return (
-    <div style={{ minHeight: '100vh', background: bgColor, display: 'flex', color: textColor }}>
+    <div style={{ 
+      minHeight: '100vh', 
+      background: 'var(--bg)', 
+      display: 'flex', 
+      color: 'var(--text-primary)',
+    }}>
       {/* ===== БОКОВОЕ МЕНЮ ===== */}
       <aside className={`admin-sidebar ${isMobileMenuOpen ? 'open' : ''}`} style={{
         width: '240px',
-        background: sidebarBg,
-        borderRight: `1px solid ${borderColor}`,
+        background: 'var(--surface)',
+        borderRight: '1px solid var(--border-soft)',
         display: 'flex',
         flexDirection: 'column',
+        flexShrink: 0,
+        position: 'sticky',
+        top: 0,
+        height: '100vh',
+        overflowY: 'auto',
       }}>
-        {/* Логотип */}
         <div style={{
           padding: '20px 24px',
-          borderBottom: `1px solid ${borderColor}`,
+          borderBottom: '1px solid var(--border-soft)',
           fontSize: '20px',
           fontWeight: '600',
-          color: '#E6EDF3',
+          color: 'var(--text-primary)',
           fontFamily: "'Playfair Display', serif",
           letterSpacing: '4px',
         }}>
           Syverro
-          <span style={{ fontSize: '12px', color: '#5B86A1', marginLeft: '8px', letterSpacing: '0' }}>Admin</span>
+          <span style={{ fontSize: '12px', color: 'var(--primary)', marginLeft: '8px', letterSpacing: '0' }}>
+            Admin
+          </span>
         </div>
 
-        {/* Навигация */}
         <nav style={{ flex: 1, padding: '16px 12px', overflowY: 'auto' }}>
           {navItems.map((item) => (
             <Link
@@ -127,8 +130,8 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
                 gap: '12px',
                 padding: '10px 16px',
                 borderRadius: '8px',
-                color: isActive(item.path) ? '#E6EDF3' : '#97A6BA',
-                background: isActive(item.path) ? activeBg : 'transparent',
+                color: isActive(item.path) ? 'var(--text-primary)' : 'var(--text-secondary)',
+                background: isActive(item.path) ? 'var(--primary)' : 'transparent',
                 textDecoration: 'none',
                 fontSize: '14px',
                 fontFamily: 'Inter, sans-serif',
@@ -137,14 +140,14 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
               }}
               onMouseEnter={(e) => {
                 if (!isActive(item.path)) {
-                  e.currentTarget.style.background = hoverBg;
-                  e.currentTarget.style.color = '#E6EDF3';
+                  e.currentTarget.style.background = 'var(--surface-hover)';
+                  e.currentTarget.style.color = 'var(--text-primary)';
                 }
               }}
               onMouseLeave={(e) => {
                 if (!isActive(item.path)) {
                   e.currentTarget.style.background = 'transparent';
-                  e.currentTarget.style.color = '#97A6BA';
+                  e.currentTarget.style.color = 'var(--text-secondary)';
                 }
               }}
             >
@@ -154,10 +157,9 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
           ))}
         </nav>
 
-        {/* Нижняя часть меню */}
         <div style={{
           padding: '16px 20px',
-          borderTop: `1px solid ${borderColor}`,
+          borderTop: '1px solid var(--border-soft)',
           display: 'flex',
           flexDirection: 'column',
           gap: '8px',
@@ -172,21 +174,21 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
               width: '32px',
               height: '32px',
               borderRadius: '50%',
-              background: '#5B86A1',
+              background: 'var(--primary)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              color: '#0A1118',
+              color: '#FFFFFF',
               fontSize: '14px',
               fontWeight: '600',
             }}>
               {user?.email?.charAt(0).toUpperCase() || 'U'}
             </div>
             <div style={{ flex: 1, overflow: 'hidden' }}>
-              <div style={{ fontSize: '13px', fontWeight: '500', color: '#E6EDF3', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+              <div style={{ fontSize: '13px', fontWeight: '500', color: 'var(--text-primary)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                 {user?.email || 'Пользователь'}
               </div>
-              <div style={{ fontSize: '11px', color: '#5B86A1' }}>
+              <div style={{ fontSize: '11px', color: 'var(--primary)' }}>
                 {user?.role || 'user'}
               </div>
             </div>
@@ -198,7 +200,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
               background: 'rgba(239, 83, 80, 0.1)',
               border: '1px solid rgba(239, 83, 80, 0.2)',
               borderRadius: '8px',
-              color: '#EF5350',
+              color: 'var(--error)',
               fontSize: '13px',
               cursor: 'pointer',
               fontFamily: 'Inter, sans-serif',
@@ -213,15 +215,14 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
       </aside>
 
       {/* ===== ОСНОВНОЙ КОНТЕНТ ===== */}
-      <div className="admin-content">
-        {/* ===== ВЕРХНЯЯ ПАНЕЛЬ ===== */}
+      <div className="admin-content" style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
         <header style={{
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
           padding: '12px 24px',
-          background: sidebarBg,
-          borderBottom: `1px solid ${borderColor}`,
+          background: 'var(--surface)',
+          borderBottom: '1px solid var(--border-soft)',
           position: 'sticky',
           top: 0,
           zIndex: 50,
@@ -234,15 +235,16 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
               style={{
                 background: 'none',
                 border: 'none',
-                color: textColor,
+                color: 'var(--text-secondary)',
                 fontSize: '24px',
                 cursor: 'pointer',
                 padding: '4px',
+                display: 'none',
               }}
             >
-              ☰
+              {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
             </button>
-            <span style={{ fontSize: '18px', fontWeight: '300', color: '#97A6BA' }}>
+            <span style={{ fontSize: '18px', fontWeight: '300', color: 'var(--text-secondary)' }}>
               {navItems.find(item => isActive(item.path))?.label || 'Dashboard'}
             </span>
           </div>
@@ -253,35 +255,40 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
               style={{
                 background: 'none',
                 border: 'none',
-                color: '#97A6BA',
+                color: 'var(--text-secondary)',
                 fontSize: '20px',
                 cursor: 'pointer',
                 padding: '4px',
                 transition: 'color 0.2s',
               }}
-              onMouseEnter={(e) => (e.currentTarget.style.color = textColor)}
-              onMouseLeave={(e) => (e.currentTarget.style.color = '#97A6BA')}
+              onMouseEnter={(e) => (e.currentTarget.style.color = 'var(--text-primary)')}
+              onMouseLeave={(e) => (e.currentTarget.style.color = 'var(--text-secondary)')}
             >
-              {theme === 'dark' ? '☀️' : '🌙'}
+              {theme === 'dark' ? <Sun size={20} /> : <Moon size={20} />}
             </button>
           </div>
         </header>
 
-        {/* ===== КОНТЕНТ ===== */}
         <main style={{
           flex: 1,
           padding: '24px',
           overflowY: 'auto',
+          background: 'var(--bg)',
         }}>
           {children}
         </main>
       </div>
 
-      {/* ===== МОБИЛЬНЫЙ ОВЕРЛЕЙ ===== */}
       {isMobileMenuOpen && (
         <div
           className="admin-overlay"
           onClick={() => setIsMobileMenuOpen(false)}
+          style={{
+            position: 'fixed',
+            inset: 0,
+            background: 'rgba(0,0,0,0.5)',
+            zIndex: 40,
+          }}
         />
       )}
     </div>

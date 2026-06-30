@@ -1,0 +1,16 @@
+{
+  "buildCommand": "npm install && npx vite build",
+  "outputDirectory": "dist",
+  "devCommand": "npx vite",
+  "installCommand": "npm install",
+  "rewrites": [
+    {
+      "source": "/(api|auth|books|admin|sync|health|users|stats|logs|authors|genres|phone)(.*)",
+      "destination": "https://api.syverro.com/$1/$2"
+    },
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
+    }
+  ]
+}

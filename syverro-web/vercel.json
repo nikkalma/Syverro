@@ -6,7 +6,7 @@
   "rewrites": [
     {
       "source": "/(api|auth|books|admin|sync|health|users|stats|logs|authors|genres|phone)(.*)",
-      "destination": "http://77.233.220.197:8000/$1$2"
+      "destination": "https://api.syverro.com/$1/$2"
     },
     {
       "source": "/(.*)",

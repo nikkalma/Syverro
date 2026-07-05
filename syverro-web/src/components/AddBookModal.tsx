@@ -1,6 +1,6 @@
 // src/components/AddBookModal.tsx
 import { useState } from 'react';
-import type { BookStatus } from '../types/book';
+import type { BookStatus } from '../types/book.types';
 
 interface AddBookModalProps {
   isOpen: boolean;

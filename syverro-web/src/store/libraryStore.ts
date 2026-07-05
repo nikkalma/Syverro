@@ -1,7 +1,7 @@
 // src/store/libraryStore.ts
 import { create } from 'zustand';
 import { UserBook, UserBookStatus } from '../types/userBook';
-import { EnrichedBook } from '../types/book';
+import { EnrichedBook } from '../types/book.types';
 import { storageService } from '../services/storageService';
 import { userBookService } from '../services/userBookService';
 

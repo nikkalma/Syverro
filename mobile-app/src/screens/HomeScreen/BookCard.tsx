@@ -6,7 +6,8 @@ import { Text } from '../../components/Text';
 import { useTheme } from '../../context/ThemeContext';
 import { useStore }  from '../../store';
 import { spacing } from '../../theme/spacing';
-import type { Book } from '../../types/book';
+import type { Book } from '../../types/book.types';
+import { useLanguage } from '../../context/LanguageContext';
 
 interface BookCardProps {
   item: Book;
@@ -17,6 +18,7 @@ interface BookCardProps {
 export default function BookCard({ item, width, navigation }: BookCardProps) {
   const { theme } = useTheme();
   const { toggleFavorite } = useStore();
+  const { t } = useLanguage();
 
   return (
     <TouchableOpacity 

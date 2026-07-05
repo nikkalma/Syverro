@@ -6,7 +6,7 @@ import type {
   NewGlobalBook,
   BookStatus,
   EditProposal,
-} from '../types/book';
+} from '../types/book.types';
 import type { ReaderProfile } from '../types/reader';
 import initialBooksData from '../data/books.json';
 

@@ -3,7 +3,7 @@ import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { spacing, radii } from '../../theme/spacing';
 import { getTypography } from '../../theme/typography';
-import type { Book } from '../../types/book';
+import type { Book } from '../../types/book.types';
 
 interface AudioBookProgressProps {
   theme: any;

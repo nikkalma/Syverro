@@ -1,17 +1,30 @@
-// src/screens/BookDetailsScreen/EditMode.js
+// src/screens/BookDetailsScreen/EditMode.tsx
 import React, { useState } from 'react';
 import {
   View, Text, TextInput, TouchableOpacity, ScrollView,
-  Platform, Switch, Image, Alert
+  Platform, Image, Alert
 } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
-import { File, Directory, Paths } from 'expo-file-system';
+import * as FileSystem from 'expo-file-system';
 import GenreSelector from '../../components/GenreSelector';
 import StatusPicker from './StatusPicker';
 import { spacing, radii } from '../../theme/spacing';
 import { useTheme } from '../../context/ThemeContext';
 import { useLanguage } from '../../context/LanguageContext';
 import DateTimePicker from '@react-native-community/datetimepicker';
+import type { Book } from '../../types/book.types';
+
+// ✅ ВРЕМЕННО: игнорируем типы для FileSystem
+const fs: any = FileSystem;
+
+interface EditModeProps {
+  book: Book;
+  books: Book[];
+  editData: any;
+  setEditData: (data: any) => void;
+  onSave: (book: Book) => void;
+  onCancel: () => void;
+}
 
 export default function EditMode({
   book,
@@ -20,7 +33,7 @@ export default function EditMode({
   setEditData,
   onSave,
   onCancel
-}) {
+}: EditModeProps) {
   const { theme } = useTheme();
   const { t } = useLanguage();
   const [showStartDatePicker, setShowStartDatePicker] = useState(false);
@@ -29,36 +42,34 @@ export default function EditMode({
 
   if (!editData) return null;
 
-  const updateField = (field, value) => {
-  // Авто-завершение при статусе "прочитано"
-  if (field === 'status' && value === 'finished') {
-    const totalPages = parseInt(editData.pages);
-    if (totalPages && totalPages > 0) {
-      setEditData({ 
-        ...editData, 
-        status: value, 
-        currentPage: totalPages.toString() 
-      });
-      return;
+  const updateField = (field: string, value: any) => {
+    if (field === 'status' && value === 'finished') {
+      const totalPages = parseInt(editData.pages);
+      if (totalPages && totalPages > 0) {
+        setEditData({ 
+          ...editData, 
+          status: value, 
+          currentPage: totalPages.toString() 
+        });
+        return;
+      }
     }
-  }
-  
-  // Авто-смена статуса при достижении последней страницы
-  if (field === 'currentPage') {
-    const totalPages = parseInt(editData.pages);
-    const newPage = parseInt(value);
-    if (totalPages && newPage >= totalPages) {
-      setEditData({ 
-        ...editData, 
-        currentPage: value, 
-        status: 'finished' 
-      });
-      return;
+    
+    if (field === 'currentPage') {
+      const totalPages = parseInt(editData.pages);
+      const newPage = parseInt(value);
+      if (totalPages && newPage >= totalPages) {
+        setEditData({ 
+          ...editData, 
+          currentPage: value, 
+          status: 'finished' 
+        });
+        return;
+      }
     }
-  }
-  
-  setEditData({ ...editData, [field]: value });
-};
+    
+    setEditData({ ...editData, [field]: value });
+  };
 
   const readingFormatOptions = [
     { value: 'reading', label: '📖 Читаю' },
@@ -77,7 +88,7 @@ export default function EditMode({
     { code: 'be', label: 'Беларуская' },
   ];
 
-  // Выбор обложки из галереи
+  // ✅ ИСПРАВЛЕНО: используем fs вместо FileSystem
   const pickCoverImage = async () => {
     try {
       const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -89,7 +100,7 @@ export default function EditMode({
       const result = await ImagePicker.launchImageLibraryAsync({
         mediaTypes: ['images'],
         allowsEditing: true,
-        aspect: [2, 3],  // пропорции книги
+        aspect: [2, 3],
         quality: 0.8,
       });
 
@@ -97,20 +108,26 @@ export default function EditMode({
         setUploadingCover(true);
         const pickedUri = result.assets[0].uri;
 
-        // Папка для обложек
-        const coversDir = new Directory(Paths.document, 'covers');
-        try {
-          await coversDir.create({ idempotent: true, intermediates: true });
-        } catch (e) {
-          console.log('Папка для обложек уже существует');
+        // ✅ ИСПОЛЬЗУЕМ fs (с any)
+        const documentDir = fs.documentDirectory;
+        if (!documentDir) {
+          throw new Error('Document directory not available');
+        }
+        
+        const coversDir = `${documentDir}covers/`;
+        const dirInfo = await fs.getInfoAsync(coversDir);
+        if (!dirInfo.exists) {
+          await fs.makeDirectoryAsync(coversDir, { intermediates: true });
         }
 
         const fileName = `cover_${Date.now()}.jpg`;
-        const newCoverFile = new File(coversDir, fileName);
-        const pickedFile = new File(pickedUri);
-        await pickedFile.copy(newCoverFile);
+        const newPath = `${coversDir}${fileName}`;
+        await fs.copyAsync({
+          from: pickedUri,
+          to: newPath,
+        });
 
-        updateField('cover', newCoverFile.uri);
+        updateField('cover', newPath);
         Alert.alert('Успех', 'Обложка добавлена');
       }
     } catch (error) {
@@ -121,12 +138,10 @@ export default function EditMode({
     }
   };
 
-  // Удаление обложки
   const removeCover = async () => {
     if (editData.cover && editData.cover.startsWith('file://')) {
       try {
-        const coverFile = new File(editData.cover);
-        await coverFile.delete();
+        await fs.deleteAsync(editData.cover);
       } catch (e) {
         console.log('Не удалось удалить файл:', e);
       }
@@ -135,19 +150,17 @@ export default function EditMode({
   };
 
   const handleSavePress = () => {
-    // Преобразуем жанры в массив, если пришли строкой
     let genres = editData.genres;
     if (typeof genres === 'string') {
-      genres = genres.split(',').map(g => g.trim());
+      genres = genres.split(',').map((g: string) => g.trim());
     }
     
-    // Преобразуем языки в массив, если пришли строкой
     let languages = editData.languages;
     if (typeof languages === 'string') {
-      languages = languages.split(',').map(l => l.trim());
+      languages = languages.split(',').map((l: string) => l.trim());
     }
 
-    const updatedBook = {
+    const updatedBook: Book = {
       ...book,
       title: editData.title,
       author: editData.author,
@@ -167,6 +180,11 @@ export default function EditMode({
       originalYear: editData.originalYear ? parseInt(editData.originalYear) : null,
       readingFormat: editData.readingFormat || 'reading',
       cover: editData.cover || book.cover,
+      id: book.id,
+      createdAt: book.createdAt,
+      favorite: book.favorite,
+      lastRead: book.lastRead,
+      section: book.section,
     };
     if (onSave) onSave(updatedBook);
   };
@@ -356,7 +374,6 @@ export default function EditMode({
       <GenreSelector
         selectedGenres={editData.genres || []}
         onGenresChange={(genres) => updateField('genres', genres)}
-        lang={t}
       />
 
       {/* Язык чтения */}
@@ -369,7 +386,7 @@ export default function EditMode({
               onPress={() => {
                 const current = editData.languages || [];
                 if (current.includes(lang.code)) {
-                  updateField('languages', current.filter(l => l !== lang.code));
+                  updateField('languages', current.filter((l: string) => l !== lang.code));
                 } else {
                   updateField('languages', [...current, lang.code]);
                 }
@@ -457,108 +474,107 @@ export default function EditMode({
         }}
       />
 
-      // Дата начала — добавляем TextInput рядом с календарём
-<View style={{ marginBottom: spacing.md }}>
-  <Text style={{ color: theme.textSecondary, marginBottom: 5 }}>Дата начала</Text>
-  <View style={{ flexDirection: 'row', gap: 12, alignItems: 'center' }}>
-    <TextInput
-      style={{
-        flex: 1,
-        padding: spacing.md,
-        borderRadius: radii.md,
-        backgroundColor: theme.surface,
-        color: theme.textPrimary,
-        borderWidth: 1,
-        borderColor: theme.border,
-      }}
-      placeholder="ДД.ММ.ГГГГ"
-      placeholderTextColor={theme.textMuted}
-      value={editData.startDate}
-      onChangeText={(val) => updateField('startDate', val)}
-    />
-    <TouchableOpacity
-      onPress={() => setShowStartDatePicker(true)}
-      style={{
-        padding: spacing.md,
-        borderRadius: radii.md,
-        backgroundColor: theme.surface,
-        borderWidth: 1,
-        borderColor: theme.border,
-      }}
-    >
-      <Text style={{ fontSize: 20 }}>📅</Text>
-    </TouchableOpacity>
-  </View>
-</View>
+      {/* Дата начала */}
+      <View style={{ marginBottom: spacing.md }}>
+        <Text style={{ color: theme.textSecondary, marginBottom: 5 }}>Дата начала</Text>
+        <View style={{ flexDirection: 'row', gap: 12, alignItems: 'center' }}>
+          <TextInput
+            style={{
+              flex: 1,
+              padding: spacing.md,
+              borderRadius: radii.md,
+              backgroundColor: theme.surface,
+              color: theme.textPrimary,
+              borderWidth: 1,
+              borderColor: theme.border,
+            }}
+            placeholder="ДД.ММ.ГГГГ"
+            placeholderTextColor={theme.textMuted}
+            value={editData.startDate}
+            onChangeText={(val) => updateField('startDate', val)}
+          />
+          <TouchableOpacity
+            onPress={() => setShowStartDatePicker(true)}
+            style={{
+              padding: spacing.md,
+              borderRadius: radii.md,
+              backgroundColor: theme.surface,
+              borderWidth: 1,
+              borderColor: theme.border,
+            }}
+          >
+            <Text style={{ fontSize: 20 }}>📅</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
 
-{showStartDatePicker && (
-  <DateTimePicker
-    value={editData.startDate ? new Date(editData.startDate.split('.').reverse().join('-')) : new Date()}
-    mode="date"
-    display="default"
-    onChange={(event, selectedDate) => {
-      setShowStartDatePicker(false);
-      if (selectedDate) {
-        const day = selectedDate.getDate().toString().padStart(2, '0');
-        const month = (selectedDate.getMonth() + 1).toString().padStart(2, '0');
-        const year = selectedDate.getFullYear();
-        updateField('startDate', `${day}.${month}.${year}`);
-      }
-    }}
-  />
-)}
+      {showStartDatePicker && (
+        <DateTimePicker
+          value={editData.startDate ? new Date(editData.startDate.split('.').reverse().join('-')) : new Date()}
+          mode="date"
+          display="default"
+          onChange={(event, selectedDate) => {
+            setShowStartDatePicker(false);
+            if (selectedDate) {
+              const day = selectedDate.getDate().toString().padStart(2, '0');
+              const month = (selectedDate.getMonth() + 1).toString().padStart(2, '0');
+              const year = selectedDate.getFullYear();
+              updateField('startDate', `${day}.${month}.${year}`);
+            }
+          }}
+        />
+      )}
 
-    // Дата окончания
-<View style={{ marginBottom: spacing.md }}>
-  <Text style={{ color: theme.textSecondary, marginBottom: 5 }}>Дата окончания</Text>
-  <View style={{ flexDirection: 'row', gap: 12, alignItems: 'center' }}>
-    <TextInput
-      style={{
-        flex: 1,
-        padding: spacing.md,
-        borderRadius: radii.md,
-        backgroundColor: theme.surface,
-        color: theme.textPrimary,
-        borderWidth: 1,
-        borderColor: theme.border,
-      }}
-      placeholder="ДД.ММ.ГГГГ"
-      placeholderTextColor={theme.textMuted}
-      value={editData.endDate}
-      onChangeText={(val) => updateField('endDate', val)}
-    />
-    <TouchableOpacity
-      onPress={() => setShowEndDatePicker(true)}
-      style={{
-        padding: spacing.md,
-        borderRadius: radii.md,
-        backgroundColor: theme.surface,
-        borderWidth: 1,
-        borderColor: theme.border,
-      }}
-    >
-      <Text style={{ fontSize: 20 }}>📅</Text>
-    </TouchableOpacity>
-  </View>
-</View>
+      {/* Дата окончания */}
+      <View style={{ marginBottom: spacing.md }}>
+        <Text style={{ color: theme.textSecondary, marginBottom: 5 }}>Дата окончания</Text>
+        <View style={{ flexDirection: 'row', gap: 12, alignItems: 'center' }}>
+          <TextInput
+            style={{
+              flex: 1,
+              padding: spacing.md,
+              borderRadius: radii.md,
+              backgroundColor: theme.surface,
+              color: theme.textPrimary,
+              borderWidth: 1,
+              borderColor: theme.border,
+            }}
+            placeholder="ДД.ММ.ГГГГ"
+            placeholderTextColor={theme.textMuted}
+            value={editData.endDate}
+            onChangeText={(val) => updateField('endDate', val)}
+          />
+          <TouchableOpacity
+            onPress={() => setShowEndDatePicker(true)}
+            style={{
+              padding: spacing.md,
+              borderRadius: radii.md,
+              backgroundColor: theme.surface,
+              borderWidth: 1,
+              borderColor: theme.border,
+            }}
+          >
+            <Text style={{ fontSize: 20 }}>📅</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
 
-{showEndDatePicker && (
-  <DateTimePicker
-    value={editData.endDate ? new Date(editData.endDate.split('.').reverse().join('-')) : new Date()}
-    mode="date"
-    display="default"
-    onChange={(event, selectedDate) => {
-      setShowEndDatePicker(false);
-      if (selectedDate) {
-        const day = selectedDate.getDate().toString().padStart(2, '0');
-        const month = (selectedDate.getMonth() + 1).toString().padStart(2, '0');
-        const year = selectedDate.getFullYear();
-        updateField('endDate', `${day}.${month}.${year}`);
-      }
-    }}
-  />
-)}
-
+      {showEndDatePicker && (
+        <DateTimePicker
+          value={editData.endDate ? new Date(editData.endDate.split('.').reverse().join('-')) : new Date()}
+          mode="date"
+          display="default"
+          onChange={(event, selectedDate) => {
+            setShowEndDatePicker(false);
+            if (selectedDate) {
+              const day = selectedDate.getDate().toString().padStart(2, '0');
+              const month = (selectedDate.getMonth() + 1).toString().padStart(2, '0');
+              const year = selectedDate.getFullYear();
+              updateField('endDate', `${day}.${month}.${year}`);
+            }
+          }}
+        />
+      )}
 
       {/* Рецензия */}
       <Text style={{ color: theme.textSecondary, marginBottom: 5, marginTop: 8 }}>Рецензия</Text>

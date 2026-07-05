@@ -846,7 +846,7 @@ import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, Alert } from 'react-native';
 import { spacing, radii } from '../theme/spacing';
 import { useLanguage } from '../context/LanguageContext';
-import type { Book } from '../types/book';
+import type { Book } from '../types/book.types';
 
 interface StartPageInputProps {
   book: Book;
@@ -3783,7 +3783,7 @@ import { useTheme } from '../context/ThemeContext';
 import { useLanguage } from '../context/LanguageContext';
 import { useStore } from '../store';
 import BookCard from './HomeScreen/BookCard';
-import type { Book } from '../types/book';
+import type { Book } from '../types/book.types';
 
 const { width } = Dimensions.get('window');
 const CARD_WIDTH = (width - 48) / 2;
@@ -3853,7 +3853,7 @@ import { useLanguage } from '../context/LanguageContext';
 import BookCover from '../components/BookCover';
 import { Text } from '../components/Text';
 import { spacing, radii } from '../theme/spacing';
-import type { Book } from '../types/book';
+import type { Book } from '../types/book.types';
 
 const { width } = Dimensions.get('window');
 const CARD_WIDTH = (width - 48 - 32) / 3;
@@ -4275,7 +4275,7 @@ import { useLanguage } from '../context/LanguageContext';
 import { useStore } from '../store';
 import { spacing, radii } from '../theme/spacing';
 import type { Quote } from '../store/slices/quotesSlice';
-import type { Book } from '../types/book';
+import type { Book } from '../types/book.types';
 
 interface QuotesScreenProps {
   navigation: any;
@@ -8383,7 +8383,7 @@ declare module '../../services/GoogleSheetsService' {
 ==================== C:\Users\kleme\Syverro\mobile-app\src\services\sync.service.ts ====================
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { apiClient } from './api/client';
-import { Book } from '../types/book';
+import { Book } from '../types/book.types';
 import { ReadingSession } from '../types/session.types';
 import { Quote } from '../types/quote.types';
 import { useStore } from '../store';

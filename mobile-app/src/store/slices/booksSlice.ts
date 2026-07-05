@@ -1,5 +1,5 @@
 import { StateCreator } from 'zustand';
-import { Book, BookUpdate, NewBook } from '../../types/book';
+import { Book, BookUpdate, NewBook } from '../../types/book.types';
 
 export interface BooksSlice {
   books: Book[];

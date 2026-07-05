@@ -51,16 +51,20 @@ export default function SessionScreen() {
   }, [selectedBookId, book]);
 
   useEffect(() => {
-    let interval: NodeJS.Timeout;
-    if (isActive && !isPaused && startTime) {
-      interval = setInterval(() => {
-        const now = Date.now();
-        const elapsed = Math.floor((now - startTime - pausedDuration) / 1000);
-        setElapsedSeconds(elapsed);
-      }, 1000);
+  let interval: ReturnType<typeof setInterval> | null = null;
+  if (isActive && !isPaused && startTime) {
+    interval = setInterval(() => {
+      const now = Date.now();
+      const elapsed = Math.floor((now - startTime - pausedDuration) / 1000);
+      setElapsedSeconds(elapsed);
+    }, 1000);
+  }
+  return () => {
+    if (interval) {
+      clearInterval(interval);
     }
-    return () => clearInterval(interval);
-  }, [isActive, isPaused, startTime, pausedDuration]);
+  };
+}, [isActive, isPaused, startTime, pausedDuration]);
 
   if (readingBooks.length === 0) {
     return (
@@ -212,8 +216,15 @@ export default function SessionScreen() {
       (t('session.clearHistoryMessage') || 'Все сессии для книги "{title}" будут удалены.').replace('{title}', book.title),
       [
         { text: t('common.cancel') || 'Отмена', style: 'cancel' as const },
-        { text: t('common.clear') || 'Очистить', style: 'destructive' as const, onPress: () => deleteSessionsByBook(selectedBookId) }
-      ]
+{ 
+  text: t('common.clear') || 'Очистить', 
+  style: 'destructive' as const, 
+  onPress: () => {
+    if (selectedBookId) {
+      deleteSessionsByBook(selectedBookId);
+    }
+  } 
+}      ]
     );
   };
 

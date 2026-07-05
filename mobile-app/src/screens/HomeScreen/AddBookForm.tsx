@@ -4,7 +4,7 @@ import { View, Text, TextInput, TouchableOpacity, Alert } from 'react-native';
 import { useTheme } from '../../context/ThemeContext';
 import { useLanguage } from '../../context/LanguageContext';
 import { useStore }  from '../../store';
-import type { Book } from '../../types/book';
+import type { Book } from '../../types/book.types';
 
 interface AddBookFormProps {
   visible: boolean;

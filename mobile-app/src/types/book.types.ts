@@ -26,6 +26,7 @@ export interface Book {
   originalYear: number | null;
   readingFormat: ReadingFormat;
   lastRead: string | null;
+  manualStartPage?: number;
 }
 
 export type NewBook = Omit<Book, 'id' | 'createdAt'>;

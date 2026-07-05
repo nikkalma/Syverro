@@ -4,7 +4,7 @@ import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Image } from 'rea
 import { useStore } from '../../store';
 import { useTheme } from '../../context/ThemeContext';
 import { useLanguage } from '../../context/LanguageContext';
-import type { Book } from '../../types/book';
+import type { Book } from '../../types/book.types';
 
 interface ViewModeProps {
   bookId: string;
@@ -50,8 +50,7 @@ export default function ViewMode({ bookId, onEdit }: ViewModeProps) {
       
       {isImageCover && (
         <View style={styles.coverContainer}>
-          <Image source={{ uri: book.cover }} style={styles.cover} />
-        </View>
+{book.cover ? <Image source={{ uri: book.cover }} style={styles.cover} /> : null}        </View>
       )}
       
       <View style={styles.header}>

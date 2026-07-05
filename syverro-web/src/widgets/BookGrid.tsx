@@ -1,6 +1,6 @@
 // src/widgets/BookGrid.tsx
 import BookCard from './BookCard';
-import type { EnrichedBook } from '../types/book';
+import type { EnrichedBook } from '../types/book.types';
 import type { UserBook } from '../types/userBook';
 
 interface BookGridProps {

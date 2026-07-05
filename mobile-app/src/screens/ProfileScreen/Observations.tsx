@@ -6,7 +6,7 @@ import { useLanguage } from '../../context/LanguageContext';
 import { useTheme } from '../../context/ThemeContext';
 import { spacing } from '../../theme/spacing';
 import { getTypography } from '../../theme/typography';
-import type { Book } from '../../types/book';
+import type { Book } from '../../types/book.types';
 import type { ReadingSession } from '../../types/session.types';
 
 interface Props {
@@ -16,8 +16,8 @@ interface Props {
 }
 
 export default function Observations({ theme, books, sessions }: Props) {
-  const { t, locale } = useLanguage();
-  const typography = getTypography(locale);
+  const { t, language } = useLanguage();
+  const typography = getTypography(language);
   const { quotes } = useStore();
   
   const [renderKey, setRenderKey] = useState(Date.now());
@@ -47,15 +47,15 @@ export default function Observations({ theme, books, sessions }: Props) {
     if (totalFormat > 0) {
       const audioPercent = (audioBooks.length / totalFormat) * 100;
       if (audioPercent > 60) {
-        pool.push(locale === 'ru' 
+        pool.push(language === 'ru' 
           ? `🎧 Ты предпочитаешь аудиокниги — ${Math.round(audioPercent)}% твоего чтения в аудиоформате.`
           : `🎧 You prefer audiobooks — ${Math.round(audioPercent)}% of your reading is audio.`);
       } else if (audioPercent < 20 && textBooks.length > 0) {
-        pool.push(locale === 'ru'
+        pool.push(language === 'ru'
           ? `📖 Ты остаёшься верен тексту — аудиокниги занимают лишь ${Math.round(audioPercent)}%.`
           : `📖 You stay true to text — audiobooks make up only ${Math.round(audioPercent)}%.`);
       } else if (textBooks.length > 0 && audioBooks.length > 0) {
-        pool.push(locale === 'ru'
+        pool.push(language === 'ru'
           ? `⚖️ Ты балансируешь между текстом и аудио — почти поровну.`
           : `⚖️ You balance between text and audio — almost evenly.`);
       }
@@ -77,11 +77,11 @@ export default function Observations({ theme, books, sessions }: Props) {
         .map(([country]) => country);
       
       if (leaderCountries.length === 1) {
-        pool.push(locale === 'ru'
+        pool.push(language === 'ru'
           ? `🌍 Твоя главная литературная страна — ${leaderCountries[0]}. ${maxCount} ${maxCount === 1 ? 'книга' : 'книг'} оттуда.`
           : `🌍 Your main literary country is ${leaderCountries[0]}. ${maxCount} book(s) from there.`);
       } else if (leaderCountries.length > 1) {
-        pool.push(locale === 'ru'
+        pool.push(language === 'ru'
           ? `🌍 Твои литературные фавориты: ${leaderCountries.join(', ')} — ${maxCount} книг из каждого места.`
           : `🌍 Your literary favorites: ${leaderCountries.join(', ')} — ${maxCount} book(s) from each.`);
       }
@@ -92,11 +92,11 @@ export default function Observations({ theme, books, sessions }: Props) {
     const shortBooks = activeBooks.filter(b => (b.totalPages || 0) > 0 && (b.totalPages || 0) <= 300);
     
     if (longBooks.length > shortBooks.length && longBooks.length > 0) {
-      pool.push(locale === 'ru'
+      pool.push(language === 'ru'
         ? `📖 Ты любишь масштабные истории — ${Math.round((longBooks.length / activeBooks.length) * 100)}% книг длиннее 500 страниц.`
         : `📖 You love large-scale stories — ${Math.round((longBooks.length / activeBooks.length) * 100)}% of your books are longer than 500 pages.`);
     } else if (shortBooks.length > longBooks.length && shortBooks.length > 0) {
-      pool.push(locale === 'ru'
+      pool.push(language === 'ru'
         ? `📖 Ты ценишь камерность — ${Math.round((shortBooks.length / activeBooks.length) * 100)}% книг короче 300 страниц.`
         : `📖 You appreciate intimacy — ${Math.round((shortBooks.length / activeBooks.length) * 100)}% of your books are shorter than 300 pages.`);
     }
@@ -108,7 +108,7 @@ export default function Observations({ theme, books, sessions }: Props) {
       const avgDuration = totalDuration / sessions.length;
       const avgMinutes = Math.round(avgDuration / 60);
       if (avgMinutes > 0) {
-        pool.push(locale === 'ru'
+        pool.push(language === 'ru'
           ? `⏱ Твоя средняя сессия чтения длится ${avgMinutes} минут.`
           : `⏱ Your average reading session lasts ${avgMinutes} minutes.`);
       }
@@ -131,7 +131,7 @@ sessions.forEach((session: ReadingSession) => {
 
 if (fastestBookTitle) {
   const roundedSpeed = Math.round(fastestBookSpeed * 10) / 10;
-  pool.push(locale === 'ru'
+  pool.push(language === 'ru'
     ? `⚡ Самый быстрый темп: «${fastestBookTitle}» — ${roundedSpeed} стр./мин.`
     : `⚡ Fastest pace: "${fastestBookTitle}" — ${roundedSpeed} pages/min.`);
 }
@@ -145,11 +145,11 @@ if (fastestBookTitle) {
         }
       });
       const maxDayIndex = dayCount.indexOf(Math.max(...dayCount));
-      const dayNames = locale === 'ru'
+      const dayNames = language === 'ru'
         ? ['Воскресенье', 'Понедельник', 'Вторник', 'Среда', 'Четверг', 'Пятница', 'Суббота']
         : ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
       if (maxDayIndex !== -1 && dayCount[maxDayIndex] > 0) {
-        pool.push(locale === 'ru'
+        pool.push(language === 'ru'
           ? `📅 Твой читательский день — ${dayNames[maxDayIndex]}.`
           : `📅 Your reading day is ${dayNames[maxDayIndex]}.`);
       }
@@ -172,23 +172,23 @@ if (fastestBookTitle) {
       }
       if (maxHourCount > 0) {
         let timeOfDay = '';
-        if (maxHour >= 5 && maxHour < 12) timeOfDay = locale === 'ru' ? 'утро' : 'morning';
-        else if (maxHour >= 12 && maxHour < 17) timeOfDay = locale === 'ru' ? 'день' : 'afternoon';
-        else if (maxHour >= 17 && maxHour < 22) timeOfDay = locale === 'ru' ? 'вечер' : 'evening';
-        else timeOfDay = locale === 'ru' ? 'ночь' : 'night';
+        if (maxHour >= 5 && maxHour < 12) timeOfDay = language === 'ru' ? 'утро' : 'morning';
+        else if (maxHour >= 12 && maxHour < 17) timeOfDay = language === 'ru' ? 'день' : 'afternoon';
+        else if (maxHour >= 17 && maxHour < 22) timeOfDay = language === 'ru' ? 'вечер' : 'evening';
+        else timeOfDay = language === 'ru' ? 'ночь' : 'night';
         
-        pool.push(locale === 'ru'
+        pool.push(language === 'ru'
           ? `🌙 Ты чаще читаешь ${timeOfDay === 'утро' ? 'по утрам' : timeOfDay === 'день' ? 'днём' : timeOfDay === 'вечер' ? 'вечером' : 'ночью'}.`
           : `🌙 You usually read in the ${timeOfDay}.`);
       }
       
       // Общее количество сессий
       if (sessions.length > 10) {
-        pool.push(locale === 'ru'
+        pool.push(language === 'ru'
           ? `📚 У тебя уже ${sessions.length} читательских сессий! Отличный прогресс.`
           : `📚 You already have ${sessions.length} reading sessions! Great progress.`);
       } else if (sessions.length > 5) {
-        pool.push(locale === 'ru'
+        pool.push(language === 'ru'
           ? `📚 ${sessions.length} сессий чтения — ты на хорошем пути!`
           : `📚 ${sessions.length} reading sessions — you're on the right track!`);
       }
@@ -201,7 +201,7 @@ if (fastestBookTitle) {
       [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
     }
     return shuffled.slice(0, 3);
-  }, [books, sessions, locale, renderKey]);
+  }, [books, sessions, language, renderKey]);
   
   const formatDate = (timestamp: number) => {
     const date = new Date(timestamp);
@@ -213,7 +213,7 @@ if (fastestBookTitle) {
   
   const formatSessionTime = (minutes: number | null) => {
     if (!minutes && minutes !== 0) return null;
-    if (minutes < 60) return `${minutes} ${locale === 'ru' ? 'мин' : 'min'}`;
+    if (minutes < 60) return `${minutes} ${language === 'ru' ? 'мин' : 'min'}`;
     const hours = Math.floor(minutes / 60);
     const mins = minutes % 60;
     return `${hours} ч ${mins} мин`;
@@ -245,7 +245,7 @@ if (fastestBookTitle) {
             </Text>
             {quoteOfDay.sessionTime !== null && quoteOfDay.sessionTime !== undefined && (
               <Text style={[typography.caption, { color: theme.textMuted, marginTop: 4 }]}>
-                ⏱️ {formatSessionTime(quoteOfDay.sessionTime)} {locale === 'ru' ? 'чтения' : 'of reading'}
+                ⏱️ {formatSessionTime(quoteOfDay.sessionTime)} {language === 'ru' ? 'чтения' : 'of reading'}
               </Text>
             )}
           </View>
@@ -260,7 +260,7 @@ if (fastestBookTitle) {
       {/* Инсайты */}
       {insights.length === 0 ? (
         <Text style={[typography.caption, { color: theme.textMuted, textAlign: 'center' }]}>
-          {locale === 'ru' 
+          {language === 'ru' 
             ? 'Добавь больше книг и проведи несколько сессий чтения, чтобы увидеть персональную статистику.'
             : 'Add more books and complete a few reading sessions to see personal statistics.'}
         </Text>

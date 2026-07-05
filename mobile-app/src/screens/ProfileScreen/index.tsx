@@ -19,7 +19,7 @@ interface Props {
 
 export default function ProfileScreen({ navigation }: Props) {
   const { theme } = useTheme();
-  const { locale } = useLanguage();
+  const { language } = useLanguage();
   const { profile, updateProfile, books, sessions } = useStore();
   const stats = useProfileStats();
   
@@ -63,21 +63,21 @@ export default function ProfileScreen({ navigation }: Props) {
           totalBooks={stats.totalBooks}
           finishedBooks={stats.finishedBooks}
           completionPercentage={stats.completionPercentage}
-          locale={locale}
+          locale={language}
         />
         
         <TopGenres
           theme={theme}
           books={books}
-          locale={locale}
+          locale={language}
         />
         
         <WeeklyActivity
           theme={theme}
           weekdayActivity={stats.weekdayActivity}
           maxActivity={Math.max(...stats.weekdayActivity)}
-          weekdays={locale === 'ru' ? ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'] : ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']}
-          locale={locale}
+          weekdays={language === 'ru' ? ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'] : ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']}
+          locale={language}
         />
 
         <Observations

@@ -1,4 +1,3 @@
-// src/screens/BookDetailsScreen/index.tsx
 import React, { useState } from 'react';
 import {
   View,
@@ -14,7 +13,7 @@ import { useLanguage } from '../../context/LanguageContext';
 import { Ionicons } from '@expo/vector-icons';
 import ViewMode from './ViewMode';
 import EditMode from './EditMode';
-import type { Book } from '../../types/book';
+import type { Book } from '../../types/book.types';
 
 interface BookDetailsScreenProps {
   route: any;
@@ -61,16 +60,16 @@ export default function BookDetailsScreen({ route, navigation }: BookDetailsScre
     series: book.series || '',
     seriesPosition: book.seriesPosition?.toString() || '',
     originalYear: book.originalYear?.toString() || '',
-    activeBookId: isActiveBook,
     readingFormat: book.readingFormat || 'reading',
   });
   
   const handleSave = async (updatedBook: Book) => {
     await updateBook(book.id, updatedBook);
     
-    if (updatedBook.activeBookId && !isActiveBook) {
+    // Активность книги определяется статусом 'reading'
+    if (!isActiveBook && updatedBook.status === 'reading') {
       setActiveBook(book.id);
-    } else if (!updatedBook.activeBookId && isActiveBook) {
+    } else if (isActiveBook && updatedBook.status !== 'reading') {
       setActiveBook(null);
     }
     

@@ -3,7 +3,7 @@ import React from 'react';
 import { View } from 'react-native';
 import { spacing } from '../theme/spacing';
 import { lightTheme, darkTheme } from '../theme/colors';
-import { OrbBackground } from './OrbBackground';
+import OrbBackground from './OrbBackground';
 import { useTheme } from '../context/ThemeContext';
 
 interface ContainerProps {
@@ -19,7 +19,7 @@ export const Container = ({ children, withOrb = false, noPadding = false, style 
 
   return (
     <View style={[{ flex: 1, backgroundColor: bg, padding: noPadding ? 0 : spacing.lg }, style]}>
-      {withOrb && <OrbBackground themeMode={mode} />}
+      {withOrb && <OrbBackground />}  {/* ✅ ИСПРАВЛЕНО */}
       {children}
     </View>
   );

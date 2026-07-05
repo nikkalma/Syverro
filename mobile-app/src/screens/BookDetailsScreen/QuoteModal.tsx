@@ -9,10 +9,18 @@ import { spacing, radii } from '../../theme/spacing';
 interface QuoteModalProps {
   visible: boolean;
   bookId: string;
+  bookTitle: string;   // ✅ Добавлено
+  bookAuthor: string;  // ✅ Добавлено
   onClose: () => void;
 }
 
-export default function QuoteModal({ visible, bookId, onClose }: QuoteModalProps) {
+export default function QuoteModal({ 
+  visible, 
+  bookId, 
+  bookTitle, 
+  bookAuthor, 
+  onClose 
+}: QuoteModalProps) {
   const { theme } = useTheme();
   const { t } = useLanguage();
   const { quotes, addQuote, deleteQuote, getQuotesByBook } = useStore();
@@ -25,7 +33,15 @@ export default function QuoteModal({ visible, bookId, onClose }: QuoteModalProps
       Alert.alert(t('common.error') || 'Ошибка', t('quotes.enterQuoteText') || 'Введите текст цитаты');
       return;
     }
-    addQuote(bookId, newQuoteText);
+    
+    // ✅ ИСПРАВЛЕНО: передаём объект с правильными полями
+    addQuote({
+      text: newQuoteText.trim(),
+      bookId: bookId,
+      bookTitle: bookTitle,
+      bookAuthor: bookAuthor,
+    });
+    
     setNewQuoteText('');
   };
 
@@ -43,10 +59,23 @@ export default function QuoteModal({ visible, bookId, onClose }: QuoteModalProps
   return (
     <Modal visible={visible} animationType="slide" transparent>
       <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.9)' }}>
-        <View style={{ flex: 1, backgroundColor: theme.background, marginTop: 50, borderTopLeftRadius: 24, borderTopRightRadius: 24 }}>
+        <View style={{ 
+          flex: 1, 
+          backgroundColor: theme.background, 
+          marginTop: 50, 
+          borderTopLeftRadius: 24, 
+          borderTopRightRadius: 24 
+        }}>
           <View style={{ padding: spacing.lg }}>
-            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: spacing.lg }}>
-              <Text style={{ color: theme.textPrimary, fontSize: 24, fontWeight: 'bold' }}>📝 {t('quotes.title') || 'Цитаты'}</Text>
+            <View style={{ 
+              flexDirection: 'row', 
+              justifyContent: 'space-between', 
+              alignItems: 'center', 
+              marginBottom: spacing.lg 
+            }}>
+              <Text style={{ color: theme.textPrimary, fontSize: 24, fontWeight: 'bold' }}>
+                📝 {t('quotes.title') || 'Цитаты'}
+              </Text>
               <TouchableOpacity onPress={onClose}>
                 <Text style={{ color: theme.primary, fontSize: 20 }}>✕</Text>
               </TouchableOpacity>
@@ -83,7 +112,7 @@ export default function QuoteModal({ visible, bookId, onClose }: QuoteModalProps
 
             <FlatList
               data={bookQuotes}
-              keyExtractor={item => item.id}
+              keyExtractor={(item) => item.id}
               renderItem={({ item }) => (
                 <View style={{
                   backgroundColor: theme.surface,

@@ -1,5 +1,5 @@
 // src/widgets/BookCard.tsx
-import type { EnrichedBook } from '../types/book';
+import type { EnrichedBook } from '../types/book.types';
 import type { UserBook } from '../types/userBook';
 import { BookOpen, CheckCircle, RotateCcw } from 'lucide-react';
 

@@ -35,9 +35,11 @@ export default function DonutChart({ data, title, theme }: DonutChartProps) {
               strokeWidth: 2,
             },
           }}
-          labelRadius={({ radius }) => (radius || 0) + 15}
-          labels={({ datum }) => `${datum.x}: ${datum.y}`}
-        />
+              labelRadius={({ radius }) => {
+                const r = typeof radius === 'number' ? radius : 0;
+                return r + 15;
+              }}          labels={({ datum }) => `${datum.x}: ${datum.y}`}
+                      />
         <Text style={{ 
           position: 'absolute', 
           color: theme.textPrimary,

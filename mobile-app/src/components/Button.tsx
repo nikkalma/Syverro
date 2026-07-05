@@ -75,8 +75,7 @@ export const Button = ({
       {loading ? (
         <ActivityIndicator color={getTextColor()} size="small" />
       ) : (
-        <Text variant="body" style={[{ color: getTextColor(), fontWeight: '500', opacity: 1 }, textStyle]}>
-          {title}
+        <Text variant="body" style={[{ color: getTextColor(), fontWeight: '500', opacity: 1 }, textStyle || {}]}>          {title}
         </Text>
       )}
     </TouchableOpacity>

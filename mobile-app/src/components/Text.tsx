@@ -25,9 +25,9 @@ export const Text = ({
   numberOfLines,
   ...props 
 }: TextProps) => {
-  const { locale } = useLanguage();
+  const { language } = useLanguage();
   const { theme } = useTheme();
-  const typography = getTypography(locale)[variant];
+  const typography = getTypography(language)[variant];
 
   const getDefaultOpacity = () => {
     switch (variant) {

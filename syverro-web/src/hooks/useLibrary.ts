@@ -1,7 +1,7 @@
 // src/features/library/hooks/useLibrary.ts
 import { useEffect, useState } from 'react';
 import { storageService } from '../services/storageService';
-import type { EnrichedBook, BookStatus, NewGlobalBook } from '../types/book';
+import type { EnrichedBook, BookStatus, NewGlobalBook } from '../types/book.types';
 
 const CURRENT_USER_ID = 'user_1';
 

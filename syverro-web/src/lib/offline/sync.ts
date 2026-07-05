@@ -3,7 +3,7 @@
 import { getUnsyncedEvents, markEventsAsSynced, setLastSyncTime } from './store';
 import { SyncResponse } from './types';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api/v1';
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
 
 export async function syncLocalEvents(token?: string | null): Promise<SyncResponse> {
   const events = getUnsyncedEvents();
@@ -82,7 +82,7 @@ export function setupSyncOnUnload(token?: string | null): void {
   const handleUnload = () => {
     const events = getUnsyncedEvents();
     if (events.length > 0) {
-      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000/api/v1';
+      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000';
       
       const headers: HeadersInit = {
         'Content-Type': 'application/json',

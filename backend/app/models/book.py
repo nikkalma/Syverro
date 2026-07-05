@@ -11,7 +11,8 @@ class Book(Base):
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     title = Column(String, nullable=False)
-    author = Column(String, nullable=False)
+    author = Column(String, nullable=False)  # Денормализовано для быстрых запросов
+    author_id = Column(UUID(as_uuid=True), ForeignKey("authors.id"), nullable=True)
     cover = Column(String, nullable=True)
     genres = Column(JSON, default=[])
     total_pages = Column(Integer, nullable=True)
@@ -20,31 +21,18 @@ class Book(Base):
     created_at = Column(DateTime, server_default=func.now())
     updated_at = Column(DateTime, onupdate=func.now())
     
+    # ============================================
+    # ✅ SYNC FIELDS (НОВЫЕ)
+    # ============================================
+    version = Column(Integer, default=1, nullable=False)
+    last_modified_at = Column(DateTime, server_default=func.now(), onupdate=func.now(), nullable=False)
+    deleted_at = Column(DateTime, nullable=True)
+    device_id = Column(String, nullable=True)
+    
     # Relationships
     user_books = relationship("UserBook", back_populates="book", cascade="all, delete-orphan")
+    author_ref = relationship("Author", back_populates="books")
     
-    # Constraints
     __table_args__ = (
         UniqueConstraint('title', 'author', name='unique_book_title_author'),
     )
-
-
-class UserBook(Base):
-    __tablename__ = "user_books"
-
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    user_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False)
-    book_id = Column(UUID(as_uuid=True), ForeignKey("books.id"), nullable=False)
-    status = Column(String, default="planned")
-    rating = Column(Integer, nullable=True)
-    current_page = Column(Integer, default=0)
-    start_date = Column(DateTime, nullable=True)
-    end_date = Column(DateTime, nullable=True)
-    notes = Column(String, nullable=True)
-    is_favorite = Column(Boolean, default=False)
-    created_at = Column(DateTime, server_default=func.now())
-    updated_at = Column(DateTime, onupdate=func.now())
-    
-    # Relationships
-    book = relationship("Book", back_populates="user_books")
-    user = relationship("User", back_populates="user_books")

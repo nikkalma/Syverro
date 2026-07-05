@@ -1,5 +1,15 @@
 {
   "dependencies": {
-    "@react-navigation/bottom-tabs": "^7.16.2"
+    "@react-navigation/bottom-tabs": "^7.16.2",
+    "@react-navigation/native": "^7.3.7",
+    "@react-navigation/native-stack": "^7.17.9",
+    "@react-navigation/stack": "^7.10.10",
+    "expo": "^57.0.2",
+    "expo-dev-client": "~57.0.5",
+    "react": "^19.2.7",
+    "uuid": "^11.1.0"
+  },
+  "devDependencies": {
+    "typescript": "~6.0.3"
   }
 }

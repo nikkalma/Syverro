@@ -1,0 +1,17 @@
+{
+  "expo": {
+    "name": "Syverro",
+    "slug": "syverro",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "automatic",
+    "extra": {
+      "eas": {
+        "projectId": "838f8e39-7990-4bf4-8cdb-b94f3aa1768e"
+      }
+    },
+    "android": {
+      "package": "com.nikkalma.syverro"
+    }
+  }
+}

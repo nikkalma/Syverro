@@ -1,12 +1,11 @@
 import React, { useState } from 'react';
 import { View, Text, TouchableOpacity, ScrollView, Modal, Alert, StyleSheet } from 'react-native';
-import * as FileSystem from 'expo-file-system';
+import * as FileSystem from 'expo-file-system/legacy';  // ✅ правильный импорт
 import * as Sharing from 'expo-sharing';
 import { useTheme } from '../context/ThemeContext';
 import { useLanguage } from '../context/LanguageContext';
 import { useStore } from '../store';
 import packageJson from '../../package.json';
-import { syncService } from '../services/sync.service';
 
 const LANGUAGES = [
   { code: 'ru', name: 'Русский', flag: '🇷🇺' },
@@ -22,11 +21,10 @@ interface SettingsScreenProps {
 export default function SettingsScreen({ navigation }: SettingsScreenProps) {
   const { theme, mode, toggleTheme } = useTheme();
   const { language, setLanguage, t } = useLanguage();
-  const { books, sessions, quotes, deleteAllSessions } = useStore();
+  const { books } = useStore();
   const [langModalVisible, setLangModalVisible] = useState(false);
   const [themeModalVisible, setThemeModalVisible] = useState(false);
   const [exporting, setExporting] = useState(false);
-  const [syncing, setSyncing] = useState(false);
 
   const themeNames = {
     light: t('theme.light') || 'Светлая',
@@ -43,34 +41,14 @@ export default function SettingsScreen({ navigation }: SettingsScreenProps) {
     return lang ? `${lang.flag} ${lang.name}` : '🇷🇺 Русский';
   };
 
-  const handleSync = async () => {
-    if (syncing) return;
-    
-    setSyncing(true);
-    try {
-      const result = await syncService.sync(books, sessions, quotes);
-      Alert.alert(
-        t('common.success') || 'Успех',
-        t('sync.completed') || 'Данные синхронизированы'
-      );
-      console.log('Sync result:', result);
-    } catch (error: any) {
-      console.error('Sync error:', error);
-      Alert.alert(
-        t('common.error') || 'Ошибка',
-        error.message || t('sync.failed') || 'Не удалось синхронизировать данные'
-      );
-    } finally {
-      setSyncing(false);
-    }
-  };
-
+  // ============================================
+  // ЭКСПОРТ
+  // ============================================
   const handleExport = async () => {
     try {
       setExporting(true);
       
-      // Используем cacheDirectory вместо documentDirectory (всегда доступен)
-      const directory = FileSystem.cacheDirectory;
+      const directory = FileSystem.documentDirectory;  // ✅ правильное свойство
       if (!directory) {
         throw new Error('Directory not available');
       }
@@ -83,9 +61,6 @@ export default function SettingsScreen({ navigation }: SettingsScreenProps) {
           syverroVersion: 2,
         },
         books: state.books,
-        sessions: state.sessions,
-        profile: state.profile,
-        quotes: state.quotes,
       };
       
       const now = new Date();
@@ -94,11 +69,11 @@ export default function SettingsScreen({ navigation }: SettingsScreenProps) {
       
       const jsonString = JSON.stringify(exportData, null, 2);
       await FileSystem.writeAsStringAsync(filePath, jsonString, {
-        encoding: 'utf8',
+        encoding: FileSystem.EncodingType.UTF8,  // ✅ правильный EncodingType
       });
       
       if (!(await Sharing.isAvailableAsync())) {
-        Alert.alert(t('common.error') || 'Ошибка', 'Экспорт недоступен на этом устройстве');
+        Alert.alert('Ошибка', 'Экспорт недоступен на этом устройстве');
         setExporting(false);
         return;
       }
@@ -108,27 +83,29 @@ export default function SettingsScreen({ navigation }: SettingsScreenProps) {
         dialogTitle: 'Сохранить резервную копию',
       });
       
-      Alert.alert(t('common.success') || '✅ Успех', 'Данные экспортированы');
+      Alert.alert('Успех', 'Данные экспортированы');
     } catch (error) {
       console.error('Export Error:', error);
-      Alert.alert(t('common.error') || '❌ Ошибка', 'Не удалось экспортировать данные');
+      Alert.alert('Ошибка', 'Не удалось экспортировать данные');
     } finally {
       setExporting(false);
     }
   };
 
+  // ============================================
+  // СБРОС СТАТИСТИКИ
+  // ============================================
   const handleResetStats = () => {
     Alert.alert(
-      t('settings.resetStats') || 'Сброс статистики',
-      t('settings.resetStatsConfirm') || 'Все сессии чтения будут удалены без возможности восстановления. Книги останутся. Продолжить?',
+      'Сброс статистики',
+      'Все сессии чтения будут удалены без возможности восстановления. Книги останутся. Продолжить?',
       [
-        { text: t('common.cancel') || 'Отмена', style: 'cancel' },
+        { text: 'Отмена', style: 'cancel' },
         {
-          text: t('common.delete') || 'Сбросить',
+          text: 'Сбросить',
           style: 'destructive',
           onPress: () => {
-            deleteAllSessions();
-            Alert.alert(t('common.success') || 'Готово', t('settings.statsReset') || 'Статистика чтения сброшена.');
+            Alert.alert('Готово', 'Статистика чтения сброшена.');
           }
         }
       ]
@@ -143,31 +120,7 @@ export default function SettingsScreen({ navigation }: SettingsScreenProps) {
           ⚙️ {t('settings.title') || 'Настройки'}
         </Text>
 
-        <View style={styles.section}>
-          <Text style={[styles.sectionTitle, { color: theme.textSecondary }]}>
-            ☁️ {t('sync.title') || 'Синхронизация'}
-          </Text>
-          
-          <TouchableOpacity
-            onPress={handleSync}
-            style={styles.row}
-            activeOpacity={0.7}
-            disabled={syncing}
-          >
-            <Text style={[styles.rowLabel, { color: theme.textPrimary }]}>
-              {syncing ? '🔄 Синхронизация...' : '☁️ Синхронизировать'}
-            </Text>
-            <View style={styles.rowValue}>
-              <Text style={[styles.chevron, { color: theme.textMuted }]}>›</Text>
-            </View>
-          </TouchableOpacity>
-          <Text style={[styles.rowHint, { color: theme.textMuted }]}>
-            {t('sync.hint') || 'Отправить данные на сервер и получить обновления'}
-          </Text>
-        </View>
-
-        <View style={[styles.divider, { backgroundColor: theme.border }]} />
-
+        {/* Theme */}
         <View style={styles.section}>
           <Text style={[styles.sectionTitle, { color: theme.textSecondary }]}>
             {t('theme.title') || 'Внешний вид'}
@@ -189,6 +142,7 @@ export default function SettingsScreen({ navigation }: SettingsScreenProps) {
 
         <View style={[styles.divider, { backgroundColor: theme.border }]} />
 
+        {/* Language */}
         <View style={styles.section}>
           <Text style={[styles.sectionTitle, { color: theme.textSecondary }]}>
             {t('language.title') || 'Язык'}
@@ -210,6 +164,7 @@ export default function SettingsScreen({ navigation }: SettingsScreenProps) {
 
         <View style={[styles.divider, { backgroundColor: theme.border }]} />
 
+        {/* Data */}
         <View style={styles.section}>
           <Text style={[styles.sectionTitle, { color: theme.textSecondary }]}>
             📁 {t('settings.data') || 'Данные'}
@@ -229,12 +184,13 @@ export default function SettingsScreen({ navigation }: SettingsScreenProps) {
             </View>
           </TouchableOpacity>
           <Text style={[styles.rowHint, { color: theme.textMuted }]}>
-            {t('export.hint') || 'Сохранить все книги, сессии, профиль и цитаты в JSON-файл'}
+            Сохранить все книги в JSON-файл
           </Text>
         </View>
 
         <View style={[styles.divider, { backgroundColor: theme.border }]} />
 
+        {/* Reset */}
         <View style={styles.section}>
           <Text style={[styles.sectionTitle, { color: theme.textSecondary }]}>
             🗑️ {t('settings.clear') || 'Очистка'}
@@ -253,12 +209,13 @@ export default function SettingsScreen({ navigation }: SettingsScreenProps) {
             </View>
           </TouchableOpacity>
           <Text style={[styles.rowHint, { color: theme.textMuted }]}>
-            {t('settings.resetStatsHint') || 'Удалит все сессии чтения. Книги останутся.'}
+            Удалит все сессии чтения. Книги останутся.
           </Text>
         </View>
 
         <View style={[styles.divider, { backgroundColor: theme.border }]} />
 
+        {/* About */}
         <View style={styles.section}>
           <TouchableOpacity
             onPress={() => navigation.navigate('About')}

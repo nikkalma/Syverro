@@ -1,42 +1,49 @@
-import { create } from 'zustand';
-import { persist, createJSONStorage } from 'zustand/middleware';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { createBooksSlice, BooksSlice } from './slices/booksSlice';
-import { createSessionsSlice, SessionsSlice } from './slices/sessionsSlice';
-import { createQuotesSlice, QuotesSlice } from './slices/quotesSlice';
-import { createProfileSlice, ProfileSlice } from './slices/profileSlice';
+import { create } from 'zustand'
+import { bookRepository } from '../db/bookRepository'
+import { bookService } from '../services/bookService'
 
-export type StoreState = {
-  books: any[];
-  activeBookId: string | null;
-  sessions: any[];
-  activeSession: any | null;
-  quotes: any[];
-  profile: any;
-};
+type Book = any // TODO: импортировать нормальный тип
 
-export type StoreActions = BooksSlice & SessionsSlice & QuotesSlice & ProfileSlice;
-export type Store = StoreState & StoreActions;
+type Store = {
+  books: Book[]
+  isLoading: boolean
+  error: string | null
+  
+  // ✅ Добавляем loadBooks
+  loadBooks: () => Promise<void>
+  addBook: (book: any) => Promise<void>
+  updateBook: (id: string, updates: any) => Promise<void>
+  deleteBook: (id: string) => Promise<void>
+}
 
-export const useStore = create<Store>()(
-  persist(
-    (set, get, store) => ({
-      ...createBooksSlice(set, get, store),
-      ...createSessionsSlice(set, get, store),
-      ...createQuotesSlice(set, get, store),
-      ...createProfileSlice(set, get, store),
-    }) as any,
-    {
-      name: 'syverro-storage',
-      storage: createJSONStorage(() => AsyncStorage),
-      version: 2,
-      partialize: (state: any) => ({
-        books: state.books,
-        activeBookId: state.activeBookId,
-        sessions: state.sessions,
-        quotes: state.quotes,
-        profile: state.profile,
-      }),
+export const useStore = create<Store>((set, get) => ({
+  books: [],
+  isLoading: false,
+  error: null,
+
+  // ✅ Реализация loadBooks
+  loadBooks: async () => {
+    set({ isLoading: true, error: null })
+    try {
+      const books = await bookRepository.getAll()
+      set({ books, isLoading: false })
+    } catch (error) {
+      set({ error: String(error), isLoading: false })
     }
-  )
-);
+  },
+
+  addBook: async (book) => {
+    await bookService.createBook(book)
+    await get().loadBooks()
+  },
+
+  updateBook: async (id, updates) => {
+    await bookService.updateBook(id, updates)
+    await get().loadBooks()
+  },
+
+  deleteBook: async (id) => {
+    await bookService.deleteBook(id)
+    await get().loadBooks()
+  },
+}))

@@ -1,0 +1,1443 @@
+﻿
+
+=== backend\app\api\admin.py ===
+
+from fastapi import APIRouter, Depends, HTTPException, status
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select, func, text
+from app.core.deps import get_current_user, get_db
+from app.models.user import User
+from app.models.book import Book, UserBook
+from app.schemas.user import UserResponse
+import logging
+from datetime import datetime, timedelta
+from typing import Optional, List
+from pydantic import BaseModel
+
+logger = logging.getLogger(__name__)
+router = APIRouter(prefix="/admin", tags=["admin"])
+
+# ============================================================
+# РЎРҐР•РњР«
+# ============================================================
+
+class AdminUserResponse(BaseModel):
+    id: str
+    email: str
+    first_name: Optional[str] = None
+    last_name: Optional[str] = None
+    username: Optional[str] = None
+    role: str = "user"
+    is_active: bool = True
+    created_at: datetime
+    last_active: Optional[datetime] = None
+    phone: Optional[str] = None
+    telegram_id: Optional[str] = None
+
+class AdminBookResponse(BaseModel):
+    id: str
+    title: str
+    author: str
+    cover: Optional[str] = None
+    genres: List[str] = []
+    total_pages: Optional[int] = None
+    is_published: bool = False
+    created_at: datetime
+    updated_at: datetime
+    created_by: Optional[str] = None
+    created_by_email: Optional[str] = None
+
+class AdminAuthorResponse(BaseModel):
+    id: str
+    name: str
+    photo: Optional[str] = None
+    bio: Optional[str] = None
+    country: Optional[str] = None
+    birth_year: Optional[int] = None
+    death_year: Optional[int] = None
+    book_count: int = 0
+    created_at: datetime
+    updated_at: datetime
+
+class AdminGenreResponse(BaseModel):
+    id: str
+    name: str
+    slug: str
+    book_count: int = 0
+    created_at: datetime
+    updated_at: datetime
+
+class AdminLogResponse(BaseModel):
+    id: str
+    type: str
+    user_id: Optional[str] = None
+    user_email: Optional[str] = None
+    endpoint: str
+    method: str
+    status_code: int
+    ip: Optional[str] = None
+    user_agent: Optional[str] = None
+    details: Optional[dict] = None
+    created_at: datetime
+
+class AdminStatsResponse(BaseModel):
+    total_users: int
+    total_books: int
+    total_authors: int
+    total_genres: int
+    active_users: int
+    new_users_24h: int
+    new_books_24h: int
+    users_by_role: dict
+
+class RoleUpdate(BaseModel):
+    role: str
+
+class BlockUpdate(BaseModel):
+    is_active: bool
+
+class PublishUpdate(BaseModel):
+    is_published: bool
+
+class SettingsResponse(BaseModel):
+    registration_enabled: bool = True
+    max_file_size_mb: int = 10
+    site_name: str = "Syverro"
+    site_description: str = "РџСЂРѕСЃС‚СЂР°РЅСЃС‚РІРѕ РґР»СЏ С‡С‚РµРЅРёСЏ"
+    maintenance_mode: bool = False
+    require_email_verification: bool = False
+    default_user_role: str = "user"
+
+# ============================================================
+# РџР РћР’Р•Р РљРђ РџР РђР’ (РўРћР›Р¬РљРћ РђР”РњРРќР«)
+# ============================================================
+
+async def check_admin(user: User) -> User:
+    if user.role not in ["owner", "admin", "moderator"]:
+        raise HTTPException(status_code=403, detail="Admin access required")
+    return user
+
+async def check_owner(user: User) -> User:
+    if user.role != "owner":
+        raise HTTPException(status_code=403, detail="Owner access required")
+    return user
+
+# ============================================================
+# 1. DASHBOARD вЂ” РЎРўРђРўРРЎРўРРљРђ
+# ============================================================
+
+@router.get("/stats", response_model=AdminStatsResponse)
+async def get_stats(
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    await check_admin(current_user)
+
+    # Р’СЃРµРіРѕ РїРѕР»СЊР·РѕРІР°С‚РµР»РµР№
+    total_users = await db.scalar(select(func.count()).select_from(User))
+    
+    # Р’СЃРµРіРѕ РєРЅРёРі
+    total_books = await db.scalar(select(func.count()).select_from(Book))
+    
+    # РђРєС‚РёРІРЅС‹Рµ РїРѕР»СЊР·РѕРІР°С‚РµР»Рё (Р·Р° РїРѕСЃР»РµРґРЅРёРµ 7 РґРЅРµР№)
+    week_ago = datetime.utcnow() - timedelta(days=7)
+    active_users = await db.scalar(
+        select(func.count()).select_from(User).where(User.last_active >= week_ago)
+    ) or 0
+    
+    # РќРѕРІС‹Рµ РїРѕР»СЊР·РѕРІР°С‚РµР»Рё Р·Р° 24 С‡Р°СЃР°
+    day_ago = datetime.utcnow() - timedelta(days=1)
+    new_users_24h = await db.scalar(
+        select(func.count()).select_from(User).where(User.created_at >= day_ago)
+    ) or 0
+    
+    # РќРѕРІС‹Рµ РєРЅРёРіРё Р·Р° 24 С‡Р°СЃР°
+    new_books_24h = await db.scalar(
+        select(func.count()).select_from(Book).where(Book.created_at >= day_ago)
+    ) or 0
+
+    return AdminStatsResponse(
+        total_users=total_users or 0,
+        total_books=total_books or 0,
+        total_authors=0,  # TODO: РґРѕР±Р°РІРёС‚СЊ РјРѕРґРµР»СЊ Author
+        total_genres=0,   # TODO: РґРѕР±Р°РІРёС‚СЊ РјРѕРґРµР»СЊ Genre
+        active_users=active_users,
+        new_users_24h=new_users_24h,
+        new_books_24h=new_books_24h,
+        users_by_role={},
+    )
+
+# ============================================================
+# 2. РџРћР›Р¬Р—РћР’РђРўР•Р›Р
+# ============================================================
+
+@router.get("/users", response_model=dict)
+async def get_users(
+    page: int = 1,
+    limit: int = 20,
+    search: Optional[str] = None,
+    role: Optional[str] = None,
+    is_active: Optional[bool] = None,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    await check_admin(current_user)
+
+    query = select(User)
+    count_query = select(func.count()).select_from(User)
+
+    if search:
+        query = query.where(User.email.contains(search))
+        count_query = count_query.where(User.email.contains(search))
+    
+    if role:
+        query = query.where(User.role == role)
+        count_query = count_query.where(User.role == role)
+    
+    if is_active is not None:
+        query = query.where(User.is_active == is_active)
+        count_query = count_query.where(User.is_active == is_active)
+
+    total = await db.scalar(count_query) or 0
+    
+    query = query.offset((page - 1) * limit).limit(limit)
+    result = await db.execute(query)
+    users = result.scalars().all()
+
+    return {
+        "data": [{
+            "id": str(u.id),
+            "email": u.email,
+            "first_name": u.first_name,
+            "last_name": u.last_name,
+            "username": u.username,
+            "role": u.role or "user",
+            "is_active": u.is_active,
+            "created_at": u.created_at,
+            "last_active": u.last_active,
+            "phone": u.phone,
+            "telegram_id": u.telegram_id,
+        } for u in users],
+        "total": total,
+        "page": page,
+        "limit": limit,
+        "total_pages": (total + limit - 1) // limit if total else 0,
+    }
+
+@router.put("/users/{user_id}/role")
+async def update_user_role(
+    user_id: str,
+    data: RoleUpdate,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    await check_admin(current_user)
+
+    result = await db.execute(select(User).where(User.id == user_id))
+    user = result.scalar_one_or_none()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    user.role = data.role
+    await db.commit()
+    return {"message": "Role updated"}
+
+@router.put("/users/{user_id}/block")
+async def block_user(
+    user_id: str,
+    data: BlockUpdate,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    await check_admin(current_user)
+
+    result = await db.execute(select(User).where(User.id == user_id))
+    user = result.scalar_one_or_none()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    user.is_active = data.is_active
+    await db.commit()
+    return {"message": "User blocked" if not data.is_active else "User unblocked"}
+
+@router.delete("/users/{user_id}")
+async def delete_user(
+    user_id: str,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    await check_owner(current_user)
+
+    result = await db.execute(select(User).where(User.id == user_id))
+    user = result.scalar_one_or_none()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    await db.delete(user)
+    await db.commit()
+    return {"message": "User deleted"}
+
+@router.post("/users/{user_id}/logout")
+async def logout_user_sessions(
+    user_id: str,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    await check_admin(current_user)
+    # TODO: СЂРµР°Р»РёР·РѕРІР°С‚СЊ РѕС‡РёСЃС‚РєСѓ СЃРµСЃСЃРёР№
+    return {"message": "All sessions terminated"}
+
+# ============================================================
+# 3. РљРќРР“Р
+# ============================================================
+
+@router.get("/books", response_model=dict)
+async def get_books(
+    page: int = 1,
+    limit: int = 20,
+    search: Optional[str] = None,
+    genre: Optional[str] = None,
+    is_published: Optional[bool] = None,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    await check_admin(current_user)
+
+    query = select(Book)
+    count_query = select(func.count()).select_from(Book)
+
+    if search:
+        query = query.where(Book.title.contains(search))
+        count_query = count_query.where(Book.title.contains(search))
+    
+    if genre:
+        query = query.where(Book.genres.contains([genre]))
+        count_query = count_query.where(Book.genres.contains([genre]))
+    
+    if is_published is not None:
+        query = query.where(Book.is_published == is_published)
+        count_query = count_query.where(Book.is_published == is_published)
+
+    total = await db.scalar(count_query) or 0
+    
+    query = query.offset((page - 1) * limit).limit(limit)
+    result = await db.execute(query)
+    books = result.scalars().all()
+
+    return {
+        "data": [{
+            "id": str(b.id),
+            "title": b.title,
+            "author": b.author,
+            "cover": b.cover,
+            "genres": b.genres or [],
+            "total_pages": b.total_pages,
+            "is_published": b.is_published,
+            "created_at": b.created_at,
+            "updated_at": b.updated_at,
+            "created_by": None,
+            "created_by_email": None,
+        } for b in books],
+        "total": total,
+        "page": page,
+        "limit": limit,
+        "total_pages": (total + limit - 1) // limit if total else 0,
+    }
+
+@router.post("/books")
+async def create_book(
+    data: dict,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    await check_admin(current_user)
+
+    book = Book(
+        title=data["title"],
+        author=data["author"],
+        cover=data.get("cover"),
+        genres=data.get("genres", []),
+        total_pages=data.get("total_pages"),
+        is_published=data.get("is_published", False),
+        created_by=current_user.id,
+    )
+    db.add(book)
+    await db.commit()
+    await db.refresh(book)
+    return {"id": str(book.id), "message": "Book created"}
+
+@router.put("/books/{book_id}")
+async def update_book(
+    book_id: str,
+    data: dict,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    await check_admin(current_user)
+
+    result = await db.execute(select(Book).where(Book.id == book_id))
+    book = result.scalar_one_or_none()
+    if not book:
+        raise HTTPException(status_code=404, detail="Book not found")
+
+    for key, value in data.items():
+        if hasattr(book, key):
+            setattr(book, key, value)
+    
+    await db.commit()
+    return {"message": "Book updated"}
+
+@router.put("/books/{book_id}/publish")
+async def toggle_publish(
+    book_id: str,
+    data: PublishUpdate,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    await check_admin(current_user)
+
+    result = await db.execute(select(Book).where(Book.id == book_id))
+    book = result.scalar_one_or_none()
+    if not book:
+        raise HTTPException(status_code=404, detail="Book not found")
+
+    book.is_published = data.is_published
+    await db.commit()
+    return {"message": "Book published" if data.is_published else "Book hidden"}
+
+@router.delete("/books/{book_id}")
+async def delete_book(
+    book_id: str,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    await check_admin(current_user)
+
+    result = await db.execute(select(Book).where(Book.id == book_id))
+    book = result.scalar_one_or_none()
+    if not book:
+        raise HTTPException(status_code=404, detail="Book not found")
+
+    await db.delete(book)
+    await db.commit()
+    return {"message": "Book deleted"}
+
+# ============================================================
+# 4. Р›РћР“Р
+# ============================================================
+
+@router.get("/logs", response_model=dict)
+async def get_logs(
+    page: int = 1,
+    limit: int = 20,
+    type: Optional[str] = None,
+    user_email: Optional[str] = None,
+    date_from: Optional[str] = None,
+    date_to: Optional[str] = None,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    await check_admin(current_user)
+
+    # TODO: СЂРµР°Р»РёР·РѕРІР°С‚СЊ РјРѕРґРµР»СЊ Log Рё С…СЂР°РЅРёР»РёС‰Рµ Р»РѕРіРѕРІ
+    return {
+        "data": [],
+        "total": 0,
+        "page": page,
+        "limit": limit,
+        "total_pages": 0,
+    }
+
+@router.get("/logs/recent")
+async def get_recent_logs(
+    limit: int = 10,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    await check_admin(current_user)
+    return []
+
+# ============================================================
+# 5. РќРђРЎРўР РћР™РљР
+# ============================================================
+
+settings_store = SettingsResponse()
+
+@router.get("/settings", response_model=SettingsResponse)
+async def get_settings(
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    await check_owner(current_user)
+    return settings_store
+
+@router.put("/settings", response_model=SettingsResponse)
+async def update_settings(
+    data: SettingsResponse,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    await check_owner(current_user)
+    
+    for key, value in data.dict().items():
+        if hasattr(settings_store, key):
+            setattr(settings_store, key, value)
+    
+    return settings_store
+
+
+=== backend\app\api\auth.py ===
+
+from fastapi import APIRouter, Depends, HTTPException, status
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select
+from app.core.deps import get_current_user, get_db
+from app.core.security import (
+    get_password_hash, verify_password, create_access_token,
+    get_user_by_email
+)
+from app.models.user import User
+from app.schemas.user import (
+    UserCreate, UserLogin, UserResponse, TokenResponse,
+    TelegramAuthData
+)
+import logging
+
+logger = logging.getLogger(__name__)
+router = APIRouter(prefix="/auth", tags=["auth"])
+
+
+# ===== REGISTER =====
+@router.post("/register", response_model=UserResponse)
+async def register(user_data: UserCreate, db: AsyncSession = Depends(get_db)):
+    logger.info(f"рџ”Ќ REGISTER ATTEMPT: {user_data.email}")
+
+    try:
+        result = await db.execute(select(User).where(User.email == user_data.email))
+        existing = result.scalar_one_or_none()
+        if existing:
+            logger.warning(f"вќЊ Email already registered: {user_data.email}")
+            raise HTTPException(status_code=400, detail="Email already registered")
+
+        user = User(
+            email=user_data.email,
+            password_hash=get_password_hash(user_data.password)
+        )
+        db.add(user)
+        await db.commit()
+        await db.refresh(user)
+
+        logger.info(f"вњ… User created: {user.id} - {user.email}")
+
+        return UserResponse(
+            id=user.id,
+            email=user.email,
+            role=user.role,
+            created_at=user.created_at
+        )
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"рџ”Ґ REGISTER ERROR: {type(e).__name__} - {str(e)}")
+        await db.rollback()
+        raise HTTPException(status_code=500, detail=f"Internal error: {str(e)}")
+
+
+# ===== LOGIN =====
+@router.post("/login", response_model=TokenResponse)
+async def login(user_data: UserLogin, db: AsyncSession = Depends(get_db)):
+    logger.info(f"рџ”Ќ LOGIN ATTEMPT: {user_data.email}")
+
+    try:
+        user = await get_user_by_email(db, user_data.email)
+        if not user or not verify_password(user_data.password, user.password_hash):
+            logger.warning(f"вќЊ Login failed: {user_data.email}")
+            raise HTTPException(status_code=401, detail="Invalid email or password")
+
+        access_token = create_access_token({"sub": str(user.id)})
+        logger.info(f"вњ… Login success: {user.id} - {user.email}")
+
+        return TokenResponse(access_token=access_token)
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"рџ”Ґ LOGIN ERROR: {type(e).__name__} - {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Internal error: {str(e)}")
+
+
+# ===== ME =====
+@router.get("/me", response_model=UserResponse)
+async def get_current_user_info(
+    current_user: User = Depends(get_current_user),
+):
+    logger.info(f"рџ”Ќ ME request for user: {current_user.id}")
+    return UserResponse(
+        id=current_user.id,
+        email=current_user.email,
+        role=current_user.role,
+        created_at=current_user.created_at
+    )
+
+
+# ===== TELEGRAM LOGIN (РґР»СЏ Р±СѓРґСѓС‰РµРіРѕ) =====
+@router.post("/telegram", response_model=TokenResponse)
+async def telegram_login(
+    telegram_data: TelegramAuthData,
+    db: AsyncSession = Depends(get_db)
+):
+    logger.info(f"рџ”Ќ TELEGRAM LOGIN ATTEMPT: {telegram_data.id}")
+
+    try:
+        from app.core.security import get_user_by_telegram_id
+        
+        user = await get_user_by_telegram_id(db, telegram_data.id)
+
+        if not user:
+            user = User(
+                telegram_id=telegram_data.id,
+                first_name=telegram_data.first_name,
+                last_name=telegram_data.last_name,
+                username=telegram_data.username,
+                photo_url=telegram_data.photo_url,
+            )
+            db.add(user)
+            await db.commit()
+            await db.refresh(user)
+            logger.info(f"вњ… New user created via Telegram: {user.id} - {telegram_data.username}")
+
+        access_token = create_access_token({"sub": str(user.id)})
+        logger.info(f"вњ… Telegram login success: {user.id}")
+
+        return TokenResponse(access_token=access_token)
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"рџ”Ґ TELEGRAM ERROR: {type(e).__name__} - {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Internal error: {str(e)}")
+
+
+=== backend\app\api\books.py ===
+
+from fastapi import APIRouter, Depends, HTTPException, status
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select
+from app.core.deps import get_current_user, get_db
+from app.models.user import User
+from app.models.book import Book, UserBook
+from app.schemas.book import BookCreate, BookResponse, UserBookResponse
+from uuid import UUID
+
+router = APIRouter(prefix="/books", tags=["books"])
+
+# ========== Р“Р›РћР‘РђР›Р¬РќР«Р™ РљРђРўРђР›РћР“ (Р’РЎР• РљРќРР“Р РњРР Рђ) ==========
+@router.get("/catalog/", response_model=list[BookResponse])
+async def get_catalog(
+    db: AsyncSession = Depends(get_db)
+):
+    """Р’СЃРµ РєРЅРёРіРё РёР· РіР»РѕР±Р°Р»СЊРЅРѕРіРѕ РєР°С‚Р°Р»РѕРіР° (Р±РµР· Р°РІС‚РѕСЂРёР·Р°С†РёРё)"""
+    try:
+        result = await db.execute(select(Book))
+        books = result.scalars().all()
+        return books
+    except Exception as e:
+        print(f"Error: {e}")
+        return []
+
+# ========== РњРћР РљРќРР“Р (РўРћР›Р¬РљРћ Р”РћР‘РђР’Р›Р•РќРќР«Р• РџРћР›Р¬Р—РћР’РђРўР•Р›Р•Рњ) ==========
+@router.get("/", response_model=list[BookResponse])
+async def get_user_books(
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    try:
+        result = await db.execute(
+            select(Book).join(UserBook).where(UserBook.user_id == current_user.id)
+        )
+        books = result.scalars().all()
+        return books
+    except Exception as e:
+        print(f"Error: {e}")
+        return []
+
+# ========== Р”РћР‘РђР’РРўР¬ РљРќРР“РЈ (РЎРћР—Р”РђРЃРў РЎР’РЇР—Р¬ Р’ USERBOOK) ==========
+@router.post("/", response_model=BookResponse)
+async def create_book(
+    book_data: BookCreate,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    try:
+        existing = await db.execute(
+            select(Book).where(
+                Book.title == book_data.title,
+                Book.author == book_data.author
+            )
+        )
+        existing_book = existing.scalar_one_or_none()
+
+        if existing_book:
+            user_book_exists = await db.execute(
+                select(UserBook).where(
+                    UserBook.user_id == current_user.id,
+                    UserBook.book_id == existing_book.id
+                )
+            )
+            if not user_book_exists.scalar_one_or_none():
+                user_book = UserBook(
+                    user_id=current_user.id,
+                    book_id=existing_book.id,
+                    status="planned"
+                )
+                db.add(user_book)
+                await db.commit()
+            return existing_book
+
+        new_book = Book(**book_data.model_dump())
+        db.add(new_book)
+        await db.flush()
+
+        user_book = UserBook(
+            user_id=current_user.id,
+            book_id=new_book.id,
+            status="planned"
+        )
+        db.add(user_book)
+
+        await db.commit()
+        await db.refresh(new_book)
+
+        return new_book
+    except Exception as e:
+        print(f"Error: {e}")
+        await db.rollback()
+        raise HTTPException(status_code=500, detail=str(e))
+
+# ========== РњРћР РљРќРР“Р РЎРћ РЎРўРђРўРЈРЎРђРњР (Р”Р›РЇ РџР РћР¤РР›РЇ) ==========
+@router.get("/user-books/", response_model=list[UserBookResponse])
+async def get_user_books_with_status(
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    try:
+        result = await db.execute(
+            select(UserBook).where(UserBook.user_id == current_user.id)
+        )
+        user_books = result.scalars().all()
+        for ub in user_books:
+            await db.refresh(ub, attribute_names=["book"])
+        return user_books
+    except Exception as e:
+        print(f"Error: {e}")
+        return []
+
+# ========== РћР‘РќРћР’РРўР¬ РЎРўРђРўРЈРЎ РљРќРР“Р ==========
+@router.put("/{book_id}/status")
+async def update_book_status(
+    book_id: UUID,
+    status_value: str,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    result = await db.execute(
+        select(UserBook).where(
+            UserBook.user_id == current_user.id,
+            UserBook.book_id == book_id
+        )
+    )
+    user_book = result.scalar_one_or_none()
+
+    if not user_book:
+        raise HTTPException(status_code=404, detail="Book not found")
+
+    user_book.status = status_value
+    await db.commit()
+
+    return {"message": "Status updated"}
+
+
+=== backend\app\api\sync.py ===
+
+from fastapi import APIRouter, Depends
+from sqlalchemy.ext.asyncio import AsyncSession
+from app.core.deps import get_current_user, get_db
+from app.models.user import User
+
+router = APIRouter(prefix="/sync", tags=["sync"])
+
+
+@router.get("/")
+async def get_sync_data(
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    """РџРѕР»СѓС‡РёС‚СЊ РґР°РЅРЅС‹Рµ РґР»СЏ СЃРёРЅС…СЂРѕРЅРёР·Р°С†РёРё (GET)"""
+    return {
+        "books": [],
+        "sessions": [],
+        "quotes": [],
+        "server_time": "2026-01-15T10:00:00Z"
+    }
+
+
+@router.post("/")
+async def sync_data(
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    """РћС‚РїСЂР°РІРёС‚СЊ РґР°РЅРЅС‹Рµ РґР»СЏ СЃРёРЅС…СЂРѕРЅРёР·Р°С†РёРё (POST)"""
+    return {
+        "books": [],
+        "sessions": [],
+        "quotes": [],
+        "server_time": "2026-01-15T10:00:00Z"
+    }
+
+
+=== backend\app\api\__init__.py ===
+
+from .auth import router as auth_router
+from .sync import router as sync_router
+from .books import router as books_router
+from .admin import router as admin_router
+
+routers = [
+    auth_router,
+    sync_router,
+    books_router,
+    admin_router,
+]
+
+
+=== backend\app\core\deps.py ===
+
+from typing import Annotated
+from uuid import UUID
+from fastapi import Depends, HTTPException, status
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select
+from app.database import get_db
+from app.core.security import decode_token
+from app.models.user import User
+
+security = HTTPBearer()
+
+
+async def get_current_user(
+    credentials: Annotated[HTTPAuthorizationCredentials, Depends(security)],
+    db: Annotated[AsyncSession, Depends(get_db)]
+) -> User:
+    token = credentials.credentials
+    payload = decode_token(token)
+    
+    if payload is None:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid token",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+    
+    user_id = payload.get("sub")
+    if user_id is None:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid token payload",
+        )
+    
+    try:
+        user_id = UUID(user_id)
+    except ValueError:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid user ID format",
+        )
+    
+    result = await db.execute(select(User).where(User.id == user_id))
+    user = result.scalar_one_or_none()
+    
+    if user is None:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="User not found",
+        )
+    
+    return user
+
+
+=== backend\app\core\security.py ===
+
+from datetime import datetime, timedelta
+from jose import JWTError, jwt
+from passlib.context import CryptContext
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select
+from app.models.user import User
+
+SECRET_KEY = "your-secret-key-change-this-in-production"
+ALGORITHM = "HS256"
+ACCESS_TOKEN_EXPIRE_MINUTES = 30
+
+pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+
+
+def verify_password(plain_password: str, hashed_password: str) -> bool:
+    return pwd_context.verify(plain_password, hashed_password)
+
+
+def get_password_hash(password: str) -> str:
+    return pwd_context.hash(password)
+
+
+def create_access_token(data: dict, expires_delta: timedelta | None = None) -> str:
+    to_encode = data.copy()
+    if expires_delta:
+        expire = datetime.utcnow() + expires_delta
+    else:
+        expire = datetime.utcnow() + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+    to_encode.update({"exp": expire})
+    encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
+    return encoded_jwt
+
+
+def decode_token(token: str) -> dict | None:
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        return payload
+    except JWTError:
+        return None
+
+
+async def get_user_by_email(db: AsyncSession, email: str) -> User | None:
+    result = await db.execute(select(User).where(User.email == email))
+    return result.scalar_one_or_none()
+
+
+async def get_user_by_telegram_id(db: AsyncSession, telegram_id: str) -> User | None:
+    result = await db.execute(select(User).where(User.telegram_id == telegram_id))
+    return result.scalar_one_or_none()
+
+
+=== backend\app\models\book.py ===
+
+from sqlalchemy import Column, String, Integer, DateTime, ForeignKey, Boolean, JSON, UniqueConstraint
+from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy.sql import func
+from sqlalchemy.orm import relationship
+from app.database import Base
+import uuid
+
+
+class Book(Base):
+    __tablename__ = "books"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    title = Column(String, nullable=False)
+    author = Column(String, nullable=False)
+    cover = Column(String, nullable=True)
+    genres = Column(JSON, default=[])
+    total_pages = Column(Integer, nullable=True)
+    is_published = Column(Boolean, default=False)
+    created_by = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=True)
+    created_at = Column(DateTime, server_default=func.now())
+    updated_at = Column(DateTime, onupdate=func.now())
+    
+    # Relationships
+    user_books = relationship("UserBook", back_populates="book", cascade="all, delete-orphan")
+    
+    # Constraints
+    __table_args__ = (
+        UniqueConstraint('title', 'author', name='unique_book_title_author'),
+    )
+
+
+class UserBook(Base):
+    __tablename__ = "user_books"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    user_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False)
+    book_id = Column(UUID(as_uuid=True), ForeignKey("books.id"), nullable=False)
+    status = Column(String, default="planned")
+    rating = Column(Integer, nullable=True)
+    current_page = Column(Integer, default=0)
+    start_date = Column(DateTime, nullable=True)
+    end_date = Column(DateTime, nullable=True)
+    notes = Column(String, nullable=True)
+    is_favorite = Column(Boolean, default=False)
+    created_at = Column(DateTime, server_default=func.now())
+    updated_at = Column(DateTime, onupdate=func.now())
+    
+    # Relationships
+    book = relationship("Book", back_populates="user_books")
+    user = relationship("User", back_populates="user_books")
+
+
+=== backend\app\models\user.py ===
+
+from sqlalchemy import Column, String, DateTime, Boolean
+from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy.sql import func
+from sqlalchemy.orm import relationship
+from app.database import Base
+import uuid
+
+
+class User(Base):
+    __tablename__ = "users"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    phone = Column(String, unique=True, nullable=False, index=True)
+    email = Column(String, unique=True, nullable=True, index=True)
+    password_hash = Column(String, nullable=True)
+    role = Column(String, default="user")
+    is_active = Column(Boolean, default=True)
+    created_at = Column(DateTime, server_default=func.now())
+    updated_at = Column(DateTime, onupdate=func.now())
+    
+    # Relationships
+    user_books = relationship("UserBook", back_populates="user", cascade="all, delete-orphan")
+
+
+=== backend\app\schemas\book.py ===
+
+from pydantic import BaseModel
+from datetime import datetime
+from typing import Optional, List
+from uuid import UUID
+
+
+class BookBase(BaseModel):
+    title: str
+    author: str
+    cover: Optional[str] = None
+    genres: Optional[List[str]] = []
+    total_pages: Optional[int] = None
+
+
+class BookCreate(BookBase):
+    pass
+
+
+class BookResponse(BookBase):
+    id: UUID
+    created_at: datetime
+    updated_at: Optional[datetime]
+
+    class Config:
+        from_attributes = True
+
+
+class UserBookCreate(BaseModel):
+    book_id: UUID
+    status: str = "planned"
+    rating: Optional[int] = None
+    current_page: Optional[int] = 0
+    start_date: Optional[datetime] = None
+    notes: Optional[str] = None
+
+
+class UserBookResponse(BaseModel):
+    id: UUID
+    user_id: UUID
+    book_id: UUID
+    book: BookResponse
+    status: str
+    rating: Optional[int]
+    current_page: int
+    start_date: Optional[datetime]
+    end_date: Optional[datetime]
+    notes: Optional[str]
+    is_favorite: bool
+    created_at: datetime
+    updated_at: Optional[datetime]
+
+    class Config:
+        from_attributes = True
+
+
+=== backend\app\schemas\user.py ===
+
+from datetime import datetime
+from uuid import UUID
+from pydantic import BaseModel, EmailStr
+from typing import Optional
+
+
+class UserCreate(BaseModel):
+    email: EmailStr
+    password: str
+
+
+class UserLogin(BaseModel):
+    email: EmailStr
+    password: str
+
+
+class UserResponse(BaseModel):
+    id: UUID
+    email: Optional[EmailStr] = None
+    created_at: datetime
+
+    class Config:
+        from_attributes = True
+
+
+class TokenResponse(BaseModel):
+    access_token: str
+    token_type: str = "bearer"
+
+
+# ===== TELEGRAM (РѕСЃС‚Р°РІР»СЏРµРј РґР»СЏ Р±СѓРґСѓС‰РµРіРѕ) =====
+class TelegramAuthData(BaseModel):
+    id: str
+    first_name: str
+    last_name: Optional[str] = None
+    username: Optional[str] = None
+    photo_url: Optional[str] = None
+    auth_date: int
+    hash: str
+
+
+# ===== BOOKS =====
+class BookBase(BaseModel):
+    title: str
+    author: str
+    cover: Optional[str] = None
+    genres: Optional[List[str]] = []
+    total_pages: Optional[int] = None
+
+
+class BookCreate(BookBase):
+    pass
+
+
+class BookResponse(BookBase):
+    id: UUID
+    created_at: datetime
+    updated_at: Optional[datetime]
+
+    class Config:
+        from_attributes = True
+
+
+class UserBookCreate(BaseModel):
+    book_id: UUID
+    status: str = "planned"
+    rating: Optional[int] = None
+    current_page: Optional[int] = 0
+    start_date: Optional[datetime] = None
+    notes: Optional[str] = None
+
+
+class UserBookResponse(BaseModel):
+    id: UUID
+    user_id: UUID
+    book_id: UUID
+    book: BookResponse
+    status: str
+    rating: Optional[int]
+    current_page: int
+    start_date: Optional[datetime]
+    end_date: Optional[datetime]
+    notes: Optional[str]
+    is_favorite: bool
+    created_at: datetime
+    updated_at: Optional[datetime]
+
+    class Config:
+        from_attributes = True
+
+
+=== backend\app\config.py ===
+
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
+
+class Settings:
+    DATABASE_URL: str = os.getenv("DATABASE_URL", "")
+    SECRET_KEY: str = os.getenv("SECRET_KEY", "your-secret-key-change-this-in-production")
+    ALGORITHM: str = "HS256"
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
+    
+    def __init__(self):
+        # РџСЂРѕРІРµСЂСЏРµРј Рё РєРѕРЅРІРµСЂС‚РёСЂСѓРµРј URL
+        if self.DATABASE_URL:
+            print(f"рџ”Ќ Original DATABASE_URL: {self.DATABASE_URL[:60]}...")
+            # РљРѕРЅРІРµСЂС‚РёСЂСѓРµРј postgres:// в†’ postgresql+asyncpg://
+            if self.DATABASE_URL.startswith("postgres://"):
+                self.DATABASE_URL = self.DATABASE_URL.replace("postgres://", "postgresql+asyncpg://", 1)
+                print(f"вњ… Converted to asyncpg: {self.DATABASE_URL[:60]}...")
+            elif self.DATABASE_URL.startswith("postgresql://") and "+asyncpg" not in self.DATABASE_URL:
+                self.DATABASE_URL = self.DATABASE_URL.replace("postgresql://", "postgresql+asyncpg://", 1)
+                print(f"вњ… Added asyncpg driver: {self.DATABASE_URL[:60]}...")
+        else:
+            print("вќЊ DATABASE_URL is not set in environment!")
+
+settings = Settings()
+
+
+=== backend\app\database.py ===
+
+from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sessionmaker
+from sqlalchemy.orm import declarative_base
+from app.config import settings
+
+# РџРµС‡Р°С‚СЊ РёРЅС„РѕСЂРјР°С†РёРё Рѕ РїРѕРґРєР»СЋС‡РµРЅРёРё
+print(f"рџ”Ќ Creating database engine with URL: {settings.DATABASE_URL[:80]}..." if settings.DATABASE_URL else "вќЊ DATABASE_URL not set!")
+
+engine = create_async_engine(
+    settings.DATABASE_URL,
+    echo=True,  # Р’СЂРµРјРµРЅРЅРѕ РІРєР»СЋС‡Р°РµРј SQL-Р»РѕРіРё РґР»СЏ РѕС‚Р»Р°РґРєРё
+    future=True
+)
+
+AsyncSessionLocal = async_sessionmaker(
+    engine,
+    class_=AsyncSession,
+    expire_on_commit=False
+)
+
+Base = declarative_base()
+
+async def get_db():
+    print("рџџў get_db() called - creating session")
+    async with AsyncSessionLocal() as session:
+        yield session
+    print("рџ”ґ Session closed")
+
+
+=== backend\app\main.py ===
+
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+from app.api import auth, books, sync, admin
+from app.database import engine, Base
+import logging
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+app = FastAPI(title="Syverro API", version="1.0.0")
+
+# CORS
+app.add_middleware(
+    CORSMiddleware,
+allow_origins=[
+    "http://localhost:3000",
+    "http://localhost:3001",
+    "http://localhost:5173",
+    "https://syverro.com",
+    "https://api.syverro.com",
+    "http://77.233.220.197:3002",
+],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+# Р РѕСѓС‚РµСЂС‹
+app.include_router(auth.router)
+app.include_router(books.router)
+app.include_router(sync.router)
+app.include_router(admin.router)
+
+@app.on_event("startup")
+async def startup():
+    async with engine.begin() as conn:
+        await conn.run_sync(Base.metadata.create_all)
+    logger.info("вњ… Database tables created")
+
+@app.get("/health")
+async def health():
+    return {"status": "ok"}
+
+
+=== node_modules\shell-quote\print.py ===
+
+#!/usr/bin/env python3
+import sys
+print(sys.argv[1])
+
+
+=== syverro-web\src\api\books.py ===
+
+from fastapi import APIRouter, Depends, HTTPException, status
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select
+from app.core.deps import get_current_user, get_db
+from app.models.user import User
+from app.models.book import Book, UserBook
+from app.schemas.book import BookCreate, BookResponse, UserBookCreate, UserBookResponse
+from uuid import UUID
+
+router = APIRouter(prefix="/books", tags=["books"])
+
+
+@router.get("/", response_model=list[BookResponse])
+async def get_user_books(
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    """РџРѕР»СѓС‡РёС‚СЊ РІСЃРµ РєРЅРёРіРё РїРѕР»СЊР·РѕРІР°С‚РµР»СЏ"""
+    # РџРѕР»СѓС‡Р°РµРј РІСЃРµ РєРЅРёРіРё, РєРѕС‚РѕСЂС‹Рµ РїРѕР»СЊР·РѕРІР°С‚РµР»СЊ РґРѕР±Р°РІРёР» РІ СЃРІРѕСЋ Р±РёР±Р»РёРѕС‚РµРєСѓ
+    result = await db.execute(
+        select(Book).join(UserBook).where(UserBook.user_id == current_user.id)
+    )
+    books = result.scalars().all()
+    return books
+
+
+@router.post("/", response_model=BookResponse)
+async def create_book(
+    book_data: BookCreate,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    """РЎРѕР·РґР°С‚СЊ РЅРѕРІСѓСЋ РєРЅРёРіСѓ РІ РєР°С‚Р°Р»РѕРіРµ Рё РґРѕР±Р°РІРёС‚СЊ РІ Р±РёР±Р»РёРѕС‚РµРєСѓ РїРѕР»СЊР·РѕРІР°С‚РµР»СЏ"""
+    # РџСЂРѕРІРµСЂСЏРµРј, СЃСѓС‰РµСЃС‚РІСѓРµС‚ Р»Рё СѓР¶Рµ С‚Р°РєР°СЏ РєРЅРёРіР°
+    existing = await db.execute(
+        select(Book).where(
+            Book.title == book_data.title,
+            Book.author == book_data.author
+        )
+    )
+    existing_book = existing.scalar_one_or_none()
+    
+    if existing_book:
+        # РљРЅРёРіР° СѓР¶Рµ РµСЃС‚СЊ РІ РєР°С‚Р°Р»РѕРіРµ, РїСЂРѕСЃС‚Рѕ РґРѕР±Р°РІР»СЏРµРј СЃРІСЏР·СЊ СЃ РїРѕР»СЊР·РѕРІР°С‚РµР»РµРј
+        user_book = UserBook(
+            user_id=current_user.id,
+            book_id=existing_book.id,
+            status="planned"
+        )
+        db.add(user_book)
+        await db.commit()
+        return existing_book
+    
+    # РЎРѕР·РґР°С‘Рј РЅРѕРІСѓСЋ РєРЅРёРіСѓ
+    new_book = Book(**book_data.model_dump())
+    db.add(new_book)
+    await db.flush()  # Р§С‚РѕР±С‹ РїРѕР»СѓС‡РёС‚СЊ id РЅРѕРІРѕР№ РєРЅРёРіРё
+    
+    # Р”РѕР±Р°РІР»СЏРµРј СЃРІСЏР·СЊ СЃ РїРѕР»СЊР·РѕРІР°С‚РµР»РµРј
+    user_book = UserBook(
+        user_id=current_user.id,
+        book_id=new_book.id,
+        status="planned"
+    )
+    db.add(user_book)
+    
+    await db.commit()
+    await db.refresh(new_book)
+    
+    return new_book
+
+
+@router.get("/user-books/", response_model=list[UserBookResponse])
+async def get_user_books_with_status(
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    """РџРѕР»СѓС‡РёС‚СЊ РІСЃРµ РєРЅРёРіРё РїРѕР»СЊР·РѕРІР°С‚РµР»СЏ СЃРѕ СЃС‚Р°С‚СѓСЃР°РјРё"""
+    result = await db.execute(
+        select(UserBook)
+        .where(UserBook.user_id == current_user.id)
+    )
+    user_books = result.scalars().all()
+    
+    # Р—Р°РіСЂСѓР¶Р°РµРј СЃРІСЏР·Р°РЅРЅС‹Рµ РєРЅРёРіРё
+    for ub in user_books:
+        await db.refresh(ub, attribute_names=["book"])
+    
+    return user_books
+
+
+@router.put("/{book_id}/status")
+async def update_book_status(
+    book_id: UUID,
+    status: str,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    """РћР±РЅРѕРІРёС‚СЊ СЃС‚Р°С‚СѓСЃ РєРЅРёРіРё Сѓ РїРѕР»СЊР·РѕРІР°С‚РµР»СЏ"""
+    result = await db.execute(
+        select(UserBook).where(
+            UserBook.user_id == current_user.id,
+            UserBook.book_id == book_id
+        )
+    )
+    user_book = result.scalar_one_or_none()
+    
+    if not user_book:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Book not found in user's library"
+        )
+    
+    user_book.status = status
+    await db.commit()
+    
+    return {"message": "Status updated"}
+
+
+=== syverro-web\src\pages\book.py ===
+
+from pydantic import BaseModel
+from typing import Optional, List
+from uuid import UUID
+
+class BookCreate(BaseModel):
+    title: str
+    author: str
+    status: Optional[str] = "planned"
+    rating: Optional[int] = None
+    cover: Optional[str] = None
+    section: Optional[str] = None
+    genres: List[str] = []
+    total_pages: int = 0
+    current_page: int = 0
+    start_date: Optional[str] = None
+    end_date: Optional[str] = None
+    notes: str = ""
+    languages: List[str] = []
+    review: str = ""
+    favorite: bool = False
+    author_country: Optional[str] = None
+    series: Optional[str] = None
+    series_position: Optional[int] = None
+    original_year: Optional[int] = None
+    reading_format: str = "reading"
+    last_read: Optional[str] = None
+
+class BookResponse(BaseModel):
+    id: UUID
+    title: str
+    author: str
+    status: Optional[str] = None
+    rating: Optional[int] = None
+    cover: Optional[str] = None
+    section: Optional[str] = None
+    genres: List[str] = []
+    total_pages: int = 0
+    current_page: int = 0
+    start_date: Optional[str] = None
+    end_date: Optional[str] = None
+    notes: str = ""
+    languages: List[str] = []
+    review: str = ""
+    favorite: bool = False
+    author_country: Optional[str] = None
+    series: Optional[str] = None
+    series_position: Optional[int] = None
+    original_year: Optional[int] = None
+    reading_format: str = "reading"
+    last_read: Optional[str] = None
+    created_at: int
+
+class UserBookResponse(BaseModel):
+    id: UUID
+    user_id: UUID
+    book_id: UUID
+    status: str
+    book: BookResponse

@@ -9,6 +9,6 @@
     "resolveJsonModule": true,
     "ignoreDeprecations": "5.0"
   },
-  "include": ["src/**/*", "App.tsx", "App.js"],
+  "include": ["src/**/*", "../App.tsx", "App.js"],
   "exclude": ["node_modules"]
 }

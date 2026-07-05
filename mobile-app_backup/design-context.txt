@@ -1,0 +1,230 @@
+﻿// src/theme/colors.ts
+
+export const lightTheme = {
+  background: '#E0D4C3',
+  surface: '#D4C7B4',
+  surfaceAlt: '#C8BAA6',
+  
+  textPrimary: '#2A2622',
+  textSecondary: '#6B6358',
+  textMuted: '#948A7C',
+  
+  primary: '#4A5A6A',
+  primarySoft: '#6B7A88',
+  accent: '#B8A99A',
+  accentSoft: '#D1C6BA',
+  
+  success: '#6B8F7A',
+  warning: '#D4A76A',
+  error: '#C47A7A',
+  info: '#7A8FC4',
+  status: '#4A5A6A',
+  
+  border: '#BEB09C',
+  borderSoft: '#D4C7B4',
+  card: '#D4C7B4',
+  cardHover: '#DDD0BE',
+  cardActive: '#C8BAA6',
+  
+  chip: '#C8BAA6',
+  chipActive: '#BEB09C',
+  currentBookGlow: '#4A5A6A',
+  neonGlow: '#4A5A6A',
+  
+  glassBackground: 'rgba(212, 199, 180, 0.7)',
+  glassBorder: 'rgba(190, 176, 156, 0.5)',
+  
+  orbColor: 'rgba(176, 162, 144, 0.7)',
+};
+
+export const darkTheme = {
+  background: '#0B1220',
+  surface: '#0E1A26',
+  surfaceAlt: '#121F2E',
+  
+  textPrimary: '#E7EDF5',
+  textSecondary: '#97A6BA',
+  textMuted: '#6E7C90',
+  
+  primary: '#5C7C9A',
+  primarySoft: '#3A5570',
+  accent: '#A8B0BA',
+  accentSoft: '#2C3F55',
+  
+  success: '#6B9B7A',
+  warning: '#D4A76A',
+  error: '#C47A7A',
+  info: '#7A9BC4',
+  status: '#5C7C9A',
+  
+  border: 'rgba(140, 170, 200, 0.12)',
+  borderSoft: '#16232E',
+  card: '#0E1A26',
+  cardHover: '#15263A',
+  cardActive: '#121F2E',
+  
+  chip: '#1B2A3A',
+  chipActive: '#2C3F55',
+  currentBookGlow: '#5C7C9A',
+  neonGlow: '#5C7C9A',
+  
+  glassBackground: 'rgba(14, 26, 38, 0.7)',
+  glassBorder: 'rgba(140, 170, 200, 0.12)',
+  
+  orbColor: 'rgba(28, 40, 58, 0.72)',
+};
+
+// src/theme/fonts.ts
+
+export const fonts = {
+  ui: 'Inter_28pt-Regular',
+  uiBold: 'Inter_28pt-Semibold',
+  ja: 'NotoSansJP-Regular',
+  ko: 'NotoSansKR-Regular',
+  display: 'PlayfairDisplay-Regular',
+};
+
+export const getFontFamily = (locale: string, isBold: boolean = false): string => {
+  if (locale === 'ja') return fonts.ja;
+  if (locale === 'ko') return fonts.ko;
+  return isBold ? fonts.uiBold : fonts.ui;
+};
+// src/theme/glass.ts
+import { spacing } from './spacing';
+
+export const glass = (themeMode: 'light' | 'dark' = 'dark') => ({
+  background: themeMode === 'dark'
+    ? 'rgba(18, 28, 36, 0.72)'
+    : 'rgba(248, 244, 234, 0.72)',
+  border: themeMode === 'dark'
+    ? 'rgba(255, 255, 255, 0.08)'
+    : 'rgba(0, 0, 0, 0.05)',
+  borderRadius: 24,
+  padding: spacing.md,
+});
+// src/theme/index.ts
+export * from './colors';
+export * from './spacing';
+export * from './fonts';
+export * from './typography';
+export * from './glass';
+// mobile-app/src/theme/spacing.ts
+
+export const spacing = {
+  xs: 4,
+  sm: 8,
+  md: 12,
+  lg: 16,
+  xl: 20,
+  xxl: 24,
+  xxxl: 32,
+  huge: 40,
+};
+
+export const radii = {
+  none: 0,
+  xs: 4,
+  sm: 8,
+  md: 12,
+  lg: 16,
+  xl: 20,
+  xxl: 24,
+  full: 999,
+};
+
+export const defaultRadius = radii.lg;
+export const buttonRadius = radii.md;
+export const inputRadius = radii.md;
+
+export const verticalRhythm = {
+  micro: spacing.xs,
+  tight: spacing.md,
+  base: spacing.lg,
+  relaxed: spacing.xxl,
+  loose: spacing.xxxl,
+};
+// mobile-app/src/theme/typography.ts
+import { getFontFamily, fonts } from './fonts';
+
+const asianAdjustments = (locale: string) => {
+  if (locale === 'ja') return { lineHeightMultiplier: 1.15, letterSpacingOffset: 0.5 };
+  if (locale === 'ko') return { lineHeightMultiplier: 1.1, letterSpacingOffset: 0.3 };
+  return { lineHeightMultiplier: 1, letterSpacingOffset: 0 };
+};
+
+interface TypographyStyle {
+  fontFamily: string;
+  fontSize: number;
+  lineHeight: number;
+  letterSpacing: number;
+  opacity?: number;
+}
+
+interface TypographySet {
+  display: TypographyStyle;
+  h1: TypographyStyle;
+  h2: TypographyStyle;
+  h3: TypographyStyle;
+  body: TypographyStyle;
+  secondary: TypographyStyle;
+  caption: TypographyStyle;
+  mono: TypographyStyle;
+}
+
+export const getTypography = (locale = 'en'): TypographySet => {
+  const fontFamily = getFontFamily(locale);
+  const asian = asianAdjustments(locale);
+
+  return {
+    display: {
+      fontFamily: fonts.display,
+      fontSize: 48,
+      lineHeight: 56 * asian.lineHeightMultiplier,
+      letterSpacing: -0.5 + asian.letterSpacingOffset,
+    },
+    h1: {
+      fontFamily,
+      fontSize: 28,
+      lineHeight: 36 * asian.lineHeightMultiplier,
+      letterSpacing: -0.3 + asian.letterSpacingOffset,
+    },
+    h2: {
+      fontFamily,
+      fontSize: 20,
+      lineHeight: 28 * asian.lineHeightMultiplier,
+      letterSpacing: 0 + asian.letterSpacingOffset,
+    },
+    h3: {
+      fontFamily,
+      fontSize: 16,
+      lineHeight: 24 * asian.lineHeightMultiplier,
+      letterSpacing: 0 + asian.letterSpacingOffset,
+    },
+    body: {
+      fontFamily,
+      fontSize: 14,
+      lineHeight: 20 * asian.lineHeightMultiplier,
+      letterSpacing: 0 + asian.letterSpacingOffset,
+    },
+    secondary: {
+      fontFamily,
+      fontSize: 12,
+      lineHeight: 16 * asian.lineHeightMultiplier,
+      letterSpacing: 0 + asian.letterSpacingOffset,
+      opacity: 0.7,
+    },
+    caption: {
+      fontFamily,
+      fontSize: 10,
+      lineHeight: 14 * asian.lineHeightMultiplier,
+      letterSpacing: 0 + asian.letterSpacingOffset,
+      opacity: 0.5,
+    },
+    mono: {
+      fontFamily,
+      fontSize: 12,
+      lineHeight: 16 * asian.lineHeightMultiplier,
+      letterSpacing: 0 + asian.letterSpacingOffset,
+    },
+  };
+};

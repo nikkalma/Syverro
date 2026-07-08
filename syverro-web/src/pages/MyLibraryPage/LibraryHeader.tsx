@@ -1,4 +1,4 @@
-import { statusLabels } from '../../types/userBook';
+import { statusLabels } from '../../types/personalBook';
 import { getLocaleData, getBrowserLocale } from '../../locales';
 
 interface LibraryHeaderProps {
@@ -8,7 +8,7 @@ interface LibraryHeaderProps {
     planned: number;
     completed: number;
     paused: number;
-    dropped: number;
+    abandoned: number;
   };
 }
 
@@ -21,8 +21,8 @@ export default function LibraryHeader({ stats }: LibraryHeaderProps) {
     { key: 'reading', label: statusLabels.reading, value: stats.reading },
     { key: 'planned', label: statusLabels.planned, value: stats.planned },
     { key: 'completed', label: statusLabels.completed, value: stats.completed },
-    { key: 'paused', label: statusLabels.paused, value: stats.paused },
-    { key: 'dropped', label: statusLabels.abandoned, value: stats.dropped },
+    { key: 'postponed', label: statusLabels.paused, value: stats.paused },
+    { key: 'abandoned', label: statusLabels.abandoned, value: stats.abandoned },
   ].filter((item) => item.value > 0);
 
   return (

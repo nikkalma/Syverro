@@ -1,7 +1,8 @@
 // src/features/library/hooks/useLibrary.ts
 import { useEffect, useState } from 'react';
 import { storageService } from '../services/storageService';
-import type { EnrichedBook, BookStatus, NewGlobalBook } from '../types/book.types';
+import type { EnrichedBook, NewGlobalBook } from '../types/globalBook';
+import type { PersonalBookStatus } from '../types/personalBook';
 
 const CURRENT_USER_ID = 'user_1';
 
@@ -40,12 +41,12 @@ export function useLibrary() {
     }
   };
 
-  const addToMyLibrary = async (bookId: string, status: BookStatus) => {
+  const addToMyLibrary = async (bookId: string, status: PersonalBookStatus) => {
     storageService.addPersonalBook(CURRENT_USER_ID, bookId, status);
     await loadBooks();
   };
 
-  const updateStatus = async (bookId: string, status: BookStatus) => {
+  const updateStatus = async (bookId: string, status: PersonalBookStatus) => {
     storageService.updatePersonalBook(CURRENT_USER_ID, bookId, { status });
     await loadBooks();
   };

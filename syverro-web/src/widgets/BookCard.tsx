@@ -1,20 +1,20 @@
 // src/widgets/BookCard.tsx
-import type { EnrichedBook } from '../types/book.types';
-import type { UserBook } from '../types/userBook';
+import type { EnrichedBook } from '../types/globalBook';
+import type { PersonalBook } from '../types/personalBook';
 import { BookOpen, CheckCircle, RotateCcw } from 'lucide-react';
 
 interface BookCardProps {
   book: EnrichedBook;
-  userBook?: UserBook | null;
+  personalBook?: PersonalBook | null;
   onClick?: () => void;
 }
 
-export default function BookCard({ book, userBook, onClick }: BookCardProps) {
-  const progress = userBook && book.totalPages > 0
-    ? Math.round((userBook.currentPage / book.totalPages) * 100)
+export default function BookCard({ book, personalBook, onClick }: BookCardProps) {
+  const progress = personalBook && book.totalPages > 0
+    ? Math.round((personalBook.currentPage / book.totalPages) * 100)
     : 0;
 
-  const rereadCount = userBook?.rereadCount || 0;
+  const rereadCount = personalBook?.rereadCount || 0;
 
   return (
     <div
@@ -109,7 +109,7 @@ export default function BookCard({ book, userBook, onClick }: BookCardProps) {
           {book.author}
         </div>
 
-        {userBook?.status === 'reading' && progress > 0 && (
+        {personalBook?.status === 'reading' && progress > 0 && (
           <div style={{ marginTop: '6px' }}>
             <div
               style={{
@@ -142,7 +142,7 @@ export default function BookCard({ book, userBook, onClick }: BookCardProps) {
           </div>
         )}
 
-        {userBook?.status === 'completed' && (
+        {personalBook?.status === 'completed' && (
           <div
             style={{
               display: 'flex',

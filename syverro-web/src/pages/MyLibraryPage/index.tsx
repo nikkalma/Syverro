@@ -3,21 +3,21 @@ import { useState, useMemo, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useLibrary } from '../../hooks/useLibrary';
 import { userBookService } from '../../services/userBookService';
-import { UserBookStatus } from '../../types/userBook';
+import { PersonalBookStatus } from '../../types/personalBook';
 import BookCard from '../../widgets/BookCard';
 import { getABTestVariant } from '../../utils/abTest';
 
 const CURRENT_USER_ID = 'user_1';
 
-const statusTabs: { key: UserBookStatus; label: string }[] = [
+const statusTabs: { key: PersonalBookStatus; label: string }[] = [
   { key: 'reading', label: 'Читаю' },
-  { key: 'shelf', label: 'На полке' },
+  { key: 'planned', label: 'На полке' },
   { key: 'completed', label: 'Завершено' },
-  { key: 'paused', label: 'Отложено' },
+  { key: 'postponed', label: 'Отложено' },
   { key: 'abandoned', label: 'Брошено' },
 ];
 
-const emptyStateMessages: Record<UserBookStatus, string> = {
+const emptyStateMessages: Record<PersonalBookStatus, string> = {
   reading: 'Вы ещё не читаете ни одной книги.',
   shelf: 'Добавьте книги на полку.',
   completed: 'Здесь появятся завершённые книги.',
@@ -28,7 +28,7 @@ const emptyStateMessages: Record<UserBookStatus, string> = {
 export default function MyLibraryPage() {
   const navigate = useNavigate();
   const { books, loading } = useLibrary();
-  const [activeStatus, setActiveStatus] = useState<UserBookStatus>('shelf');
+  const [activeStatus, setActiveStatus] = useState<PersonalBookStatus>('planned');
   const [randomBookId, setRandomBookId] = useState<string | null>(null);
 
   const userBooks = userBookService.getByUser(CURRENT_USER_ID);
@@ -43,7 +43,7 @@ export default function MyLibraryPage() {
 
   // Статистика
   const stats = useMemo(() => {
-    const counts: Record<UserBookStatus, number> = {
+    const counts: Record<PersonalBookStatus, number> = {
       reading: 0,
       shelf: 0,
       completed: 0,
@@ -52,7 +52,7 @@ export default function MyLibraryPage() {
     };
     userBooks.forEach((ub) => {
       if (ub.status in counts) {
-        counts[ub.status as UserBookStatus]++;
+        counts[ub.status as PersonalBookStatus]++;
       }
     });
     return counts;
@@ -62,7 +62,7 @@ export default function MyLibraryPage() {
   const shelfBooks = useMemo(() => {
     return books.filter((book) => {
       const ub = userBookMap.get(book.id);
-      return ub && ub.status === 'shelf';
+      return ub && ub.status === 'planned';
     });
   }, [books, userBookMap]);
 
@@ -82,7 +82,7 @@ export default function MyLibraryPage() {
     setRandomBookId(randomBook.id);
   }, [shelfBooks]);
 
-  const handleTabChange = (status: UserBookStatus) => {
+  const handleTabChange = (status: PersonalBookStatus) => {
     setActiveStatus(status);
     setRandomBookId(null);
   };

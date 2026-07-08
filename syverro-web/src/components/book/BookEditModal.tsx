@@ -1,6 +1,6 @@
 // src/components/book/BookEditModal.tsx
 import { useState } from 'react';
-import type { Book, BookStatus, ReadingFormat } from '../../types/book';
+import type { Book, BookStatus, ReadingFormat } from 'types/globalBook';
 
 interface BookEditModalProps {
   isOpen: boolean;

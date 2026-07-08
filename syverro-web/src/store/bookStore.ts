@@ -1,6 +1,6 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
-import { Book, BookStatus } from '../types/book.types'
+import { Book } from '../types/book'
 
 interface BookState {
   books: Book[]

@@ -1,7 +1,7 @@
 // src/pages/Profile/LibrarySection.tsx
 import { useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { EnrichedBook } from '../../types/book';
+import { EnrichedBook } from 'types/globalBook';
 import { userBookService } from '../../services/userBookService';
 
 const CURRENT_USER_ID = 'user_1';

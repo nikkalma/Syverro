@@ -1,7 +1,7 @@
 import { apiClient } from '../shared/api/client'
 
 export const booksApi = {
-  getUserBooks: async () => {
+  getPersonalBooks: async () => {
     const response = await apiClient.get('/books/')
     return response.data
   },

@@ -1,5 +1,6 @@
 import { apiClient } from '../../shared/api/client';
-import type { Book, BookCreate, UserBook, UserBookCreate, EnrichedBook } from './book';
+import type { GlobalBook, EnrichedBook } from '../../types/globalBook';
+import type { PersonalBook } from '../../types/personalBook';
 
 export const bookApi = {
   // ============================================
@@ -30,17 +31,17 @@ export const bookApi = {
   },
 
   // ============================================
-  // USER LIBRARY (UserBooks)
+  // USER LIBRARY (PersonalBooks)
   // ============================================
   
   // Получить все книги пользователя с прогрессом
-  getUserBooks: async (): Promise<UserBook[]> => {
+  getPersonalBooks: async (): Promise<PersonalBook[]> => {
     const response = await apiClient.get('/books/user-books/');
     return response.data;
   },
 
   // Добавить книгу в личную библиотеку
-  addToLibrary: async (data: UserBookCreate): Promise<UserBook> => {
+  addToLibrary: async (data: PersonalBookCreate): Promise<PersonalBook> => {
     const response = await apiClient.post('/books/user-books/', data);
     return response.data;
   },

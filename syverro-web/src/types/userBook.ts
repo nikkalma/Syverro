@@ -1,39 +1,105 @@
-// src/types/userBook.ts
-export type UserBookStatus =
+export type PersonalBookStatus =
   | 'reading'
-  | 'shelf'
+  | 'rereading'
   | 'completed'
-  | 'paused'
-  | 'abandoned'
-  | 'rereading'; 
+  | 'planned'
+  | 'postponed'
+  | 'abandoned';
 
-export interface UserBook {
+
+
+export type ReadingFormat =
+  | 'paper'
+  | 'ebook'
+  | 'audio';
+
+
+
+export interface Quote {
   id: string;
-  userId: string;
-  bookId: string;
-  status: UserBookStatus;
-  rereadCount: number;          // ← вместо isRereading
-  currentPage: number;
-  addedAt: string;
-  startedAt?: string;
-  completedAt?: string;
-  personalNote?: string;
+
+  text: string;
+
+  page?: number | null;
+
+  note?: string | null;
+
+  createdAt?: number;
 }
 
-export const statusLabels: Record<UserBookStatus, string> = {
+
+
+export interface PersonalBook {
+
+  id: string;
+
+  userId: string;
+
+  bookId: string;
+
+
+  status: PersonalBookStatus;
+
+
+  currentPage: number;
+
+
+  favorite: boolean;
+
+
+  notes: string;
+
+
+  quotes: Quote[];
+
+
+  review?: string | null;
+
+
+  readingFormat?: ReadingFormat;
+
+
+  startedAt?: string;
+
+
+  completedAt?: string;
+
+
+  rereadCount: number;
+}
+
+
+
+export const statusLabels: Record<PersonalBookStatus, string> = {
+
   reading: 'Читаю',
-  shelf: 'На полке',             // ← вместо planned
-  completed: 'Завершено',
-  paused: 'Отложено',
-  abandoned: 'Брошено',
+
   rereading: 'Перечитываю',
+
+  completed: 'Завершено',
+
+  planned: 'Хочу прочитать',
+
+  postponed: 'Отложено',
+
+  abandoned: 'Брошено',
+
 };
 
-export const statusOrder: UserBookStatus[] = [
+
+
+export const statusOrder: PersonalBookStatus[] = [
+
   'reading',
-  'shelf',
+
+  'planned',
+
   'completed',
-  'paused',
+
+  'postponed',
+
   'abandoned',
+
   'rereading',
+
 ];

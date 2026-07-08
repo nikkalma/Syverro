@@ -3,8 +3,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from app.core.deps import get_current_user, get_db
 from app.models.user import User
-from app.models.book import Book, UserBook
-from app.schemas.book import BookCreate, BookResponse, UserBookCreate, UserBookResponse
+from app.models.book import Book, PersonalBook
+from app.schemas.book import BookCreate, BookResponse, PersonalBookCreate, PersonalBookResponse
 from uuid import UUID
 
 router = APIRouter(prefix="/books", tags=["books"])
@@ -18,7 +18,7 @@ async def get_user_books(
     """Получить все книги пользователя"""
     # Получаем все книги, которые пользователь добавил в свою библиотеку
     result = await db.execute(
-        select(Book).join(UserBook).where(UserBook.user_id == current_user.id)
+        select(Book).join(PersonalBook).where(PersonalBook.user_id == current_user.id)
     )
     books = result.scalars().all()
     return books
@@ -42,7 +42,7 @@ async def create_book(
     
     if existing_book:
         # Книга уже есть в каталоге, просто добавляем связь с пользователем
-        user_book = UserBook(
+        user_book = PersonalBook(
             user_id=current_user.id,
             book_id=existing_book.id,
             status="planned"
@@ -57,7 +57,7 @@ async def create_book(
     await db.flush()  # Чтобы получить id новой книги
     
     # Добавляем связь с пользователем
-    user_book = UserBook(
+    user_book = PersonalBook(
         user_id=current_user.id,
         book_id=new_book.id,
         status="planned"
@@ -70,15 +70,15 @@ async def create_book(
     return new_book
 
 
-@router.get("/user-books/", response_model=list[UserBookResponse])
+@router.get("/user-books/", response_model=list[PersonalBookResponse])
 async def get_user_books_with_status(
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db)
 ):
     """Получить все книги пользователя со статусами"""
     result = await db.execute(
-        select(UserBook)
-        .where(UserBook.user_id == current_user.id)
+        select(PersonalBook)
+        .where(PersonalBook.user_id == current_user.id)
     )
     user_books = result.scalars().all()
     
@@ -98,9 +98,9 @@ async def update_book_status(
 ):
     """Обновить статус книги у пользователя"""
     result = await db.execute(
-        select(UserBook).where(
-            UserBook.user_id == current_user.id,
-            UserBook.book_id == book_id
+        select(PersonalBook).where(
+            PersonalBook.user_id == current_user.id,
+            PersonalBook.book_id == book_id
         )
     )
     user_book = result.scalar_one_or_none()

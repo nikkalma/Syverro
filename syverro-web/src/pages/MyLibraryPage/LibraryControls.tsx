@@ -1,11 +1,11 @@
-import { UserBookStatus, statusLabels, statusOrder } from '../../types/userBook';
+import { PersonalBookStatus, statusLabels, statusOrder } from '../../types/personalBook';
 import { getLocaleData, getBrowserLocale } from '../../locales';
 
 interface LibraryControlsProps {
   searchQuery: string;
   onSearchChange: (query: string) => void;
-  statusFilters: UserBookStatus[];
-  onStatusToggle: (status: UserBookStatus) => void;
+  statusFilters: PersonalBookStatus[];
+  onStatusToggle: (status: PersonalBookStatus) => void;
   genreFilters: string[];
   onGenreToggle: (genre: string) => void;
   allGenres: string[];

@@ -1,13 +1,13 @@
 // src/services/userBookService.ts
-import type { UserBook, UserBookStatus } from '../types/userBook';
+import type { PersonalBook, PersonalBookStatus } from '../types/personalBook';
 
 const STORAGE_KEY = 'syverro_user_books';
 
-const getAll = (): UserBook[] => {
+const getAll = (): PersonalBook[] => {
   const stored = localStorage.getItem(STORAGE_KEY);
   if (stored) {
     try {
-      return JSON.parse(stored) as UserBook[];
+      return JSON.parse(stored) as PersonalBook[];
     } catch {
       return [];
     }
@@ -15,22 +15,22 @@ const getAll = (): UserBook[] => {
   return [];
 };
 
-const saveAll = (books: UserBook[]): void => {
+const saveAll = (books: PersonalBook[]): void => {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(books));
 };
 
 export const userBookService = {
-  getByUser: (userId: string): UserBook[] => {
+  getByUser: (userId: string): PersonalBook[] => {
     return getAll().filter((b) => b.userId === userId);
   },
 
-  getByBook: (userId: string, bookId: string): UserBook | null => {
+  getByBook: (userId: string, bookId: string): PersonalBook | null => {
     return getAll().find((b) => b.userId === userId && b.bookId === bookId) || null;
   },
 
-  add: (userId: string, bookId: string, status: UserBookStatus): UserBook => {
+  add: (userId: string, bookId: string, status: PersonalBookStatus): PersonalBook => {
     const now = new Date().toISOString();
-    const newBook: UserBook = {
+    const newBook: PersonalBook = {
       id: `ub_${Date.now()}`,
       userId,
       bookId,
@@ -49,8 +49,8 @@ export const userBookService = {
   update: (
     userId: string,
     bookId: string,
-    updates: Partial<Omit<UserBook, 'id' | 'userId' | 'bookId' | 'addedAt'>>
-  ): UserBook | null => {
+    updates: Partial<Omit<PersonalBook, 'id' | 'userId' | 'bookId' | 'addedAt'>>
+  ): PersonalBook | null => {
     const all = getAll();
     const index = all.findIndex((b) => b.userId === userId && b.bookId === bookId);
     if (index === -1) return null;
@@ -90,7 +90,7 @@ export const userBookService = {
       }
     }
 
-    const updated: UserBook = {
+    const updated: PersonalBook = {
       ...current,
       ...updates,
       status,

@@ -1,5 +1,5 @@
 // src/types/bookEntry.ts
-export type BookStatus = 'planned' | 'reading' | 'completed' | 'paused' | 'dropped';
+export type BookStatus = 'planned' | 'reading' | 'completed' | 'postponed' | 'abandoned';
 
 export interface BookEntry {
   id: string;
@@ -18,10 +18,10 @@ export const statusLabels: Record<BookStatus, string> = {
   reading: 'Читаю',
   completed: 'Прочитано',
   paused: 'Отложено',
-  dropped: 'Брошено',
+  abandoned: 'Брошено',
 };
 
-export const statusOrder: BookStatus[] = ['reading', 'planned', 'completed', 'paused', 'dropped'];
+export const statusOrder: BookStatus[] = ['reading', 'planned', 'completed', 'postponed', 'abandoned'];
 
 // Цвета для статусов
 export const statusColors: Record<BookStatus, string> = {
@@ -29,5 +29,5 @@ export const statusColors: Record<BookStatus, string> = {
   planned: '#97A6BA',
   completed: '#4CAF50',
   paused: '#FFA726',
-  dropped: '#EF5350',
+  abandoned: '#EF5350',
 };

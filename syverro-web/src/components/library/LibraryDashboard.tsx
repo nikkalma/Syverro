@@ -10,8 +10,8 @@ export function LibraryDashboard({ entries }: LibraryDashboardProps) {
   const reading = entries.filter((e) => e.status === 'reading').length;
   const completed = entries.filter((e) => e.status === 'completed').length;
   const planned = entries.filter((e) => e.status === 'planned').length;
-  const paused = entries.filter((e) => e.status === 'paused').length;
-  const dropped = entries.filter((e) => e.status === 'dropped').length;
+  const paused = entries.filter((e) => e.status === 'postponed').length;
+  const abandoned = entries.filter((e) => e.status === 'abandoned').length;
 
   const stats = [
     { label: 'Всего книг', value: total, color: '#E6EDF3' },
@@ -19,7 +19,7 @@ export function LibraryDashboard({ entries }: LibraryDashboardProps) {
     { label: 'Прочитано', value: completed, color: '#4CAF50' },
     { label: 'Планирую', value: planned, color: '#97A6BA' },
     { label: 'Отложено', value: paused, color: '#FFA726' },
-    { label: 'Брошено', value: dropped, color: '#EF5350' },
+    { label: 'Брошено', value: abandoned, color: '#EF5350' },
   ];
 
   return (

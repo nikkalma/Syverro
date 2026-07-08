@@ -50,7 +50,7 @@ class BookResponse(BaseModel):
     last_read: Optional[str] = None
     created_at: int
 
-class UserBookResponse(BaseModel):
+class PersonalBookResponse(BaseModel):
     id: UUID
     user_id: UUID
     book_id: UUID

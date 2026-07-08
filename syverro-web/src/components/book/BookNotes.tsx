@@ -1,6 +1,6 @@
 // src/components/book/BookNotes.tsx
 import { useState } from 'react';
-import type { Book } from '../../types/book';
+import type { Book } from 'types/globalBook';
 
 interface BookNotesProps {
   book: Book;

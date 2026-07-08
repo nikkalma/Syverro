@@ -1,6 +1,6 @@
 // src/components/book/BookQuotes.tsx
 import { useState } from 'react';
-import type { Book } from '../../types/book';
+import type { Book } from 'types/globalBook';
 
 interface BookQuotesProps {
   book: Book;

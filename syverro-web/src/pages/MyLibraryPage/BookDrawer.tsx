@@ -1,14 +1,14 @@
 // src/pages/MyLibraryPage/BookDrawer.tsx
 import { useEffect, useState } from 'react';
-import { EnrichedBook } from '../../types/book';
-import { UserBook, UserBookStatus, statusLabels, statusOrder } from '../../types/userBook';
+import { EnrichedBook } from 'types/globalBook';
+import { PersonalBook, PersonalBookStatus, statusLabels, statusOrder } from '../../types/personalBook';
 import { useLibraryStore } from '../../store/libraryStore';
 
 interface BookDrawerProps {
   bookId: string | null;
   isOpen: boolean;
   onClose: () => void;
-  onStatusChange: (bookId: string, status: UserBookStatus) => void;
+  onStatusChange: (bookId: string, status: PersonalBookStatus) => void;
   onProgressChange: (bookId: string, progress: number) => void;
   onRemove: (bookId: string) => void;
 }
@@ -23,15 +23,15 @@ export default function BookDrawer({
 }: BookDrawerProps) {
   const { books, userBooks } = useLibraryStore();
   const [book, setBook] = useState<EnrichedBook | null>(null);
-  const [userBook, setUserBook] = useState<UserBook | null>(null);
+  const [userBook, setPersonalBook] = useState<PersonalBook | null>(null);
 
   useEffect(() => {
     if (!bookId) return;
     const found = books.find((b: EnrichedBook) => b.id === bookId);
     setBook(found || null);
     if (found) {
-      const ub = userBooks.find((u: UserBook) => u.bookId === bookId);
-      setUserBook(ub || null);
+      const ub = userBooks.find((u: PersonalBook) => u.bookId === bookId);
+      setPersonalBook(ub || null);
     }
   }, [bookId, books, userBooks]);
 
@@ -134,7 +134,7 @@ export default function BookDrawer({
             Статус
           </label>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
-            {statusOrder.map((status: UserBookStatus) => (
+            {statusOrder.map((status: PersonalBookStatus) => (
               <button
                 key={status}
                 onClick={() => onStatusChange(book.id, status)}

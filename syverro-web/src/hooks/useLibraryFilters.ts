@@ -1,7 +1,7 @@
 // src/hooks/useLibraryFilters.ts
 import { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import type { EnrichedBook } from '../types/book.types';
+import type { EnrichedBook } from '../types/globalBook';
 
 export function useLibraryFilters(books: EnrichedBook[]) {
   const [searchParams] = useSearchParams();

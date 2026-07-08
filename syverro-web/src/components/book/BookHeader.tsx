@@ -1,5 +1,5 @@
 // src/components/book/BookHeader.tsx
-import type { Book } from '../../types/book';
+import type { Book } from 'types/globalBook';
 
 interface BookHeaderProps {
   book: Book;

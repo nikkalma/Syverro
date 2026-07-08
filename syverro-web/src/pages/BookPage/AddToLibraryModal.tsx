@@ -1,12 +1,12 @@
 // src/pages/BookPage/AddToLibraryModal.tsx
 import { useState } from 'react';
-import { statusLabels, statusOrder, UserBookStatus } from '../../types/userBook';
+import { statusLabels, statusOrder, PersonalBookStatus } from '../../types/personalBook';
 
 interface AddToLibraryModalProps {
   isOpen: boolean;
   bookTitle: string;
   onClose: () => void;
-  onAdd: (status: UserBookStatus) => void;
+  onAdd: (status: PersonalBookStatus) => void;
 }
 
 export function AddToLibraryModal({
@@ -15,7 +15,7 @@ export function AddToLibraryModal({
   onClose,
   onAdd,
 }: AddToLibraryModalProps) {
-  const [selectedStatus, setSelectedStatus] = useState<UserBookStatus>('planned');
+  const [selectedStatus, setSelectedStatus] = useState<PersonalBookStatus>('planned');
 
   if (!isOpen) return null;
 

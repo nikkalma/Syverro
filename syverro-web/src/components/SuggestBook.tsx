@@ -61,7 +61,7 @@ export function SuggestBook() {
           type: 'fanfiction',
           source: 'suggestion',
           addedAt: now,
-          status: 'shelf', // или 'reading' — как хочешь
+          status: 'planned', // или 'reading' — как хочешь
         });
         localStorage.setItem(`syverro_personal_books_${userId}`, JSON.stringify(personalBooks));
       }

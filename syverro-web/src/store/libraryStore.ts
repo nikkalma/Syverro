@@ -1,22 +1,22 @@
 // src/store/libraryStore.ts
 import { create } from 'zustand';
-import { UserBook, UserBookStatus } from '../types/userBook';
-import { EnrichedBook } from '../types/book.types';
+import { PersonalBook, PersonalBookStatus } from '../types/personalBook';
+import { EnrichedBook } from '../types/globalBook';
 import { storageService } from '../services/storageService';
-import { userBookService } from '../services/userBookService';
+import { personalBookService } from '../services/personalBookService';
 
 const CURRENT_USER_ID = 'user_1';
 
 interface LibraryState {
   // Данные
   books: EnrichedBook[];
-  userBooks: UserBook[];
+  personalBooks: PersonalBook[];
   loading: boolean;
   error: string | null;
 
   // Фильтры
   searchQuery: string;
-  statusFilters: UserBookStatus[];
+  statusFilters: PersonalBookStatus[];
   genreFilters: string[];
   authorFilters: string[];
 
@@ -27,7 +27,7 @@ interface LibraryState {
   // Actions
   loadLibrary: () => Promise<void>;
   setSearchQuery: (query: string) => void;
-  toggleStatusFilter: (status: UserBookStatus) => void;
+  toggleStatusFilter: (status: PersonalBookStatus) => void;
   toggleGenreFilter: (genre: string) => void;
   toggleAuthorFilter: (author: string) => void;
   clearFilters: () => void;
@@ -35,7 +35,7 @@ interface LibraryState {
   selectBook: (bookId: string | null) => void;
 
   // CRUD (optimistic)
-  updateBookStatus: (bookId: string, status: UserBookStatus) => void;
+  updateBookStatus: (bookId: string, status: PersonalBookStatus) => void;
   updateProgress: (bookId: string, progress: number) => void;
   removeFromLibrary: (bookId: string) => void;
 }
@@ -43,7 +43,7 @@ interface LibraryState {
 export const useLibraryStore = create<LibraryState>((set, get) => ({
   // Начальное состояние
   books: [],
-  userBooks: [],
+  personalBooks: [],
   loading: false,
   error: null,
   searchQuery: '',
@@ -55,14 +55,14 @@ export const useLibraryStore = create<LibraryState>((set, get) => ({
 
   // Загрузка
   loadLibrary: async () => {
-    if (get().books.length > 0 && get().userBooks.length > 0) {
+    if (get().books.length > 0 && get().personalBooks.length > 0) {
       return;
     }
     set({ loading: true, error: null });
     try {
       const books = storageService.getEnrichedBooks(CURRENT_USER_ID);
-      const userBooks = userBookService.getByUser(CURRENT_USER_ID);
-      set({ books, userBooks, loading: false });
+      const personalBooks = personalBookService.getByUser(CURRENT_USER_ID);
+      set({ books, personalBooks, loading: false });
     } catch (error: any) {
       set({ error: error.message, loading: false });
     }
@@ -114,42 +114,42 @@ export const useLibraryStore = create<LibraryState>((set, get) => ({
 
   // CRUD с optimistic updates
   updateBookStatus: (bookId, status) => {
-    const prev = get().userBooks;
+    const prev = get().personalBooks;
 
     set({
-      userBooks: prev.map((ub) =>
+      personalBooks: prev.map((ub) =>
         ub.bookId === bookId ? { ...ub, status } : ub
       ),
     });
 
-    const updated = userBookService.update(CURRENT_USER_ID, bookId, { status });
+    const updated = personalBookService.update(CURRENT_USER_ID, bookId, { status });
     if (!updated) {
-      set({ userBooks: prev });
+      set({ personalBooks: prev });
     }
   },
 
   updateProgress: (bookId, progress) => {
-    const prev = get().userBooks;
+    const prev = get().personalBooks;
 
     set({
-      userBooks: prev.map((ub) =>
+      personalBooks: prev.map((ub) =>
         ub.bookId === bookId ? { ...ub, currentPage: progress } : ub
       ),
     });
 
-    const updated = userBookService.update(CURRENT_USER_ID, bookId, { currentPage: progress });
+    const updated = personalBookService.update(CURRENT_USER_ID, bookId, { currentPage: progress });
     if (!updated) {
-      set({ userBooks: prev });
+      set({ personalBooks: prev });
     }
   },
 
   removeFromLibrary: (bookId) => {
-    const prev = get().userBooks;
+    const prev = get().personalBooks;
 
     set({
-      userBooks: prev.filter((ub) => ub.bookId !== bookId),
+      personalBooks: prev.filter((ub) => ub.bookId !== bookId),
     });
 
-    userBookService.remove(CURRENT_USER_ID, bookId);
+    personalBookService.remove(CURRENT_USER_ID, bookId);
   },
 }));

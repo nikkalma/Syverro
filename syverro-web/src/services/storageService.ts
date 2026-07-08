@@ -6,7 +6,7 @@ import type {
   NewGlobalBook,
   BookStatus,
   EditProposal,
-} from '../types/book.types';
+} from '../types/book';
 import type { ReaderProfile } from '../types/reader';
 import initialBooksData from '../data/books.json';
 
@@ -148,7 +148,7 @@ export const storageService = {
   getPersonalBook: (userId: string, bookId: string): PersonalBook | null =>
     getPersonalBook(userId, bookId),
 
-  addPersonalBook: (userId: string, bookId: string, status: BookStatus = 'want_to_read'): PersonalBook => {
+  addPersonalBook: (userId: string, bookId: string, status: BookStatus = 'planned'): PersonalBook => {
     const now = Date.now();
     const personal: PersonalBook = {
       userId,

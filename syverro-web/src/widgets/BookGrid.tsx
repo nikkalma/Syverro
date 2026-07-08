@@ -1,16 +1,16 @@
 // src/widgets/BookGrid.tsx
 import BookCard from './BookCard';
-import type { EnrichedBook } from '../types/book.types';
-import type { UserBook } from '../types/userBook';
+import type { EnrichedBook } from '../types/globalBook';
+import type { PersonalBook } from '../types/personalBook';
 
 interface BookGridProps {
   books: EnrichedBook[];
-  userBooks?: UserBook[];
+  personalBooks?: PersonalBook[];
   onBookClick?: (bookId: string) => void;
 }
 
-export default function BookGrid({ books, userBooks = [], onBookClick }: BookGridProps) {
-  const userBookMap = new Map(userBooks.map((ub) => [ub.bookId, ub]));
+export default function BookGrid({ books, personalBooks = [], onBookClick }: BookGridProps) {
+  const personalBookMap = new Map(personalBooks.map((ub) => [ub.bookId, ub]));
 
   if (books.length === 0) {
     return (
@@ -33,7 +33,7 @@ export default function BookGrid({ books, userBooks = [], onBookClick }: BookGri
         <BookCard
           key={book.id}
           book={book}
-          userBook={userBookMap.get(book.id)}
+          personalBook={personalBookMap.get(book.id)}
           onClick={() => onBookClick?.(book.id)}
         />
       ))}

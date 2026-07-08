@@ -1,5 +1,5 @@
 // src/components/book/BookProgress.tsx
-import type { Book } from '../../types/book';
+import type { Book } from 'types/globalBook';
 
 interface BookProgressProps {
   book: Book;

@@ -20,7 +20,7 @@ interface AuthState {
   checkAuth: () => void;
 }
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://77.233.220.197:8000';
+const API_URL = import.meta.env.VITE_API_URL || 'https://api.syverro.com';
 
 export const useAuthStore = create<AuthState>((set, get) => ({
   user: JSON.parse(localStorage.getItem('user') || 'null'),

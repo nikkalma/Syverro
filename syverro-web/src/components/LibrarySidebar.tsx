@@ -1,6 +1,6 @@
 // src/components/LibrarySidebar.tsx
 import { useState } from 'react';
-import type { EnrichedBook } from '../types/book.types';
+import type { EnrichedBook } from '../types/globalBook';
 import { getABTestVariant } from '../utils/abTest';
 import { Search, Sparkles, Shuffle, BookOpen, Globe2, Clock, Tag, FolderOpen } from 'lucide-react';
 

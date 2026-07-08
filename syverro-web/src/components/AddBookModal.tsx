@@ -1,6 +1,6 @@
 // src/components/AddBookModal.tsx
 import { useState } from 'react';
-import type { BookStatus } from '../types/book.types';
+import type { BookStatus } from '../types/book';
 
 interface AddBookModalProps {
   isOpen: boolean;
@@ -12,7 +12,7 @@ interface AddBookModalProps {
 export default function AddBookModal({ isOpen, onClose, onSave, isLoading }: AddBookModalProps) {
   const [title, setTitle] = useState('');
   const [author, setAuthor] = useState('');
-  const [status, setStatus] = useState<BookStatus>('want_to_read');
+  const [status, setStatus] = useState<BookStatus>('planned');
 
   if (!isOpen) return null;
 
@@ -22,7 +22,7 @@ export default function AddBookModal({ isOpen, onClose, onSave, isLoading }: Add
     onSave({ title: title.trim(), author: author.trim(), status });
     setTitle('');
     setAuthor('');
-    setStatus('want_to_read');
+    setStatus('planned');
   };
 
   return (
@@ -60,7 +60,7 @@ export default function AddBookModal({ isOpen, onClose, onSave, isLoading }: Add
                 onChange={(e) => setStatus(e.target.value as BookStatus)}
                 className="w-full px-4 py-2.5 bg-[#0A1118] border border-[#2A4B60] rounded-xl text-[#E6EDF3] focus:outline-none focus:border-[#5B86A1] transition appearance-none cursor-pointer"
               >
-                <option value="want_to_read">📌 Хочу прочитать</option>
+                <option value="planned">📌 Хочу прочитать</option>
                 <option value="reading">📖 Читаю</option>
                 <option value="completed">✅ Прочитано</option>
                 <option value="postponed">⏸️ Отложено</option>

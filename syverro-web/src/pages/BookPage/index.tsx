@@ -4,10 +4,10 @@ import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useLibrary } from '../../hooks/useLibrary';
 import { storageService } from '../../services/storageService';
-import { userBookService } from '../../services/userBookService';
+import { personalBookService } from '../../services/personalBookService';
 import { EditModal } from './EditModal';
 import { AddToLibraryModal } from './AddToLibraryModal';
-import type { UserBookStatus } from '../../types/userBook';
+import type { PersonalBookStatus } from '../../types/personalBook';
 
 // ===== ОФФЛАЙН-СЛОЙ =====
 import { useOffline } from '@/lib/offline';
@@ -25,7 +25,7 @@ export default function BookPage() {
   const { trackReadingStart, trackReadingFinish, trackNote } = useOffline();
 
   const book = books.find((b) => b.id === id);
-  const isInLibrary = book ? !!userBookService.getByBook(CURRENT_USER_ID, book.id) : false;
+  const isInLibrary = book ? !!personalBookService.getByBook(CURRENT_USER_ID, book.id) : false;
 
   if (!book) {
     return (
@@ -57,8 +57,8 @@ export default function BookPage() {
     setIsEditModalOpen(false);
   };
 
-  const handleAddToLibrary = (status: UserBookStatus) => {
-    userBookService.add(CURRENT_USER_ID, book.id, status);
+  const handleAddToLibrary = (status: PersonalBookStatus) => {
+    personalBookService.add(CURRENT_USER_ID, book.id, status);
     setIsAddModalOpen(false);
     loadBooks();
 
@@ -74,16 +74,16 @@ export default function BookPage() {
 
   const handleRemoveFromLibrary = () => {
     // ===== ТРЕКИНГ: ЗАВЕРШЕНИЕ ЧТЕНИЯ =====
-    if (userBook?.status === 'reading') {
+    if (personalBook?.status === 'reading') {
       trackReadingFinish(book.id, 0);
     }
     // ======================================
 
-    userBookService.remove(CURRENT_USER_ID, book.id);
+    personalBookService.remove(CURRENT_USER_ID, book.id);
     loadBooks();
   };
 
-  const userBook = userBookService.getByBook(CURRENT_USER_ID, book.id);
+  const personalBook = personalBookService.getByBook(CURRENT_USER_ID, book.id);
 
   const handleTagClick = (type: 'genre' | 'theme', value: string) => {
     navigate(`/?${type}=${encodeURIComponent(value)}`);
@@ -358,34 +358,34 @@ export default function BookPage() {
                 <div>
                   <div style={{ fontSize: '11px', color: '#5B86A1' }}>Статус</div>
                   <div style={{ fontSize: '14px', color: '#E6EDF3' }}>
-                    {userBook?.status === 'reading' && '📖 Читаю'}
-                    {userBook?.status === 'shelf' && '📚 На полке'}
-                    {userBook?.status === 'completed' && '✅ Завершено'}
-                    {userBook?.status === 'paused' && '⏸ Отложено'}
-                    {userBook?.status === 'abandoned' && '❌ Брошено'}
+                    {personalBook?.status === 'reading' && '📖 Читаю'}
+                    {personalBook?.status === 'planned' && '📚 На полке'}
+                    {personalBook?.status === 'completed' && '✅ Завершено'}
+                    {personalBook?.status === 'postponed' && '⏸ Отложено'}
+                    {personalBook?.status === 'abandoned' && '❌ Брошено'}
                   </div>
                 </div>
-                {userBook?.startedAt && (
+                {personalBook?.startedAt && (
                   <div>
                     <div style={{ fontSize: '11px', color: '#5B86A1' }}>Начато</div>
                     <div style={{ fontSize: '14px', color: '#E6EDF3' }}>
-                      {new Date(userBook.startedAt).toLocaleDateString('ru-RU')}
+                      {new Date(personalBook.startedAt).toLocaleDateString('ru-RU')}
                     </div>
                   </div>
                 )}
-                {userBook?.completedAt && (
+                {personalBook?.completedAt && (
                   <div>
                     <div style={{ fontSize: '11px', color: '#5B86A1' }}>Завершено</div>
                     <div style={{ fontSize: '14px', color: '#E6EDF3' }}>
-                      {new Date(userBook.completedAt).toLocaleDateString('ru-RU')}
+                      {new Date(personalBook.completedAt).toLocaleDateString('ru-RU')}
                     </div>
                   </div>
                 )}
-                {userBook?.rereadCount !== undefined && userBook.rereadCount > 0 && (
+                {personalBook?.rereadCount !== undefined && personalBook.rereadCount > 0 && (
                   <div>
                     <div style={{ fontSize: '11px', color: '#5B86A1' }}>Прочтений</div>
                     <div style={{ fontSize: '14px', color: '#E6EDF3' }}>
-                      {userBook.rereadCount}
+                      {personalBook.rereadCount}
                     </div>
                   </div>
                 )}

@@ -1,6 +1,6 @@
 // src/pages/BookPage/EditModal.tsx
 import { useState } from 'react';
-import { EnrichedBook } from '../../types/book';
+import { EnrichedBook } from 'types/globalBook';
 
 interface EditModalProps {
   isOpen: boolean;

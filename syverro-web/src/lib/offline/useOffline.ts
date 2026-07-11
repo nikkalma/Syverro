@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { addLocalEvent, trackReadingStart, trackReadingFinish, trackNote, trackMood } from './events'
 import { syncLocalEvents, scheduleSync } from './sync'
-import { getLocalEvents, getUnsyncedEvents, getLastSyncTime } from './store'
+import { getLocalEvents, getLastSyncTime } from './store'
 import { LocalEventType, LocalEvent, SyncResponse } from './types'
 
 interface UseOfflineReturn {

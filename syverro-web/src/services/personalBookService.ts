@@ -1,6 +1,11 @@
-import type { PersonalBook, PersonalBookStatus } from '../types/personalBook';
+import type {
+  PersonalBook,
+  PersonalBookStatus,
+} from '../types/personalBook';
+
 
 const STORAGE_KEY = 'personal-books';
+
 
 const getAll = (): PersonalBook[] => {
   const stored = localStorage.getItem(STORAGE_KEY);
@@ -17,14 +22,20 @@ const getAll = (): PersonalBook[] => {
 };
 
 
-const saveAll = (books: PersonalBook[]) => {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(books));
+const saveAll = (books: PersonalBook[]): void => {
+  localStorage.setItem(
+    STORAGE_KEY,
+    JSON.stringify(books)
+  );
 };
 
 
 export const personalBookService = {
 
-  getByUser: (userId: string): PersonalBook[] => {
+  getByUser: (
+    userId: string
+  ): PersonalBook[] => {
+
     return getAll().filter(
       (book) => book.userId === userId
     );
@@ -41,26 +52,58 @@ export const personalBookService = {
         (book) =>
           book.userId === userId &&
           book.bookId === bookId
-      ) || null
+      ) ?? null
     );
-
   },
 
 
   add: (
     userId: string,
     bookId: string,
-    status: PersonalBookStatus
+    status: PersonalBookStatus = 'planned'
   ): PersonalBook => {
 
     const books = getAll();
 
+
+    const existing = books.find(
+      (book) =>
+        book.userId === userId &&
+        book.bookId === bookId
+    );
+
+
+    if (existing) {
+      return existing;
+    }
+
+
+    const now = Date.now();
+
+
     const newBook: PersonalBook = {
       userId,
+
       bookId,
+
       status,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
+
+
+      currentPage: 0,
+
+      favorite: false,
+
+
+      notes: '',
+
+      quotes: [],
+
+      review: '',
+
+
+      createdAt: now,
+
+      updatedAt: now,
     };
 
 
@@ -68,6 +111,7 @@ export const personalBookService = {
       ...books,
       newBook,
     ]);
+
 
     return newBook;
   },
@@ -81,6 +125,7 @@ export const personalBookService = {
 
     const books = getAll();
 
+
     const index = books.findIndex(
       (book) =>
         book.userId === userId &&
@@ -93,16 +138,29 @@ export const personalBookService = {
     }
 
 
-    const updated = {
-      ...books[index],
+    const current = books[index];
+
+
+    const updated: PersonalBook = {
+      ...current,
+
       ...updates,
-      updatedAt: new Date().toISOString(),
+
+      // запрещаем изменение идентификаторов связи
+      userId: current.userId,
+
+      bookId: current.bookId,
+
+
+      updatedAt: Date.now(),
     };
 
 
     books[index] = updated;
 
+
     saveAll(books);
+
 
     return updated;
   },
@@ -111,9 +169,10 @@ export const personalBookService = {
   remove: (
     userId: string,
     bookId: string
-  ) => {
+  ): void => {
 
     const books = getAll();
+
 
     saveAll(
       books.filter(
@@ -124,7 +183,16 @@ export const personalBookService = {
           )
       )
     );
+  },
 
+
+  getAll: (): PersonalBook[] => {
+    return getAll();
+  },
+
+
+  clear: (): void => {
+    localStorage.removeItem(STORAGE_KEY);
   },
 
 };

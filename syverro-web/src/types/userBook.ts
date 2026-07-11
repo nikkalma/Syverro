@@ -70,7 +70,7 @@ export interface PersonalBook {
 
 
 
-export const statusLabels: Record<PersonalBookStatus, string> = {
+export const personalBookStatusLabels: Record<PersonalBookStatus, string> = {
 
   reading: 'Читаю',
 
@@ -88,7 +88,7 @@ export const statusLabels: Record<PersonalBookStatus, string> = {
 
 
 
-export const statusOrder: PersonalBookStatus[] = [
+export const personalBookStatusOrder: PersonalBookStatus[] = [
 
   'reading',
 

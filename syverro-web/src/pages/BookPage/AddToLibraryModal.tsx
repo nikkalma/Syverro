@@ -1,6 +1,6 @@
 // src/pages/BookPage/AddToLibraryModal.tsx
 import { useState } from 'react';
-import { statusLabels, statusOrder, PersonalBookStatus } from '../../types/personalBook';
+import { personalBookStatusLabels, personalBookStatusOrder, PersonalBookStatus } from '../../types/personalBook';
 
 interface AddToLibraryModalProps {
   isOpen: boolean;
@@ -53,7 +53,7 @@ export function AddToLibraryModal({
         <p style={{ color: '#97A6BA', fontSize: '14px', marginBottom: '20px' }}>«{bookTitle}»</p>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-          {statusOrder.map((status) => (
+          {personalBookStatusOrder.map((status) => (
             <button
               key={status}
               onClick={() => setSelectedStatus(status)}
@@ -70,7 +70,7 @@ export function AddToLibraryModal({
                 transition: 'all 0.2s',
               }}
             >
-              {statusLabels[status]}
+              {personalBookStatusLabels[status]}
             </button>
           ))}
         </div>

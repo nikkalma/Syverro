@@ -1,7 +1,7 @@
 // src/pages/MyLibraryPage/LibraryGrid.tsx
-import { EnrichedBook } from 'types/globalBook';
+import { EnrichedBook } from '@/types/globalBook';
 import { PersonalBook } from '../../types/personalBook';
-import { statusLabels, PersonalBookStatus } from '../../types/personalBook';
+import { personalBookStatusLabels, PersonalBookStatus } from '../../types/personalBook';
 import { useLibraryStore } from '../../store/libraryStore';
 
 interface LibraryGridProps {
@@ -10,8 +10,8 @@ interface LibraryGridProps {
 }
 
 export default function LibraryGrid({ books, onBookClick }: LibraryGridProps) {
-  const userBooks = useLibraryStore((state: { userBooks: PersonalBook[] }) => state.userBooks);
-  const userBookMap = new Map(userBooks.map((ub: PersonalBook) => [ub.bookId, ub]));
+  const personalBooks = useLibraryStore((state: { personalBooks: PersonalBook[] }) => state.personalBooks);
+  const userBookMap = new Map(personalBooks.map((ub: PersonalBook) => [ub.bookId, ub]));
 
   return (
     <div
@@ -88,7 +88,7 @@ export default function LibraryGrid({ books, onBookClick }: LibraryGridProps) {
                   border: '1px solid rgba(255,255,255,0.06)',
                 }}
               >
-                {statusLabels[userBook.status as PersonalBookStatus]}
+                {personalBookStatusLabels[userBook.status as PersonalBookStatus]}
               </span>
 
               {userBook.status === 'reading' && progress > 0 && (

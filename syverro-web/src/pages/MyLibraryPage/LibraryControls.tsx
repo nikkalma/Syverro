@@ -1,4 +1,4 @@
-import { PersonalBookStatus, statusLabels, statusOrder } from '../../types/personalBook';
+import { PersonalBookStatus, personalBookStatusLabels, personalBookStatusOrder } from '../../types/personalBook';
 import { getLocaleData, getBrowserLocale } from '../../locales';
 
 interface LibraryControlsProps {
@@ -95,7 +95,7 @@ export default function LibraryControls({
           border: '1px solid rgba(255,255,255,0.04)',
         }}
       >
-        {statusOrder.map((status) => (
+        {personalBookStatusOrder.map((status) => (
           <button
             key={status}
             onClick={() => onStatusToggle(status)}
@@ -114,7 +114,7 @@ export default function LibraryControls({
               fontFamily: 'Inter, sans-serif',
             }}
           >
-            {statusLabels[status]}
+            {personalBookStatusLabels[status]}
           </button>
         ))}
 

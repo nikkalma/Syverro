@@ -1,7 +1,7 @@
 // src/pages/MyLibraryPage/LibraryList.tsx
-import { EnrichedBook } from 'types/globalBook';
+import { EnrichedBook } from '@/types/globalBook';
 import { PersonalBook } from '../../types/personalBook';
-import { statusLabels, PersonalBookStatus } from '../../types/personalBook';
+import { personalBookStatusLabels, PersonalBookStatus } from '../../types/personalBook';
 import { useLibraryStore } from '../../store/libraryStore';
 
 interface LibraryListProps {
@@ -10,8 +10,8 @@ interface LibraryListProps {
 }
 
 export default function LibraryList({ books, onBookClick }: LibraryListProps) {
-  const userBooks = useLibraryStore((state: { userBooks: PersonalBook[] }) => state.userBooks);
-  const userBookMap = new Map(userBooks.map((ub: PersonalBook) => [ub.bookId, ub]));
+  const personalBooks = useLibraryStore((state: { personalBooks: PersonalBook[] }) => state.personalBooks);
+  const userBookMap = new Map(personalBooks.map((ub: PersonalBook) => [ub.bookId, ub]));
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
@@ -100,7 +100,7 @@ export default function LibraryList({ books, onBookClick }: LibraryListProps) {
                 flexShrink: 0,
               }}
             >
-              {statusLabels[userBook.status as PersonalBookStatus]}
+              {personalBookStatusLabels[userBook.status as PersonalBookStatus]}
             </span>
 
             {userBook.status === 'reading' && progress > 0 && (

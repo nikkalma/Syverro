@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useAdminStore } from '../../../store/adminStore';
-import { AdminBook, AdminBookFilters, AdminBookCreate, AdminBookUpdate } from '../../../types/admin';
+import { AdminBook, AdminBookCreate, AdminBookUpdate } from '../../../types/admin';
 import BooksTable from './BooksTable';
 import BooksFilters from './BooksFilters';
 import BookModal from './BookModal';

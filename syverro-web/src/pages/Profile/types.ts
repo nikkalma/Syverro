@@ -16,7 +16,7 @@ export const statusConfig: Record<StatusKey, { label: string; icon: string; colo
   abandoned: { label: 'Брошено', icon: '❌', color: '#EF5350' },
 };
 
-export const statusOrder: StatusKey[] = [
+export const personalBookStatusOrder: StatusKey[] = [
   'reading',
   'rereading',
   'planned',

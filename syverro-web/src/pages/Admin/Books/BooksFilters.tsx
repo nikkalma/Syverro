@@ -1,53 +1,101 @@
-// src/pages/Admin/Books/BooksFilters.tsx
-
 import { useState, useEffect } from 'react';
 import { useAdminStore } from '../../../store/adminStore';
+
 
 interface BooksFiltersProps {
   onFilterChange: () => void;
 }
 
+
 export default function BooksFilters({ onFilterChange }: BooksFiltersProps) {
-  const { searchQuery, setSearchQuery, filters, setFilters, clearFilters } = useAdminStore();
-  
+  const {
+    searchQuery,
+    setSearchQuery,
+    booksFilters,
+    setBooksFilters,
+    clearFilters,
+  } = useAdminStore();
+
+
   const [localSearch, setLocalSearch] = useState(searchQuery);
-  const [statusFilter, setStatusFilter] = useState<string>(filters.is_published || 'all');
-  const [genreFilter, setGenreFilter] = useState<string>(filters.genre || '');
+
+  const [statusFilter, setStatusFilter] = useState<string>(
+    booksFilters.is_published === true
+      ? 'published'
+      : booksFilters.is_published === false
+        ? 'draft'
+        : 'all'
+  );
+
+  const [genreFilter, setGenreFilter] = useState<string>(
+    booksFilters.genre || ''
+  );
+
+
 
   // ===== ПРИМЕНЕНИЕ ФИЛЬТРОВ =====
+
   const applyFilters = () => {
-    const newFilters: Record<string, any> = {};
-    
-    if (statusFilter !== 'all') newFilters.is_published = statusFilter === 'published';
-    if (genreFilter) newFilters.genre = genreFilter;
-    
-    setFilters(newFilters);
+    const newFilters = {
+      ...(statusFilter !== 'all'
+        ? {
+            is_published: statusFilter === 'published',
+          }
+        : {}),
+
+      ...(genreFilter
+        ? {
+            genre: genreFilter,
+          }
+        : {}),
+    };
+
+
+    setBooksFilters(newFilters);
+
     setSearchQuery(localSearch);
+
     onFilterChange();
   };
 
+
+
   // ===== СБРОС =====
+
   const handleClear = () => {
     setLocalSearch('');
     setStatusFilter('all');
     setGenreFilter('');
+
     clearFilters();
+
     onFilterChange();
   };
 
-  // ===== ПРИМЕНЯЕМ ФИЛЬТРЫ ПРИ ИЗМЕНЕНИИ =====
+
+
+  // ===== ПОИСК =====
+
   useEffect(() => {
     const timer = setTimeout(() => {
       if (localSearch !== searchQuery) {
         applyFilters();
       }
     }, 400);
+
+
     return () => clearTimeout(timer);
   }, [localSearch]);
+
+
+
+  // ===== ФИЛЬТРЫ =====
 
   useEffect(() => {
     applyFilters();
   }, [statusFilter, genreFilter]);
+
+
 
   return (
     <div style={{
@@ -61,7 +109,7 @@ export default function BooksFilters({ onFilterChange }: BooksFiltersProps) {
       border: '1px solid rgba(255,255,255,0.06)',
       alignItems: 'center',
     }}>
-      {/* ===== ПОИСК ===== */}
+
       <div style={{ flex: 1, minWidth: '200px' }}>
         <input
           type="text"
@@ -78,30 +126,15 @@ export default function BooksFilters({ onFilterChange }: BooksFiltersProps) {
             fontSize: '14px',
             fontFamily: 'Inter, sans-serif',
             outline: 'none',
-            transition: 'border-color 0.2s',
           }}
-          onFocus={(e) => (e.currentTarget.style.borderColor = '#5B86A1')}
-          onBlur={(e) => (e.currentTarget.style.borderColor = 'rgba(255,255,255,0.08)')}
         />
       </div>
 
-      {/* ===== ФИЛЬТР ПО СТАТУСУ ===== */}
+
       <div style={{ minWidth: '140px' }}>
         <select
           value={statusFilter}
           onChange={(e) => setStatusFilter(e.target.value)}
-          style={{
-            width: '100%',
-            padding: '8px 14px',
-            background: 'rgba(255,255,255,0.05)',
-            border: '1px solid rgba(255,255,255,0.08)',
-            borderRadius: '8px',
-            color: '#E6EDF3',
-            fontSize: '14px',
-            fontFamily: 'Inter, sans-serif',
-            outline: 'none',
-            cursor: 'pointer',
-          }}
         >
           <option value="all">Все статусы</option>
           <option value="published">📗 Опубликованные</option>
@@ -109,7 +142,7 @@ export default function BooksFilters({ onFilterChange }: BooksFiltersProps) {
         </select>
       </div>
 
-      {/* ===== ФИЛЬТР ПО ЖАНРУ ===== */}
+
       <div style={{ minWidth: '140px' }}>
         <input
           type="text"
@@ -130,37 +163,26 @@ export default function BooksFilters({ onFilterChange }: BooksFiltersProps) {
         />
       </div>
 
-      {/* ===== КНОПКИ ===== */}
-      <button
-        onClick={handleClear}
-        style={{
-          padding: '8px 16px',
-          background: 'rgba(255,255,255,0.05)',
-          border: '1px solid rgba(255,255,255,0.08)',
-          borderRadius: '8px',
-          color: '#97A6BA',
-          fontSize: '13px',
-          cursor: 'pointer',
-          fontFamily: 'Inter, sans-serif',
-          transition: 'all 0.2s',
-          whiteSpace: 'nowrap',
-        }}
-        onMouseEnter={(e) => {
-          e.currentTarget.style.background = 'rgba(255,255,255,0.1)';
-          e.currentTarget.style.color = '#E6EDF3';
-        }}
-        onMouseLeave={(e) => {
-          e.currentTarget.style.background = 'rgba(255,255,255,0.05)';
-          e.currentTarget.style.color = '#97A6BA';
-        }}
-      >
+
+      <button onClick={handleClear}>
         ✕ Очистить
       </button>
 
-      {/* ===== ИНФО ===== */}
-      <div style={{ color: '#5B86A1', fontSize: '13px', marginLeft: 'auto' }}>
-        {statusFilter !== 'all' || genreFilter || localSearch ? '🔍 Фильтры активны' : '📋 Все книги'}
+
+      <div style={{
+        color: '#5B86A1',
+        fontSize: '13px',
+        marginLeft: 'auto',
+      }}>
+        {
+          statusFilter !== 'all' ||
+          genreFilter ||
+          localSearch
+            ? '🔍 Фильтры активны'
+            : '📋 Все книги'
+        }
       </div>
+
     </div>
   );
 }

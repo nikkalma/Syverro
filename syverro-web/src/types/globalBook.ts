@@ -3,13 +3,19 @@ export interface GlobalBook {
 
   title: string;
 
+  subtitle?: string;
+
   author: string;
+
+  authors?: string[];
 
   cover: string | null;
 
   genres: string[];
 
-  totalPages: number;
+  subgenres?: string[];
+
+  originalLanguage?: string;
 
   authorCountry?: string | null;
 
@@ -17,27 +23,31 @@ export interface GlobalBook {
 
   description?: string | null;
 
+  totalPages: number;
 
-  // аналитические поля на будущее
+  averageRating?: number | null;
+
   themes?: string[];
 
   motifs?: string[];
 
+  mood?: string[];
+
+  vibe?: string[];
 
   series?: string | null;
 
   seriesPosition?: number | null;
 
-
-  // модерация
-  moderationStatus?: 'pending' | 'approved' | 'rejected';
+  moderationStatus?: 
+    | 'pending'
+    | 'approved'
+    | 'rejected';
 
   moderationReason?: string;
 
-
   createdAt: number;
 }
-
 
 
 export type NewGlobalBook = Omit<
@@ -46,7 +56,11 @@ export type NewGlobalBook = Omit<
 >;
 
 
-
 export interface EnrichedBook extends GlobalBook {
-personal: import('./personalBook').PersonalBook | null;
+  personal: import('./personalBook').PersonalBook | null;
 }
+
+
+export type Book = GlobalBook;
+
+export type BookCreate = NewGlobalBook;

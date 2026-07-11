@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useAdminStore } from '../../../store/adminStore';
-import { AdminLog, AdminLogFilters, LOG_TYPE_LABELS } from '../../../types/admin';
+import { AdminLog } from '../../../types/admin';
 import LogsTable from './LogsTable';
 import LogsFilters from './LogsFilters';
 

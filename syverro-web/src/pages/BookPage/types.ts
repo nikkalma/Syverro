@@ -1,5 +1,5 @@
 // src/pages/BookPage/types.ts
-import { EnrichedBook } from 'types/globalBook';
+import { EnrichedBook } from '@/types/globalBook';
 
 export interface BookPageProps {
   book: EnrichedBook;

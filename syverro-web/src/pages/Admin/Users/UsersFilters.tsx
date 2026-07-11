@@ -1,54 +1,96 @@
-// src/pages/Admin/Users/UsersFilters.tsx
+ // src/pages/Admin/Users/UsersFilters.tsx
 
 import { useState, useEffect } from 'react';
 import { useAdminStore } from '../../../store/adminStore';
-import { AdminRole, ALL_ROLES, ROLE_LABELS } from '../../../types/admin';
+import { ALL_ROLES, ROLE_LABELS } from '../../../types/admin';
+
 
 interface UsersFiltersProps {
   onFilterChange: () => void;
 }
 
+
 export default function UsersFilters({ onFilterChange }: UsersFiltersProps) {
-  const { searchQuery, setSearchQuery, filters, setFilters, clearFilters } = useAdminStore();
-  
+  const {
+    searchQuery,
+    setSearchQuery,
+    usersFilters,
+    setUsersFilters,
+    clearFilters,
+  } = useAdminStore();
+
+
   const [localSearch, setLocalSearch] = useState(searchQuery);
-  const [roleFilter, setRoleFilter] = useState<string>(filters.role || 'all');
-  const [statusFilter, setStatusFilter] = useState<string>(filters.is_active || 'all');
+
+  const [roleFilter, setRoleFilter] = useState<string>(
+    usersFilters.role || 'all'
+  );
+
+  const [statusFilter, setStatusFilter] = useState<string>(
+    usersFilters.is_active === true
+      ? 'active'
+      : usersFilters.is_active === false
+        ? 'blocked'
+        : 'all'
+  );
+
 
   // ===== ПРИМЕНЕНИЕ ФИЛЬТРОВ =====
+
   const applyFilters = () => {
-    const newFilters: Record<string, any> = {};
-    
-    if (roleFilter !== 'all') newFilters.role = roleFilter;
-    if (statusFilter !== 'all') newFilters.is_active = statusFilter === 'active';
-    
-    setFilters(newFilters);
+    const newFilters = {
+      ...(roleFilter !== 'all'
+        ? { role: roleFilter as typeof usersFilters.role }
+        : {}),
+
+      ...(statusFilter !== 'all'
+        ? { is_active: statusFilter === 'active' }
+        : {}),
+    };
+
+
+    setUsersFilters(newFilters);
+
     setSearchQuery(localSearch);
+
     onFilterChange();
   };
 
+
   // ===== СБРОС =====
+
   const handleClear = () => {
     setLocalSearch('');
     setRoleFilter('all');
     setStatusFilter('all');
+
     clearFilters();
+
     onFilterChange();
   };
 
-  // ===== ПРИМЕНЯЕМ ФИЛЬТРЫ ПРИ ИЗМЕНЕНИИ =====
+
+  // ===== ПОИСК =====
+
   useEffect(() => {
     const timer = setTimeout(() => {
       if (localSearch !== searchQuery) {
         applyFilters();
       }
     }, 400);
+
+
     return () => clearTimeout(timer);
   }, [localSearch]);
+
+
+  // ===== ФИЛЬТРЫ =====
 
   useEffect(() => {
     applyFilters();
   }, [roleFilter, statusFilter]);
+
+
 
   return (
     <div style={{
@@ -62,7 +104,9 @@ export default function UsersFilters({ onFilterChange }: UsersFiltersProps) {
       border: '1px solid rgba(255,255,255,0.06)',
       alignItems: 'center',
     }}>
-      {/* ===== ПОИСК ===== */}
+
+      {/* ПОИСК */}
+
       <div style={{ flex: 1, minWidth: '200px' }}>
         <input
           type="text"
@@ -81,30 +125,19 @@ export default function UsersFilters({ onFilterChange }: UsersFiltersProps) {
             outline: 'none',
             transition: 'border-color 0.2s',
           }}
-          onFocus={(e) => (e.currentTarget.style.borderColor = '#5B86A1')}
-          onBlur={(e) => (e.currentTarget.style.borderColor = 'rgba(255,255,255,0.08)')}
         />
       </div>
 
-      {/* ===== ФИЛЬТР ПО РОЛИ ===== */}
+
+      {/* РОЛЬ */}
+
       <div style={{ minWidth: '140px' }}>
         <select
           value={roleFilter}
           onChange={(e) => setRoleFilter(e.target.value)}
-          style={{
-            width: '100%',
-            padding: '8px 14px',
-            background: 'rgba(255,255,255,0.05)',
-            border: '1px solid rgba(255,255,255,0.08)',
-            borderRadius: '8px',
-            color: '#E6EDF3',
-            fontSize: '14px',
-            fontFamily: 'Inter, sans-serif',
-            outline: 'none',
-            cursor: 'pointer',
-          }}
         >
           <option value="all">Все роли</option>
+
           {ALL_ROLES.map((role) => (
             <option key={role} value={role}>
               {ROLE_LABELS[role]}
@@ -113,23 +146,13 @@ export default function UsersFilters({ onFilterChange }: UsersFiltersProps) {
         </select>
       </div>
 
-      {/* ===== ФИЛЬТР ПО СТАТУСУ ===== */}
+
+      {/* СТАТУС */}
+
       <div style={{ minWidth: '140px' }}>
         <select
           value={statusFilter}
           onChange={(e) => setStatusFilter(e.target.value)}
-          style={{
-            width: '100%',
-            padding: '8px 14px',
-            background: 'rgba(255,255,255,0.05)',
-            border: '1px solid rgba(255,255,255,0.08)',
-            borderRadius: '8px',
-            color: '#E6EDF3',
-            fontSize: '14px',
-            fontFamily: 'Inter, sans-serif',
-            outline: 'none',
-            cursor: 'pointer',
-          }}
         >
           <option value="all">Все статусы</option>
           <option value="active">🟢 Активные</option>
@@ -137,37 +160,30 @@ export default function UsersFilters({ onFilterChange }: UsersFiltersProps) {
         </select>
       </div>
 
-      {/* ===== КНОПКИ ===== */}
-      <button
-        onClick={handleClear}
-        style={{
-          padding: '8px 16px',
-          background: 'rgba(255,255,255,0.05)',
-          border: '1px solid rgba(255,255,255,0.08)',
-          borderRadius: '8px',
-          color: '#97A6BA',
-          fontSize: '13px',
-          cursor: 'pointer',
-          fontFamily: 'Inter, sans-serif',
-          transition: 'all 0.2s',
-          whiteSpace: 'nowrap',
-        }}
-        onMouseEnter={(e) => {
-          e.currentTarget.style.background = 'rgba(255,255,255,0.1)';
-          e.currentTarget.style.color = '#E6EDF3';
-        }}
-        onMouseLeave={(e) => {
-          e.currentTarget.style.background = 'rgba(255,255,255,0.05)';
-          e.currentTarget.style.color = '#97A6BA';
-        }}
-      >
+
+      {/* КНОПКА */}
+
+      <button onClick={handleClear}>
         ✕ Очистить
       </button>
 
-      {/* ===== ИНФО ===== */}
-      <div style={{ color: '#5B86A1', fontSize: '13px', marginLeft: 'auto' }}>
-        {roleFilter !== 'all' || statusFilter !== 'all' || localSearch ? '🔍 Фильтры активны' : '📋 Все пользователи'}
+
+      {/* ИНФО */}
+
+      <div style={{
+        color: '#5B86A1',
+        fontSize: '13px',
+        marginLeft: 'auto',
+      }}>
+        {
+          roleFilter !== 'all' ||
+          statusFilter !== 'all' ||
+          localSearch
+            ? '🔍 Фильтры активны'
+            : '📋 Все пользователи'
+        }
       </div>
+
     </div>
   );
 }

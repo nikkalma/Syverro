@@ -1,7 +1,7 @@
 // src/pages/Admin/Users/UserModal.tsx
 
 import { useState } from 'react';
-import { AdminUser, AdminRole, ROLE_LABELS, ROLE_COLORS } from '../../../types/admin';
+import { AdminUser, ROLE_LABELS, ROLE_COLORS } from '../../../types/admin';
 
 interface UserModalProps {
   isOpen: boolean;

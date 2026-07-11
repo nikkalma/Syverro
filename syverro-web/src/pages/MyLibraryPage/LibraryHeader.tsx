@@ -1,4 +1,4 @@
-import { statusLabels } from '../../types/personalBook';
+import { personalBookStatusLabels } from '../../types/personalBook';
 import { getLocaleData, getBrowserLocale } from '../../locales';
 
 interface LibraryHeaderProps {
@@ -7,7 +7,7 @@ interface LibraryHeaderProps {
     reading: number;
     planned: number;
     completed: number;
-    paused: number;
+    postponed: number;
     abandoned: number;
   };
 }
@@ -18,11 +18,11 @@ export default function LibraryHeader({ stats }: LibraryHeaderProps) {
 
   const items = [
     { key: 'total', label: t.library?.total || 'Всего', value: stats.total },
-    { key: 'reading', label: statusLabels.reading, value: stats.reading },
-    { key: 'planned', label: statusLabels.planned, value: stats.planned },
-    { key: 'completed', label: statusLabels.completed, value: stats.completed },
-    { key: 'postponed', label: statusLabels.paused, value: stats.paused },
-    { key: 'abandoned', label: statusLabels.abandoned, value: stats.abandoned },
+    { key: 'reading', label: personalBookStatusLabels.reading, value: stats.reading },
+    { key: 'planned', label: personalBookStatusLabels.planned, value: stats.planned },
+    { key: 'completed', label: personalBookStatusLabels.completed, value: stats.completed },
+    { key: 'postponed', label: personalBookStatusLabels.postponed, value: stats.postponed },
+    { key: 'abandoned', label: personalBookStatusLabels.abandoned, value: stats.abandoned },
   ].filter((item) => item.value > 0);
 
   return (

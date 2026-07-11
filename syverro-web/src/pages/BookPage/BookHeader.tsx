@@ -1,5 +1,5 @@
 // src/pages/BookPage/BookHeader.tsx
-import { EnrichedBook } from 'types/globalBook';
+import { EnrichedBook } from '@/types/globalBook';
 
 interface BookHeaderProps {
   book: EnrichedBook;

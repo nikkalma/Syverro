@@ -1,5 +1,5 @@
 // src/pages/BookPage/BookMeta.tsx
-import { EnrichedBook } from 'types/globalBook';
+import { EnrichedBook } from '@/types/globalBook';
 import { getLocaleData, getBrowserLocale } from '../../locales';
 
 interface BookMetaProps {

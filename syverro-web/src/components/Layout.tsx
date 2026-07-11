@@ -9,11 +9,8 @@ import {
   User, 
   Settings, 
   LogOut, 
-  Shield, 
   Sun, 
   Moon,
-  Menu,
-  LayoutDashboard,
   Sparkles,
   UserCircle,
   Crown

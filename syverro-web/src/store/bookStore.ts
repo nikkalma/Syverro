@@ -1,33 +1,26 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
-import { Book } from '../types/book'
+import { GlobalBook } from '../types/globalBook'
 
-interface BookState {
-  books: Book[]
+interface GlobalBookState {
+  books: GlobalBook[]
   loading: boolean
-  setBooks: (books: Book[]) => void
-  addBook: (book: Book) => void
-  updateBook: (id: string, updates: Partial<Book>) => void
-  toggleFavorite: (id: string) => void
+  setGlobalBooks: (books: GlobalBook[]) => void
+  addGlobalBook: (book: GlobalBook) => void
+  updateGlobalBook: (id: string, updates: Partial<GlobalBook>) => void
   setLoading: (loading: boolean) => void
 }
 
-export const useBookStore = create<BookState>()(
+export const useGlobalBookStore = create<GlobalBookState>()(
   persist(
     (set) => ({
       books: [],
       loading: false,
-      setBooks: (books) => set({ books }),
-      addBook: (book) => set((state) => ({ books: [...state.books, book] })),
-      updateBook: (id, updates) =>
+      setGlobalBooks: (books) => set({ books }),
+      addGlobalBook: (book) => set((state) => ({ books: [...state.books, book] })),
+      updateGlobalBook: (id, updates) =>
         set((state) => ({
           books: state.books.map((b) => (b.id === id ? { ...b, ...updates } : b)),
-        })),
-      toggleFavorite: (id) =>
-        set((state) => ({
-          books: state.books.map((b) =>
-            b.id === id ? { ...b, favorite: !b.favorite } : b
-          ),
         })),
       setLoading: (loading) => set({ loading }),
     }),

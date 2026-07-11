@@ -1,13 +1,20 @@
 // src/components/library/LibraryFilters.tsx
-import { BookStatus, statusLabels } from '../../types/bookEntry';
+
+import {
+  PersonalBookStatus,
+  personalBookStatusLabels,
+} from '../../types/personalBook';
 
 interface LibraryFiltersProps {
   search: string;
   onSearchChange: (value: string) => void;
-  statusFilter: BookStatus | 'all';
-  onStatusChange: (value: BookStatus | 'all') => void;
+
+  statusFilter: PersonalBookStatus | 'all';
+  onStatusChange: (value: PersonalBookStatus | 'all') => void;
+
   genreFilter: string;
   onGenreChange: (value: string) => void;
+
   availableGenres: string[];
 }
 
@@ -45,7 +52,7 @@ export function LibraryFilters({
           flex: 1,
           minWidth: '200px',
           padding: '8px 14px',
-          background: 'rgba(255,255,255,0.05)',
+          background: 'rgba<...>',
           border: '1px solid rgba(255,255,255,0.08)',
           borderRadius: '8px',
           color: '#E6EDF3',
@@ -59,12 +66,15 @@ export function LibraryFilters({
       {/* Фильтр по статусу */}
       <select
         value={statusFilter}
-        onChange={(e) => onStatusChange(e.target.value as BookStatus | 'all')}
+        onChange={(e) =>
+          onStatusChange(e.target.value as PersonalBookStatus | 'all')
+        }
         className="syverro-select"
         style={{ width: 'auto', minWidth: '140px' }}
       >
         <option value="all">Все статусы</option>
-        {Object.entries(statusLabels).map(([key, label]) => (
+
+        {Object.entries(personalBookStatusLabels).map(([key, label]) => (
           <option key={key} value={key}>
             {label}
           </option>
@@ -79,6 +89,7 @@ export function LibraryFilters({
         style={{ width: 'auto', minWidth: '140px' }}
       >
         <option value="all">Все жанры</option>
+
         {availableGenres.map((genre) => (
           <option key={genre} value={genre}>
             {genre}

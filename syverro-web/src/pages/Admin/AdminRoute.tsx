@@ -3,7 +3,6 @@
 import { ReactNode, useEffect } from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import { useAuthStore } from '../../store/authStore';
-import { ADMIN_ROLES } from '../../types/admin';
 import AdminLayout from '../../components/Admin/AdminLayout';
 
 interface AdminRouteProps {

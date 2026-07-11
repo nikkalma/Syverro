@@ -30,7 +30,7 @@ export default function BooksTable({
   onTogglePublish,
   onRefresh,
 }: BooksTableProps) {
-  const { setPage, setLimit } = useAdminStore();
+  const { setPage } = useAdminStore();
   const totalPages = Math.ceil(total / limit);
 
   // ===== СКЕЛЕТОН =====

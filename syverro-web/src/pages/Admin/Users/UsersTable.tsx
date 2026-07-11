@@ -36,7 +36,7 @@ export default function UsersTable({
   onLogoutSessions,
   onRefresh,
 }: UsersTableProps) {
-  const { setPage, setLimit } = useAdminStore();
+  const { setPage } = useAdminStore();
   const totalPages = Math.ceil(total / limit);
 
   // ===== СКЕЛЕТОН =====

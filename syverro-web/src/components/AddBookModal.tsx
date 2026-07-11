@@ -1,18 +1,18 @@
 // src/components/AddBookModal.tsx
 import { useState } from 'react';
-import type { BookStatus } from '../types/book';
+import type { PersonalBookStatus } from '../types/personalBook';
 
 interface AddBookModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSave: (book: { title: string; author: string; status: BookStatus }) => void;
+  onSave: (book: { title: string; author: string; status: PersonalBookStatus }) => void;
   isLoading?: boolean;
 }
 
 export default function AddBookModal({ isOpen, onClose, onSave, isLoading }: AddBookModalProps) {
   const [title, setTitle] = useState('');
   const [author, setAuthor] = useState('');
-  const [status, setStatus] = useState<BookStatus>('planned');
+  const [status, setStatus] = useState<PersonalBookStatus>('planned');
 
   if (!isOpen) return null;
 
@@ -57,7 +57,7 @@ export default function AddBookModal({ isOpen, onClose, onSave, isLoading }: Add
               <label className="text-sm text-[#97A6BA] block mb-1.5">Статус</label>
               <select
                 value={status}
-                onChange={(e) => setStatus(e.target.value as BookStatus)}
+                onChange={(e) => setStatus(e.target.value as PersonalBookStatus)}
                 className="w-full px-4 py-2.5 bg-[#0A1118] border border-[#2A4B60] rounded-xl text-[#E6EDF3] focus:outline-none focus:border-[#5B86A1] transition appearance-none cursor-pointer"
               >
                 <option value="planned">📌 Хочу прочитать</option>

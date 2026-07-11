@@ -1,8 +1,9 @@
 // src/components/library/ReaderPortrait.tsx
-import { BookEntry } from '../../types/bookEntry';
+
+import { PersonalBook } from '../../types/personalBook';
 
 interface ReaderPortraitProps {
-  entries: BookEntry[];
+  entries: PersonalBook[];
 }
 
 export function ReaderPortrait({ entries }: ReaderPortraitProps) {
@@ -33,6 +34,7 @@ export function ReaderPortrait({ entries }: ReaderPortraitProps) {
       >
         🧠 Читательский портрет
       </h3>
+
       {hasData ? (
         <p style={{ color: '#5B86A1', fontSize: '14px' }}>
           Недостаточно данных для анализа. Продолжайте пополнять библиотеку.

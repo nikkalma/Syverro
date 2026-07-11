@@ -18,7 +18,7 @@ import UserModal from './UserModal';
 export default function AdminUsers() {
   const {
     searchQuery,
-    filters,
+    usersFilters,
     page,
     limit,
     setLoading,
@@ -73,15 +73,15 @@ export default function AdminUsers() {
 
 
     try {
-      const params = {
-        page,
-        limit,
+    const params = {
+  page,
+  limit,
 
-        ...(searchQuery && {
-          search: searchQuery,
-        }),
+  ...(searchQuery && {
+    search: searchQuery,
+  }),
 
-        ...filters,
+  ...usersFilters,
       };
 
 
@@ -117,12 +117,12 @@ export default function AdminUsers() {
 
 
   useEffect(() => {
-    fetchUsers();
-  }, [
-    page,
-    limit,
-    searchQuery,
-    filters,
+  fetchUsers();
+}, [
+  page,
+  limit,
+  searchQuery,
+  usersFilters,
   ]);
 
 

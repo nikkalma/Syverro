@@ -14,52 +14,101 @@ export type ReadingFormat =
   | 'other';
 
 
+export interface Quote {
+  id: string;
+  text: string;
+  page?: number | null;
+  note?: string | null;
+  createdAt: number;
+}
+
+
 export interface PersonalBook {
+
   userId: string;
+
   bookId: string;
+
 
   status: PersonalBookStatus;
 
-  currentPage?: number;
 
-  favorite?: boolean;
+  currentPage: number;
 
-  notes?: string;
+  favorite: boolean;
 
-  quotes?: string[];
+
+  notes: string;
+
+  quotes: Quote[];
+
+
+  rating?: number | null;
 
   review?: string;
+
+
+  readingFormat?: ReadingFormat;
+
 
   startedAt?: string;
 
   completedAt?: string;
 
-  readingFormat?: ReadingFormat;
+
+  lastRead?: string;
+
 
   readingSessions?: string[];
 
   rereadCount?: number;
 
-  createdAt?: string;
-  updatedAt?: string;
+
+  mood?: string;
+
+  readingContext?: string;
+
+  reasonForReading?: string;
+
+
+  createdAt: number;
+
+  updatedAt: number;
 }
 
 
-export const personalBookStatusLabels: Record<PersonalBookStatus, string> = {
+
+export const personalBookStatusLabels:
+Record<PersonalBookStatus, string> = {
+
   reading: 'Читаю',
+
   rereading: 'Перечитываю',
+
   completed: 'Прочитано',
+
   planned: 'Запланировано',
+
   postponed: 'Отложено',
+
   abandoned: 'Брошено',
+
 };
 
 
-export const personalBookStatusOrder: PersonalBookStatus[] = [
+export const personalBookStatusOrder:
+PersonalBookStatus[] = [
+
   'reading',
+
   'planned',
+
   'completed',
+
   'rereading',
+
   'postponed',
+
   'abandoned',
+
 ];

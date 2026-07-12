@@ -1,0 +1,207 @@
+ .VSCodeCounter/2026-05-30_03-08-34/diff.csv        |      2 [31m-[m
+ .VSCodeCounter/2026-05-30_03-08-34/diff.txt        |     22 [31m-[m
+ .VSCodeCounter/2026-05-30_03-08-34/results.csv     |     92 [31m-[m
+ .VSCodeCounter/2026-05-30_03-08-34/results.json    |      1 [31m-[m
+ .VSCodeCounter/2026-05-30_03-08-34/results.txt     |    142 [31m-[m
+ .env.example                                       |      4 [31m-[m
+ .gitignore                                         |     69 [31m-[m
+ .obsidian/core-plugins.json                        |      0
+ .../__pycache__/config.cpython-312.pyc             |    Bin [31m1906[m -> [32m0[m bytes
+ .../__pycache__/database.cpython-312.pyc           |    Bin [31m1310[m -> [32m0[m bytes
+ .../__pycache__/main.cpython-312.pyc               |    Bin [31m2194[m -> [32m0[m bytes
+ .temp_backend_export/api/__init__.py               |     11 [31m-[m
+ .../api/__pycache__/__init__.cpython-312.pyc       |    Bin [31m308[m -> [32m0[m bytes
+ .../api/__pycache__/auth.cpython-312.pyc           |    Bin [31m11404[m -> [32m0[m bytes
+ .../api/__pycache__/books.cpython-312.pyc          |    Bin [31m6988[m -> [32m0[m bytes
+ .../api/__pycache__/sync.cpython-312.pyc           |    Bin [31m1269[m -> [32m0[m bytes
+ .temp_backend_export/api/admin.py                  |    910 [31m-[m
+ .temp_backend_export/api/auth.py                   |    126 [31m-[m
+ .temp_backend_export/api/books.py                  |    135 [31m-[m
+ .temp_backend_export/api/sync.py                   |     34 [31m-[m
+ .temp_backend_export/config.py                     |     26 [31m-[m
+ .../core/__pycache__/deps.cpython-312.pyc          |    Bin [31m3333[m -> [32m0[m bytes
+ .../core/__pycache__/security.cpython-312.pyc      |    Bin [31m2705[m -> [32m0[m bytes
+ .temp_backend_export/core/deps.py                  |     52 [31m-[m
+ .temp_backend_export/core/security.py              |     49 [31m-[m
+ .temp_backend_export/database.py                   |     26 [31m-[m
+ .temp_backend_export/main.py                       |     44 [31m-[m
+ .../models/__pycache__/book.cpython-312.pyc        |    Bin [31m2645[m -> [32m0[m bytes
+ .../models/__pycache__/user.cpython-312.pyc        |    Bin [31m1521[m -> [32m0[m bytes
+ .temp_backend_export/models/author.py              |     83 [31m-[m
+ .temp_backend_export/models/book.py                |     36 [31m-[m
+ .temp_backend_export/models/genre.py               |     17 [31m-[m
+ .temp_backend_export/models/user.py                |     22 [31m-[m
+ .../schemas/__pycache__/book.cpython-312.pyc       |    Bin [31m2503[m -> [32m0[m bytes
+ .../schemas/__pycache__/user.cpython-312.pyc       |    Bin [31m2544[m -> [32m0[m bytes
+ .temp_backend_export/schemas/author.py             |    144 [31m-[m
+ .temp_backend_export/schemas/book.py               |     53 [31m-[m
+ .temp_backend_export/schemas/genre.py              |     34 [31m-[m
+ .temp_backend_export/schemas/user.py               |     89 [31m-[m
+ App.tsx                                            |     81 [31m-[m
+ Basic formatting.md                                |    191 [31m-[m
+ FULL_CODE_EXPORT.txt                               |   3558 [31m-[m
+ Syverro_mobile-app_src_dump.txt                    |   9373 [31m-[m
+ admin_components.zip                               |    Bin [31m3504[m -> [32m0[m bytes
+ admin_dump.txt                                     |    Bin [31m419832[m -> [32m0[m bytes
+ admin_full.zip                                     |    Bin [31m52468[m -> [32m0[m bytes
+ admin_pages.zip                                    |    Bin [31m52468[m -> [32m0[m bytes
+ admin_types.zip                                    |    Bin [31m1926[m -> [32m0[m bytes
+ app.json                                           |     17 [31m-[m
+ backend/.dockerignore                              |     10 [31m-[m
+ backend/Dockerfile                                 |     25 [31m-[m
+ backend/Procfile                                   |      1 [31m-[m
+ backend/app/__pycache__/config.cpython-312.pyc     |    Bin [31m1906[m -> [32m0[m bytes
+ backend/app/__pycache__/database.cpython-312.pyc   |    Bin [31m1310[m -> [32m0[m bytes
+ backend/app/__pycache__/main.cpython-312.pyc       |    Bin [31m2194[m -> [32m0[m bytes
+ backend/app/api/__init__.py                        |     11 [31m-[m
+ .../app/api/__pycache__/__init__.cpython-312.pyc   |    Bin [31m308[m -> [32m0[m bytes
+ backend/app/api/__pycache__/auth.cpython-312.pyc   |    Bin [31m11404[m -> [32m0[m bytes
+ backend/app/api/__pycache__/books.cpython-312.pyc  |    Bin [31m6988[m -> [32m0[m bytes
+ backend/app/api/__pycache__/sync.cpython-312.pyc   |    Bin [31m1269[m -> [32m0[m bytes
+ backend/app/api/admin.py                           |    910 [31m-[m
+ backend/app/api/auth.py                            |    126 [31m-[m
+ backend/app/api/books.py                           |    135 [31m-[m
+ backend/app/api/sync.py                            |    592 [31m-[m
+ backend/app/config.py                              |     26 [31m-[m
+ backend/app/core/__pycache__/deps.cpython-312.pyc  |    Bin [31m3333[m -> [32m0[m bytes
+ .../app/core/__pycache__/security.cpython-312.pyc  |    Bin [31m2705[m -> [32m0[m bytes
+ backend/app/core/deps.py                           |     80 [31m-[m
+ backend/app/core/security.py                       |     49 [31m-[m
+ backend/app/database.py                            |     26 [31m-[m
+ backend/app/main.py                                |     47 [31m-[m
+ backend/app/models/__init__.py                     |     21 [31m-[m
+ .../app/models/__pycache__/book.cpython-312.pyc    |    Bin [31m2645[m -> [32m0[m bytes
+ .../app/models/__pycache__/user.cpython-312.pyc    |    Bin [31m1521[m -> [32m0[m bytes
+ backend/app/models/author.py                       |     83 [31m-[m
+ backend/app/models/book.py                         |     38 [31m-[m
+ backend/app/models/change_log.py                   |     19 [31m-[m
+ backend/app/models/genre.py                        |     17 [31m-[m
+ backend/app/models/quote.py                        |     36 [31m-[m
+ backend/app/models/session.py                      |     39 [31m-[m
+ backend/app/models/sync_state.py                   |     19 [31m-[m
+ backend/app/models/user.py                         |     23 [31m-[m
+ backend/app/models/user_book.py                    |     35 [31m-[m
+ backend/app/schemas/__init__.py                    |     41 [31m-[m
+ .../app/schemas/__pycache__/book.cpython-312.pyc   |    Bin [31m2503[m -> [32m0[m bytes
+ .../app/schemas/__pycache__/user.cpython-312.pyc   |    Bin [31m2544[m -> [32m0[m bytes
+ backend/app/schemas/author.py                      |    144 [31m-[m
+ backend/app/schemas/book.py                        |     53 [31m-[m
+ backend/app/schemas/genre.py                       |     34 [31m-[m
+ backend/app/schemas/sync.py                        |    113 [31m-[m
+ backend/app/schemas/user.py                        |     89 [31m-[m
+ backend/backend_all.txt                            |      0
+ backend/railway.json                               |     11 [31m-[m
+ backend/requirements.txt                           |     10 [31m-[m
+ backend/runtime.txt                                |      1 [31m-[m
+ .../Include/site/python3.12/greenlet/greenlet.h    |    164 [31m-[m
+ .../site-packages/__pycache__/six.cpython-312.pyc  |    Bin [31m41329[m -> [32m0[m bytes
+ .../__pycache__/typing_extensions.cpython-312.pyc  |    Bin [31m163629[m -> [32m0[m bytes
+ .../_cffi_backend.cp312-win_amd64.pyd              |    Bin [31m181248[m -> [32m0[m bytes
+ .../alembic-1.18.4.dist-info/INSTALLER             |      1 [31m-[m
+ .../alembic-1.18.4.dist-info/METADATA              |    139 [31m-[m
+ .../site-packages/alembic-1.18.4.dist-info/RECORD  |    179 [31m-[m
+ .../alembic-1.18.4.dist-info/REQUESTED             |      0
+ .../site-packages/alembic-1.18.4.dist-info/WHEEL   |      5 [31m-[m
+ .../alembic-1.18.4.dist-info/entry_points.txt      |      2 [31m-[m
+ .../alembic-1.18.4.dist-info/licenses/LICENSE      |     19 [31m-[m
+ .../alembic-1.18.4.dist-info/top_level.txt         |      1 [31m-[m
+ backend/venv/Lib/site-packages/alembic/__init__.py |      6 [31m-[m
+ backend/venv/Lib/site-packages/alembic/__main__.py |      4 [31m-[m
+ .../alembic/__pycache__/__init__.cpython-312.pyc   |    Bin [31m303[m -> [32m0[m bytes
+ .../alembic/__pycache__/__main__.cpython-312.pyc   |    Bin [31m296[m -> [32m0[m bytes
+ .../alembic/__pycache__/command.cpython-312.pyc    |    Bin [31m29897[m -> [32m0[m bytes
+ .../alembic/__pycache__/config.cpython-312.pyc     |    Bin [31m39082[m -> [32m0[m bytes
+ .../alembic/__pycache__/context.cpython-312.pyc    |    Bin [31m361[m -> [32m0[m bytes
+ .../__pycache__/environment.cpython-312.pyc        |    Bin [31m214[m -> [32m0[m bytes
+ .../alembic/__pycache__/migration.cpython-312.pyc  |    Bin [31m210[m -> [32m0[m bytes
+ .../alembic/__pycache__/op.cpython-312.pyc         |    Bin [31m343[m -> [32m0[m bytes
+ .../site-packages/alembic/autogenerate/__init__.py |     10 [31m-[m
+ .../__pycache__/__init__.cpython-312.pyc           |    Bin [31m609[m -> [32m0[m bytes
+ .../autogenerate/__pycache__/api.cpython-312.pyc   |    Bin [31m22954[m -> [32m0[m bytes
+ .../__pycache__/render.cpython-312.pyc             |    Bin [31m47404[m -> [32m0[m bytes
+ .../__pycache__/rewriter.cpython-312.pyc           |    Bin [31m9484[m -> [32m0[m bytes
+ .../Lib/site-packages/alembic/autogenerate/api.py  |    667 [31m-[m
+ .../alembic/autogenerate/compare/__init__.py       |     62 [31m-[m
+ .../compare/__pycache__/__init__.cpython-312.pyc   |    Bin [31m2418[m -> [32m0[m bytes
+ .../compare/__pycache__/comments.cpython-312.pyc   |    Bin [31m3757[m -> [32m0[m bytes
+ .../__pycache__/constraints.cpython-312.pyc        |    Bin [31m27102[m -> [32m0[m bytes
+ .../compare/__pycache__/schema.cpython-312.pyc     |    Bin [31m2358[m -> [32m0[m bytes
+ .../__pycache__/server_defaults.cpython-312.pyc    |    Bin [31m10522[m -> [32m0[m bytes
+ .../compare/__pycache__/tables.cpython-312.pyc     |    Bin [31m11597[m -> [32m0[m bytes
+ .../compare/__pycache__/types.cpython-312.pyc      |    Bin [31m4358[m -> [32m0[m bytes
+ .../compare/__pycache__/util.cpython-312.pyc       |    Bin [31m10932[m -> [32m0[m bytes
+ .../alembic/autogenerate/compare/comments.py       |    106 [31m-[m
+ .../alembic/autogenerate/compare/constraints.py    |    812 [31m-[m
+ .../alembic/autogenerate/compare/schema.py         |     62 [31m-[m
+ .../autogenerate/compare/server_defaults.py        |    344 [31m-[m
+ .../alembic/autogenerate/compare/tables.py         |    316 [31m-[m
+ .../alembic/autogenerate/compare/types.py          |    147 [31m-[m
+ .../alembic/autogenerate/compare/util.py           |    314 [31m-[m
+ .../site-packages/alembic/autogenerate/render.py   |   1172 [31m-[m
+ .../site-packages/alembic/autogenerate/rewriter.py |    240 [31m-[m
+ backend/venv/Lib/site-packages/alembic/command.py  |    848 [31m-[m
+ backend/venv/Lib/site-packages/alembic/config.py   |   1051 [31m-[m
+ backend/venv/Lib/site-packages/alembic/context.py  |      5 [31m-[m
+ backend/venv/Lib/site-packages/alembic/context.pyi |    876 [31m-[m
+ .../venv/Lib/site-packages/alembic/ddl/__init__.py |      6 [31m-[m
+ .../ddl/__pycache__/__init__.cpython-312.pyc       |    Bin [31m371[m -> [32m0[m bytes
+ .../ddl/__pycache__/_autogen.cpython-312.pyc       |    Bin [31m15181[m -> [32m0[m bytes
+ .../alembic/ddl/__pycache__/base.cpython-312.pyc   |    Bin [31m17500[m -> [32m0[m bytes
+ .../alembic/ddl/__pycache__/impl.cpython-312.pyc   |    Bin [31m35874[m -> [32m0[m bytes
+ .../alembic/ddl/__pycache__/mssql.cpython-312.pyc  |    Bin [31m19388[m -> [32m0[m bytes
+ .../alembic/ddl/__pycache__/mysql.cpython-312.pyc  |    Bin [31m16996[m -> [32m0[m bytes
+ .../alembic/ddl/__pycache__/oracle.cpython-312.pyc |    Bin [31m8502[m -> [32m0[m bytes
+ .../ddl/__pycache__/postgresql.cpython-312.pyc     |    Bin [31m33677[m -> [32m0[m bytes
+ .../alembic/ddl/__pycache__/sqlite.cpython-312.pyc |    Bin [31m8010[m -> [32m0[m bytes
+ .../venv/Lib/site-packages/alembic/ddl/_autogen.py |    329 [31m-[m
+ backend/venv/Lib/site-packages/alembic/ddl/base.py |    406 [31m-[m
+ backend/venv/Lib/site-packages/alembic/ddl/impl.py |    921 [31m-[m
+ .../venv/Lib/site-packages/alembic/ddl/mssql.py    |    523 [31m-[m
+ .../venv/Lib/site-packages/alembic/ddl/mysql.py    |    526 [31m-[m
+ .../venv/Lib/site-packages/alembic/ddl/oracle.py   |    202 [31m-[m
+ .../Lib/site-packages/alembic/ddl/postgresql.py    |    864 [31m-[m
+ .../venv/Lib/site-packages/alembic/ddl/sqlite.py   |    237 [31m-[m
+ .../venv/Lib/site-packages/alembic/environment.py  |      1 [31m-[m
+ .../venv/Lib/site-packages/alembic/migration.py    |      1 [31m-[m
+ backend/venv/Lib/site-packages/alembic/op.py       |      5 [31m-[m
+ backend/venv/Lib/site-packages/alembic/op.pyi      |   1429 [31m-[m
+ .../site-packages/alembic/operations/__init__.py   |     15 [31m-[m
+ .../__pycache__/__init__.cpython-312.pyc           |    Bin [31m471[m -> [32m0[m bytes
+ .../operations/__pycache__/base.cpython-312.pyc    |    Bin [31m81740[m -> [32m0[m bytes
+ .../operations/__pycache__/batch.cpython-312.pyc   |    Bin [31m31382[m -> [32m0[m bytes
+ .../operations/__pycache__/ops.cpython-312.pyc     |    Bin [31m113701[m -> [32m0[m bytes
+ .../__pycache__/schemaobj.cpython-312.pyc          |    Bin [31m11869[m -> [32m0[m bytes
+ .../operations/__pycache__/toimpl.cpython-312.pyc  |    Bin [31m11989[m -> [32m0[m bytes
+ .../Lib/site-packages/alembic/operations/base.py   |   2001 [31m-[m
+ .../Lib/site-packages/alembic/operations/batch.py  |    720 [31m-[m
+ .../Lib/site-packages/alembic/operations/ops.py    |   2918 [31m-[m
+ .../site-packages/alembic/operations/schemaobj.py  |    290 [31m-[m
+ .../Lib/site-packages/alembic/operations/toimpl.py |    261 [31m-[m
+ backend/venv/Lib/site-packages/alembic/py.typed    |      0
+ .../Lib/site-packages/alembic/runtime/__init__.py  |      0
+ .../runtime/__pycache__/__init__.cpython-312.pyc   |    Bin [31m178[m -> [32m0[m bytes
+ .../__pycache__/environment.cpython-312.pyc        |    Bin [31m44651[m -> [32m0[m bytes
+ .../runtime/__pycache__/migration.cpython-312.pyc  |    Bin [31m57774[m -> [32m0[m bytes
+ .../runtime/__pycache__/plugins.cpython-312.pyc    |    Bin [31m7789[m -> [32m0[m bytes
+ .../site-packages/alembic/runtime/environment.py   |   1074 [31m-[m
+ .../Lib/site-packages/alembic/runtime/migration.py |   1346 [31m-[m
+ .../Lib/site-packages/alembic/runtime/plugins.py   |    179 [31m-[m
+ .../Lib/site-packages/alembic/script/__init__.py   |      4 [31m-[m
+ .../script/__pycache__/__init__.cpython-312.pyc    |    Bin [31m291[m -> [32m0[m bytes
+ .../script/__pycache__/base.cpython-312.pyc        |    Bin [31m42513[m -> [32m0[m bytes
+ .../script/__pycache__/revision.cpython-312.pyc    |    Bin [31m62490[m -> [32m0[m bytes
+ .../script/__pycache__/write_hooks.cpython-312.pyc |    Bin [31m7205[m -> [32m0[m bytes
+ .../venv/Lib/site-packages/alembic/script/base.py  |   1052 [31m-[m
+ .../Lib/site-packages/alembic/script/revision.py   |   1728 [31m-[m
+ .../site-packages/alembic/script/write_hooks.py    |    181 [31m-[m
+ .../site-packages/alembic/templates/async/README   |      1 [31m-[m
+ .../async/__pycache__/env.cpython-312.pyc          |    Bin [31m3327[m -> [32m0[m bytes
+ .../alembic/templates/async/alembic.ini.mako       |    149 [31m-[m
+ .../site-packages/alembic/templates/async/env.py   |     89 [31m-[m
+ .../alembic/templates/async/script.py.mako         |     28 [31m-[m
+ .../site-packages/alembic/templates/generic/README |      1 [31m-[m
+ .../generic/__pycache__/env.cpython-312.pyc        |    Bin [31m2541[m -> [32m0[m bytes
+ .../alembic/templates/generic/alembic.ini.mako     |    149 [31m-[m
+ .../site-packages/alembic/templates/generic/env.py |     78 [31m-[m
+ .../alembic/templates/generic/script.py.mako       |     28 [31m-[m
+ .../site-packages/alembic/templates/multidb/REA

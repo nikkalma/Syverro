@@ -1,69 +1,124 @@
-# Learn more https://docs.github.com/en/get-started/getting-started-with-git/ignoring-files
-
-# dependencies
-node_modules/
+# =========================
+# Dependencies
+# =========================
 
 node_modules/
 **/node_modules/
-mobile-app/node_modules/
 
-# Expo
+# =========================
+# Environment
+# =========================
+
+.env
+.env.*
+!.env.example
+
+# =========================
+# Logs
+# =========================
+
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# =========================
+# Expo / React Native
+# =========================
+
 .expo/
+.eas/
+expo-env.d.ts
 dist/
 web-build/
-expo-env.d.ts
 
-# Native
-.kotlin/
-*.orig.*
+# Native generated
+ios/
+android/
+
+# Android / Gradle
+.gradle/
+*.apk
+*.aab
+
+# Keystores and certificates
 *.jks
+*.keystore
 *.p8
 *.p12
 *.key
 *.mobileprovision
 
-# Metro
-.metro-health-check*
+# =========================
+# TypeScript
+# =========================
 
-# debug
-npm-debug.*
-yarn-debug.*
-yarn-error.*
-
-# macOS
-.DS_Store
-*.pem
-
-# local env files
-.env*.local
-
-# typescript
 *.tsbuildinfo
 
-# generated native folders
-/ios
-/android
+# =========================
+# Python
+# =========================
 
-node_modules/
-.expo/
-.eas/
-.env
-*.log
+__pycache__/
+*.py[cod]
+
+.pytest_cache/
+.mypy_cache/
+
+# =========================
+# Build / cache
+# =========================
+
+.vite/
+.cache/
+
+# =========================
+# IDE
+# =========================
+
+.vscode/
+!.vscode/extensions.json
+
+.idea/
+
+# =========================
+# OS
+# =========================
+
 .DS_Store
-.vercel
+Thumbs.db
 
-# Документация (теперь в Obsidian)
-ARCHITECTURE.md
-BACKLOG.md
-DEBUG.md
-ROADMAP.md
-context.txt
+# =========================
+# Temporary exports / backups
+# =========================
 
-# Obsidian
+.temp_backend_export/
+*_dump.txt
+*_full.txt
+*_export.txt
+
+*.zip
+*.bak
+
+# =========================
+# Documentation
+# =========================
+
 .obsidian/
+
 00 Dashboard/
 01 Daily Notes/
 02 Docs/
 04 Ideas/
-*.md
-!README.md   # если README оставишь на GitHub
+
+# =========================
+# VS Code Counter
+# =========================
+
+.VSCodeCounter/
+
+# =========================
+# Keep README
+# =========================
+
+!README.md

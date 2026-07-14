@@ -20,7 +20,28 @@ const STORAGE_KEYS = {
   GLOBAL_BOOKS: 'syverro_global_books',
   PERSONAL_BOOKS: 'syverro_personal_books',
   EDIT_PROPOSALS: 'syverro_edit_proposals',
-  READER_PROFILE: 'syverro_reader_profile',
+};
+
+
+const getReaderProfileKey = (): string => {
+  const user =
+    localStorage.getItem('user');
+
+  if (!user) {
+    return 'syverro_reader_profile_guest';
+  }
+
+  try {
+    const parsed =
+      JSON.parse(user);
+
+    return `syverro_reader_profile_${parsed.id}`;
+
+  } catch {
+
+    return 'syverro_reader_profile_guest';
+
+  }
 };
 
 
@@ -641,40 +662,40 @@ export const storageService = {
 
   getReaderProfile(): ReaderProfile {
 
-    const stored =
-      localStorage.getItem(
-        STORAGE_KEYS.READER_PROFILE
-      );
-
-
-    if (!stored) return {};
-
-
-    try {
-
-      return JSON.parse(
-        stored
-      ) as ReaderProfile;
-
-    } catch {
-
-      return {};
-
-    }
-
-  },
-
-
-  saveReaderProfile(
-    profile: ReaderProfile
-  ): void {
-
-    localStorage.setItem(
-      STORAGE_KEYS.READER_PROFILE,
-      JSON.stringify(profile)
+  const stored =
+    localStorage.getItem(
+      getReaderProfileKey()
     );
 
-  },
+
+  if (!stored) return {};
+
+
+  try {
+
+    return JSON.parse(
+      stored
+    ) as ReaderProfile;
+
+  } catch {
+
+    return {};
+
+  }
+
+},
+
+
+saveReaderProfile(
+  profile: ReaderProfile
+): void {
+
+  localStorage.setItem(
+    getReaderProfileKey(),
+    JSON.stringify(profile)
+  );
+
+},
 
 
   updateReaderProfile(

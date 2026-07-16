@@ -3,10 +3,10 @@ import { LocaleData } from '../../../locales';
 
 interface GenresProps {
   profile: any;
-  t: LocaleData;
+
 }
 
-export function Genres({ profile, t }: GenresProps) {
+export function Genres({ profile }: GenresProps) {
   const genres = profile.favoriteGenres || [];
 
   return (

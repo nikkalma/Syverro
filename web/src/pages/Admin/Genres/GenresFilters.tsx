@@ -8,8 +8,7 @@ interface GenresFiltersProps {
 }
 
 export default function GenresFilters({ onFilterChange }: GenresFiltersProps) {
-  const { searchQuery, setSearchQuery, filters, setFilters, clearFilters } = useAdminStore();
-  
+const { searchQuery, setSearchQuery, setFilters, clearFilters } = useAdminStore();  
   const [localSearch, setLocalSearch] = useState(searchQuery);
 
   const applyFilters = () => {

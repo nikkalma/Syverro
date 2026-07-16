@@ -72,9 +72,16 @@ async def get_current_active_user(
 async def get_current_admin_user(
     current_user: Annotated[User, Depends(get_current_user)]
 ) -> User:
+    print("========== ADMIN CHECK ==========")
+    print("EMAIL:", current_user.email)
+    print("ROLE:", current_user.role)
+    print("ACTIVE:", current_user.is_active)
+    print("=================================")
+
     if current_user.role not in ["admin", "owner"]:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Admin access required",
         )
+
     return current_user

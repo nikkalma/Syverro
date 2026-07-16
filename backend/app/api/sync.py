@@ -12,7 +12,7 @@ from app.models.sync_state import SyncState
 from app.models.change_log import ChangeLog
 from app.schemas.sync import (
     PushRequest, PushResponse, PushItem,
-    PullRequest, PullResponse, PullItem,
+    PullRequest, PullResponse,
     SyncStatusResponse,
     ConflictItem, ConflictResolution
 )

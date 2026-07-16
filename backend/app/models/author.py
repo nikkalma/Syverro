@@ -1,83 +1,27 @@
-# backend/app/schemas/__init__.py
-# Экспортируем все схемы для удобного импорта
+from sqlalchemy import Column, String, Text, Integer, DateTime
+from sqlalchemy.orm import relationship
+from sqlalchemy.dialects.postgresql import UUID
+from datetime import datetime
+import uuid
 
-from app.schemas.user import (
-    UserCreate,
-    UserLogin,
-    UserResponse,
-    TokenResponse,
-    TelegramAuthData,
-)
+from app.database import Base
 
-from app.schemas.book import (
-    BookBase,
-    BookCreate,
-    BookResponse,
-    UserBookCreate,
-    UserBookResponse,
-)
 
-from app.schemas.author import (
-    AuthorBase,
-    AuthorCreate,
-    AuthorUpdate,
-    AuthorResponse,
-)
+class Author(Base):
+    __tablename__ = "authors"
 
-from app.schemas.genre import (
-    GenreBase,
-    GenreCreate,
-    GenreUpdate,
-    GenreResponse,
-)
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    name = Column(String, nullable=False, index=True)
+    photo = Column(String, nullable=True)
+    bio = Column(Text, nullable=True)
+    country = Column(String, nullable=True)
+    birth_year = Column(Integer, nullable=True)
+    death_year = Column(Integer, nullable=True)
 
-from app.schemas.admin import (
-    AdminUserResponse,
-    AdminUserUpdate,
-    AdminBookResponse,
-    AdminBookCreate,
-    AdminBookUpdate,
-    AdminLogResponse,
-    RoleUpdate,
-    BlockUpdate,
-    PublishUpdate,
-    AdminStatsResponse,
-    SettingsResponse,
-)
+    books = relationship(
+        "Book",
+        back_populates="author_ref"
+    )
 
-__all__ = [
-    # User
-    "UserCreate",
-    "UserLogin",
-    "UserResponse",
-    "TokenResponse",
-    "TelegramAuthData",
-    # Book
-    "BookBase",
-    "BookCreate",
-    "BookResponse",
-    "UserBookCreate",
-    "UserBookResponse",
-    # Author
-    "AuthorBase",
-    "AuthorCreate",
-    "AuthorUpdate",
-    "AuthorResponse",
-    # Genre
-    "GenreBase",
-    "GenreCreate",
-    "GenreUpdate",
-    "GenreResponse",
-    # Admin
-    "AdminUserResponse",
-    "AdminUserUpdate",
-    "AdminBookResponse",
-    "AdminBookCreate",
-    "AdminBookUpdate",
-    "AdminLogResponse",
-    "RoleUpdate",
-    "BlockUpdate",
-    "PublishUpdate",
-    "AdminStatsResponse",
-    "SettingsResponse",
-]
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)

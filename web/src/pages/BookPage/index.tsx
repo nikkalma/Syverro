@@ -4,7 +4,6 @@ import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useLibrary } from '../../hooks/useLibrary';
 import { storageService } from '../../services/storageService';
-import { personalBookService } from '../../services/personalBookService';
 import { EditModal } from './EditModal';
 import { AddToLibraryModal } from './AddToLibraryModal';
 import type { PersonalBookStatus } from '../../types/personalBook';
@@ -25,7 +24,7 @@ export default function BookPage() {
   const { trackReadingStart, trackReadingFinish, trackNote } = useOffline();
 
   const book = books.find((b) => b.id === id);
-  const isInLibrary = book ? !!personalBookService.getByBook(CURRENT_USER_ID, book.id) : false;
+  const isInLibrary = book ? !!storageService.getByBook(CURRENT_USER_ID, book.id) : false;
 
   if (!book) {
     return (
@@ -58,7 +57,7 @@ export default function BookPage() {
   };
 
   const handleAddToLibrary = (status: PersonalBookStatus) => {
-    personalBookService.add(CURRENT_USER_ID, book.id, status);
+    storageService.add(CURRENT_USER_ID, book.id, status);
     setIsAddModalOpen(false);
     loadBooks();
 
@@ -79,11 +78,11 @@ export default function BookPage() {
     }
     // ======================================
 
-    personalBookService.remove(CURRENT_USER_ID, book.id);
+    storageService.remove(CURRENT_USER_ID, book.id);
     loadBooks();
   };
 
-  const personalBook = personalBookService.getByBook(CURRENT_USER_ID, book.id);
+  const personalBook = storageService.getByBook(CURRENT_USER_ID, book.id);
 
   const handleTagClick = (type: 'genre' | 'theme', value: string) => {
     navigate(`/?${type}=${encodeURIComponent(value)}`);

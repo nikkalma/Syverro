@@ -1,26 +1,46 @@
 import os
+from pathlib import Path
 from dotenv import load_dotenv
 
-load_dotenv()
+BASE_DIR = Path(__file__).resolve().parents[1]
+
+load_dotenv(BASE_DIR / ".env")
+
 
 class Settings:
-    DATABASE_URL: str = os.getenv("DATABASE_URL", "")
-    SECRET_KEY: str = os.getenv("SECRET_KEY", "your-secret-key-change-this-in-production")
-    ALGORITHM: str = "HS256"
-    ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
-    
     def __init__(self):
-        # Проверяем и конвертируем URL
+        self.DATABASE_URL = os.getenv("DATABASE_URL", "")
+        self.SECRET_KEY = os.getenv(
+            "SECRET_KEY",
+            "your-secret-key-change-this-in-production"
+        )
+        self.ALGORITHM = "HS256"
+        self.ACCESS_TOKEN_EXPIRE_MINUTES = int(
+            os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", "30")
+        )
+
         if self.DATABASE_URL:
-            print(f"🔍 Original DATABASE_URL: {self.DATABASE_URL[:60]}...")
-            # Конвертируем postgres:// → postgresql+asyncpg://
+            print(f"🔍 DATABASE_URL loaded: {self.DATABASE_URL[:60]}...")
+
             if self.DATABASE_URL.startswith("postgres://"):
-                self.DATABASE_URL = self.DATABASE_URL.replace("postgres://", "postgresql+asyncpg://", 1)
-                print(f"✅ Converted to asyncpg: {self.DATABASE_URL[:60]}...")
-            elif self.DATABASE_URL.startswith("postgresql://") and "+asyncpg" not in self.DATABASE_URL:
-                self.DATABASE_URL = self.DATABASE_URL.replace("postgresql://", "postgresql+asyncpg://", 1)
-                print(f"✅ Added asyncpg driver: {self.DATABASE_URL[:60]}...")
+                self.DATABASE_URL = self.DATABASE_URL.replace(
+                    "postgres://",
+                    "postgresql+asyncpg://",
+                    1
+                )
+
+            elif (
+                self.DATABASE_URL.startswith("postgresql://")
+                and "+asyncpg" not in self.DATABASE_URL
+            ):
+                self.DATABASE_URL = self.DATABASE_URL.replace(
+                    "postgresql://",
+                    "postgresql+asyncpg://",
+                    1
+                )
+
         else:
             print("❌ DATABASE_URL is not set in environment!")
+
 
 settings = Settings()

@@ -3,7 +3,7 @@ import { create } from 'zustand';
 import { PersonalBook, PersonalBookStatus } from '../types/personalBook';
 import { EnrichedBook } from '../types/globalBook';
 import { storageService } from '../services/storageService';
-import { personalBookService } from '../services/personalBookService';
+import { storageService } from '../services/storageService';
 
 const CURRENT_USER_ID = 'user_1';
 
@@ -61,7 +61,7 @@ export const useLibraryStore = create<LibraryState>((set, get) => ({
     set({ loading: true, error: null });
     try {
       const books = storageService.getEnrichedBooks(CURRENT_USER_ID);
-      const personalBooks = personalBookService.getByUser(CURRENT_USER_ID);
+      const personalBooks = storageService.getByUser(CURRENT_USER_ID);
       set({ books, personalBooks, loading: false });
     } catch (error: any) {
       set({ error: error.message, loading: false });
@@ -122,7 +122,7 @@ export const useLibraryStore = create<LibraryState>((set, get) => ({
       ),
     });
 
-    const updated = personalBookService.update(CURRENT_USER_ID, bookId, { status });
+    const updated = storageService.update(CURRENT_USER_ID, bookId, { status });
     if (!updated) {
       set({ personalBooks: prev });
     }
@@ -137,7 +137,7 @@ export const useLibraryStore = create<LibraryState>((set, get) => ({
       ),
     });
 
-    const updated = personalBookService.update(CURRENT_USER_ID, bookId, { currentPage: progress });
+    const updated = storageService.update(CURRENT_USER_ID, bookId, { currentPage: progress });
     if (!updated) {
       set({ personalBooks: prev });
     }
@@ -150,6 +150,6 @@ export const useLibraryStore = create<LibraryState>((set, get) => ({
       personalBooks: prev.filter((ub) => ub.bookId !== bookId),
     });
 
-    personalBookService.remove(CURRENT_USER_ID, bookId);
+    storageService.remove(CURRENT_USER_ID, bookId);
   },
 }));

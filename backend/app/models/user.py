@@ -15,6 +15,9 @@ class User(Base):
     password_hash = Column(String, nullable=True)
     role = Column(String, default="user")
     is_active = Column(Boolean, default=True)
+    is_admin = Column(Boolean, default=False)
+    is_moderator = Column(Boolean, default=False)
+    last_active = Column(DateTime, nullable=True)
     created_at = Column(DateTime, server_default=func.now())
     updated_at = Column(DateTime, onupdate=func.now())
     

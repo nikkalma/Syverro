@@ -3,7 +3,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from app.core.deps import get_current_user, get_db
 from app.models.user import User
-from app.models.book import Book, UserBook
+from app.models.book import Book
+from app.models.user_book import UserBook
 from app.schemas.book import BookCreate, BookResponse, UserBookResponse
 from uuid import UUID
 

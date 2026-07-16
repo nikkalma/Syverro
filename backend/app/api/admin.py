@@ -5,7 +5,8 @@ from sqlalchemy import select, func, or_, and_
 from sqlalchemy.orm import selectinload
 from app.core.deps import get_current_user, get_db
 from app.models.user import User
-from app.models.book import Book, UserBook
+from app.models.book import Book
+from app.models.user_book import UserBook
 from app.models.author import Author
 from app.models.genre import Genre
 from app.schemas.admin import (

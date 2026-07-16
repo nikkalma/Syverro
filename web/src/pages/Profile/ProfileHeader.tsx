@@ -7,7 +7,7 @@ interface ProfileHeaderProps {
   books: any[];
 }
 
-export default function ProfileHeader({ books }: ProfileHeaderProps) {
+export default function ProfileHeader() {
   const profile = storageService.getReaderProfile();
   const [displayName, setDisplayName] = useState(profile.displayName || 'Читатель');
   const [avatar, setAvatar] = useState(profile.avatar || null);

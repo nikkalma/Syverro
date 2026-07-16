@@ -1,7 +1,7 @@
 from datetime import datetime
 from uuid import UUID
 from pydantic import BaseModel, EmailStr
-from typing import Optional
+from typing import Optional, List
 
 
 class UserCreate(BaseModel):
@@ -17,11 +17,11 @@ class UserLogin(BaseModel):
 class UserResponse(BaseModel):
     id: UUID
     email: Optional[EmailStr] = None
+    role: str
     created_at: datetime
 
     class Config:
         from_attributes = True
-
 
 class TokenResponse(BaseModel):
     access_token: str

@@ -382,18 +382,6 @@ export const storageService = {
 
   },
 
-
-  getPersonalBooks(
-    userId: string
-  ): PersonalBook[] {
-
-    return getPersonalBooks(
-      userId
-    );
-
-  },
-
-
   getPersonalBook(
     userId: string,
     bookId: string
@@ -405,18 +393,13 @@ export const storageService = {
     );
 
   },
-
-
   addPersonalBook(
     userId: string,
     bookId: string,
-    status:
-      PersonalBookStatus = 'planned'
+    status: PersonalBookStatus = 'planned'
   ): PersonalBook {
 
-    const now =
-      Date.now();
-
+    const now = Date.now();
 
     const personal: PersonalBook = {
 
@@ -426,23 +409,17 @@ export const storageService = {
 
       status,
 
-      currentPage:
-        0,
+      currentPage: 0,
 
-      favorite:
-        false,
+      favorite: false,
 
-      notes:
-        '',
+      notes: '',
 
-      quotes:
-        [],
+      quotes: [],
 
-      createdAt:
-        now,
+      createdAt: now,
 
-      updatedAt:
-        now,
+      updatedAt: now,
 
     };
 
@@ -481,8 +458,7 @@ export const storageService = {
       {
         ...current,
         ...updates,
-        updatedAt:
-          Date.now(),
+        updatedAt: Date.now(),
       }
     );
 
@@ -500,7 +476,6 @@ export const storageService = {
     );
 
   },
-
 
   getEnrichedBooks(
     userId: string

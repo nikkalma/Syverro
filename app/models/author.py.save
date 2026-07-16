@@ -1,0 +1,31 @@
+from sqlalchemy import Column, String, Text, Integer, DateTime
+from sqlalchemy.orm import relationship
+from sqlalchemy.dialects.postgresql import UUID
+from datetime import datetime
+import uuid
+
+from app.database import Base
+
+
+class Author(Base):
+    __tablename__ = "authors"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    name = Column(String, nullable=False, index=True)
+    photo = Column(String, nullable=True)
+    bio = Column(Text, nullable=True)
+    country = Column(String, nullable=True)
+    birth_year = Column(Integer, nullable=True)
+    death_year = Column(Integer, nullable=True)
+
+books = relationship(
+    "Book",
+    back_populates="author_ref"
+)
+
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    books = relationship(
+        "Book",
+   

@@ -13,6 +13,12 @@ class User(Base):
     email = Column(String, unique=True, nullable=False, index=True)  # ✅ email обязателен
     phone = Column(String, unique=True, nullable=True, index=True)   # ✅ телефон опционален
     password_hash = Column(String, nullable=True)
+    # Profile / Telegram fields used by admin API and telegram auth
+    first_name = Column(String, nullable=True)
+    last_name = Column(String, nullable=True)
+    username = Column(String, nullable=True, index=True)
+    telegram_id = Column(String, unique=True, nullable=True, index=True)
+    photo_url = Column(String, nullable=True)
     role = Column(String, default="user")
     is_active = Column(Boolean, default=True)
     is_admin = Column(Boolean, default=False)

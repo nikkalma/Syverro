@@ -177,8 +177,11 @@ async def get_users(
 
     if search:
         search_filter = or_(
-        User.email.contains(search),
-        User.phone.contains(search)
+            User.email.contains(search),
+            User.phone.contains(search),
+            User.first_name.contains(search),
+            User.last_name.contains(search),
+            User.username.contains(search),
         )
         query = query.where(search_filter)
         count_query = count_query.where(search_filter)
@@ -201,15 +204,15 @@ async def get_users(
         "data": [{
             "id": str(u.id),
             "email": u.email,
+            "first_name": u.first_name,
+            "last_name": u.last_name,
+            "username": u.username,
             "role": u.role or "user",
             "is_active": u.is_active,
             "created_at": u.created_at,
             "last_active": u.last_active,
             "phone": u.phone,
-            "first_name": None,
-            "last_name": None,
-            "username": None,
-            "telegram_id": None,
+            "telegram_id": u.telegram_id,
         } for u in users],
         "total": total,
         "page": page,
@@ -235,10 +238,10 @@ async def get_recent_users(
     return [{
         "id": str(u.id),
         "email": u.email,
-        "first_name": None,
-        "last_name": None,
-        "username": None,
-        "telegram_id": None,
+        "first_name": u.first_name,
+        "last_name": u.last_name,
+        "username": u.username,
+        "telegram_id": u.telegram_id,
         "created_at": u.created_at,
         "role": u.role or "user",
     } for u in users]
@@ -259,15 +262,15 @@ async def get_user_detail(
     return {
         "id": str(user.id),
         "email": user.email,
-        "first_name": None,
-        "last_name": None,
-        "username": None,
+        "first_name": user.first_name,
+        "last_name": user.last_name,
+        "username": user.username,
         "role": user.role or "user",
         "is_active": user.is_active,
         "created_at": user.created_at,
         "last_active": user.last_active,
         "phone": user.phone,
-        "telegram_id": None,
+        "telegram_id": user.telegram_id,
     }
 
 @router.put("/users/{user_id}")
@@ -284,7 +287,7 @@ async def update_user(
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
     
-    allowed_fields = ["phone"]
+    allowed_fields = ["first_name", "last_name", "username", "phone"]
     for field in allowed_fields:
         if field in data:
             setattr(user, field, data[field])

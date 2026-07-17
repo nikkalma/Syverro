@@ -1,0 +1,14 @@
+node_modules
+dist
+.git
+.gitignore
+*.md
+*.txt
+.env
+.env.*
+scripts
+vercel.json
+syverro-src-structure.txt
+syverro-structure.txt
+Dockerfile
+.dockerignore

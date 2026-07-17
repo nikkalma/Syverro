@@ -1,7 +1,15 @@
-# Local development stack — builds images from source.
-# Usage:
-#   docker compose up --build
-#   docker compose up --build -d
+# Production / VPS stack — pulls prebuilt images from GHCR (no local build).
+# Usage on VPS:
+#   cp .env.prod.example .env
+#   # edit secrets + image tag
+#   ./deploy/pull-up.sh
+#
+# Or manually:
+#   docker login ghcr.io
+#   docker compose -f docker-compose.prod.yml pull
+#   docker compose -f docker-compose.prod.yml up -d
+
+name: syverro
 
 services:
   postgres:
@@ -10,12 +18,13 @@ services:
     restart: unless-stopped
     environment:
       POSTGRES_USER: ${POSTGRES_USER:-syverro}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-syverro}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD}
       POSTGRES_DB: ${POSTGRES_DB:-syverro}
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    # Bind to localhost only — put a reverse proxy in front if needed.
     ports:
-      - "5432:5432"
+      - "127.0.0.1:5432:5432"
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-syverro} -d ${POSTGRES_DB:-syverro}"]
       interval: 10s
@@ -24,20 +33,17 @@ services:
       start_period: 10s
 
   backend:
-    build:
-      context: ./backend
-      dockerfile: Dockerfile
-    image: ${BACKEND_IMAGE:-syverro-backend:local}
+    image: ${BACKEND_IMAGE:-ghcr.io/nikkalma/syverro-backend:${IMAGE_TAG:-main}}
     container_name: syverro-backend
     restart: unless-stopped
     depends_on:
       postgres:
         condition: service_healthy
     environment:
-      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-syverro}:${POSTGRES_PASSWORD:-syverro}@postgres:5432/${POSTGRES_DB:-syverro}
-      SECRET_KEY: ${SECRET_KEY:-change-me-in-production}
+      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-syverro}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-syverro}
+      SECRET_KEY: ${SECRET_KEY:?set SECRET_KEY}
     ports:
-      - "8000:8000"
+      - "127.0.0.1:8000:8000"
     healthcheck:
       test:
         [
@@ -50,19 +56,14 @@ services:
       start_period: 40s
 
   web:
-    build:
-      context: ./web
-      dockerfile: Dockerfile
-      args:
-        VITE_API_URL: ${VITE_API_URL:-http://localhost:8000}
-    image: ${WEB_IMAGE:-syverro-web:local}
+    image: ${WEB_IMAGE:-ghcr.io/nikkalma/syverro-web:${IMAGE_TAG:-main}}
     container_name: syverro-web
     restart: unless-stopped
     depends_on:
       backend:
         condition: service_healthy
     ports:
-      - "3000:80"
+      - "127.0.0.1:3000:80"
 
 volumes:
   postgres_data:

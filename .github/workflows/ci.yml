@@ -1,0 +1,119 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  backend-docker:
+    name: Backend Docker
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build backend image
+        uses: docker/build-push-action@v6
+        with:
+          context: ./backend
+          file: ./backend/Dockerfile
+          push: false
+          load: true
+          tags: |
+            syverro-backend:ci
+            syverro-backend:local
+          cache-from: type=gha,scope=backend
+          cache-to: type=gha,mode=max,scope=backend
+
+      - name: Validate compose file
+        run: docker compose config --quiet
+
+      - name: Start postgres + backend
+        run: docker compose up -d --no-build postgres backend
+
+      - name: Wait for backend health
+        run: |
+          set -e
+          for i in $(seq 1 40); do
+            if curl -fsS http://127.0.0.1:8000/health; then
+              echo
+              echo "Backend healthy"
+              exit 0
+            fi
+            echo "Waiting for backend... ($i)"
+            sleep 3
+          done
+          echo "Backend failed to become healthy"
+          docker compose ps
+          docker compose logs backend postgres
+          exit 1
+
+      - name: Smoke test OpenAPI docs
+        run: curl -fsS -o /dev/null -w "%{http_code}\n" http://127.0.0.1:8000/docs
+
+      - name: Tear down
+        if: always()
+        run: docker compose down -v
+
+  web-docker:
+    name: Web Docker
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build web image
+        uses: docker/build-push-action@v6
+        with:
+          context: ./web
+          file: ./web/Dockerfile
+          push: false
+          load: true
+          tags: syverro-web:ci
+          build-args: |
+            VITE_API_URL=http://localhost:8000
+          cache-from: type=gha,scope=web
+          cache-to: type=gha,mode=max,scope=web
+
+  web-build:
+    name: Web npm build
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: web
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build
+        env:
+          VITE_API_URL: http://localhost:8000
+        run: npm run build

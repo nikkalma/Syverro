@@ -13,7 +13,8 @@ import {
   Moon,
   Sparkles,
   UserCircle,
-  Crown
+  Crown,
+  Library
 } from 'lucide-react';
 
 interface LayoutProps {
@@ -136,6 +137,23 @@ export default function Layout({ children }: LayoutProps) {
             <Globe size={18} />
             Карта миров
           </span>
+          {user && (
+            <span
+              onClick={() => navigate('/my-library')}
+              style={{
+                color: location.pathname === '/my-library' ? 'var(--text-primary)' : 'var(--text-secondary)',
+                cursor: 'pointer',
+                fontFamily: 'Inter, sans-serif',
+                transition: 'color 0.2s',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px',
+              }}
+            >
+              <Library size={18} />
+              Моя библиотека
+            </span>
+          )}
         </nav>
 
         <div style={{

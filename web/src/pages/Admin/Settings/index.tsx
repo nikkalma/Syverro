@@ -5,7 +5,7 @@ import { useAdminStore } from '../../../store/adminStore';
 import { type AdminSettings } from '../../../types/admin';
 import { canManageSettings } from '../../../types/admin';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+const API_URL = import.meta.env.VITE_API_URL || 'https://api.syverro.com';
 
 export default function AdminSettings() {
   const { setLoading, isLoading, error, setError, clearError } = useAdminStore();

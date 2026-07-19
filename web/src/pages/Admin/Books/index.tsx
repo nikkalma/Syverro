@@ -8,7 +8,7 @@ import BooksFilters from './BooksFilters';
 import BookModal from './BookModal';
 import { canManageBooks } from '../../../types/admin';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+const API_URL = import.meta.env.VITE_API_URL || 'https://api.syverro.com';
 
 export default function AdminBooks() {
   const { searchQuery, filters, page, limit, setLoading, isLoading, error, setError, clearError } = useAdminStore();

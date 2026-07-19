@@ -9,6 +9,8 @@ import Insights from './pages/Insights';
 import WorldMap from './pages/WorldMap';
 import Profile from './pages/Profile';
 import Settings from './pages/Settings';
+import BookPage from './pages/BookPage';
+import MyLibraryPage from './pages/MyLibraryPage';
 
 import AdminRoute from './pages/Admin/AdminRoute';
 import AdminDashboard from './pages/Admin/Dashboard';
@@ -39,6 +41,10 @@ export default function App() {
           <Route path="/profile" element={<Profile />} />
 
           <Route path="/settings" element={<Settings />} />
+
+          <Route path="/book/:id" element={<BookPage />} />
+
+          <Route path="/my-library" element={<MyLibraryPage />} />
 
 
           <Route

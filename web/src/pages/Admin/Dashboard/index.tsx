@@ -7,7 +7,7 @@ import StatCard from './StatCard';
 import RecentUsers from './RecentUsers';
 import RecentActivity from './RecentActivity';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+const API_URL = import.meta.env.VITE_API_URL || 'https://api.syverro.com';
 
 export default function AdminDashboard() {
   const { isLoading, setLoading, error, setError } = useAdminStore();

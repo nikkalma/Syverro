@@ -2,29 +2,22 @@
 import { create } from 'zustand';
 import { PersonalBook, PersonalBookStatus } from '../types/personalBook';
 import { EnrichedBook } from '../types/globalBook';
-import { storageService } from '../services/storageService';
-import { storageService } from '../services/storageService';
-
-const CURRENT_USER_ID = 'user_1';
+import { bookApi } from '../shared/api/bookApi';
 
 interface LibraryState {
-  // Данные
   books: EnrichedBook[];
   personalBooks: PersonalBook[];
   loading: boolean;
   error: string | null;
 
-  // Фильтры
   searchQuery: string;
   statusFilters: PersonalBookStatus[];
   genreFilters: string[];
   authorFilters: string[];
 
-  // UI
   viewMode: 'grid' | 'list';
   selectedBookId: string | null;
 
-  // Actions
   loadLibrary: () => Promise<void>;
   setSearchQuery: (query: string) => void;
   toggleStatusFilter: (status: PersonalBookStatus) => void;
@@ -34,14 +27,12 @@ interface LibraryState {
   setViewMode: (mode: 'grid' | 'list') => void;
   selectBook: (bookId: string | null) => void;
 
-  // CRUD (optimistic)
   updateBookStatus: (bookId: string, status: PersonalBookStatus) => void;
   updateProgress: (bookId: string, progress: number) => void;
   removeFromLibrary: (bookId: string) => void;
 }
 
 export const useLibraryStore = create<LibraryState>((set, get) => ({
-  // Начальное состояние
   books: [],
   personalBooks: [],
   loading: false,
@@ -53,25 +44,28 @@ export const useLibraryStore = create<LibraryState>((set, get) => ({
   viewMode: 'grid',
   selectedBookId: null,
 
-  // Загрузка
   loadLibrary: async () => {
     if (get().books.length > 0 && get().personalBooks.length > 0) {
       return;
     }
     set({ loading: true, error: null });
     try {
-      const books = storageService.getEnrichedBooks(CURRENT_USER_ID);
-      const personalBooks = storageService.getByUser(CURRENT_USER_ID);
-      set({ books, personalBooks, loading: false });
+      const [enrichedResult, personalResult] = await Promise.allSettled([
+        bookApi.getEnrichedBooks(),
+        bookApi.getUserBooks(),
+      ]);
+
+      const enrichedBooks = enrichedResult.status === 'fulfilled' ? enrichedResult.value : [];
+      const personalBooks = personalResult.status === 'fulfilled' ? personalResult.value : [];
+
+      set({ books: enrichedBooks, personalBooks, loading: false });
     } catch (error: any) {
       set({ error: error.message, loading: false });
     }
   },
 
-  // Поиск
   setSearchQuery: (query) => set({ searchQuery: query }),
 
-  // Фильтры
   toggleStatusFilter: (status) => {
     const { statusFilters } = get();
     set({
@@ -108,12 +102,10 @@ export const useLibraryStore = create<LibraryState>((set, get) => ({
     });
   },
 
-  // UI
   setViewMode: (mode) => set({ viewMode: mode }),
   selectBook: (bookId) => set({ selectedBookId: bookId }),
 
-  // CRUD с optimistic updates
-  updateBookStatus: (bookId, status) => {
+  updateBookStatus: async (bookId, status) => {
     const prev = get().personalBooks;
 
     set({
@@ -122,13 +114,14 @@ export const useLibraryStore = create<LibraryState>((set, get) => ({
       ),
     });
 
-    const updated = storageService.update(CURRENT_USER_ID, bookId, { status });
-    if (!updated) {
+    try {
+      await bookApi.updateStatus(bookId, status);
+    } catch {
       set({ personalBooks: prev });
     }
   },
 
-  updateProgress: (bookId, progress) => {
+  updateProgress: async (bookId, progress) => {
     const prev = get().personalBooks;
 
     set({
@@ -137,19 +130,18 @@ export const useLibraryStore = create<LibraryState>((set, get) => ({
       ),
     });
 
-    const updated = storageService.update(CURRENT_USER_ID, bookId, { currentPage: progress });
-    if (!updated) {
-      set({ personalBooks: prev });
-    }
+    // No backend endpoint for progress yet — revert on failure
+    set({ personalBooks: prev });
   },
 
-  removeFromLibrary: (bookId) => {
+  removeFromLibrary: async (bookId) => {
     const prev = get().personalBooks;
 
     set({
       personalBooks: prev.filter((ub) => ub.bookId !== bookId),
     });
 
-    storageService.remove(CURRENT_USER_ID, bookId);
+    // No backend endpoint for removing from library yet — revert on failure
+    set({ personalBooks: prev });
   },
 }));

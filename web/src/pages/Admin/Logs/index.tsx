@@ -6,7 +6,7 @@ import { AdminLog } from '../../../types/admin';
 import LogsTable from './LogsTable';
 import LogsFilters from './LogsFilters';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+const API_URL = import.meta.env.VITE_API_URL || 'https://api.syverro.com';
 
 export default function AdminLogs() {
   const { searchQuery, filters, page, limit, setLoading, isLoading, error, setError, clearError } = useAdminStore();

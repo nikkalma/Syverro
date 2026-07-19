@@ -1,9 +1,8 @@
 // src/shared/api/client.ts
 
 import axios from 'axios';
-import { useAuthStore } from '../../store/authStore';
 
-export const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+export const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://api.syverro.com';
 
 export const apiClient = axios.create({
   baseURL: API_BASE_URL,
@@ -51,8 +50,8 @@ apiClient.interceptors.response.use(
       // Проверяем, есть ли токен в localStorage
       const token = localStorage.getItem('token');
       if (!token) {
-        console.warn('🔐 [API] No token, redirecting to login');
-        window.location.href = '/login';
+        // Anonymous user — no token, no redirect. Caller handles the error.
+        console.warn('🔐 [API] No token, 401 returned');
         return Promise.reject(error);
       }
 

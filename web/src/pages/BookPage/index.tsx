@@ -3,7 +3,6 @@
 import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useLibrary } from '../../hooks/useLibrary';
-import { storageService } from '../../services/storageService';
 import { EditModal } from './EditModal';
 import { AddToLibraryModal } from './AddToLibraryModal';
 import type { PersonalBookStatus } from '../../types/personalBook';
@@ -11,12 +10,10 @@ import type { PersonalBookStatus } from '../../types/personalBook';
 // ===== ОФФЛАЙН-СЛОЙ =====
 import { useOffline } from '@/lib/offline';
 
-const CURRENT_USER_ID = 'user_1';
-
 export default function BookPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { books, loadBooks } = useLibrary();
+  const { books, loadBooks, addToMyLibrary, removeFromMyLibrary } = useLibrary();
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
 
@@ -24,7 +21,8 @@ export default function BookPage() {
   const { trackReadingStart, trackReadingFinish, trackNote } = useOffline();
 
   const book = books.find((b) => b.id === id);
-  const isInLibrary = book ? !!storageService.getByBook(CURRENT_USER_ID, book.id) : false;
+  const personalBook = book?.personal ?? null;
+  const isInLibrary = !!personalBook;
 
   if (!book) {
     return (
@@ -49,17 +47,14 @@ export default function BookPage() {
     );
   }
 
-  const handleEditSave = (data: Partial<typeof book>) => {
-    const updated = { ...book, ...data };
-    storageService.updateGlobalBook(updated);
+  const handleEditSave = (_data: Partial<typeof book>) => {
     loadBooks();
     setIsEditModalOpen(false);
   };
 
   const handleAddToLibrary = (status: PersonalBookStatus) => {
-    storageService.add(CURRENT_USER_ID, book.id, status);
+    addToMyLibrary(book.id, status);
     setIsAddModalOpen(false);
-    loadBooks();
 
     // ===== ТРЕКИНГ: НАЧАЛО ЧТЕНИЯ =====
     if (status === 'reading') {
@@ -78,11 +73,8 @@ export default function BookPage() {
     }
     // ======================================
 
-    storageService.remove(CURRENT_USER_ID, book.id);
-    loadBooks();
+    removeFromMyLibrary(book.id);
   };
-
-  const personalBook = storageService.getByBook(CURRENT_USER_ID, book.id);
 
   const handleTagClick = (type: 'genre' | 'theme', value: string) => {
     navigate(`/?${type}=${encodeURIComponent(value)}`);
@@ -143,18 +135,17 @@ export default function BookPage() {
             {book.originalLanguage && <span>{book.originalLanguage}</span>}
           </div>
 
-          {book.description && (
-            <div style={{ marginTop: '4px' }}>
-              <p style={{
-                color: '#97A6BA',
-                lineHeight: '1.8',
-                fontSize: '15px',
-                whiteSpace: 'pre-wrap',
-              }}>
-                {book.description}
-              </p>
-            </div>
-          )}
+          <div style={{ marginTop: '4px' }}>
+            <p style={{
+              color: book.description ? '#97A6BA' : '#5B86A1',
+              lineHeight: '1.8',
+              fontSize: '15px',
+              whiteSpace: 'pre-wrap',
+              fontStyle: book.description ? 'normal' : 'italic',
+            }}>
+              {book.description || 'Описание пока отсутствует'}
+            </p>
+          </div>
         </div>
 
         {/* ПРАВАЯ КОЛОНКА — 30% (ОБЛОЖКА + КНОПКИ) */}
@@ -283,9 +274,9 @@ export default function BookPage() {
       {/* ============================================ */}
 
       {/* Жанры */}
-      {book.genres && book.genres.length > 0 && (
-        <div style={{ marginTop: '32px' }}>
-          <h3 style={{ fontSize: '14px', color: '#5B86A1', marginBottom: '8px' }}>Жанры</h3>
+      <div style={{ marginTop: '32px' }}>
+        <h3 style={{ fontSize: '14px', color: '#5B86A1', marginBottom: '8px' }}>Жанры</h3>
+        {book.genres && book.genres.length > 0 ? (
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
             {book.genres.map((genre) => (
               <span
@@ -305,8 +296,12 @@ export default function BookPage() {
               </span>
             ))}
           </div>
-        </div>
-      )}
+        ) : (
+          <p style={{ fontSize: '13px', color: '#5B86A1', fontStyle: 'italic' }}>
+            Жанры пока не определены
+          </p>
+        )}
+      </div>
 
       {/* Темы */}
       {book.themes && book.themes.length > 0 && (

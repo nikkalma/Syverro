@@ -8,7 +8,7 @@ import AuthorsFilters from './AuthorsFilters';
 import AuthorModal from './AuthorModal';
 import { canManageAuthors } from '../../../types/admin';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+const API_URL = import.meta.env.VITE_API_URL || 'https://api.syverro.com';
 
 export default function AdminAuthors() {
   const { searchQuery, filters, page, limit, setLoading, isLoading, error, setError, clearError } = useAdminStore();

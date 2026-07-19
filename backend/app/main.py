@@ -37,7 +37,7 @@ app.include_router(sync.router)  # ✅ ТЕПЕРЬ РАБОТАЕТ
 app.include_router(admin.router)
 
 async def ensure_user_profile_columns(conn):
-    """Add profile columns used by admin/telegram if missing (create_all won't alter existing tables)."""
+    """Add columns that create_all won't add to existing tables."""
     from sqlalchemy import text
 
     statements = [
@@ -46,6 +46,8 @@ async def ensure_user_profile_columns(conn):
         "ALTER TABLE users ADD COLUMN IF NOT EXISTS username VARCHAR",
         "ALTER TABLE users ADD COLUMN IF NOT EXISTS telegram_id VARCHAR",
         "ALTER TABLE users ADD COLUMN IF NOT EXISTS photo_url VARCHAR",
+        "ALTER TABLE books ADD COLUMN IF NOT EXISTS description TEXT",
+        "ALTER TABLE genres ADD COLUMN IF NOT EXISTS parent_id UUID REFERENCES genres(id)",
     ]
     for sql in statements:
         await conn.execute(text(sql))

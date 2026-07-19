@@ -45,8 +45,10 @@ class AdminBookResponse(BaseModel):
     id: str
     title: str
     author: str
+    author_id: Optional[str] = None
     cover: Optional[str] = None
     genres: List[str] = []
+    description: Optional[str] = None
     total_pages: Optional[int] = None
     is_published: bool = False
     created_at: datetime
@@ -416,14 +418,16 @@ async def get_books(
             "id": str(b.id),
             "title": b.title,
             "author": b.author,
+            "author_id": str(b.author_id) if b.author_id else None,
             "cover": b.cover,
             "genres": b.genres or [],
+            "description": b.description,
             "total_pages": b.total_pages,
             "is_published": b.is_published,
             "created_at": b.created_at,
             "updated_at": b.updated_at,
             "created_by": str(b.created_by) if b.created_by else None,
-            "created_by_email": None,  # Можно подтянуть через join
+            "created_by_email": None,
         } for b in books],
         "total": total,
         "page": page,
@@ -448,13 +452,28 @@ async def get_book_detail(
         "id": str(book.id),
         "title": book.title,
         "author": book.author,
+        "author_id": str(book.author_id) if book.author_id else None,
         "cover": book.cover,
         "genres": book.genres or [],
+        "description": book.description,
         "total_pages": book.total_pages,
         "is_published": book.is_published,
         "created_at": book.created_at,
         "updated_at": book.updated_at,
     }
+
+async def _find_or_create_author(db: AsyncSession, author_name: str) -> Author:
+    """Find author by name (case-insensitive) or create new one."""
+    result = await db.execute(
+        select(Author).where(func.lower(Author.name) == author_name.strip().lower())
+    )
+    author = result.scalar_one_or_none()
+    if not author:
+        author = Author(name=author_name.strip())
+        db.add(author)
+        await db.flush()
+    return author
+
 
 @router.post("/books")
 async def create_book(
@@ -474,11 +493,15 @@ async def create_book(
     if existing.scalar_one_or_none():
         raise HTTPException(status_code=400, detail="Book already exists")
 
+    author = await _find_or_create_author(db, data["author"])
+
     book = Book(
         title=data["title"],
         author=data["author"],
+        author_id=author.id,
         cover=data.get("cover"),
         genres=data.get("genres", []),
+        description=data.get("description"),
         total_pages=data.get("total_pages"),
         is_published=data.get("is_published", False),
         created_by=current_user.id,
@@ -502,7 +525,14 @@ async def update_book(
     if not book:
         raise HTTPException(status_code=404, detail="Book not found")
 
-    allowed_fields = ["title", "author", "cover", "genres", "total_pages", "is_published"]
+    # Handle author: explicit author_id wins, else find-or-create from author name
+    if "author_id" in data and data["author_id"]:
+        book.author_id = data["author_id"]
+    elif "author" in data and data["author"] and data["author"] != book.author:
+        author = await _find_or_create_author(db, data["author"])
+        book.author_id = author.id
+
+    allowed_fields = ["title", "author", "cover", "genres", "total_pages", "is_published", "description"]
     for key, value in data.items():
         if key in allowed_fields and hasattr(book, key):
             setattr(book, key, value)
@@ -747,6 +777,7 @@ async def get_genres(
             "name": g.name,
             "slug": g.slug,
             "description": g.description,
+            "parent_id": str(g.parent_id) if g.parent_id else None,
             "book_count": g.book_count or 0,
             "created_at": g.created_at,
             "updated_at": g.updated_at,
@@ -775,6 +806,7 @@ async def get_genre_detail(
         "name": genre.name,
         "slug": genre.slug,
         "description": genre.description,
+        "parent_id": str(genre.parent_id) if genre.parent_id else None,
         "book_count": genre.book_count or 0,
         "created_at": genre.created_at,
         "updated_at": genre.updated_at,
@@ -802,6 +834,7 @@ async def create_genre(
         name=data.name,
         slug=slug,
         description=data.description,
+        parent_id=data.parent_id,
     )
     db.add(genre)
     await db.commit()
@@ -828,6 +861,9 @@ async def update_genre(
     
     if data.description is not None:
         genre.description = data.description
+
+    if data.parent_id is not None:
+        genre.parent_id = data.parent_id
     
     await db.commit()
     await db.refresh(genre)

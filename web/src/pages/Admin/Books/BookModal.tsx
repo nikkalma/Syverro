@@ -1,7 +1,8 @@
 // src/pages/Admin/Books/BookModal.tsx
 
-import { useState, useEffect } from 'react';
-import { AdminBook } from '../../../types/admin';
+import { useState, useEffect, useRef } from 'react';
+import { apiClient } from '../../../shared/api/client';
+import type { AdminBook, AdminAuthor, AdminGenre } from '../../../types/admin';
 
 interface BookModalProps {
   isOpen: boolean;
@@ -11,17 +12,36 @@ interface BookModalProps {
   onSave: (data: any) => void;
 }
 
+const inputStyle: React.CSSProperties = {
+  width: '100%',
+  padding: '10px 14px',
+  background: 'rgba(0,0,0,0.3)',
+  border: '1px solid rgba(255,255,255,0.08)',
+  borderRadius: '8px',
+  color: '#E6EDF3',
+  fontSize: '14px',
+  fontFamily: 'Inter, sans-serif',
+  outline: 'none',
+};
+
 export default function BookModal({ isOpen, mode, book, onClose, onSave }: BookModalProps) {
   const [formData, setFormData] = useState({
     title: '',
     author: '',
+    author_id: null as string | null,
     cover: '',
     genres: [] as string[],
     total_pages: '',
     description: '',
     is_published: false,
   });
-  const [genreInput, setGenreInput] = useState('');
+
+  const [authorQuery, setAuthorQuery] = useState('');
+  const [authorSuggestions, setAuthorSuggestions] = useState<AdminAuthor[]>([]);
+  const [showAuthorDropdown, setShowAuthorDropdown] = useState(false);
+  const authorRef = useRef<HTMLDivElement>(null);
+
+  const [availableGenres, setAvailableGenres] = useState<AdminGenre[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -30,42 +50,82 @@ export default function BookModal({ isOpen, mode, book, onClose, onSave }: BookM
       setFormData({
         title: book.title || '',
         author: book.author || '',
+        author_id: book.author_id || null,
         cover: book.cover || '',
         genres: book.genres || [],
         total_pages: book.total_pages?.toString() || '',
         description: book.description || '',
         is_published: book.is_published || false,
       });
+      setAuthorQuery(book.author || '');
     } else {
       setFormData({
         title: '',
         author: '',
+        author_id: null,
         cover: '',
         genres: [],
         total_pages: '',
         description: '',
         is_published: false,
       });
+      setAuthorQuery('');
     }
-    setGenreInput('');
+    setAuthorSuggestions([]);
+    setShowAuthorDropdown(false);
     setError(null);
   }, [mode, book, isOpen]);
 
+  useEffect(() => {
+    apiClient.get('/admin/genres', { params: { limit: 200 } })
+      .then((res) => setAvailableGenres(res.data?.data ?? []))
+      .catch(() => {});
+  }, []);
+
+  useEffect(() => {
+    if (!authorQuery || authorQuery.length < 1) {
+      setAuthorSuggestions([]);
+      return;
+    }
+    const timer = setTimeout(() => {
+      apiClient.get('/admin/authors', { params: { search: authorQuery, limit: 10 } })
+        .then((res) => setAuthorSuggestions(res.data?.data ?? []))
+        .catch(() => {});
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [authorQuery]);
+
+  useEffect(() => {
+    const handleClick = (e: MouseEvent) => {
+      if (authorRef.current && !authorRef.current.contains(e.target as Node)) {
+        setShowAuthorDropdown(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClick);
+    return () => document.removeEventListener('mousedown', handleClick);
+  }, []);
+
   if (!isOpen) return null;
 
-  const handleAddGenre = () => {
-    const trimmed = genreInput.trim();
-    if (trimmed && !formData.genres.includes(trimmed)) {
-      setFormData({ ...formData, genres: [...formData.genres, trimmed] });
-      setGenreInput('');
-    }
+  const handleSelectAuthor = (author: AdminAuthor) => {
+    setFormData({ ...formData, author: author.name, author_id: author.id });
+    setAuthorQuery(author.name);
+    setShowAuthorDropdown(false);
   };
 
-  const handleRemoveGenre = (genre: string) => {
-    setFormData({
-      ...formData,
-      genres: formData.genres.filter((g) => g !== genre),
-    });
+  const handleAuthorInputChange = (value: string) => {
+    setAuthorQuery(value);
+    setFormData({ ...formData, author: value, author_id: null });
+    setShowAuthorDropdown(true);
+  };
+
+  const handleToggleGenre = (genreName: string) => {
+    const current = formData.genres;
+    if (current.includes(genreName)) {
+      setFormData({ ...formData, genres: current.filter((g) => g !== genreName) });
+    } else {
+      setFormData({ ...formData, genres: [...current, genreName] });
+    }
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -74,7 +134,7 @@ export default function BookModal({ isOpen, mode, book, onClose, onSave }: BookM
     setError(null);
 
     try {
-      const submitData = {
+      const submitData: Record<string, any> = {
         title: formData.title.trim(),
         author: formData.author.trim(),
         cover: formData.cover.trim() || null,
@@ -83,6 +143,10 @@ export default function BookModal({ isOpen, mode, book, onClose, onSave }: BookM
         description: formData.description.trim() || null,
         is_published: formData.is_published,
       };
+
+      if (formData.author_id) {
+        submitData.author_id = formData.author_id;
+      }
 
       if (!submitData.title) {
         throw new Error('Название обязательно');
@@ -147,7 +211,7 @@ export default function BookModal({ isOpen, mode, book, onClose, onSave }: BookM
         </div>
 
         <form onSubmit={handleSubmit}>
-          {/* ===== НАЗВАНИЕ ===== */}
+          {/* НАЗВАНИЕ */}
           <div style={{ marginBottom: '16px' }}>
             <label style={{ color: '#97A6BA', fontSize: '13px', display: 'block', marginBottom: '4px' }}>
               Название *
@@ -158,46 +222,63 @@ export default function BookModal({ isOpen, mode, book, onClose, onSave }: BookM
               onChange={(e) => setFormData({ ...formData, title: e.target.value })}
               placeholder="Введите название книги"
               required
-              style={{
-                width: '100%',
-                padding: '10px 14px',
-                background: 'rgba(0,0,0,0.3)',
-                border: '1px solid rgba(255,255,255,0.08)',
-                borderRadius: '8px',
-                color: '#E6EDF3',
-                fontSize: '14px',
-                fontFamily: 'Inter, sans-serif',
-                outline: 'none',
-              }}
+              style={inputStyle}
             />
           </div>
 
-          {/* ===== АВТОР ===== */}
-          <div style={{ marginBottom: '16px' }}>
+          {/* АВТОР с автокомплитом */}
+          <div style={{ marginBottom: '16px' }} ref={authorRef}>
             <label style={{ color: '#97A6BA', fontSize: '13px', display: 'block', marginBottom: '4px' }}>
-              Автор *
+              Автор * {formData.author_id && <span style={{ color: '#4CAF50', fontSize: '11px' }}>✓ из базы</span>}
             </label>
-            <input
-              type="text"
-              value={formData.author}
-              onChange={(e) => setFormData({ ...formData, author: e.target.value })}
-              placeholder="Введите имя автора"
-              required
-              style={{
-                width: '100%',
-                padding: '10px 14px',
-                background: 'rgba(0,0,0,0.3)',
-                border: '1px solid rgba(255,255,255,0.08)',
-                borderRadius: '8px',
-                color: '#E6EDF3',
-                fontSize: '14px',
-                fontFamily: 'Inter, sans-serif',
-                outline: 'none',
-              }}
-            />
+            <div style={{ position: 'relative' }}>
+              <input
+                type="text"
+                value={authorQuery}
+                onChange={(e) => handleAuthorInputChange(e.target.value)}
+                onFocus={() => authorQuery.length >= 1 && setShowAuthorDropdown(true)}
+                placeholder="Начните вводить имя автора..."
+                required
+                style={inputStyle}
+              />
+              {showAuthorDropdown && authorSuggestions.length > 0 && (
+                <div style={{
+                  position: 'absolute',
+                  top: '100%',
+                  left: 0,
+                  right: 0,
+                  background: '#1A2832',
+                  border: '1px solid rgba(255,255,255,0.1)',
+                  borderRadius: '8px',
+                  marginTop: '4px',
+                  maxHeight: '200px',
+                  overflowY: 'auto',
+                  zIndex: 10,
+                }}>
+                  {authorSuggestions.map((a) => (
+                    <div
+                      key={a.id}
+                      onClick={() => handleSelectAuthor(a)}
+                      style={{
+                        padding: '10px 14px',
+                        cursor: 'pointer',
+                        borderBottom: '1px solid rgba(255,255,255,0.04)',
+                        color: '#E6EDF3',
+                        fontSize: '14px',
+                      }}
+                      onMouseEnter={(e) => (e.currentTarget.style.background = 'rgba(255,255,255,0.05)')}
+                      onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
+                    >
+                      {a.name}
+                      {a.country && <span style={{ color: '#5B86A1', fontSize: '12px', marginLeft: '8px' }}>{a.country}</span>}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
 
-          {/* ===== ОБЛОЖКА ===== */}
+          {/* ОБЛОЖКА */}
           <div style={{ marginBottom: '16px' }}>
             <label style={{ color: '#97A6BA', fontSize: '13px', display: 'block', marginBottom: '4px' }}>
               Обложка (URL)
@@ -207,21 +288,11 @@ export default function BookModal({ isOpen, mode, book, onClose, onSave }: BookM
               value={formData.cover}
               onChange={(e) => setFormData({ ...formData, cover: e.target.value })}
               placeholder="https://example.com/cover.jpg"
-              style={{
-                width: '100%',
-                padding: '10px 14px',
-                background: 'rgba(0,0,0,0.3)',
-                border: '1px solid rgba(255,255,255,0.08)',
-                borderRadius: '8px',
-                color: '#E6EDF3',
-                fontSize: '14px',
-                fontFamily: 'Inter, sans-serif',
-                outline: 'none',
-              }}
+              style={inputStyle}
             />
           </div>
 
-          {/* ===== СТРАНИЦЫ ===== */}
+          {/* СТРАНИЦЫ */}
           <div style={{ marginBottom: '16px' }}>
             <label style={{ color: '#97A6BA', fontSize: '13px', display: 'block', marginBottom: '4px' }}>
               Количество страниц
@@ -232,21 +303,11 @@ export default function BookModal({ isOpen, mode, book, onClose, onSave }: BookM
               onChange={(e) => setFormData({ ...formData, total_pages: e.target.value })}
               placeholder="0"
               min="0"
-              style={{
-                width: '100%',
-                padding: '10px 14px',
-                background: 'rgba(0,0,0,0.3)',
-                border: '1px solid rgba(255,255,255,0.08)',
-                borderRadius: '8px',
-                color: '#E6EDF3',
-                fontSize: '14px',
-                fontFamily: 'Inter, sans-serif',
-                outline: 'none',
-              }}
+              style={inputStyle}
             />
           </div>
 
-          {/* ===== ОПИСАНИЕ ===== */}
+          {/* ОПИСАНИЕ */}
           <div style={{ marginBottom: '16px' }}>
             <label style={{ color: '#97A6BA', fontSize: '13px', display: 'block', marginBottom: '4px' }}>
               Описание
@@ -257,103 +318,80 @@ export default function BookModal({ isOpen, mode, book, onClose, onSave }: BookM
               placeholder="Краткое описание книги..."
               rows={3}
               style={{
-                width: '100%',
-                padding: '10px 14px',
-                background: 'rgba(0,0,0,0.3)',
-                border: '1px solid rgba(255,255,255,0.08)',
-                borderRadius: '8px',
-                color: '#E6EDF3',
-                fontSize: '14px',
-                fontFamily: 'Inter, sans-serif',
-                outline: 'none',
+                ...inputStyle,
                 resize: 'vertical',
               }}
             />
           </div>
 
-          {/* ===== ЖАНРЫ ===== */}
+          {/* ЖАНРЫ — выбор из существующих */}
           <div style={{ marginBottom: '16px' }}>
             <label style={{ color: '#97A6BA', fontSize: '13px', display: 'block', marginBottom: '4px' }}>
               Жанры
             </label>
-            <div style={{ display: 'flex', gap: '8px' }}>
-              <input
-                type="text"
-                value={genreInput}
-                onChange={(e) => setGenreInput(e.target.value)}
-                placeholder="Например: Фантастика"
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') {
-                    e.preventDefault();
-                    handleAddGenre();
-                  }
-                }}
-                style={{
-                  flex: 1,
-                  padding: '10px 14px',
-                  background: 'rgba(0,0,0,0.3)',
-                  border: '1px solid rgba(255,255,255,0.08)',
-                  borderRadius: '8px',
-                  color: '#E6EDF3',
-                  fontSize: '14px',
-                  fontFamily: 'Inter, sans-serif',
-                  outline: 'none',
-                }}
-              />
-              <button
-                type="button"
-                onClick={handleAddGenre}
-                style={{
-                  padding: '10px 16px',
-                  background: 'rgba(91, 134, 161, 0.15)',
-                  border: '1px solid rgba(91, 134, 161, 0.2)',
-                  borderRadius: '8px',
-                  color: '#5B86A1',
-                  fontSize: '14px',
-                  cursor: 'pointer',
-                  fontFamily: 'Inter, sans-serif',
-                }}
-              >
-                +
-              </button>
-            </div>
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginTop: '8px' }}>
-              {formData.genres.map((genre) => (
-                <span
-                  key={genre}
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '6px',
-                    padding: '4px 10px',
-                    background: 'rgba(91, 134, 161, 0.1)',
-                    borderRadius: '12px',
-                    fontSize: '13px',
-                    color: '#5B86A1',
-                    border: '1px solid rgba(91, 134, 161, 0.1)',
-                  }}
-                >
-                  {genre}
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+              {availableGenres.map((genre) => {
+                const selected = formData.genres.includes(genre.name);
+                return (
                   <button
+                    key={genre.id}
                     type="button"
-                    onClick={() => handleRemoveGenre(genre)}
+                    onClick={() => handleToggleGenre(genre.name)}
                     style={{
-                      background: 'none',
-                      border: 'none',
-                      color: '#5B86A1',
+                      padding: '4px 12px',
+                      borderRadius: '16px',
+                      fontSize: '13px',
                       cursor: 'pointer',
-                      fontSize: '14px',
-                      padding: '0 2px',
+                      fontFamily: 'Inter, sans-serif',
+                      background: selected ? 'rgba(91, 134, 161, 0.25)' : 'rgba(255,255,255,0.05)',
+                      border: `1px solid ${selected ? 'rgba(91, 134, 161, 0.4)' : 'rgba(255,255,255,0.08)'}`,
+                      color: selected ? '#5B86A1' : '#97A6BA',
                     }}
                   >
-                    ×
+                    {selected ? '✓ ' : ''}{genre.name}
                   </button>
-                </span>
-              ))}
+                );
+              })}
             </div>
+            {formData.genres.length > 0 && (
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginTop: '8px' }}>
+                {formData.genres.map((genre) => (
+                  <span
+                    key={genre}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '6px',
+                      padding: '4px 10px',
+                      background: 'rgba(91, 134, 161, 0.1)',
+                      borderRadius: '12px',
+                      fontSize: '13px',
+                      color: '#5B86A1',
+                      border: '1px solid rgba(91, 134, 161, 0.1)',
+                    }}
+                  >
+                    {genre}
+                    <button
+                      type="button"
+                      onClick={() => handleToggleGenre(genre)}
+                      style={{
+                        background: 'none',
+                        border: 'none',
+                        color: '#5B86A1',
+                        cursor: 'pointer',
+                        fontSize: '14px',
+                        padding: '0 2px',
+                      }}
+                    >
+                      ×
+                    </button>
+                  </span>
+                ))}
+              </div>
+            )}
           </div>
 
-          {/* ===== СТАТУС ПУБЛИКАЦИИ ===== */}
+          {/* СТАТУС ПУБЛИКАЦИИ */}
           <div style={{ marginBottom: '24px' }}>
             <label style={{ display: 'flex', alignItems: 'center', gap: '10px', color: '#97A6BA', fontSize: '13px', cursor: 'pointer' }}>
               <input
@@ -371,14 +409,14 @@ export default function BookModal({ isOpen, mode, book, onClose, onSave }: BookM
             </label>
           </div>
 
-          {/* ===== ОШИБКИ ===== */}
+          {/* ОШИБКИ */}
           {error && (
             <div style={{ color: '#EF5350', fontSize: '13px', marginBottom: '16px' }}>
-              ❌ {error}
+              {error}
             </div>
           )}
 
-          {/* ===== КНОПКИ ===== */}
+          {/* КНОПКИ */}
           <div style={{ display: 'flex', gap: '12px' }}>
             <button
               type="submit"

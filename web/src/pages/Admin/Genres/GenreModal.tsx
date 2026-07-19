@@ -1,7 +1,8 @@
 // src/pages/Admin/Genres/GenreModal.tsx
 
 import { useState, useEffect } from 'react';
-import { AdminGenre } from '../../../types/admin';
+import { apiClient } from '../../../shared/api/client';
+import type { AdminGenre } from '../../../types/admin';
 
 interface GenreModalProps {
   isOpen: boolean;
@@ -13,17 +14,33 @@ interface GenreModalProps {
 
 export default function GenreModal({ isOpen, mode, genre, onClose, onSave }: GenreModalProps) {
   const [name, setName] = useState('');
+  const [description, setDescription] = useState('');
+  const [parentId, setParentId] = useState<string | null>(null);
+  const [allGenres, setAllGenres] = useState<AdminGenre[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (mode === 'edit' && genre) {
       setName(genre.name || '');
+      setDescription(genre.description || '');
+      setParentId(genre.parent_id || null);
     } else {
       setName('');
+      setDescription('');
+      setParentId(null);
     }
     setError(null);
   }, [mode, genre, isOpen]);
+
+  useEffect(() => {
+    apiClient.get('/admin/genres', { params: { limit: 200 } })
+      .then((res) => {
+        const genres = (res.data?.data ?? []) as AdminGenre[];
+        setAllGenres(genres.filter((g) => g.id !== genre?.id));
+      })
+      .catch(() => {});
+  }, [genre?.id]);
 
   if (!isOpen) return null;
 
@@ -37,7 +54,11 @@ export default function GenreModal({ isOpen, mode, genre, onClose, onSave }: Gen
       if (!trimmed) {
         throw new Error('Название жанра обязательно');
       }
-      onSave({ name: trimmed });
+      onSave({
+        name: trimmed,
+        description: description.trim() || null,
+        parent_id: parentId || null,
+      });
       setLoading(false);
     } catch (err: any) {
       setError(err.message);
@@ -91,7 +112,8 @@ export default function GenreModal({ isOpen, mode, genre, onClose, onSave }: Gen
         </div>
 
         <form onSubmit={handleSubmit}>
-          <div style={{ marginBottom: '24px' }}>
+          {/* НАЗВАНИЕ */}
+          <div style={{ marginBottom: '16px' }}>
             <label style={{ color: '#97A6BA', fontSize: '13px', display: 'block', marginBottom: '4px' }}>
               Название жанра *
             </label>
@@ -115,9 +137,61 @@ export default function GenreModal({ isOpen, mode, genre, onClose, onSave }: Gen
             />
           </div>
 
+          {/* ОПИСАНИЕ */}
+          <div style={{ marginBottom: '16px' }}>
+            <label style={{ color: '#97A6BA', fontSize: '13px', display: 'block', marginBottom: '4px' }}>
+              Описание
+            </label>
+            <textarea
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              placeholder="Краткое описание жанра..."
+              rows={2}
+              style={{
+                width: '100%',
+                padding: '10px 14px',
+                background: 'rgba(0,0,0,0.3)',
+                border: '1px solid rgba(255,255,255,0.08)',
+                borderRadius: '8px',
+                color: '#E6EDF3',
+                fontSize: '14px',
+                fontFamily: 'Inter, sans-serif',
+                outline: 'none',
+                resize: 'vertical',
+              }}
+            />
+          </div>
+
+          {/* РОДИТЕЛЬСКИЙ ЖАНР */}
+          <div style={{ marginBottom: '24px' }}>
+            <label style={{ color: '#97A6BA', fontSize: '13px', display: 'block', marginBottom: '4px' }}>
+              Поджанр (родительский жанр)
+            </label>
+            <select
+              value={parentId || ''}
+              onChange={(e) => setParentId(e.target.value || null)}
+              style={{
+                width: '100%',
+                padding: '10px 14px',
+                background: 'rgba(0,0,0,0.3)',
+                border: '1px solid rgba(255,255,255,0.08)',
+                borderRadius: '8px',
+                color: '#E6EDF3',
+                fontSize: '14px',
+                fontFamily: 'Inter, sans-serif',
+                outline: 'none',
+              }}
+            >
+              <option value="">— Нет (корневой жанр) —</option>
+              {allGenres.map((g) => (
+                <option key={g.id} value={g.id}>{g.name}</option>
+              ))}
+            </select>
+          </div>
+
           {error && (
             <div style={{ color: '#EF5350', fontSize: '13px', marginBottom: '16px' }}>
-              ❌ {error}
+              {error}
             </div>
           )}
 

@@ -45,8 +45,10 @@ class AdminBookResponse(BaseModel):
     id: str
     title: str
     author: str
+    author_id: Optional[str] = None
     cover: Optional[str] = None
     genres: List[str] = []
+    description: Optional[str] = None
     total_pages: Optional[int] = None
     is_published: bool = False
     created_at: datetime
@@ -59,8 +61,10 @@ class AdminBookCreate(BaseModel):
     """Создание книги в админке"""
     title: str
     author: str
+    author_id: Optional[str] = None
     cover: Optional[str] = None
     genres: List[str] = []
+    description: Optional[str] = None
     total_pages: Optional[int] = None
     is_published: bool = False
 
@@ -69,8 +73,10 @@ class AdminBookUpdate(BaseModel):
     """Обновление книги в админке"""
     title: Optional[str] = None
     author: Optional[str] = None
+    author_id: Optional[str] = None
     cover: Optional[str] = None
     genres: Optional[List[str]] = None
+    description: Optional[str] = None
     total_pages: Optional[int] = None
     is_published: Optional[bool] = None
 

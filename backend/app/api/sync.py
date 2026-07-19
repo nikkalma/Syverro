@@ -528,6 +528,7 @@ def book_to_dict(book: Book) -> dict:
         "author_id": str(book.author_id) if book.author_id else None,
         "cover": book.cover,
         "genres": book.genres,
+        "description": book.description,
         "total_pages": book.total_pages,
         "is_published": book.is_published,
         "version": book.version,

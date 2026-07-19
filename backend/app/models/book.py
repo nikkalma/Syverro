@@ -1,4 +1,4 @@
-from sqlalchemy import Column, String, Integer, DateTime, ForeignKey, Boolean, JSON, UniqueConstraint
+from sqlalchemy import Column, String, Integer, DateTime, ForeignKey, Boolean, JSON, Text, UniqueConstraint
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.sql import func
 from sqlalchemy.orm import relationship
@@ -15,6 +15,7 @@ class Book(Base):
     author_id = Column(UUID(as_uuid=True), ForeignKey("authors.id"), nullable=True)
     cover = Column(String, nullable=True)
     genres = Column(JSON, default=[])
+    description = Column(Text, nullable=True)
     total_pages = Column(Integer, nullable=True)
     is_published = Column(Boolean, default=False)
     created_by = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=True)

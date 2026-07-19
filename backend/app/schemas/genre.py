@@ -9,6 +9,7 @@ class GenreBase(BaseModel):
     """Базовые поля жанра"""
     name: str
     description: Optional[str] = None
+    parent_id: Optional[UUID] = None
 
 
 class GenreCreate(GenreBase):
@@ -16,10 +17,11 @@ class GenreCreate(GenreBase):
     pass
 
 
-class GenreUpdate(GenreBase):
+class GenreUpdate(BaseModel):
     """Для обновления жанра (все поля опциональны)"""
     name: Optional[str] = None
     description: Optional[str] = None
+    parent_id: Optional[UUID] = None
 
 
 class GenreResponse(GenreBase):

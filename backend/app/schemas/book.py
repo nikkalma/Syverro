@@ -9,6 +9,7 @@ class BookBase(BaseModel):
     author: str
     cover: Optional[str] = None
     genres: Optional[List[str]] = []
+    description: Optional[str] = None
     total_pages: Optional[int] = None
 
 
@@ -18,6 +19,10 @@ class BookCreate(BookBase):
 
 class BookResponse(BookBase):
     id: UUID
+    author_id: Optional[UUID] = None
+    author_name: Optional[str] = None
+    author_country: Optional[str] = None
+    author_bio: Optional[str] = None
     created_at: datetime
     updated_at: Optional[datetime]
 

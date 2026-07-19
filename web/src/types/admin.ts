@@ -70,15 +70,16 @@ export interface AdminBook {
   id: string;
   title: string;
   author: string;
+  author_id?: string | null;
   cover?: string | null;
   genres: string[];
+  description?: string | null;
   total_pages?: number | null;
   is_published: boolean;
   created_at: string;
   updated_at: string;
   created_by?: string;
   created_by_email?: string;
-  description?: string | null;
 }
 
 export interface AdminBookFilters {
@@ -97,10 +98,11 @@ export interface AdminBookFilters {
 export interface AdminBookCreate {
   title: string;
   author: string;
+  author_id?: string | null;
   cover?: string | null;
   genres?: string[];
-  total_pages?: number | null;
   description?: string | null;
+  total_pages?: number | null;
 }
 
 export interface AdminBookUpdate extends Partial<AdminBookCreate> {
@@ -152,6 +154,8 @@ export interface AdminGenre {
   id: string;
   name: string;
   slug: string;
+  description?: string | null;
+  parent_id?: string | null;
   book_count: number;
   created_at: string;
   updated_at: string;
@@ -167,10 +171,14 @@ export interface AdminGenreFilters {
 
 export interface AdminGenreCreate {
   name: string;
+  description?: string | null;
+  parent_id?: string | null;
 }
 
 export interface AdminGenreUpdate {
-  name: string;
+  name?: string;
+  description?: string | null;
+  parent_id?: string | null;
 }
 
 // ============================================================

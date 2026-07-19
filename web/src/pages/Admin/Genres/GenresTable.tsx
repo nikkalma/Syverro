@@ -38,7 +38,7 @@ export default function GenresTable({
         <table style={{ width: '100%', borderCollapse: 'collapse' }}>
           <thead>
             <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
-              {['Название', 'Slug', 'Книг', 'Дата', 'Действия'].map((h) => (
+              {['Название', 'Slug', 'Описание', 'Книг', 'Дата', 'Действия'].map((h) => (
                 <th key={h} style={{ padding: '12px 16px', textAlign: 'left', color: '#97A6BA', fontSize: '12px', fontWeight: '500' }}>
                   {h}
                 </th>
@@ -48,9 +48,9 @@ export default function GenresTable({
           <tbody>
             {[...Array(5)].map((_, i) => (
               <tr key={i} style={{ borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
-                {[...Array(5)].map((_, j) => (
+                {[...Array(6)].map((_, j) => (
                   <td key={j} style={{ padding: '12px 16px' }}>
-                    <div style={{ height: '20px', background: 'rgba(255,255,255,0.05)', borderRadius: '4px', width: j === 4 ? '60%' : '80%' }} />
+                    <div style={{ height: '20px', background: 'rgba(255,255,255,0.05)', borderRadius: '4px', width: j === 5 ? '60%' : '80%' }} />
                   </td>
                 ))}
               </tr>
@@ -118,6 +118,7 @@ export default function GenresTable({
           <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
             <th style={{ padding: '12px 16px', textAlign: 'left', color: '#97A6BA', fontSize: '12px', fontWeight: '500' }}>Название</th>
             <th style={{ padding: '12px 16px', textAlign: 'left', color: '#97A6BA', fontSize: '12px', fontWeight: '500' }}>Slug</th>
+            <th style={{ padding: '12px 16px', textAlign: 'left', color: '#97A6BA', fontSize: '12px', fontWeight: '500' }}>Описание</th>
             <th style={{ padding: '12px 16px', textAlign: 'left', color: '#97A6BA', fontSize: '12px', fontWeight: '500' }}>Книг</th>
             <th style={{ padding: '12px 16px', textAlign: 'left', color: '#97A6BA', fontSize: '12px', fontWeight: '500' }}>Дата</th>
             <th style={{ padding: '12px 16px', textAlign: 'left', color: '#97A6BA', fontSize: '12px', fontWeight: '500' }}>Действия</th>
@@ -139,6 +140,9 @@ export default function GenresTable({
               </td>
               <td style={{ padding: '12px 16px', color: '#97A6BA', fontSize: '13px' }}>
                 {genre.slug || '—'}
+              </td>
+              <td style={{ padding: '12px 16px', color: '#97A6BA', fontSize: '12px', maxWidth: '200px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                {genre.description || '—'}
               </td>
               <td style={{ padding: '12px 16px', color: '#5B86A1', fontSize: '13px' }}>
                 {genre.book_count || 0}

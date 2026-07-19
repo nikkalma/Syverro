@@ -12,6 +12,12 @@ import Settings from './pages/Settings';
 
 import AdminRoute from './pages/Admin/AdminRoute';
 import AdminDashboard from './pages/Admin/Dashboard';
+import AdminUsers from "./pages/Admin/Users";
+import AdminBooks from "./pages/Admin/Books";
+import AdminAuthors from "./pages/Admin/Authors";
+import AdminGenres from "./pages/Admin/Genres";
+import AdminLogs from "./pages/Admin/Logs";
+import AdminSettings from "./pages/Admin/Settings";
 
 
 export default function App() {
@@ -43,6 +49,60 @@ export default function App() {
               </AdminRoute>
             }
           />
+
+          <Route 
+ path="/admin/users" 
+ element={
+   <AdminRoute>
+     <AdminUsers />
+   </AdminRoute>
+ }
+/>
+
+<Route 
+ path="/admin/books" 
+ element={
+   <AdminRoute>
+     <AdminBooks />
+   </AdminRoute>
+ }
+/>
+
+<Route 
+ path="/admin/authors" 
+ element={
+   <AdminRoute>
+     <AdminAuthors />
+   </AdminRoute>
+ }
+/>
+
+<Route 
+ path="/admin/genres" 
+ element={
+   <AdminRoute>
+     <AdminGenres />
+   </AdminRoute>
+ }
+/>
+
+<Route 
+ path="/admin/logs" 
+ element={
+   <AdminRoute>
+     <AdminLogs />
+   </AdminRoute>
+ }
+/>
+
+<Route 
+ path="/admin/settings" 
+ element={
+   <AdminRoute>
+     <AdminSettings />
+   </AdminRoute>
+ }
+/>
 
         </Routes>
       </Layout>

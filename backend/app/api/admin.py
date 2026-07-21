@@ -653,6 +653,12 @@ async def toggle_publish(
     if not book:
         raise HTTPException(status_code=404, detail="Book not found")
 
+    if data.is_published and book.moderation_status != "approved":
+        raise HTTPException(
+            status_code=400,
+            detail="Cannot publish a book that has not been approved by moderation"
+        )
+
     book.is_published = data.is_published
     await db.commit()
     return {"message": "Book published" if data.is_published else "Book hidden"}

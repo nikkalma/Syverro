@@ -310,6 +310,12 @@ async def process_change(user_id: UUID, item: PushItem, db: AsyncSession) -> dic
 async def process_book_change(user_id: UUID, entity_id: str, operation: str, payload: dict, db: AsyncSession) -> dict:
     """Обрабатывает изменение книги."""
     
+    # Fields that must never be set via sync — only server-side moderation can change these
+    SYNC_BLOCKED_BOOK_FIELDS = {
+        "is_published", "moderation_status", "moderation_reason",
+        "moderated_by", "moderated_at", "metadata_status",
+    }
+
     # Проверяем существование
     result = await db.execute(
         select(Book).where(
@@ -338,9 +344,9 @@ async def process_book_change(user_id: UUID, entity_id: str, operation: str, pay
                     "resolved_state": book_to_dict(existing),
                     "version": existing.version
                 }
-            # Обновляем существующую
+            # Обновляем существующую (skip moderation-sensitive fields)
             for key, value in payload.items():
-                if hasattr(existing, key) and key not in ["id", "created_at", "created_by"]:
+                if hasattr(existing, key) and key not in ({"id", "created_at", "created_by"} | SYNC_BLOCKED_BOOK_FIELDS):
                     setattr(existing, key, value)
             existing.version += 1
             existing.last_modified_at = datetime.now(timezone.utc)
@@ -348,11 +354,16 @@ async def process_book_change(user_id: UUID, entity_id: str, operation: str, pay
             await db.refresh(existing)
             return {"status": "applied", "entity_id": entity_id, "version": existing.version}
 
-        # Создаём новую
+        # Создаём новую — always start with moderation_state defaults
+        safe_payload = {k: v for k, v in payload.items()
+                        if k not in ({"id", "created_by", "version"} | SYNC_BLOCKED_BOOK_FIELDS)}
         book = Book(
             id=entity_id,
             created_by=user_id,
-            **{k: v for k, v in payload.items() if k not in ["id", "created_by", "version"]}
+            moderation_status="pending",
+            is_published=False,
+            metadata_status="draft",
+            **safe_payload,
         )
         db.add(book)
         await db.commit()
@@ -373,7 +384,7 @@ async def process_book_change(user_id: UUID, entity_id: str, operation: str, pay
             }
 
         for key, value in payload.items():
-            if hasattr(existing, key) and key not in ["id", "created_at", "created_by", "version"]:
+            if hasattr(existing, key) and key not in ({"id", "created_at", "created_by", "version"} | SYNC_BLOCKED_BOOK_FIELDS):
                 setattr(existing, key, value)
         existing.version += 1
         existing.last_modified_at = datetime.now(timezone.utc)

@@ -37,12 +37,19 @@ export default function BookEnrichmentPage() {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
 
+  const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
+  const userRole = currentUser?.role || 'user';
+  const isModerator = userRole === 'moderator';
+  const canEdit = userRole === 'owner' || userRole === 'admin';
+
   // Book enrichment fields
+  const [title, setTitle] = useState('');
   const [subtitle, setSubtitle] = useState('');
   const [originalTitle, setOriginalTitle] = useState('');
   const [description, setDescription] = useState('');
   const [cover, setCover] = useState('');
   const [genres, setGenres] = useState<string[]>([]);
+  const [genreIds, setGenreIds] = useState<string[]>([]);
   const [genreInput, setGenreInput] = useState('');
   const [originalLanguage, setOriginalLanguage] = useState('');
   const [countryOfOrigin, setCountryOfOrigin] = useState('');
@@ -53,6 +60,8 @@ export default function BookEnrichmentPage() {
   const [themeInput, setThemeInput] = useState('');
   const [motifs, setMotifs] = useState<string[]>([]);
   const [motifInput, setMotifInput] = useState('');
+  const [totalPages, setTotalPages] = useState('');
+  const [publicationType, setPublicationType] = useState('official');
 
   // Author fields
   const [authorId, setAuthorId] = useState('');
@@ -75,11 +84,13 @@ export default function BookEnrichmentPage() {
       .then((r) => r.json())
       .then((data: AdminBook) => {
         setBook(data);
+        setTitle(data.title || '');
         setSubtitle(data.subtitle || '');
         setOriginalTitle(data.original_title || '');
         setDescription(data.description || '');
         setCover(data.cover || '');
         setGenres(data.genres || []);
+        setGenreIds(data.genre_ids || []);
         setOriginalLanguage(data.original_language || '');
         setCountryOfOrigin(data.country_of_origin || '');
         setOriginalPublicationYear(data.original_publication_year?.toString() || '');
@@ -94,6 +105,8 @@ export default function BookEnrichmentPage() {
         setAuthorBirthYear(data.author_birth_year?.toString() || '');
         setAuthorDeathYear(data.author_death_year?.toString() || '');
         setAuthorCreationType(data.author_creation_type || 'individual_author');
+        setTotalPages(data.total_pages?.toString() || '');
+        setPublicationType(data.publication_type || 'official');
       })
       .catch((err) => console.error(err))
       .finally(() => setLoading(false));
@@ -133,12 +146,34 @@ export default function BookEnrichmentPage() {
     setSuccess(false);
 
     try {
+      // Step 1: Save basic fields via admin books endpoint (admin/owner only)
+      if (canEdit) {
+        const basicBody: Record<string, any> = {};
+        if (title !== (book?.title || '')) basicBody.title = title;
+        if (totalPages !== (book?.total_pages?.toString() || '')) basicBody.total_pages = totalPages ? parseInt(totalPages) : null;
+        if (publicationType !== (book?.publication_type || 'official')) basicBody.publication_type = publicationType;
+
+        if (Object.keys(basicBody).length > 0) {
+          const basicRes = await fetch(`${API_URL}/admin/books/${id}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+            body: JSON.stringify(basicBody),
+          });
+          if (!basicRes.ok) {
+            const err = await basicRes.json();
+            throw new Error(err.detail || 'Ошибка сохранения основных полей');
+          }
+        }
+      }
+
+      // Step 2: Save enrichment fields via metadata endpoint
       const body: Record<string, any> = {
         subtitle: subtitle || null,
         original_title: originalTitle || null,
         description: description || null,
         cover: cover || null,
         genres: genres,
+        genre_ids: genreIds.length > 0 ? genreIds : undefined,
         author_id: authorId || null,
         original_language: originalLanguage || null,
         country_of_origin: countryOfOrigin || null,
@@ -226,6 +261,15 @@ export default function BookEnrichmentPage() {
         </div>
       </div>
 
+      {isModerator && (
+        <div style={{
+          padding: '12px 16px', background: 'rgba(91,134,161,0.08)', borderRadius: '8px',
+          border: '1px solid rgba(91,134,161,0.15)', fontSize: '13px', color: '#5B86A1',
+        }}>
+          Режим модератора — просмотр без возможности редактирования. Только admin/owner могут сохранять изменения.
+        </div>
+      )}
+
       {book.missing_fields && book.missing_fields.length > 0 && (
         <div style={{
           padding: '12px 16px', background: 'rgba(255,167,38,0.08)', borderRadius: '8px',
@@ -241,24 +285,80 @@ export default function BookEnrichmentPage() {
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
           <div>
             <label style={labelStyle}>Название</label>
-            <input value={book.title} disabled style={{ ...inputStyle, opacity: 0.5 }} />
+            <input
+              value={title}
+              onChange={(e) => canEdit && setTitle(e.target.value)}
+              disabled={isModerator}
+              style={{ ...inputStyle, opacity: isModerator ? 0.5 : 1 }}
+            />
           </div>
           <div>
             <label style={labelStyle}>Подзаголовок</label>
-            <input value={subtitle} onChange={(e) => setSubtitle(e.target.value)} placeholder="Подзаголовок" style={inputStyle} />
+            <input
+              value={subtitle}
+              onChange={(e) => setSubtitle(e.target.value)}
+              disabled={isModerator}
+              placeholder="Подзаголовок"
+              style={{ ...inputStyle, opacity: isModerator ? 0.5 : 1 }}
+            />
           </div>
           <div>
             <label style={labelStyle}>Оригинальное название</label>
-            <input value={originalTitle} onChange={(e) => setOriginalTitle(e.target.value)} placeholder="Оригинальное название" style={inputStyle} />
+            <input
+              value={originalTitle}
+              onChange={(e) => setOriginalTitle(e.target.value)}
+              disabled={isModerator}
+              placeholder="Оригинальное название"
+              style={{ ...inputStyle, opacity: isModerator ? 0.5 : 1 }}
+            />
           </div>
           <div style={{ gridColumn: '1 / -1' }}>
             <label style={labelStyle}>Описание</label>
-            <textarea value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Описание книги..." rows={3} style={{ ...inputStyle, resize: 'vertical' }} />
+            <textarea
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              disabled={isModerator}
+              placeholder="Описание книги..."
+              rows={3}
+              style={{ ...inputStyle, resize: 'vertical', opacity: isModerator ? 0.5 : 1 }}
+            />
           </div>
           <div>
             <label style={labelStyle}>Обложка (URL)</label>
-            <input type="url" value={cover} onChange={(e) => setCover(e.target.value)} placeholder="https://..." style={inputStyle} />
+            <input
+              type="url"
+              value={cover}
+              onChange={(e) => setCover(e.target.value)}
+              disabled={isModerator}
+              placeholder="https://..."
+              style={{ ...inputStyle, opacity: isModerator ? 0.5 : 1 }}
+            />
           </div>
+          {canEdit && (
+            <>
+              <div>
+                <label style={labelStyle}>Страниц</label>
+                <input
+                  type="number"
+                  value={totalPages}
+                  onChange={(e) => setTotalPages(e.target.value)}
+                  placeholder="Кол-во страниц"
+                  style={inputStyle}
+                />
+              </div>
+              <div>
+                <label style={labelStyle}>Тип издания</label>
+                <select
+                  value={publicationType}
+                  onChange={(e) => setPublicationType(e.target.value)}
+                  style={inputStyle}
+                >
+                  <option value="official">Официальное</option>
+                  <option value="unofficial">Неофициальное</option>
+                </select>
+              </div>
+            </>
+          )}
           <div>
             <label style={labelStyle}>Жанры</label>
             <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', marginBottom: '6px' }}>

@@ -1,146 +1,137 @@
 // src/pages/Admin/Genres/index.tsx
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useAdminStore } from '../../../store/adminStore';
 import { AdminGenre, AdminGenreCreate } from '../../../types/admin';
-import GenresTable from './GenresTable';
+import GenresTree from './GenresTree';
 import GenresFilters from './GenresFilters';
 import GenreModal from './GenreModal';
 import { canManageGenres } from '../../../types/admin';
 
+interface GenreTreeNode {
+  id: string;
+  name: string;
+  slug: string;
+  type: string;
+  description: string | null;
+  parent_id: string | null;
+  book_count: number;
+  children: GenreTreeNode[];
+  created_at?: string;
+}
+
 const API_URL = import.meta.env.VITE_API_URL || 'https://api.syverro.com';
 
 export default function AdminGenres() {
-  const { searchQuery, filters, page, limit, setLoading, isLoading, error, setError, clearError } = useAdminStore();
+  const { searchQuery, isLoading, setLoading, error, setError, clearError } = useAdminStore();
   
-  const [genres, setGenres] = useState<AdminGenre[]>([]);
-  const [allGenres, setAllGenres] = useState<AdminGenre[]>([]);
-  const [total, setTotal] = useState(0);
+  const [tree, setTree] = useState<GenreTreeNode[]>([]);
   const [selectedGenre, setSelectedGenre] = useState<AdminGenre | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [genreToDelete, setGenreToDelete] = useState<AdminGenre | null>(null);
   const [modalMode, setModalMode] = useState<'create' | 'edit'>('create');
+  const [defaultParentId, setDefaultParentId] = useState<string | null>(null);
 
   const token = localStorage.getItem('token');
   const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
   const userRole = currentUser?.role || 'user';
   const canManage = canManageGenres(userRole);
 
-  // ===== ЗАГРУЗКА ЖАНРОВ =====
-  const fetchGenres = async () => {
+  const countAll = (nodes: GenreTreeNode[]): number => {
+    let c = 0;
+    for (const n of nodes) {
+      c++;
+      if (n.children?.length) c += countAll(n.children);
+    }
+    return c;
+  };
+
+  const fetchTree = useCallback(async () => {
     setLoading(true);
     clearError();
-
     try {
-      const params = new URLSearchParams({
-        page: String(page),
-        limit: String(limit),
-        ...(searchQuery && { search: searchQuery }),
-        ...filters,
-      });
-
-      const response = await fetch(`${API_URL}/admin/genres?${params}`, {
+      const res = await fetch(`${API_URL}/admin/genres/tree`, {
         headers: { Authorization: `Bearer ${token}` },
       });
-
-      if (!response.ok) {
-        const data = await response.json();
+      if (!res.ok) {
+        const data = await res.json();
         throw new Error(data.detail || 'Ошибка загрузки жанров');
       }
-
-      const data = await response.json();
-      setGenres(data.data || []);
-      setTotal(data.total || 0);
+      const data = await res.json();
+      setTree(data || []);
     } catch (err: any) {
       setError(err.message);
     } finally {
       setLoading(false);
     }
-  };
+  }, [token, setLoading, setError, clearError]);
 
   useEffect(() => {
-    fetchGenres();
-    // Also fetch all genres for parent selection
-    fetch(`${API_URL}/admin/genres?limit=500`, {
-      headers: { Authorization: `Bearer ${token}` },
-    })
-      .then((r) => r.json())
-      .then((data) => setAllGenres(data.data || []))
-      .catch(() => {});
-  }, [page, limit, searchQuery, filters]);
+    fetchTree();
+  }, [fetchTree]);
 
-  // ===== СОЗДАНИЕ ЖАНРА =====
   const handleCreate = async (data: AdminGenreCreate) => {
     try {
-      const response = await fetch(`${API_URL}/admin/genres`, {
+      const res = await fetch(`${API_URL}/admin/genres`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
         body: JSON.stringify(data),
       });
-
-      if (!response.ok) throw new Error('Ошибка создания жанра');
-
+      if (!res.ok) throw new Error('Ошибка создания жанра');
       setIsModalOpen(false);
-      await fetchGenres();
+      setDefaultParentId(null);
+      await fetchTree();
     } catch (err: any) {
       setError(err.message);
     }
   };
 
-  // ===== ОБНОВЛЕНИЕ ЖАНРА =====
   const handleUpdate = async (id: string, data: AdminGenreCreate) => {
     try {
-      const response = await fetch(`${API_URL}/admin/genres/${id}`, {
+      const res = await fetch(`${API_URL}/admin/genres/${id}`, {
         method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
         body: JSON.stringify(data),
       });
-
-      if (!response.ok) throw new Error('Ошибка обновления жанра');
-
+      if (!res.ok) throw new Error('Ошибка обновления жанра');
       setIsModalOpen(false);
-      await fetchGenres();
+      setDefaultParentId(null);
+      await fetchTree();
     } catch (err: any) {
       setError(err.message);
     }
   };
 
-  // ===== УДАЛЕНИЕ =====
   const handleDelete = async () => {
     if (!genreToDelete) return;
-
     try {
-      const response = await fetch(`${API_URL}/admin/genres/${genreToDelete.id}`, {
+      const res = await fetch(`${API_URL}/admin/genres/${genreToDelete.id}`, {
         method: 'DELETE',
         headers: { Authorization: `Bearer ${token}` },
       });
-
-      if (!response.ok) throw new Error('Ошибка удаления жанра');
-
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.detail || 'Ошибка удаления жанра');
+      }
       setIsDeleteModalOpen(false);
       setGenreToDelete(null);
-      await fetchGenres();
+      await fetchTree();
     } catch (err: any) {
       setError(err.message);
     }
   };
 
-  // ===== ОТКРЫТИЕ МОДАЛКИ =====
-  const handleOpenCreate = () => {
+  const handleOpenCreate = (parentId?: string | null) => {
     setSelectedGenre(null);
+    setDefaultParentId(parentId || null);
     setModalMode('create');
     setIsModalOpen(true);
   };
 
   const handleOpenEdit = (genre: AdminGenre) => {
     setSelectedGenre(genre);
+    setDefaultParentId(null);
     setModalMode('edit');
     setIsModalOpen(true);
   };
@@ -150,18 +141,23 @@ export default function AdminGenres() {
     setIsDeleteModalOpen(true);
   };
 
+  // Build the modal genre with defaultParentId for create mode
+  const modalGenre = modalMode === 'create' && defaultParentId
+    ? { ...selectedGenre, parent_id: defaultParentId } as AdminGenre
+    : selectedGenre;
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <h1 style={{ fontSize: '24px', fontWeight: '400', color: '#E6EDF3', margin: 0 }}>
-          🏷️ Жанры
+          🏷 Жанры
           <span style={{ fontSize: '14px', color: '#97A6BA', marginLeft: '12px' }}>
-            {total} записей
+            {countAll(tree)} жанров
           </span>
         </h1>
         {canManage && (
           <button
-            onClick={handleOpenCreate}
+            onClick={() => handleOpenCreate()}
             style={{
               padding: '10px 20px',
               background: '#5B86A1',
@@ -177,35 +173,33 @@ export default function AdminGenres() {
             onMouseEnter={(e) => (e.currentTarget.style.background = '#4A7590')}
             onMouseLeave={(e) => (e.currentTarget.style.background = '#5B86A1')}
           >
-            + Добавить жанр
+            + Добавить корневой жанр
           </button>
         )}
       </div>
 
-      <GenresFilters onFilterChange={fetchGenres} />
+      <GenresFilters onFilterChange={() => {}} />
 
-      <GenresTable
-        genres={genres}
+      <GenresTree
+        tree={tree}
         loading={isLoading}
         error={error}
-        total={total}
-        page={page}
-        limit={limit}
+        searchQuery={searchQuery}
         canManage={canManage}
-        allGenres={allGenres}
         onEdit={handleOpenEdit}
         onDelete={handleOpenDelete}
-        onRefresh={fetchGenres}
+        onAddChild={(parentId) => handleOpenCreate(parentId)}
+        onRefresh={fetchTree}
       />
 
-      {/* ===== МОДАЛКА ===== */}
       <GenreModal
         isOpen={isModalOpen}
         mode={modalMode}
-        genre={selectedGenre}
+        genre={modalGenre}
         onClose={() => {
           setIsModalOpen(false);
           setSelectedGenre(null);
+          setDefaultParentId(null);
         }}
         onSave={(data) => {
           if (modalMode === 'create') {
@@ -216,7 +210,6 @@ export default function AdminGenres() {
         }}
       />
 
-      {/* ===== МОДАЛКА УДАЛЕНИЯ ===== */}
       {isDeleteModalOpen && genreToDelete && (
         <div
           style={{
@@ -243,12 +236,15 @@ export default function AdminGenres() {
             onClick={(e) => e.stopPropagation()}
           >
             <div style={{ textAlign: 'center', marginBottom: '20px' }}>
-              <div style={{ fontSize: '48px' }}>⚠️</div>
+              <div style={{ fontSize: '48px' }}>⚠</div>
               <h2 style={{ color: '#E6EDF3', fontSize: '20px', marginBottom: '8px' }}>Удалить жанр?</h2>
               <p style={{ color: '#97A6BA', fontSize: '14px' }}>
-                Вы уверены, что хотите удалить жанр <strong style={{ color: '#E6EDF3' }}>{genreToDelete.name}</strong>?
-                <br />
-                <span style={{ color: '#EF5350', fontSize: '13px' }}>Это действие нельзя отменить.</span>
+                Жанр <strong style={{ color: '#E6EDF3' }}>{genreToDelete.name}</strong> будет удалён.
+                {genreToDelete.book_count > 0 && (
+                  <span style={{ display: 'block', color: '#D4A76A', fontSize: '13px', marginTop: '4px' }}>
+                    Привязано {genreToDelete.book_count} книг — связи будут разорваны.
+                  </span>
+                )}
               </p>
             </div>
             <div style={{ display: 'flex', gap: '12px' }}>
@@ -267,7 +263,7 @@ export default function AdminGenres() {
                   fontFamily: 'Inter, sans-serif',
                 }}
               >
-                🗑️ Удалить
+                Удалить
               </button>
               <button
                 onClick={() => setIsDeleteModalOpen(false)}

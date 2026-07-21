@@ -1,7 +1,7 @@
 // src/pages/MyLibraryPage/LibraryGrid.tsx
 import { EnrichedBook } from '@/types/globalBook';
 import { PersonalBook } from '../../types/personalBook';
-import { personalBookStatusLabels, PersonalBookStatus } from '../../types/personalBook';
+import { personalBookStatusLabels, personalBookStatusColors, PersonalBookStatus } from '../../types/personalBook';
 import { useLibraryStore } from '../../store/libraryStore';
 
 interface LibraryGridProps {
@@ -82,10 +82,10 @@ export default function LibraryGrid({ books, onBookClick }: LibraryGridProps) {
                   padding: '2px 10px',
                   fontSize: '10px',
                   borderRadius: '12px',
-                  background: 'rgba(0,0,0,0.7)',
+                  background: personalBookStatusColors[userBook.status as PersonalBookStatus]?.bg || 'rgba(0,0,0,0.7)',
                   backdropFilter: 'blur(4px)',
-                  color: '#E6EDF3',
-                  border: '1px solid rgba(255,255,255,0.06)',
+                  color: personalBookStatusColors[userBook.status as PersonalBookStatus]?.text || '#E6EDF3',
+                  border: `1px solid ${personalBookStatusColors[userBook.status as PersonalBookStatus]?.border || 'rgba(255,255,255,0.06)'}`,
                 }}
               >
                 {personalBookStatusLabels[userBook.status as PersonalBookStatus]}

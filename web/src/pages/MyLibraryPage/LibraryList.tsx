@@ -1,7 +1,7 @@
 // src/pages/MyLibraryPage/LibraryList.tsx
 import { EnrichedBook } from '@/types/globalBook';
 import { PersonalBook } from '../../types/personalBook';
-import { personalBookStatusLabels, PersonalBookStatus } from '../../types/personalBook';
+import { personalBookStatusLabels, personalBookStatusColors, PersonalBookStatus } from '../../types/personalBook';
 import { useLibraryStore } from '../../store/libraryStore';
 
 interface LibraryListProps {
@@ -95,8 +95,9 @@ export default function LibraryList({ books, onBookClick }: LibraryListProps) {
                 padding: '2px 12px',
                 fontSize: '12px',
                 borderRadius: '12px',
-                background: 'rgba(91, 134, 161, 0.15)',
-                color: '#5B86A1',
+                background: personalBookStatusColors[userBook.status as PersonalBookStatus]?.bg || 'rgba(91, 134, 161, 0.15)',
+                color: personalBookStatusColors[userBook.status as PersonalBookStatus]?.text || '#5B86A1',
+                border: `1px solid ${personalBookStatusColors[userBook.status as PersonalBookStatus]?.border || 'rgba(91, 134, 161, 0.3)'}`,
                 flexShrink: 0,
               }}
             >

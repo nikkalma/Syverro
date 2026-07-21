@@ -1,4 +1,4 @@
-import { PersonalBookStatus, personalBookStatusLabels, personalBookStatusOrder } from '../../types/personalBook';
+import { PersonalBookStatus, personalBookStatusLabels, personalBookStatusOrder, personalBookStatusColors } from '../../types/personalBook';
 import { getLocaleData, getBrowserLocale } from '../../locales';
 
 interface LibraryControlsProps {
@@ -95,28 +95,31 @@ export default function LibraryControls({
           border: '1px solid rgba(255,255,255,0.04)',
         }}
       >
-        {personalBookStatusOrder.map((status) => (
-          <button
-            key={status}
-            onClick={() => onStatusToggle(status)}
-            style={{
-              padding: '4px 12px',
-              fontSize: '12px',
-              borderRadius: '20px',
-              background: statusFilters.includes(status)
-                ? 'rgba(91, 134, 161, 0.25)'
-                : 'rgba(255,255,255,0.04)',
-              border: statusFilters.includes(status)
-                ? '1px solid rgba(91, 134, 161, 0.3)'
-                : '1px solid rgba(255,255,255,0.06)',
-              color: statusFilters.includes(status) ? '#E6EDF3' : '#97A6BA',
-              cursor: 'pointer',
-              fontFamily: 'Inter, sans-serif',
-            }}
-          >
-            {personalBookStatusLabels[status]}
-          </button>
-        ))}
+        {personalBookStatusOrder.map((status) => {
+          const colors = personalBookStatusColors[status];
+          const isActive = statusFilters.includes(status);
+          return (
+            <button
+              key={status}
+              onClick={() => onStatusToggle(status)}
+              style={{
+                padding: '4px 12px',
+                fontSize: '12px',
+                borderRadius: '20px',
+                background: isActive ? colors.bg : 'rgba(255,255,255,0.04)',
+                border: isActive
+                  ? `1px solid ${colors.border}`
+                  : '1px solid rgba(255,255,255,0.06)',
+                color: isActive ? colors.text : '#97A6BA',
+                cursor: 'pointer',
+                fontFamily: 'Inter, sans-serif',
+                transition: 'all 0.2s',
+              }}
+            >
+              {personalBookStatusLabels[status]}
+            </button>
+          );
+        })}
 
         <span style={{ color: '#2A4B60', margin: '0 4px' }}>|</span>
 

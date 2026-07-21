@@ -20,6 +20,9 @@ import AdminAuthors from "./pages/Admin/Authors";
 import AdminGenres from "./pages/Admin/Genres";
 import AdminLogs from "./pages/Admin/Logs";
 import AdminSettings from "./pages/Admin/Settings";
+import AdminModeration from "./pages/Admin/Moderation/ModerationPage";
+import AdminMetadata from "./pages/Admin/Metadata/MetadataPage";
+import BookEnrichmentPage from "./pages/Admin/Metadata/BookEnrichmentPage";
 
 
 export default function App() {
@@ -106,6 +109,33 @@ export default function App() {
  element={
    <AdminRoute>
      <AdminSettings />
+   </AdminRoute>
+ }
+/>
+
+<Route 
+ path="/admin/moderation" 
+ element={
+   <AdminRoute>
+     <AdminModeration />
+   </AdminRoute>
+ }
+/>
+
+<Route 
+ path="/admin/metadata" 
+ element={
+   <AdminRoute>
+     <AdminMetadata />
+   </AdminRoute>
+ }
+/>
+
+<Route 
+ path="/admin/books/:id/enrichment" 
+ element={
+   <AdminRoute>
+     <BookEnrichmentPage />
    </AdminRoute>
  }
 />

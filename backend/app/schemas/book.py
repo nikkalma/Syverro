@@ -1,7 +1,17 @@
+# backend/app/schemas/book.py
 from pydantic import BaseModel
 from datetime import datetime
 from typing import Optional, List
 from uuid import UUID
+
+
+class GenreBrief(BaseModel):
+    id: UUID
+    name: str
+    slug: str
+
+    class Config:
+        from_attributes = True
 
 
 class BookBase(BaseModel):
@@ -9,8 +19,10 @@ class BookBase(BaseModel):
     author: str
     cover: Optional[str] = None
     genres: Optional[List[str]] = []
+    genre_ids: Optional[List[UUID]] = []
     description: Optional[str] = None
     total_pages: Optional[int] = None
+    publication_type: str = "official"
 
 
 class BookCreate(BookBase):
@@ -23,8 +35,21 @@ class BookResponse(BookBase):
     author_name: Optional[str] = None
     author_country: Optional[str] = None
     author_bio: Optional[str] = None
+    subtitle: Optional[str] = None
+    original_title: Optional[str] = None
+    original_language: Optional[str] = None
+    country_of_origin: Optional[str] = None
+    original_publication_year: Optional[int] = None
+    series_name: Optional[str] = None
+    series_position: Optional[int] = None
+    themes: List[str] = []
+    motifs: List[str] = []
+    metadata_status: str = "draft"
+    moderation_status: str = "pending"
+    moderation_reason: Optional[str] = None
     created_at: datetime
     updated_at: Optional[datetime]
+    genre_objects: List[GenreBrief] = []
 
     class Config:
         from_attributes = True

@@ -50,11 +50,35 @@ class AdminBookResponse(BaseModel):
     genres: List[str] = []
     description: Optional[str] = None
     total_pages: Optional[int] = None
+    publication_type: str = "official"
+    metadata_status: str = "draft"
     is_published: bool = False
+    moderation_status: str = "pending"
+    moderation_reason: Optional[str] = None
+    moderated_by: Optional[str] = None
+    moderated_at: Optional[datetime] = None
     created_at: datetime
     updated_at: datetime
     created_by: Optional[str] = None
     created_by_email: Optional[str] = None
+    # Enrichment fields
+    subtitle: Optional[str] = None
+    original_title: Optional[str] = None
+    original_language: Optional[str] = None
+    country_of_origin: Optional[str] = None
+    original_publication_year: Optional[int] = None
+    series_name: Optional[str] = None
+    series_position: Optional[int] = None
+    themes: List[str] = []
+    motifs: List[str] = []
+    missing_fields: List[str] = []
+    # Author enrichment
+    author_name: Optional[str] = None
+    author_country: Optional[str] = None
+    author_bio: Optional[str] = None
+    author_birth_year: Optional[int] = None
+    author_death_year: Optional[int] = None
+    author_creation_type: Optional[str] = None
 
 
 class AdminBookCreate(BaseModel):
@@ -66,6 +90,7 @@ class AdminBookCreate(BaseModel):
     genres: List[str] = []
     description: Optional[str] = None
     total_pages: Optional[int] = None
+    publication_type: str = "official"
     is_published: bool = False
 
 
@@ -78,7 +103,33 @@ class AdminBookUpdate(BaseModel):
     genres: Optional[List[str]] = None
     description: Optional[str] = None
     total_pages: Optional[int] = None
+    publication_type: Optional[str] = None
     is_published: Optional[bool] = None
+    metadata_status: Optional[str] = None
+
+
+class AdminBookEnrichment(BaseModel):
+    """Обогащение метаданных книги (только admin/owner)"""
+    subtitle: Optional[str] = None
+    original_title: Optional[str] = None
+    description: Optional[str] = None
+    cover: Optional[str] = None
+    genres: Optional[List[str]] = None
+    author_id: Optional[str] = None
+    original_language: Optional[str] = None
+    country_of_origin: Optional[str] = None
+    original_publication_year: Optional[int] = None
+    series_name: Optional[str] = None
+    series_position: Optional[int] = None
+    themes: Optional[List[str]] = None
+    motifs: Optional[List[str]] = None
+    # Author fields
+    author_name: Optional[str] = None
+    author_country: Optional[str] = None
+    author_bio: Optional[str] = None
+    author_birth_year: Optional[int] = None
+    author_death_year: Optional[int] = None
+    author_creation_type: Optional[str] = None
 
 
 # ============================================================

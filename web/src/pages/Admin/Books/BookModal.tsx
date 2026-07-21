@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { apiClient } from '../../../shared/api/client';
 import type { AdminBook, AdminAuthor, AdminGenre } from '../../../types/admin';
+import { useAuthStore } from '../../../store/authStore';
 
 interface BookModalProps {
   isOpen: boolean;
@@ -25,14 +26,19 @@ const inputStyle: React.CSSProperties = {
 };
 
 export default function BookModal({ isOpen, mode, book, onClose, onSave }: BookModalProps) {
+  const user = useAuthStore((s) => s.user);
+  const isModerator = user?.role === 'moderator';
+
   const [formData, setFormData] = useState({
     title: '',
     author: '',
     author_id: null as string | null,
     cover: '',
     genres: [] as string[],
+    genre_ids: [] as string[],
     total_pages: '',
     description: '',
+    publication_type: 'official' as 'official' | 'unofficial',
     is_published: false,
   });
 
@@ -53,8 +59,10 @@ export default function BookModal({ isOpen, mode, book, onClose, onSave }: BookM
         author_id: book.author_id || null,
         cover: book.cover || '',
         genres: book.genres || [],
+        genre_ids: book.genre_ids || [],
         total_pages: book.total_pages?.toString() || '',
         description: book.description || '',
+        publication_type: (book.publication_type as 'official' | 'unofficial') || 'official',
         is_published: book.is_published || false,
       });
       setAuthorQuery(book.author || '');
@@ -65,8 +73,10 @@ export default function BookModal({ isOpen, mode, book, onClose, onSave }: BookM
         author_id: null,
         cover: '',
         genres: [],
+        genre_ids: [],
         total_pages: '',
         description: '',
+        publication_type: 'official',
         is_published: false,
       });
       setAuthorQuery('');
@@ -119,12 +129,21 @@ export default function BookModal({ isOpen, mode, book, onClose, onSave }: BookM
     setShowAuthorDropdown(true);
   };
 
-  const handleToggleGenre = (genreName: string) => {
-    const current = formData.genres;
-    if (current.includes(genreName)) {
-      setFormData({ ...formData, genres: current.filter((g) => g !== genreName) });
+  const handleToggleGenre = (genreId: string, genreName: string) => {
+    const currentIds = formData.genre_ids;
+    const currentNames = formData.genres;
+    if (currentIds.includes(genreId)) {
+      setFormData({
+        ...formData,
+        genre_ids: currentIds.filter((id) => id !== genreId),
+        genres: currentNames.filter((name) => name !== genreName),
+      });
     } else {
-      setFormData({ ...formData, genres: [...current, genreName] });
+      setFormData({
+        ...formData,
+        genre_ids: [...currentIds, genreId],
+        genres: [...currentNames, genreName],
+      });
     }
   };
 
@@ -139,8 +158,10 @@ export default function BookModal({ isOpen, mode, book, onClose, onSave }: BookM
         author: formData.author.trim(),
         cover: formData.cover.trim() || null,
         genres: formData.genres,
+        genre_ids: formData.genre_ids,
         total_pages: formData.total_pages ? parseInt(formData.total_pages) : null,
         description: formData.description.trim() || null,
+        publication_type: formData.publication_type,
         is_published: formData.is_published,
       };
 
@@ -278,6 +299,26 @@ export default function BookModal({ isOpen, mode, book, onClose, onSave }: BookM
             </div>
           </div>
 
+          {/* ТИП ПУБЛИКАЦИИ */}
+          <div style={{ marginBottom: '16px' }}>
+            <label style={{ color: '#97A6BA', fontSize: '13px', display: 'block', marginBottom: '4px' }}>
+              Тип публикации
+            </label>
+            <select
+              value={formData.publication_type}
+              onChange={(e) => setFormData({ ...formData, publication_type: e.target.value as 'official' | 'unofficial' })}
+              disabled={isModerator && mode === 'edit'}
+              style={{
+                ...inputStyle,
+                background: isModerator && mode === 'edit' ? 'rgba(255,255,255,0.02)' : 'rgba(0,0,0,0.3)',
+                cursor: isModerator && mode === 'edit' ? 'not-allowed' : 'pointer',
+              }}
+            >
+              <option value="official">📚 Официальная (библиотека, классика, академические)</option>
+              <option value="unofficial">✏️ Неофициальная (фанфик, рукопись, веб-новелла)</option>
+            </select>
+          </div>
+
           {/* ОБЛОЖКА */}
           <div style={{ marginBottom: '16px' }}>
             <label style={{ color: '#97A6BA', fontSize: '13px', display: 'block', marginBottom: '4px' }}>
@@ -293,19 +334,21 @@ export default function BookModal({ isOpen, mode, book, onClose, onSave }: BookM
           </div>
 
           {/* СТРАНИЦЫ */}
-          <div style={{ marginBottom: '16px' }}>
-            <label style={{ color: '#97A6BA', fontSize: '13px', display: 'block', marginBottom: '4px' }}>
-              Количество страниц
-            </label>
-            <input
-              type="number"
-              value={formData.total_pages}
-              onChange={(e) => setFormData({ ...formData, total_pages: e.target.value })}
-              placeholder="0"
-              min="0"
-              style={inputStyle}
-            />
-          </div>
+          {!(isModerator && mode === 'edit') && (
+            <div style={{ marginBottom: '16px' }}>
+              <label style={{ color: '#97A6BA', fontSize: '13px', display: 'block', marginBottom: '4px' }}>
+                Количество страниц
+              </label>
+              <input
+                type="number"
+                value={formData.total_pages}
+                onChange={(e) => setFormData({ ...formData, total_pages: e.target.value })}
+                placeholder="0"
+                min="0"
+                style={inputStyle}
+              />
+            </div>
+          )}
 
           {/* ОПИСАНИЕ */}
           <div style={{ marginBottom: '16px' }}>
@@ -331,12 +374,12 @@ export default function BookModal({ isOpen, mode, book, onClose, onSave }: BookM
             </label>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
               {availableGenres.map((genre) => {
-                const selected = formData.genres.includes(genre.name);
+                const selected = formData.genre_ids.includes(genre.id);
                 return (
                   <button
                     key={genre.id}
                     type="button"
-                    onClick={() => handleToggleGenre(genre.name)}
+                    onClick={() => handleToggleGenre(genre.id, genre.name)}
                     style={{
                       padding: '4px 12px',
                       borderRadius: '16px',
@@ -355,9 +398,9 @@ export default function BookModal({ isOpen, mode, book, onClose, onSave }: BookM
             </div>
             {formData.genres.length > 0 && (
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginTop: '8px' }}>
-                {formData.genres.map((genre) => (
+                {formData.genres.map((genre, idx) => (
                   <span
-                    key={genre}
+                    key={formData.genre_ids[idx] || genre}
                     style={{
                       display: 'flex',
                       alignItems: 'center',
@@ -373,7 +416,7 @@ export default function BookModal({ isOpen, mode, book, onClose, onSave }: BookM
                     {genre}
                     <button
                       type="button"
-                      onClick={() => handleToggleGenre(genre)}
+                      onClick={() => handleToggleGenre(formData.genre_ids[idx], genre)}
                       style={{
                         background: 'none',
                         border: 'none',
@@ -392,22 +435,24 @@ export default function BookModal({ isOpen, mode, book, onClose, onSave }: BookM
           </div>
 
           {/* СТАТУС ПУБЛИКАЦИИ */}
-          <div style={{ marginBottom: '24px' }}>
-            <label style={{ display: 'flex', alignItems: 'center', gap: '10px', color: '#97A6BA', fontSize: '13px', cursor: 'pointer' }}>
-              <input
-                type="checkbox"
-                checked={formData.is_published}
-                onChange={(e) => setFormData({ ...formData, is_published: e.target.checked })}
-                style={{
-                  width: '18px',
-                  height: '18px',
-                  accentColor: '#5B86A1',
-                  cursor: 'pointer',
-                }}
-              />
-              Опубликовать книгу
-            </label>
-          </div>
+          {!(isModerator && mode === 'edit') && (
+            <div style={{ marginBottom: '24px' }}>
+              <label style={{ display: 'flex', alignItems: 'center', gap: '10px', color: '#97A6BA', fontSize: '13px', cursor: 'pointer' }}>
+                <input
+                  type="checkbox"
+                  checked={formData.is_published}
+                  onChange={(e) => setFormData({ ...formData, is_published: e.target.checked })}
+                  style={{
+                    width: '18px',
+                    height: '18px',
+                    accentColor: '#5B86A1',
+                    cursor: 'pointer',
+                  }}
+                />
+                Опубликовать книгу
+              </label>
+            </div>
+          )}
 
           {/* ОШИБКИ */}
           {error && (

@@ -1,17 +1,20 @@
 // src/components/SuggestBook.tsx
 
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../store/authStore';
-import { BookPlus, Send, CheckCircle, AlertCircle, FileText, Library } from 'lucide-react';
+import { BookPlus, Send, CheckCircle, AlertCircle, FileText, Library, LogIn, UserPlus, X } from 'lucide-react';
 
 type SuggestionType = 'book' | 'fanfiction';
 
 export function SuggestBook() {
-  const { user } = useAuthStore();
+  const { user, isAuthenticated } = useAuthStore();
+  const navigate = useNavigate();
   const [title, setTitle] = useState('');
   const [author, setAuthor] = useState('');
   const [type, setType] = useState<SuggestionType>('book');
   const [status, setStatus] = useState<'idle' | 'success' | 'error'>('idle');
+  const [showAuthDialog, setShowAuthDialog] = useState(false);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -22,6 +25,15 @@ export function SuggestBook() {
       return;
     }
 
+    if (!isAuthenticated) {
+      setShowAuthDialog(true);
+      return;
+    }
+
+    submitSuggestion();
+  };
+
+  const submitSuggestion = () => {
     try {
       const suggestions = JSON.parse(localStorage.getItem('syverro_book_suggestions') || '[]');
       const now = new Date().toISOString();
@@ -39,19 +51,16 @@ export function SuggestBook() {
       };
 
       if (type === 'book') {
-        // Книга → на модерацию
         suggestions.push({
           ...newSuggestion,
           status: 'pending',
         });
       } else {
-        // Неофициальная литература → сразу в личную библиотеку
         suggestions.push({
           ...newSuggestion,
           status: 'internal',
         });
 
-        // ===== ДОБАВЛЯЕМ В ЛИЧНУЮ БИБЛИОТЕКУ ПОЛЬЗОВАТЕЛЯ =====
         const userId = user?.id || 'anonymous';
         const personalBooks = JSON.parse(localStorage.getItem(`syverro_personal_books_${userId}`) || '[]');
         personalBooks.push({
@@ -61,7 +70,7 @@ export function SuggestBook() {
           type: 'fanfiction',
           source: 'suggestion',
           addedAt: now,
-          status: 'planned', // или 'reading' — как хочешь
+          status: 'planned',
         });
         localStorage.setItem(`syverro_personal_books_${userId}`, JSON.stringify(personalBooks));
       }
@@ -183,6 +192,67 @@ export function SuggestBook() {
         <div style={{ marginTop: '12px', color: 'var(--error)', display: 'flex', alignItems: 'center', gap: '8px' }}>
           <AlertCircle size={18} />
           Заполните все поля.
+        </div>
+      )}
+
+      {/* AUTH GATE DIALOG */}
+      {showAuthDialog && (
+        <div
+          style={{
+            position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)',
+            backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center',
+            justifyContent: 'center', zIndex: 1000, padding: '20px',
+          }}
+          onClick={() => setShowAuthDialog(false)}
+        >
+          <div
+            style={{
+              background: '#121C24', borderRadius: '16px', padding: '32px',
+              maxWidth: '400px', width: '100%', border: '1px solid rgba(255,255,255,0.08)',
+              textAlign: 'center',
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div style={{ fontSize: '32px', marginBottom: '12px' }}>🔐</div>
+            <h3 style={{ color: '#E6EDF3', fontSize: '18px', fontWeight: '500', margin: '0 0 8px 0' }}>
+              Требуется авторизация
+            </h3>
+            <p style={{ color: '#97A6BA', fontSize: '14px', margin: '0 0 24px 0', lineHeight: '1.5' }}>
+              Чтобы предложить книгу, войдите в аккаунт или зарегистрируйтесь.
+            </p>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+              <button
+                onClick={() => { setShowAuthDialog(false); navigate('/login'); }}
+                style={{
+                  padding: '12px', background: '#5B86A1', border: 'none', borderRadius: '8px',
+                  color: '#0A1118', fontSize: '14px', fontWeight: '500', cursor: 'pointer',
+                  fontFamily: 'Inter, sans-serif', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
+                }}
+              >
+                <LogIn size={16} /> Войти
+              </button>
+              <button
+                onClick={() => { setShowAuthDialog(false); navigate('/register'); }}
+                style={{
+                  padding: '12px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)',
+                  borderRadius: '8px', color: '#E6EDF3', fontSize: '14px', cursor: 'pointer',
+                  fontFamily: 'Inter, sans-serif', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
+                }}
+              >
+                <UserPlus size={16} /> Зарегистрироваться
+              </button>
+              <button
+                onClick={() => setShowAuthDialog(false)}
+                style={{
+                  padding: '8px', background: 'none', border: 'none',
+                  color: '#97A6BA', fontSize: '13px', cursor: 'pointer',
+                  fontFamily: 'Inter, sans-serif',
+                }}
+              >
+                Отмена
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>

@@ -3,6 +3,22 @@
 import { AdminGenre } from '../../../types/admin';
 import { useAdminStore } from '../../../store/adminStore';
 
+const GENRE_TYPE_LABELS: Record<string, string> = {
+  literary: 'Литературные',
+  non_fiction: 'Нон-фикшн',
+  spiritual: 'Духовные',
+  cultural: 'Культурные',
+  practical: 'Практические',
+};
+
+const GENRE_TYPE_COLORS: Record<string, string> = {
+  literary: '#5B86A1',
+  non_fiction: '#4CAF50',
+  spiritual: '#A855F7',
+  cultural: '#FFA726',
+  practical: '#97A6BA',
+};
+
 interface GenresTableProps {
   genres: AdminGenre[];
   loading: boolean;
@@ -11,6 +27,7 @@ interface GenresTableProps {
   page: number;
   limit: number;
   canManage: boolean;
+  allGenres: AdminGenre[];
   onEdit: (genre: AdminGenre) => void;
   onDelete: (genre: AdminGenre) => void;
   onRefresh: () => void;
@@ -24,12 +41,19 @@ export default function GenresTable({
   page,
   limit,
   canManage,
+  allGenres,
   onEdit,
   onDelete,
   onRefresh,
 }: GenresTableProps) {
   const { setPage } = useAdminStore();
   const totalPages = Math.ceil(total / limit);
+
+  const getParentName = (parentId: string | null) => {
+    if (!parentId) return '—';
+    const parent = allGenres.find((g) => g.id === parentId);
+    return parent?.name || '—';
+  };
 
   // ===== СКЕЛЕТОН =====
   if (loading) {
@@ -38,7 +62,7 @@ export default function GenresTable({
         <table style={{ width: '100%', borderCollapse: 'collapse' }}>
           <thead>
             <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
-              {['Название', 'Slug', 'Описание', 'Книг', 'Дата', 'Действия'].map((h) => (
+              {['Название', 'Тип', 'Родитель', 'Slug', 'Описание', 'Книг', 'Дата', 'Действия'].map((h) => (
                 <th key={h} style={{ padding: '12px 16px', textAlign: 'left', color: '#97A6BA', fontSize: '12px', fontWeight: '500' }}>
                   {h}
                 </th>
@@ -48,9 +72,9 @@ export default function GenresTable({
           <tbody>
             {[...Array(5)].map((_, i) => (
               <tr key={i} style={{ borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
-                {[...Array(6)].map((_, j) => (
+                {[...Array(8)].map((_, j) => (
                   <td key={j} style={{ padding: '12px 16px' }}>
-                    <div style={{ height: '20px', background: 'rgba(255,255,255,0.05)', borderRadius: '4px', width: j === 5 ? '60%' : '80%' }} />
+                    <div style={{ height: '20px', background: 'rgba(255,255,255,0.05)', borderRadius: '4px', width: j === 7 ? '60%' : '80%' }} />
                   </td>
                 ))}
               </tr>
@@ -117,6 +141,8 @@ export default function GenresTable({
         <thead>
           <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
             <th style={{ padding: '12px 16px', textAlign: 'left', color: '#97A6BA', fontSize: '12px', fontWeight: '500' }}>Название</th>
+            <th style={{ padding: '12px 16px', textAlign: 'left', color: '#97A6BA', fontSize: '12px', fontWeight: '500' }}>Тип</th>
+            <th style={{ padding: '12px 16px', textAlign: 'left', color: '#97A6BA', fontSize: '12px', fontWeight: '500' }}>Родитель</th>
             <th style={{ padding: '12px 16px', textAlign: 'left', color: '#97A6BA', fontSize: '12px', fontWeight: '500' }}>Slug</th>
             <th style={{ padding: '12px 16px', textAlign: 'left', color: '#97A6BA', fontSize: '12px', fontWeight: '500' }}>Описание</th>
             <th style={{ padding: '12px 16px', textAlign: 'left', color: '#97A6BA', fontSize: '12px', fontWeight: '500' }}>Книг</th>
@@ -137,6 +163,23 @@ export default function GenresTable({
             >
               <td style={{ padding: '12px 16px', color: '#E6EDF3', fontSize: '14px', fontWeight: '500' }}>
                 {genre.name}
+              </td>
+              <td style={{ padding: '12px 16px' }}>
+                <span style={{
+                  display: 'inline-block',
+                  padding: '2px 8px',
+                  borderRadius: '10px',
+                  fontSize: '11px',
+                  fontWeight: '500',
+                  color: GENRE_TYPE_COLORS[genre.type] || '#97A6BA',
+                  background: `${GENRE_TYPE_COLORS[genre.type] || '#97A6BA'}20`,
+                  border: `1px solid ${GENRE_TYPE_COLORS[genre.type] || '#97A6BA'}30`,
+                }}>
+                  {GENRE_TYPE_LABELS[genre.type] || genre.type}
+                </span>
+              </td>
+              <td style={{ padding: '12px 16px', color: '#97A6BA', fontSize: '13px' }}>
+                {getParentName(genre.parent_id)}
               </td>
               <td style={{ padding: '12px 16px', color: '#97A6BA', fontSize: '13px' }}>
                 {genre.slug || '—'}
@@ -248,3 +291,4 @@ export default function GenresTable({
     </div>
   );
 }
+

@@ -17,6 +17,9 @@ class Author(Base):
     country = Column(String, nullable=True)
     birth_year = Column(Integer, nullable=True)
     death_year = Column(Integer, nullable=True)
+    creation_type = Column(String, default="individual_author", nullable=False)
+    # individual_author | multiple_authors | anonymous_traditional |
+    # religious_canon | oral_tradition | collective_creation
 
     books = relationship(
         "Book",

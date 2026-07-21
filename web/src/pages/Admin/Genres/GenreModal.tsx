@@ -4,6 +4,24 @@ import { useState, useEffect } from 'react';
 import { apiClient } from '../../../shared/api/client';
 import type { AdminGenre } from '../../../types/admin';
 
+interface GenreTreeNode {
+  id: string;
+  name: string;
+  slug: string;
+  type: string;
+  parent_id: string | null;
+  book_count: number;
+  children: GenreTreeNode[];
+}
+
+const GENRE_TYPES = [
+  { value: 'literary', label: 'Литературные' },
+  { value: 'non_fiction', label: 'Нон-фикшн' },
+  { value: 'spiritual', label: 'Духовные' },
+  { value: 'cultural', label: 'Культурные' },
+  { value: 'practical', label: 'Практические' },
+];
+
 interface GenreModalProps {
   isOpen: boolean;
   mode: 'create' | 'edit';
@@ -16,7 +34,8 @@ export default function GenreModal({ isOpen, mode, genre, onClose, onSave }: Gen
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [parentId, setParentId] = useState<string | null>(null);
-  const [allGenres, setAllGenres] = useState<AdminGenre[]>([]);
+  const [genreType, setGenreType] = useState('literary');
+  const [tree, setTree] = useState<GenreTreeNode[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -25,24 +44,38 @@ export default function GenreModal({ isOpen, mode, genre, onClose, onSave }: Gen
       setName(genre.name || '');
       setDescription(genre.description || '');
       setParentId(genre.parent_id || null);
+      setGenreType(genre.type || 'literary');
     } else {
       setName('');
       setDescription('');
       setParentId(null);
+      setGenreType('literary');
     }
     setError(null);
   }, [mode, genre, isOpen]);
 
   useEffect(() => {
-    apiClient.get('/admin/genres', { params: { limit: 200 } })
-      .then((res) => {
-        const genres = (res.data?.data ?? []) as AdminGenre[];
-        setAllGenres(genres.filter((g) => g.id !== genre?.id));
-      })
+    apiClient.get('/admin/genres/tree')
+      .then((res) => setTree(res.data ?? []))
       .catch(() => {});
-  }, [genre?.id]);
+  }, []);
 
   if (!isOpen) return null;
+
+  const flattenTree = (nodes: GenreTreeNode[], excludeId?: string): GenreTreeNode[] => {
+    const result: GenreTreeNode[] = [];
+    const walk = (items: GenreTreeNode[], depth: number) => {
+      for (const node of items) {
+        if (excludeId && node.id === excludeId) continue;
+        result.push({ ...node, name: '  '.repeat(depth) + node.name });
+        if (node.children?.length) walk(node.children, depth + 1);
+      }
+    };
+    walk(nodes, 0);
+    return result;
+  };
+
+  const flatGenres = flattenTree(tree, genre?.id);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -58,6 +91,7 @@ export default function GenreModal({ isOpen, mode, genre, onClose, onSave }: Gen
         name: trimmed,
         description: description.trim() || null,
         parent_id: parentId || null,
+        type: genreType,
       });
       setLoading(false);
     } catch (err: any) {
@@ -137,6 +171,32 @@ export default function GenreModal({ isOpen, mode, genre, onClose, onSave }: Gen
             />
           </div>
 
+          {/* ТИП */}
+          <div style={{ marginBottom: '16px' }}>
+            <label style={{ color: '#97A6BA', fontSize: '13px', display: 'block', marginBottom: '4px' }}>
+              Тип жанра *
+            </label>
+            <select
+              value={genreType}
+              onChange={(e) => setGenreType(e.target.value)}
+              style={{
+                width: '100%',
+                padding: '10px 14px',
+                background: 'rgba(0,0,0,0.3)',
+                border: '1px solid rgba(255,255,255,0.08)',
+                borderRadius: '8px',
+                color: '#E6EDF3',
+                fontSize: '14px',
+                fontFamily: 'Inter, sans-serif',
+                outline: 'none',
+              }}
+            >
+              {GENRE_TYPES.map((t) => (
+                <option key={t.value} value={t.value}>{t.label}</option>
+              ))}
+            </select>
+          </div>
+
           {/* ОПИСАНИЕ */}
           <div style={{ marginBottom: '16px' }}>
             <label style={{ color: '#97A6BA', fontSize: '13px', display: 'block', marginBottom: '4px' }}>
@@ -183,7 +243,7 @@ export default function GenreModal({ isOpen, mode, genre, onClose, onSave }: Gen
               }}
             >
               <option value="">— Нет (корневой жанр) —</option>
-              {allGenres.map((g) => (
+              {flatGenres.map((g) => (
                 <option key={g.id} value={g.id}>{g.name}</option>
               ))}
             </select>

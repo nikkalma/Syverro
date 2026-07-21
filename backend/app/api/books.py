@@ -7,6 +7,8 @@ from app.models.user import User
 from app.models.book import Book
 from app.models.author import Author
 from app.models.user_book import UserBook
+from app.models.genre import Genre
+from app.models.book_genre import book_genres
 from app.schemas.book import BookCreate, BookResponse, UserBookResponse
 from uuid import UUID
 
@@ -26,8 +28,8 @@ async def _find_or_create_author(db: AsyncSession, author_name: str) -> Author:
     return author
 
 
-def _book_to_response_dict(book: Book) -> dict:
-    """Build BookResponse dict with author info from relationship."""
+async def _book_to_response_dict(db: AsyncSession, book: Book) -> dict:
+    """Build BookResponse dict with author info and genre objects."""
     author_name = None
     author_country = None
     author_bio = None
@@ -37,6 +39,16 @@ def _book_to_response_dict(book: Book) -> dict:
         author_country = book.author_ref.country
         author_bio = book.author_ref.bio
         author_id = book.author_id
+
+    genre_result = await db.execute(
+        select(Genre.id, Genre.name, Genre.slug)
+        .join(book_genres, book_genres.c.genre_id == Genre.id)
+        .where(book_genres.c.book_id == book.id)
+    )
+    genre_rows = genre_result.all()
+    genre_objects = [{"id": str(g[0]), "name": g[1], "slug": g[2]} for g in genre_rows]
+    genre_ids = [str(g[0]) for g in genre_rows]
+
     return {
         "id": book.id,
         "title": book.title,
@@ -47,8 +59,14 @@ def _book_to_response_dict(book: Book) -> dict:
         "author_bio": author_bio,
         "cover": book.cover,
         "genres": book.genres or [],
+        "genre_ids": genre_ids,
+        "genre_objects": genre_objects,
         "description": book.description,
         "total_pages": book.total_pages,
+        "publication_type": book.publication_type or "official",
+        "metadata_status": book.metadata_status or "incomplete",
+        "moderation_status": book.moderation_status or "pending",
+        "moderation_reason": book.moderation_reason,
         "created_at": book.created_at,
         "updated_at": book.updated_at,
     }
@@ -56,18 +74,23 @@ def _book_to_response_dict(book: Book) -> dict:
 # ========== ГЛОБАЛЬНЫЙ КАТАЛОГ (ОПУБЛИКОВАННЫЕ КНИГИ) ==========
 @router.get("/catalog/", response_model=list[BookResponse])
 async def get_catalog(
+    genre_id: str = None,
     db: AsyncSession = Depends(get_db)
 ):
     """Опубликованные книги из глобального каталога (без авторизации)"""
     try:
-        result = await db.execute(
+        query = (
             select(Book)
             .options(selectinload(Book.author_ref))
-            .where(Book.is_published == True)
-            .order_by(Book.created_at.desc())
+            .where(Book.is_published == True, Book.moderation_status == "approved")
         )
+        if genre_id:
+            query = query.join(book_genres, book_genres.c.book_id == Book.id).where(
+                book_genres.c.genre_id == genre_id
+            )
+        result = await db.execute(query.order_by(Book.created_at.desc()))
         books = result.scalars().all()
-        return [_book_to_response_dict(b) for b in books]
+        return [await _book_to_response_dict(db, b) for b in books]
     except Exception as e:
         print(f"Error: {e}")
         return []
@@ -86,7 +109,7 @@ async def get_user_books(
             .where(UserBook.user_id == current_user.id)
         )
         books = result.scalars().all()
-        return [_book_to_response_dict(b) for b in books]
+        return [await _book_to_response_dict(db, b) for b in books]
     except Exception as e:
         print(f"Error: {e}")
         return []
@@ -123,7 +146,7 @@ async def create_book(
                 db.add(user_book)
                 await db.commit()
             await db.refresh(existing_book, ["author_ref"])
-            return _book_to_response_dict(existing_book)
+            return await _book_to_response_dict(db, existing_book)
 
         author = await _find_or_create_author(db, book_data.author)
 
@@ -135,7 +158,10 @@ async def create_book(
             genres=book_data.genres,
             description=book_data.description,
             total_pages=book_data.total_pages,
+            publication_type=book_data.publication_type or "official",
             created_by=current_user.id,
+            moderation_status="pending",
+            is_published=False,
         )
         db.add(new_book)
         await db.flush()
@@ -150,7 +176,7 @@ async def create_book(
         await db.commit()
         await db.refresh(new_book, ["author_ref"])
 
-        return _book_to_response_dict(new_book)
+        return await _book_to_response_dict(db, new_book)
     except Exception as e:
         print(f"Error: {e}")
         await db.rollback()

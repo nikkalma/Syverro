@@ -24,6 +24,8 @@ const navItems: NavItem[] = [
   { path: '/admin/books', label: 'Книги', icon: '📚' },
   { path: '/admin/authors', label: 'Авторы', icon: '✍️' },
   { path: '/admin/genres', label: 'Жанры', icon: '🏷️' },
+  { path: '/admin/moderation', label: 'Модерация', icon: '🛡️' },
+  { path: '/admin/metadata', label: 'Метаданные', icon: '📝' },
   { path: '/admin/logs', label: 'Логи', icon: '📋' },
   { path: '/admin/settings', label: 'Настройки', icon: '⚙️' },
 ];

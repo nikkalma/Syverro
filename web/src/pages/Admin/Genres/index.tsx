@@ -14,6 +14,7 @@ export default function AdminGenres() {
   const { searchQuery, filters, page, limit, setLoading, isLoading, error, setError, clearError } = useAdminStore();
   
   const [genres, setGenres] = useState<AdminGenre[]>([]);
+  const [allGenres, setAllGenres] = useState<AdminGenre[]>([]);
   const [total, setTotal] = useState(0);
   const [selectedGenre, setSelectedGenre] = useState<AdminGenre | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -60,6 +61,13 @@ export default function AdminGenres() {
 
   useEffect(() => {
     fetchGenres();
+    // Also fetch all genres for parent selection
+    fetch(`${API_URL}/admin/genres?limit=500`, {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+      .then((r) => r.json())
+      .then((data) => setAllGenres(data.data || []))
+      .catch(() => {});
   }, [page, limit, searchQuery, filters]);
 
   // ===== СОЗДАНИЕ ЖАНРА =====
@@ -184,6 +192,7 @@ export default function AdminGenres() {
         page={page}
         limit={limit}
         canManage={canManage}
+        allGenres={allGenres}
         onEdit={handleOpenEdit}
         onDelete={handleOpenDelete}
         onRefresh={fetchGenres}

@@ -13,6 +13,10 @@ export interface GlobalBook {
 
   genres: string[];
 
+  genreIds?: string[];
+
+  genreObjects?: Array<{ id: string; name: string; slug: string }>;
+
   subgenres?: string[];
 
   originalLanguage?: string;
@@ -45,6 +49,10 @@ export interface GlobalBook {
     | 'rejected';
 
   moderationReason?: string;
+
+  publicationType?: 'official' | 'unofficial';
+
+  metadataStatus?: 'draft' | 'incomplete' | 'review_ready' | 'complete';
 
   createdAt: number;
 }

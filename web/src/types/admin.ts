@@ -73,13 +73,39 @@ export interface AdminBook {
   author_id?: string | null;
   cover?: string | null;
   genres: string[];
+  genre_ids?: string[];
+  genre_objects?: Array<{ id: string; name: string; slug: string }>;
   description?: string | null;
   total_pages?: number | null;
+  publication_type: 'official' | 'unofficial';
+  metadata_status: 'draft' | 'incomplete' | 'review_ready' | 'complete';
   is_published: boolean;
+  moderation_status: 'pending' | 'approved' | 'rejected';
+  moderation_reason?: string | null;
+  moderated_by?: string | null;
+  moderated_at?: string | null;
   created_at: string;
   updated_at: string;
   created_by?: string;
   created_by_email?: string;
+  // Enrichment fields
+  subtitle?: string | null;
+  original_title?: string | null;
+  original_language?: string | null;
+  country_of_origin?: string | null;
+  original_publication_year?: number | null;
+  series_name?: string | null;
+  series_position?: number | null;
+  themes?: string[];
+  motifs?: string[];
+  missing_fields?: string[];
+  // Author enrichment
+  author_name?: string | null;
+  author_country?: string | null;
+  author_bio?: string | null;
+  author_birth_year?: number | null;
+  author_death_year?: number | null;
+  author_creation_type?: string | null;
 }
 
 export interface AdminBookFilters {
@@ -87,6 +113,7 @@ export interface AdminBookFilters {
   genre?: string;
   author?: string;
   is_published?: boolean | 'all';
+  publication_type?: string;
   date_from?: string;
   date_to?: string;
   sort_by?: keyof AdminBook;
@@ -101,12 +128,15 @@ export interface AdminBookCreate {
   author_id?: string | null;
   cover?: string | null;
   genres?: string[];
+  genre_ids?: string[];
   description?: string | null;
   total_pages?: number | null;
+  publication_type?: 'official' | 'unofficial';
 }
 
 export interface AdminBookUpdate extends Partial<AdminBookCreate> {
   is_published?: boolean;
+  metadata_status?: 'draft' | 'incomplete' | 'review_ready' | 'complete';
 }
 
 // ============================================================
@@ -121,6 +151,7 @@ export interface AdminAuthor {
   country?: string | null;
   birth_year?: number | null;
   death_year?: number | null;
+  creation_type: string;
   book_count: number;
   created_at: string;
   updated_at: string;
@@ -154,6 +185,7 @@ export interface AdminGenre {
   id: string;
   name: string;
   slug: string;
+  type: string;
   description?: string | null;
   parent_id?: string | null;
   book_count: number;
@@ -173,12 +205,14 @@ export interface AdminGenreCreate {
   name: string;
   description?: string | null;
   parent_id?: string | null;
+  type: string;
 }
 
 export interface AdminGenreUpdate {
   name?: string;
   description?: string | null;
   parent_id?: string | null;
+  type?: string;
 }
 
 // ============================================================
@@ -346,3 +380,78 @@ export function canManageGenres(role: AdminRole): boolean {
 export function canViewLogs(role: AdminRole): boolean {
   return role === 'owner' || role === 'admin';
 }
+
+export function canModerate(role: AdminRole): boolean {
+  return role === 'owner' || role === 'admin' || role === 'moderator';
+}
+
+export function canModerateFull(role: AdminRole): boolean {
+  return role === 'owner' || role === 'admin';
+}
+
+export type ModerationStatus = 'pending' | 'approved' | 'rejected';
+
+export const MODERATION_STATUS_LABELS: Record<ModerationStatus, string> = {
+  pending: 'На модерации',
+  approved: 'Одобрено',
+  rejected: 'Отклонено',
+};
+
+export const MODERATION_STATUS_COLORS: Record<ModerationStatus, string> = {
+  pending: '#FFA726',
+  approved: '#4CAF50',
+  rejected: '#EF5350',
+};
+
+export type PublicationType = 'official' | 'unofficial';
+
+export const PUBLICATION_TYPE_LABELS: Record<PublicationType, string> = {
+  official: 'Официальная',
+  unofficial: 'Неофициальная',
+};
+
+export const PUBLICATION_TYPE_COLORS: Record<PublicationType, string> = {
+  official: '#5B86A1',
+  unofficial: '#A855F7',
+};
+
+export type MetadataStatus = 'draft' | 'incomplete' | 'review_ready' | 'complete';
+
+export const METADATA_STATUS_LABELS: Record<MetadataStatus, string> = {
+  draft: 'Черновик',
+  incomplete: 'Неполные',
+  review_ready: 'На проверке',
+  complete: 'Заполнены',
+};
+
+export const METADATA_STATUS_COLORS: Record<MetadataStatus, string> = {
+  draft: '#97A6BA',
+  incomplete: '#FFA726',
+  review_ready: '#5B86A1',
+  complete: '#4CAF50',
+};
+
+export const ENRICHMENT_FIELD_LABELS: Record<string, string> = {
+  title: 'Название',
+  author_id: 'Автор',
+  description: 'Описание',
+  cover: 'Обложка',
+  genres: 'Жанры',
+  author_country: 'Страна автора',
+  original_language: 'Язык оригинала',
+  country_of_origin: 'Страна происхождения',
+  original_publication_year: 'Год издания',
+  series_name: 'Серия',
+  series_position: 'Номер в серии',
+  themes: 'Темы',
+  motifs: 'Мотивы',
+};
+
+export const CREATION_TYPE_LABELS: Record<string, string> = {
+  individual_author: 'Индивидуальный автор',
+  multiple_authors: 'Несколько авторов',
+  anonymous_traditional: 'Анонимное / традиционное',
+  religious_canon: 'Религиозный канон',
+  oral_tradition: 'Устное творчество',
+  collective_creation: 'Коллективное творчество',
+};

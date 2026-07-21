@@ -131,18 +131,22 @@ GENRE_SEED_DATA = [
 
 
 async def seed_genres(conn):
-    """Insert seed genres if the genres table is empty."""
+    """Insert seed genres. Uses ON CONFLICT DO NOTHING so only missing genres are added."""
     from sqlalchemy import text
 
-    result = await conn.execute(text("SELECT count(*) FROM genres"))
-    count = result.scalar()
-    if count and count > 0:
-        return
-
-    logger.info("🌱 Seeding genre taxonomy...")
+    logger.info("🌱 Ensuring genre taxonomy is seeded...")
 
     slug_to_id = {}
+    inserted = 0
     for name, slug, genre_type, parent_slug in GENRE_SEED_DATA:
+        # First, try to find existing by slug
+        fetch = await conn.execute(text("SELECT id FROM genres WHERE slug = :slug"), {"slug": slug})
+        row = fetch.fetchone()
+        if row:
+            slug_to_id[slug] = str(row[0])
+            continue
+
+        # Not found — insert it (resolve parent_id from already-seeded slugs)
         parent_id = f"'{slug_to_id[parent_slug]}'" if parent_slug else "NULL"
         insert_sql = text(
             f"""INSERT INTO genres (id, name, slug, type, parent_id)
@@ -151,17 +155,18 @@ async def seed_genres(conn):
                 RETURNING id"""
         )
         result = await conn.execute(insert_sql, {"name": name, "slug": slug, "type": genre_type})
-        row = result.fetchone()
-        if row:
-            slug_to_id[slug] = str(row[0])
+        new_row = result.fetchone()
+        if new_row:
+            slug_to_id[slug] = str(new_row[0])
+            inserted += 1
         else:
-            # Already exists (ON CONFLICT DO NOTHING) — fetch its id
-            fetch = await conn.execute(text("SELECT id FROM genres WHERE slug = :slug"), {"slug": slug})
-            fetched = fetch.fetchone()
-            if fetched:
-                slug_to_id[slug] = str(fetched[0])
+            # Race condition fallback
+            fetch2 = await conn.execute(text("SELECT id FROM genres WHERE slug = :slug"), {"slug": slug})
+            r2 = fetch2.fetchone()
+            if r2:
+                slug_to_id[slug] = str(r2[0])
 
-    logger.info(f"✅ Seeded {len(GENRE_SEED_DATA)} genres")
+    logger.info(f"✅ Genre seed complete: {inserted} new genres inserted, {len(GENRE_SEED_DATA) - inserted} already existed")
 
 
 async def migrate_json_genres_to_relations(conn):

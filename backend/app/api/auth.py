@@ -4,7 +4,7 @@ from sqlalchemy import select
 from app.core.deps import get_current_user, get_db
 from app.core.security import (
     get_password_hash, verify_password, create_access_token,
-    get_user_by_email
+    create_refresh_token, decode_token, get_user_by_email
 )
 from app.models.user import User
 from app.schemas.user import (
@@ -18,7 +18,7 @@ router = APIRouter(prefix="/auth", tags=["auth"])
 
 
 # ===== REGISTER =====
-@router.post("/register", response_model=UserResponse)
+@router.post("/register", response_model=TokenResponse)
 async def register(user_data: UserCreate, db: AsyncSession = Depends(get_db)):
     logger.info(f"🔍 REGISTER ATTEMPT: {user_data.email}")
 
@@ -37,13 +37,14 @@ async def register(user_data: UserCreate, db: AsyncSession = Depends(get_db)):
         await db.commit()
         await db.refresh(user)
 
+        access_token = create_access_token({"sub": str(user.id)})
+        refresh_token = create_refresh_token({"sub": str(user.id)})
+
         logger.info(f"✅ User created: {user.id} - {user.email}")
 
-        return UserResponse(
-            id=user.id,
-            email=user.email,
-            role=user.role,
-            created_at=user.created_at
+        return TokenResponse(
+            access_token=access_token,
+            refresh_token=refresh_token,
         )
     except HTTPException:
         raise
@@ -65,14 +66,56 @@ async def login(user_data: UserLogin, db: AsyncSession = Depends(get_db)):
             raise HTTPException(status_code=401, detail="Invalid email or password")
 
         access_token = create_access_token({"sub": str(user.id)})
+        refresh_token = create_refresh_token({"sub": str(user.id)})
         logger.info(f"✅ Login success: {user.id} - {user.email}")
 
-        return TokenResponse(access_token=access_token)
+        return TokenResponse(
+            access_token=access_token,
+            refresh_token=refresh_token,
+        )
     except HTTPException:
         raise
     except Exception as e:
         logger.error(f"🔥 LOGIN ERROR: {type(e).__name__} - {str(e)}")
         raise HTTPException(status_code=500, detail=f"Internal error: {str(e)}")
+
+
+# ===== REFRESH =====
+@router.post("/refresh", response_model=TokenResponse)
+async def refresh_token(refresh_token: str, db: AsyncSession = Depends(get_db)):
+    """Exchange a valid refresh token for new access + refresh tokens."""
+    logger.info("🔍 REFRESH TOKEN REQUEST")
+
+    payload = decode_token(refresh_token)
+    if payload is None:
+        logger.warning("❌ Refresh token invalid or expired")
+        raise HTTPException(status_code=401, detail="Invalid or expired refresh token")
+
+    if payload.get("type") != "refresh":
+        logger.warning("❌ Token type is not refresh")
+        raise HTTPException(status_code=401, detail="Token is not a refresh token")
+
+    user_id = payload.get("sub")
+    if user_id is None:
+        raise HTTPException(status_code=401, detail="Invalid token payload")
+
+    result = await db.execute(select(User).where(User.id == user_id))
+    user = result.scalar_one_or_none()
+    if not user:
+        raise HTTPException(status_code=401, detail="User not found")
+
+    if not user.is_active:
+        raise HTTPException(status_code=403, detail="User account is disabled")
+
+    new_access = create_access_token({"sub": str(user.id)})
+    new_refresh = create_refresh_token({"sub": str(user.id)})
+
+    logger.info(f"✅ Token refreshed for user {user.id}")
+
+    return TokenResponse(
+        access_token=new_access,
+        refresh_token=new_refresh,
+    )
 
 
 # ===== ME =====
@@ -89,7 +132,7 @@ async def get_current_user_info(
     )
 
 
-# ===== TELEGRAM LOGIN (для будущего) =====
+# ===== TELEGRAM LOGIN =====
 @router.post("/telegram", response_model=TokenResponse)
 async def telegram_login(
     telegram_data: TelegramAuthData,
@@ -116,9 +159,13 @@ async def telegram_login(
             logger.info(f"✅ New user created via Telegram: {user.id} - {telegram_data.username}")
 
         access_token = create_access_token({"sub": str(user.id)})
+        refresh_token = create_refresh_token({"sub": str(user.id)})
         logger.info(f"✅ Telegram login success: {user.id}")
 
-        return TokenResponse(access_token=access_token)
+        return TokenResponse(
+            access_token=access_token,
+            refresh_token=refresh_token,
+        )
     except HTTPException:
         raise
     except Exception as e:

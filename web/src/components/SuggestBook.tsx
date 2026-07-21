@@ -3,7 +3,8 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../store/authStore';
-import { BookPlus, Send, CheckCircle, AlertCircle, FileText, Library, LogIn, UserPlus, X } from 'lucide-react';
+import { BookPlus, Send, CheckCircle, AlertCircle, FileText, Library, LogIn, UserPlus } from 'lucide-react';
+import { apiClient } from '../shared/api/client';
 
 type SuggestionType = 'book' | 'fanfiction';
 
@@ -13,14 +14,16 @@ export function SuggestBook() {
   const [title, setTitle] = useState('');
   const [author, setAuthor] = useState('');
   const [type, setType] = useState<SuggestionType>('book');
-  const [status, setStatus] = useState<'idle' | 'success' | 'error'>('idle');
+  const [status, setStatus] = useState<'idle' | 'success' | 'error' | 'submitting'>('idle');
   const [showAuthDialog, setShowAuthDialog] = useState(false);
+  const [errorMsg, setErrorMsg] = useState('');
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (!title.trim() || !author.trim()) {
       setStatus('error');
+      setErrorMsg('Заполните все поля.');
       setTimeout(() => setStatus('idle'), 3000);
       return;
     }
@@ -30,61 +33,30 @@ export function SuggestBook() {
       return;
     }
 
-    submitSuggestion();
-  };
+    setStatus('submitting');
+    setErrorMsg('');
 
-  const submitSuggestion = () => {
     try {
-      const suggestions = JSON.parse(localStorage.getItem('syverro_book_suggestions') || '[]');
-      const now = new Date().toISOString();
-      
-      const newSuggestion = {
-        id: `suggestion_${Date.now()}`,
+      const response = await apiClient.post('/books/', {
         title: title.trim(),
         author: author.trim(),
-        type: type,
-        userId: user?.id || 'anonymous',
-        userEmail: user?.email || 'anonymous',
-        createdAt: now,
-        reviewedAt: null,
-        moderatorComment: null,
-      };
+        publication_type: type === 'book' ? 'official' : 'unofficial',
+      });
 
-      if (type === 'book') {
-        suggestions.push({
-          ...newSuggestion,
-          status: 'pending',
-        });
+      if (response.status === 200 || response.status === 201) {
+        setStatus('success');
+        setTitle('');
+        setAuthor('');
+        setType('book');
+        setTimeout(() => setStatus('idle'), 4000);
       } else {
-        suggestions.push({
-          ...newSuggestion,
-          status: 'internal',
-        });
-
-        const userId = user?.id || 'anonymous';
-        const personalBooks = JSON.parse(localStorage.getItem(`syverro_personal_books_${userId}`) || '[]');
-        personalBooks.push({
-          id: `internal_${Date.now()}`,
-          title: title.trim(),
-          author: author.trim(),
-          type: 'fanfiction',
-          source: 'suggestion',
-          addedAt: now,
-          status: 'planned',
-        });
-        localStorage.setItem(`syverro_personal_books_${userId}`, JSON.stringify(personalBooks));
+        throw new Error('Unexpected response');
       }
-
-      localStorage.setItem('syverro_book_suggestions', JSON.stringify(suggestions));
-
-      setStatus('success');
-      setTitle('');
-      setAuthor('');
-      setType('book');
-      setTimeout(() => setStatus('idle'), 3000);
-    } catch {
+    } catch (err: any) {
+      const detail = err.response?.data?.detail || err.message || 'Ошибка отправки';
       setStatus('error');
-      setTimeout(() => setStatus('idle'), 3000);
+      setErrorMsg(detail);
+      setTimeout(() => setStatus('idle'), 5000);
     }
   };
 
@@ -173,9 +145,10 @@ export function SuggestBook() {
           type="submit"
           className="glass-btn glass-btn-primary"
           style={{ alignSelf: 'flex-start' }}
+          disabled={status === 'submitting'}
         >
           <Send size={16} />
-          Отправить
+          {status === 'submitting' ? 'Отправка...' : 'Отправить'}
         </button>
       </form>
 
@@ -183,15 +156,15 @@ export function SuggestBook() {
         <div style={{ marginTop: '12px', color: 'var(--success)', display: 'flex', alignItems: 'center', gap: '8px' }}>
           <CheckCircle size={18} />
           {type === 'book'
-            ? 'Спасибо! Книга отправлена на модерацию.'
-            : 'Материал добавлен в вашу библиотеку.'}
+            ? 'Спасибо! Книга отправлена на модерацию и появится в каталоге после проверки.'
+            : 'Книга добавлена в вашу библиотеку.'}
         </div>
       )}
 
       {status === 'error' && (
         <div style={{ marginTop: '12px', color: 'var(--error)', display: 'flex', alignItems: 'center', gap: '8px' }}>
           <AlertCircle size={18} />
-          Заполните все поля.
+          {errorMsg || 'Заполните все поля.'}
         </div>
       )}
 
@@ -213,12 +186,12 @@ export function SuggestBook() {
             }}
             onClick={(e) => e.stopPropagation()}
           >
-            <div style={{ fontSize: '32px', marginBottom: '12px' }}>🔐</div>
+            <div style={{ fontSize: '32px', marginBottom: '12px' }}>📚</div>
             <h3 style={{ color: '#E6EDF3', fontSize: '18px', fontWeight: '500', margin: '0 0 8px 0' }}>
-              Требуется авторизация
+              Сохраните книгу в своей библиотеке
             </h3>
             <p style={{ color: '#97A6BA', fontSize: '14px', margin: '0 0 24px 0', lineHeight: '1.5' }}>
-              Чтобы предложить книгу, войдите в аккаунт или зарегистрируйтесь.
+              Войдите, чтобы добавить книгу в личную коллекцию, отслеживать чтение и предлагать новые книги в каталог.
             </p>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
               <button

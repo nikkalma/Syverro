@@ -11,7 +11,9 @@ from app.models.genre import Genre
 from app.models.book_genre import book_genres
 from app.schemas.book import BookCreate, BookResponse, UserBookResponse
 from uuid import UUID
+import logging
 
+logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/books", tags=["books"])
 
 
@@ -145,6 +147,7 @@ async def create_book(
                 )
                 db.add(user_book)
                 await db.commit()
+                logger.info(f"📚 UserBook created for existing book {existing_book.id} by user {current_user.id}")
             await db.refresh(existing_book, ["author_ref"])
             return await _book_to_response_dict(db, existing_book)
 
@@ -159,9 +162,10 @@ async def create_book(
             description=book_data.description,
             total_pages=book_data.total_pages,
             publication_type=book_data.publication_type or "official",
-            created_by=current_user.id,
+            metadata_status="draft",
             moderation_status="pending",
             is_published=False,
+            created_by=current_user.id,
         )
         db.add(new_book)
         await db.flush()
@@ -175,6 +179,8 @@ async def create_book(
 
         await db.commit()
         await db.refresh(new_book, ["author_ref"])
+
+        logger.info(f"✅ Book created: {new_book.id} '{new_book.title}' by user {current_user.id} — moderation_status=pending, is_published=False")
 
         return await _book_to_response_dict(db, new_book)
     except Exception as e:

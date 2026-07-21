@@ -585,6 +585,7 @@ async def create_book(
         total_pages=data.get("total_pages"),
         publication_type=data.get("publication_type", "official"),
         metadata_status="draft",
+        moderation_status="pending",
         is_published=data.get("is_published", False),
         created_by=current_user.id,
     )
@@ -694,12 +695,10 @@ async def get_moderation_books(
     query = select(Book)
     count_query = select(func.count()).select_from(Book)
 
-    if status:
+    if status and status != "all":
         query = query.where(Book.moderation_status == status)
         count_query = count_query.where(Book.moderation_status == status)
-    else:
-        query = query.where(Book.moderation_status == "pending")
-        count_query = count_query.where(Book.moderation_status == "pending")
+    # else: no moderation_status filter applied, show all books
 
     if search:
         search_filter = or_(
@@ -784,6 +783,7 @@ async def approve_book(
     book.metadata_status = "incomplete"
 
     await db.commit()
+    logger.info(f"✅ Book APPROVED: {book.id} '{book.title}' by moderator {current_user.id} — now visible in Global Library")
     return {"message": "Book approved and published"}
 
 @router.post("/moderation/books/{book_id}/reject")
@@ -807,6 +807,7 @@ async def reject_book(
     book.is_published = False
 
     await db.commit()
+    logger.info(f"❌ Book REJECTED: {book.id} '{book.title}' by moderator {current_user.id} — reason: {data.reason}")
     return {"message": "Book rejected"}
 
 @router.post("/moderation/books/{book_id}/personal-only")
@@ -833,6 +834,7 @@ async def set_personal_only(
     book.metadata_status = "incomplete"
 
     await db.commit()
+    logger.info(f"🔒 Book set to PERSONAL-ONLY: {book.id} '{book.title}' — not in Global Library, only for owner")
     return {"message": "Book set to personal only — available for owner, not in Global Library"}
 
 # ============================================================

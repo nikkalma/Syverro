@@ -14,7 +14,8 @@ import {
   Sparkles,
   UserCircle,
   Crown,
-  Library
+  Library,
+  Shield
 } from 'lucide-react';
 
 interface LayoutProps {
@@ -152,6 +153,26 @@ export default function Layout({ children }: LayoutProps) {
             >
               <Library size={18} />
               Моя библиотека
+            </span>
+          )}
+          {isAdmin && (
+            <span
+              onClick={() => navigate('/admin')}
+              style={{
+                color: location.pathname.startsWith('/admin') ? 'var(--primary)' : 'var(--text-secondary)',
+                cursor: 'pointer',
+                fontFamily: 'Inter, sans-serif',
+                transition: 'color 0.2s',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px',
+                fontWeight: location.pathname.startsWith('/admin') ? '500' : '400',
+              }}
+              onMouseEnter={(e) => { e.currentTarget.style.color = 'var(--primary)'; }}
+              onMouseLeave={(e) => { e.currentTarget.style.color = location.pathname.startsWith('/admin') ? 'var(--primary)' : 'var(--text-secondary)'; }}
+            >
+              <Shield size={18} />
+              Админка
             </span>
           )}
         </nav>

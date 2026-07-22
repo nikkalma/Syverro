@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { AdminBook } from '../../../types/admin';
 import { METADATA_STATUS_LABELS, METADATA_STATUS_COLORS, ENRICHMENT_FIELD_LABELS, CREATION_TYPE_LABELS } from '../../../types/admin';
 import { Save, ArrowLeft, RefreshCw, AlertCircle, CheckCircle } from 'lucide-react';
+import { getLocaleData, getBrowserLocale } from '../../../locales';
 
 const API_URL = import.meta.env.VITE_API_URL || 'https://api.syverro.com';
 
@@ -30,6 +31,8 @@ export default function BookEnrichmentPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const token = localStorage.getItem('token');
+  const locale = getBrowserLocale();
+  const t = getLocaleData(locale);
 
   const [book, setBook] = useState<AdminBook | null>(null);
   const [loading, setLoading] = useState(true);
@@ -225,7 +228,7 @@ export default function BookEnrichmentPage() {
   if (!book) {
     return (
       <div style={{ padding: '40px', textAlign: 'center', color: '#EF5350' }}>
-        Книга не найдена
+        {t.admin.enrichment.bookNotFound}
       </div>
     );
   }
@@ -247,7 +250,7 @@ export default function BookEnrichmentPage() {
         </button>
         <div>
           <h1 style={{ fontSize: '22px', fontWeight: '400', color: '#E6EDF3', margin: 0 }}>
-            Обогащение: {book.title}
+            {t.admin.enrichment.title}: {book.title}
           </h1>
           <div style={{ fontSize: '13px', color: '#97A6BA', marginTop: '4px' }}>
             {book.author}
@@ -266,7 +269,7 @@ export default function BookEnrichmentPage() {
           padding: '12px 16px', background: 'rgba(91,134,161,0.08)', borderRadius: '8px',
           border: '1px solid rgba(91,134,161,0.15)', fontSize: '13px', color: '#5B86A1',
         }}>
-          Режим модератора — просмотр без возможности редактирования. Только admin/owner могут сохранять изменения.
+          {t.admin.enrichment.moderatorNotice}
         </div>
       )}
 
@@ -275,16 +278,16 @@ export default function BookEnrichmentPage() {
           padding: '12px 16px', background: 'rgba(255,167,38,0.08)', borderRadius: '8px',
           border: '1px solid rgba(255,167,38,0.15)', fontSize: '13px', color: '#FFA726',
         }}>
-          <strong>Не хватает:</strong> {book.missing_fields.map((f) => ENRICHMENT_FIELD_LABELS[f] || f).join(', ')}
+          <strong>{t.admin.enrichment.missing}</strong> {book.missing_fields.map((f) => ENRICHMENT_FIELD_LABELS[f] || f).join(', ')}
         </div>
       )}
 
       {/* BASIC INFO */}
       <div style={sectionStyle}>
-        <h3 style={sectionTitleStyle}>Основная информация</h3>
+        <h3 style={sectionTitleStyle}>{t.admin.enrichment.basicInfo}</h3>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
           <div>
-            <label style={labelStyle}>Название</label>
+            <label style={labelStyle}>{t.admin.enrichment.titleField}</label>
             <input
               value={title}
               onChange={(e) => canEdit && setTitle(e.target.value)}
@@ -293,38 +296,38 @@ export default function BookEnrichmentPage() {
             />
           </div>
           <div>
-            <label style={labelStyle}>Подзаголовок</label>
+            <label style={labelStyle}>{t.admin.enrichment.subtitle}</label>
             <input
               value={subtitle}
               onChange={(e) => setSubtitle(e.target.value)}
               disabled={isModerator}
-              placeholder="Подзаголовок"
+              placeholder={t.admin.enrichment.subtitlePlaceholder}
               style={{ ...inputStyle, opacity: isModerator ? 0.5 : 1 }}
             />
           </div>
           <div>
-            <label style={labelStyle}>Оригинальное название</label>
+            <label style={labelStyle}>{t.admin.enrichment.originalTitle}</label>
             <input
               value={originalTitle}
               onChange={(e) => setOriginalTitle(e.target.value)}
               disabled={isModerator}
-              placeholder="Оригинальное название"
+              placeholder={t.admin.enrichment.originalTitlePlaceholder}
               style={{ ...inputStyle, opacity: isModerator ? 0.5 : 1 }}
             />
           </div>
           <div style={{ gridColumn: '1 / -1' }}>
-            <label style={labelStyle}>Описание</label>
+            <label style={labelStyle}>{t.admin.enrichment.description}</label>
             <textarea
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               disabled={isModerator}
-              placeholder="Описание книги..."
+              placeholder={t.admin.enrichment.descriptionPlaceholder}
               rows={3}
               style={{ ...inputStyle, resize: 'vertical', opacity: isModerator ? 0.5 : 1 }}
             />
           </div>
           <div>
-            <label style={labelStyle}>Обложка (URL)</label>
+            <label style={labelStyle}>{t.admin.enrichment.coverUrl}</label>
             <input
               type="url"
               value={cover}
@@ -337,30 +340,30 @@ export default function BookEnrichmentPage() {
           {canEdit && (
             <>
               <div>
-                <label style={labelStyle}>Страниц</label>
+                <label style={labelStyle}>{t.admin.enrichment.pages}</label>
                 <input
                   type="number"
                   value={totalPages}
                   onChange={(e) => setTotalPages(e.target.value)}
-                  placeholder="Кол-во страниц"
+                  placeholder={t.admin.enrichment.pagesPlaceholder}
                   style={inputStyle}
                 />
               </div>
               <div>
-                <label style={labelStyle}>Тип издания</label>
+                <label style={labelStyle}>{t.admin.enrichment.publicationType}</label>
                 <select
                   value={publicationType}
                   onChange={(e) => setPublicationType(e.target.value)}
                   style={inputStyle}
                 >
-                  <option value="official">Официальное</option>
-                  <option value="unofficial">Неофициальное</option>
+                  <option value="official">{t.admin.enrichment.official}</option>
+                  <option value="unofficial">{t.admin.enrichment.unofficial}</option>
                 </select>
               </div>
             </>
           )}
           <div>
-            <label style={labelStyle}>Жанры</label>
+            <label style={labelStyle}>{t.admin.enrichment.genres}</label>
             <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', marginBottom: '6px' }}>
               {genres.map((g) => (
                 <span key={g} onClick={() => handleRemoveFromList(g, genres, setGenres)} style={{
@@ -376,7 +379,7 @@ export default function BookEnrichmentPage() {
                 value={genreInput}
                 onChange={(e) => setGenreInput(e.target.value)}
                 onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); handleAddToList(genreInput, genres, setGenres, setGenreInput); } }}
-                placeholder="Добавить жанр..."
+                placeholder={t.admin.enrichment.genresPlaceholder}
                 style={{ ...inputStyle, flex: 1 }}
               />
               <button
@@ -392,16 +395,16 @@ export default function BookEnrichmentPage() {
 
       {/* AUTHOR */}
       <div style={sectionStyle}>
-        <h3 style={sectionTitleStyle}>Автор</h3>
+        <h3 style={sectionTitleStyle}>{t.admin.enrichment.authorSection}</h3>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
           <div style={{ gridColumn: '1 / -1', position: 'relative' }}>
-            <label style={labelStyle}>Автор {authorId && <span style={{ color: '#4CAF50', fontSize: '11px' }}>✓ из базы</span>}</label>
+            <label style={labelStyle}>{t.admin.enrichment.authorField} {authorId && <span style={{ color: '#4CAF50', fontSize: '11px' }}>{t.admin.enrichment.authorFromDb}</span>}</label>
             <input
               value={authorQuery}
               onChange={(e) => { setAuthorQuery(e.target.value); setAuthorId(''); setShowAuthorDropdown(true); }}
               onFocus={() => authorQuery.length >= 1 && setShowAuthorDropdown(true)}
               onBlur={() => setTimeout(() => setShowAuthorDropdown(false), 200)}
-              placeholder="Начните вводить имя автора..."
+              placeholder={t.admin.enrichment.authorSearchPlaceholder}
               style={inputStyle}
             />
             {showAuthorDropdown && authorSuggestions.length > 0 && (
@@ -424,11 +427,11 @@ export default function BookEnrichmentPage() {
             )}
           </div>
           <div>
-            <label style={labelStyle}>Страна автора</label>
-            <input value={authorCountry} onChange={(e) => setAuthorCountry(e.target.value)} placeholder="Страна" style={inputStyle} />
+            <label style={labelStyle}>{t.admin.enrichment.authorCountry}</label>
+            <input value={authorCountry} onChange={(e) => setAuthorCountry(e.target.value)} placeholder={t.admin.enrichment.countryPlaceholder} style={inputStyle} />
           </div>
           <div>
-            <label style={labelStyle}>Тип авторства</label>
+            <label style={labelStyle}>{t.admin.enrichment.authorType}</label>
             <select value={authorCreationType} onChange={(e) => setAuthorCreationType(e.target.value)} style={inputStyle}>
               {Object.entries(CREATION_TYPE_LABELS).map(([key, label]) => (
                 <option key={key} value={key}>{label}</option>
@@ -436,46 +439,46 @@ export default function BookEnrichmentPage() {
             </select>
           </div>
           <div>
-            <label style={labelStyle}>Год рождения</label>
-            <input type="number" value={authorBirthYear} onChange={(e) => setAuthorBirthYear(e.target.value)} placeholder="Год" style={inputStyle} />
+            <label style={labelStyle}>{t.admin.enrichment.birthYear}</label>
+            <input type="number" value={authorBirthYear} onChange={(e) => setAuthorBirthYear(e.target.value)} placeholder={t.admin.enrichment.yearPlaceholder} style={inputStyle} />
           </div>
           <div>
-            <label style={labelStyle}>Год смерти</label>
-            <input type="number" value={authorDeathYear} onChange={(e) => setAuthorDeathYear(e.target.value)} placeholder="Год" style={inputStyle} />
+            <label style={labelStyle}>{t.admin.enrichment.deathYear}</label>
+            <input type="number" value={authorDeathYear} onChange={(e) => setAuthorDeathYear(e.target.value)} placeholder={t.admin.enrichment.yearPlaceholder} style={inputStyle} />
           </div>
           <div style={{ gridColumn: '1 / -1' }}>
-            <label style={labelStyle}>Биография автора</label>
-            <textarea value={authorBio} onChange={(e) => setAuthorBio(e.target.value)} placeholder="Краткая биография..." rows={3} style={{ ...inputStyle, resize: 'vertical' }} />
+            <label style={labelStyle}>{t.admin.enrichment.authorBio}</label>
+            <textarea value={authorBio} onChange={(e) => setAuthorBio(e.target.value)} placeholder={t.admin.enrichment.bioPlaceholder} rows={3} style={{ ...inputStyle, resize: 'vertical' }} />
           </div>
         </div>
       </div>
 
       {/* CLASSIFICATION */}
       <div style={sectionStyle}>
-        <h3 style={sectionTitleStyle}>Классификация</h3>
+        <h3 style={sectionTitleStyle}>{t.admin.enrichment.classification}</h3>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
           <div>
-            <label style={labelStyle}>Язык оригинала</label>
-            <input value={originalLanguage} onChange={(e) => setOriginalLanguage(e.target.value)} placeholder="Язык" style={inputStyle} />
+            <label style={labelStyle}>{t.admin.enrichment.originalLanguage}</label>
+            <input value={originalLanguage} onChange={(e) => setOriginalLanguage(e.target.value)} placeholder={t.admin.enrichment.languagePlaceholder} style={inputStyle} />
           </div>
           <div>
-            <label style={labelStyle}>Страна происхождения</label>
-            <input value={countryOfOrigin} onChange={(e) => setCountryOfOrigin(e.target.value)} placeholder="Страна" style={inputStyle} />
+            <label style={labelStyle}>{t.admin.enrichment.countryOfOrigin}</label>
+            <input value={countryOfOrigin} onChange={(e) => setCountryOfOrigin(e.target.value)} placeholder={t.admin.enrichment.countryPlaceholder} style={inputStyle} />
           </div>
           <div>
-            <label style={labelStyle}>Год первого издания</label>
-            <input type="number" value={originalPublicationYear} onChange={(e) => setOriginalPublicationYear(e.target.value)} placeholder="Год" style={inputStyle} />
+            <label style={labelStyle}>{t.admin.enrichment.firstPublishedYear}</label>
+            <input type="number" value={originalPublicationYear} onChange={(e) => setOriginalPublicationYear(e.target.value)} placeholder={t.admin.enrichment.yearPlaceholder} style={inputStyle} />
           </div>
           <div>
-            <label style={labelStyle}>Серия</label>
-            <input value={seriesName} onChange={(e) => setSeriesName(e.target.value)} placeholder="Название серии" style={inputStyle} />
+            <label style={labelStyle}>{t.admin.enrichment.series}</label>
+            <input value={seriesName} onChange={(e) => setSeriesName(e.target.value)} placeholder={t.admin.enrichment.seriesPlaceholder} style={inputStyle} />
           </div>
           <div>
-            <label style={labelStyle}>Номер в серии</label>
+            <label style={labelStyle}>{t.admin.enrichment.seriesPosition}</label>
             <input type="number" value={seriesPosition} onChange={(e) => setSeriesPosition(e.target.value)} placeholder="#" style={inputStyle} />
           </div>
           <div>
-            <label style={labelStyle}>Темы</label>
+            <label style={labelStyle}>{t.admin.enrichment.themes}</label>
             <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', marginBottom: '6px' }}>
               {themes.map((t) => (
                 <span key={t} onClick={() => handleRemoveFromList(t, themes, setThemes)} style={{
@@ -491,7 +494,7 @@ export default function BookEnrichmentPage() {
                 value={themeInput}
                 onChange={(e) => setThemeInput(e.target.value)}
                 onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); handleAddToList(themeInput, themes, setThemes, setThemeInput); } }}
-                placeholder="Добавить тему..."
+                placeholder={t.admin.enrichment.themesPlaceholder}
                 style={{ ...inputStyle, flex: 1 }}
               />
               <button
@@ -503,7 +506,7 @@ export default function BookEnrichmentPage() {
             </div>
           </div>
           <div>
-            <label style={labelStyle}>Мотивы</label>
+            <label style={labelStyle}>{t.admin.enrichment.motifs}</label>
             <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', marginBottom: '6px' }}>
               {motifs.map((m) => (
                 <span key={m} onClick={() => handleRemoveFromList(m, motifs, setMotifs)} style={{
@@ -519,7 +522,7 @@ export default function BookEnrichmentPage() {
                 value={motifInput}
                 onChange={(e) => setMotifInput(e.target.value)}
                 onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); handleAddToList(motifInput, motifs, setMotifs, setMotifInput); } }}
-                placeholder="Добавить мотив..."
+                placeholder={t.admin.enrichment.motifsPlaceholder}
                 style={{ ...inputStyle, flex: 1 }}
               />
               <button
@@ -546,11 +549,11 @@ export default function BookEnrichmentPage() {
           }}
         >
           <Save size={16} />
-          {saving ? 'Сохранение...' : 'Сохранить'}
+          {saving ? t.admin.common.saving : t.admin.common.save}
         </button>
         {success && (
           <span style={{ color: '#4CAF50', fontSize: '13px', display: 'flex', alignItems: 'center', gap: '6px' }}>
-            <CheckCircle size={14} /> Сохранено
+            <CheckCircle size={14} /> {t.admin.enrichment.saved}
           </span>
         )}
         {error && (

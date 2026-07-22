@@ -3,6 +3,7 @@
 import { ReactNode, useEffect } from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import { useAuthStore } from '../../store/authStore';
+import { getLocaleData, getBrowserLocale } from '../../locales';
 import AdminLayout from '../../components/Admin/AdminLayout';
 
 interface AdminRouteProps {
@@ -13,6 +14,8 @@ interface AdminRouteProps {
 export default function AdminRoute({ children, requiredRole = 'moderator' }: AdminRouteProps) {
   const { user, isAuthenticated, checkAuth } = useAuthStore();
   const location = useLocation();
+  const locale = getBrowserLocale();
+  const t = getLocaleData(locale);
 
   useEffect(() => {
     checkAuth();
@@ -36,7 +39,7 @@ export default function AdminRoute({ children, requiredRole = 'moderator' }: Adm
       }}>
         <div style={{ textAlign: 'center' }}>
           <div style={{ fontSize: '24px', marginBottom: '16px' }}>⏳</div>
-          <div>Загрузка...</div>
+          <div>{t.admin.common.loading}</div>
         </div>
       </div>
     );
@@ -69,12 +72,12 @@ export default function AdminRoute({ children, requiredRole = 'moderator' }: Adm
         padding: '20px',
       }}>
         <div style={{ fontSize: '64px' }}>🚫</div>
-        <h1 style={{ fontSize: '24px', fontWeight: '400' }}>Доступ запрещён</h1>
+        <h1 style={{ fontSize: '24px', fontWeight: '400' }}>{t.admin.access.denied}</h1>
         <p style={{ color: '#97A6BA', maxWidth: '400px' }}>
-          У вас недостаточно прав для доступа к этому разделу.
+          {t.admin.access.noPermission}
           <br />
           <span style={{ fontSize: '13px', color: '#5B86A1' }}>
-            Ваша роль: <strong>{userRole}</strong> · Требуется: <strong>{requiredRole}</strong>
+            {t.admin.access.yourRole} <strong>{userRole}</strong> · {t.admin.access.required} <strong>{requiredRole}</strong>
           </span>
         </p>
         <button
@@ -91,7 +94,7 @@ export default function AdminRoute({ children, requiredRole = 'moderator' }: Adm
             fontFamily: 'Inter, sans-serif',
           }}
         >
-          Вернуться на главную
+          {t.admin.access.returnHome}
         </button>
       </div>
     );

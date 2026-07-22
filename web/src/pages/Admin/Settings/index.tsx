@@ -4,10 +4,13 @@ import { useEffect, useState } from 'react';
 import { useAdminStore } from '../../../store/adminStore';
 import { type AdminSettings } from '../../../types/admin';
 import { canManageSettings } from '../../../types/admin';
+import { getLocaleData, getBrowserLocale } from '../../../locales';
 
 const API_URL = import.meta.env.VITE_API_URL || 'https://api.syverro.com';
 
 export default function AdminSettings() {
+  const locale = getBrowserLocale();
+  const t = getLocaleData(locale);
   const { setLoading, isLoading, error, setError, clearError } = useAdminStore();
   const [settings, setSettings] = useState<AdminSettings | null>(null);
   const [formData, setFormData] = useState<Partial<AdminSettings>>({});
@@ -95,8 +98,8 @@ export default function AdminSettings() {
         border: '1px solid rgba(239,83,80,0.2)',
       }}>
         <div style={{ fontSize: '48px', marginBottom: '12px' }}>🚫</div>
-        <h2 style={{ color: '#E6EDF3', marginBottom: '8px' }}>Доступ запрещён</h2>
-        <p>Только владелец может управлять настройками системы.</p>
+        <h2 style={{ color: '#E6EDF3', marginBottom: '8px' }}>{t.admin.settings.accessDenied}</h2>
+        <p>{t.admin.settings.accessDeniedDescription}</p>
       </div>
     );
   }
@@ -104,7 +107,7 @@ export default function AdminSettings() {
   if (isLoading && !settings) {
     return (
       <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '200px' }}>
-        <div style={{ color: '#97A6BA' }}>Загрузка настроек...</div>
+        <div style={{ color: '#97A6BA' }}>{t.admin.common.loading}</div>
       </div>
     );
   }
@@ -134,7 +137,7 @@ export default function AdminSettings() {
             fontFamily: 'Inter, sans-serif',
           }}
         >
-          Повторить
+          {t.admin.common.retry}
         </button>
       </div>
     );
@@ -146,7 +149,7 @@ export default function AdminSettings() {
     <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <h1 style={{ fontSize: '24px', fontWeight: '400', color: '#E6EDF3', margin: 0 }}>
-          ⚙️ Настройки системы
+          {t.admin.settings.title}
         </h1>
       </div>
 
@@ -165,7 +168,7 @@ export default function AdminSettings() {
           padding: '24px',
         }}>
           <h2 style={{ fontSize: '16px', color: '#E6EDF3', marginBottom: '20px' }}>
-            🌐 Общие настройки
+            {t.admin.settings.generalSettings}
           </h2>
 
           {/* Регистрация */}
@@ -182,10 +185,10 @@ export default function AdminSettings() {
                   cursor: 'pointer',
                 }}
               />
-              Разрешена регистрация новых пользователей
+              {t.admin.settings.registrationEnabled}
             </label>
             <p style={{ color: '#97A6BA', fontSize: '12px', marginTop: '4px', marginLeft: '30px' }}>
-              Если выключено — новые пользователи не смогут зарегистрироваться
+              {t.admin.settings.registrationDescription}
             </p>
           </div>
 
@@ -203,10 +206,10 @@ export default function AdminSettings() {
                   cursor: 'pointer',
                 }}
               />
-              Режим обслуживания
+              {t.admin.settings.maintenanceMode}
             </label>
             <p style={{ color: '#97A6BA', fontSize: '12px', marginTop: '4px', marginLeft: '30px' }}>
-              Включает заглушку для всех пользователей (админы видят сайт)
+              {t.admin.settings.maintenanceDescription}
             </p>
           </div>
 
@@ -224,10 +227,10 @@ export default function AdminSettings() {
                   cursor: 'pointer',
                 }}
               />
-              Требовать подтверждение email
+              {t.admin.settings.emailVerification}
             </label>
             <p style={{ color: '#97A6BA', fontSize: '12px', marginTop: '4px', marginLeft: '30px' }}>
-              Пользователи должны подтвердить email перед входом
+              {t.admin.settings.emailVerificationDescription}
             </p>
           </div>
         </div>
@@ -241,13 +244,13 @@ export default function AdminSettings() {
           padding: '24px',
         }}>
           <h2 style={{ fontSize: '16px', color: '#E6EDF3', marginBottom: '20px' }}>
-            🛠️ Системные параметры
+            {t.admin.settings.systemParameters}
           </h2>
 
           {/* Максимальный размер файла */}
           <div style={{ marginBottom: '16px' }}>
             <label style={{ color: '#97A6BA', fontSize: '13px', display: 'block', marginBottom: '4px' }}>
-              Максимальный размер загружаемого файла (МБ)
+              {t.admin.settings.maxFileSize}
             </label>
             <input
               type="number"
@@ -272,7 +275,7 @@ export default function AdminSettings() {
           {/* Название сайта */}
           <div style={{ marginBottom: '16px' }}>
             <label style={{ color: '#97A6BA', fontSize: '13px', display: 'block', marginBottom: '4px' }}>
-              Название сайта
+              {t.admin.settings.siteName}
             </label>
             <input
               type="text"
@@ -295,7 +298,7 @@ export default function AdminSettings() {
           {/* Описание сайта */}
           <div style={{ marginBottom: '16px' }}>
             <label style={{ color: '#97A6BA', fontSize: '13px', display: 'block', marginBottom: '4px' }}>
-              Описание сайта
+              {t.admin.settings.siteDescription}
             </label>
             <input
               type="text"
@@ -318,7 +321,7 @@ export default function AdminSettings() {
           {/* Роль по умолчанию */}
           <div>
             <label style={{ color: '#97A6BA', fontSize: '13px', display: 'block', marginBottom: '4px' }}>
-              Роль по умолчанию для новых пользователей
+              {t.admin.settings.defaultRole}
             </label>
             <select
               value={formData.default_user_role ?? settings.default_user_role}
@@ -336,9 +339,9 @@ export default function AdminSettings() {
                 cursor: 'pointer',
               }}
             >
-              <option value="user">Пользователь</option>
-              <option value="moderator">Модератор</option>
-              <option value="admin">Администратор</option>
+              <option value="user">{t.admin.settings.roleUser}</option>
+              <option value="moderator">{t.admin.settings.roleModerator}</option>
+              <option value="admin">{t.admin.settings.roleAdmin}</option>
             </select>
           </div>
         </div>
@@ -389,11 +392,11 @@ export default function AdminSettings() {
             if (!isLoading) e.currentTarget.style.background = '#5B86A1';
           }}
         >
-          {isLoading ? '⏳ Сохранение...' : '💾 Сохранить настройки'}
+          {isLoading ? t.admin.common.saving : t.admin.common.save}
         </button>
 
         <p style={{ color: '#5B86A1', fontSize: '12px', textAlign: 'center', marginTop: '12px' }}>
-          Только владелец может изменять настройки системы
+          {t.admin.settings.ownerOnly}
         </p>
       </div>
     </div>

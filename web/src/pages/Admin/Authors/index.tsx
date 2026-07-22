@@ -7,10 +7,13 @@ import AuthorsTable from './AuthorsTable';
 import AuthorsFilters from './AuthorsFilters';
 import AuthorModal from './AuthorModal';
 import { canManageAuthors } from '../../../types/admin';
+import { getLocaleData, getBrowserLocale } from '../../../locales';
 
 const API_URL = import.meta.env.VITE_API_URL || 'https://api.syverro.com';
 
 export default function AdminAuthors() {
+  const locale = getBrowserLocale();
+  const t = getLocaleData(locale);
   const { searchQuery, filters, page, limit, setLoading, isLoading, error, setError, clearError } = useAdminStore();
   
   const [authors, setAuthors] = useState<AdminAuthor[]>([]);
@@ -146,9 +149,9 @@ export default function AdminAuthors() {
     <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <h1 style={{ fontSize: '24px', fontWeight: '400', color: '#E6EDF3', margin: 0 }}>
-          ✍️ Авторы
+          {t.admin.authors.title}
           <span style={{ fontSize: '14px', color: '#97A6BA', marginLeft: '12px' }}>
-            {total} записей
+            {total} {t.admin.common.records}
           </span>
         </h1>
         {canManage && (
@@ -169,7 +172,7 @@ export default function AdminAuthors() {
             onMouseEnter={(e) => (e.currentTarget.style.background = '#4A7590')}
             onMouseLeave={(e) => (e.currentTarget.style.background = '#5B86A1')}
           >
-            + Добавить автора
+            + {t.admin.authors.addAuthor}
           </button>
         )}
       </div>
@@ -235,11 +238,11 @@ export default function AdminAuthors() {
           >
             <div style={{ textAlign: 'center', marginBottom: '20px' }}>
               <div style={{ fontSize: '48px' }}>⚠️</div>
-              <h2 style={{ color: '#E6EDF3', fontSize: '20px', marginBottom: '8px' }}>Удалить автора?</h2>
+              <h2 style={{ color: '#E6EDF3', fontSize: '20px', marginBottom: '8px' }}>{t.admin.authors.deleteConfirm}</h2>
               <p style={{ color: '#97A6BA', fontSize: '14px' }}>
-                Вы уверены, что хотите удалить автора <strong style={{ color: '#E6EDF3' }}>{authorToDelete.name}</strong>?
+                {t.admin.authors.deleteConfirmText} <strong style={{ color: '#E6EDF3' }}>{authorToDelete.name}</strong>?
                 <br />
-                <span style={{ color: '#EF5350', fontSize: '13px' }}>Это действие нельзя отменить.</span>
+                <span style={{ color: '#EF5350', fontSize: '13px' }}>{t.admin.authors.irreversible}</span>
               </p>
             </div>
             <div style={{ display: 'flex', gap: '12px' }}>
@@ -258,7 +261,7 @@ export default function AdminAuthors() {
                   fontFamily: 'Inter, sans-serif',
                 }}
               >
-                🗑️ Удалить
+                {t.admin.common.delete}
               </button>
               <button
                 onClick={() => setIsDeleteModalOpen(false)}
@@ -274,7 +277,7 @@ export default function AdminAuthors() {
                   fontFamily: 'Inter, sans-serif',
                 }}
               >
-                Отмена
+                {t.admin.common.cancel}
               </button>
             </div>
           </div>

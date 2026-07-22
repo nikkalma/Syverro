@@ -5,10 +5,13 @@ import { useAdminStore } from '../../../store/adminStore';
 import { AdminLog } from '../../../types/admin';
 import LogsTable from './LogsTable';
 import LogsFilters from './LogsFilters';
+import { getLocaleData, getBrowserLocale } from '../../../locales';
 
 const API_URL = import.meta.env.VITE_API_URL || 'https://api.syverro.com';
 
 export default function AdminLogs() {
+  const locale = getBrowserLocale();
+  const t = getLocaleData(locale);
   const { searchQuery, filters, page, limit, setLoading, isLoading, error, setError, clearError } = useAdminStore();
   
   const [logs, setLogs] = useState<AdminLog[]>([]);
@@ -56,9 +59,9 @@ export default function AdminLogs() {
     <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <h1 style={{ fontSize: '24px', fontWeight: '400', color: '#E6EDF3', margin: 0 }}>
-          📋 Логи
+          {t.admin.logs.title}
           <span style={{ fontSize: '14px', color: '#97A6BA', marginLeft: '12px' }}>
-            {total} записей
+            {total} {t.admin.common.records}
           </span>
         </h1>
         <button
@@ -74,7 +77,7 @@ export default function AdminLogs() {
             fontFamily: 'Inter, sans-serif',
           }}
         >
-          🔄 Обновить
+          {t.admin.common.refresh}
         </button>
       </div>
 

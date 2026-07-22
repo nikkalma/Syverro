@@ -6,6 +6,8 @@ import { useAuthStore } from '../../store/authStore';
 import { useAdminTheme } from '../../store/adminStore';
 import { ADMIN_ROLES } from '../../types/admin';
 import { Sun, Moon, Menu, X } from 'lucide-react';
+import { getLocaleData, getBrowserLocale } from '../../locales';
+import type { LocaleData } from '../../locales';
 import './AdminLayout.css';
 
 interface AdminLayoutProps {
@@ -18,24 +20,28 @@ interface NavItem {
   icon: string;
 }
 
-const navItems: NavItem[] = [
-  { path: '/admin', label: 'Dashboard', icon: '📊' },
-  { path: '/admin/users', label: 'Пользователи', icon: '👥' },
-  { path: '/admin/books', label: 'Книги', icon: '📚' },
-  { path: '/admin/authors', label: 'Авторы', icon: '✍️' },
-  { path: '/admin/genres', label: 'Жанры', icon: '🏷️' },
-  { path: '/admin/moderation', label: 'Модерация', icon: '🛡️' },
-  { path: '/admin/metadata', label: 'Метаданные', icon: '📝' },
-  { path: '/admin/logs', label: 'Логи', icon: '📋' },
-  { path: '/admin/settings', label: 'Настройки', icon: '⚙️' },
-];
-
 export default function AdminLayout({ children }: AdminLayoutProps) {
   const navigate = useNavigate();
   const location = useLocation();
   const { user, logout } = useAuthStore();
   const { theme, toggleTheme } = useAdminTheme();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const locale = getBrowserLocale();
+  const t = getLocaleData(locale);
+
+  const getNavItems = (t: LocaleData): NavItem[] => [
+    { path: '/admin', label: t.admin.nav.dashboard, icon: '📊' },
+    { path: '/admin/users', label: t.admin.nav.users, icon: '👥' },
+    { path: '/admin/books', label: t.admin.nav.books, icon: '📚' },
+    { path: '/admin/authors', label: t.admin.nav.authors, icon: '✍️' },
+    { path: '/admin/genres', label: t.admin.nav.genres, icon: '🏷️' },
+    { path: '/admin/moderation', label: t.admin.nav.moderation, icon: '🛡️' },
+    { path: '/admin/metadata', label: t.admin.nav.metadata, icon: '📝' },
+    { path: '/admin/logs', label: t.admin.nav.logs, icon: '📋' },
+    { path: '/admin/settings', label: t.admin.nav.settings, icon: '⚙️' },
+  ];
+
+  const navItems = getNavItems(t);
 
   const userRole = user?.role || 'user';
   const hasAccess = ADMIN_ROLES.includes(userRole as any);
@@ -53,13 +59,13 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
         gap: '16px',
       }}>
         <div style={{ fontSize: '64px' }}>🚫</div>
-        <h1 style={{ fontSize: '24px', fontWeight: '400' }}>Доступ запрещён</h1>
-        <p style={{ color: 'var(--text-secondary)' }}>У вас нет прав для доступа к административной панели.</p>
+        <h1 style={{ fontSize: '24px', fontWeight: '400' }}>{t.admin.access.denied}</h1>
+        <p style={{ color: 'var(--text-secondary)' }}>{t.admin.access.noPermission}</p>
         <button
           onClick={() => navigate('/')}
           className="glass-button glass-button-primary"
         >
-          Вернуться на главную
+          {t.admin.access.returnHome}
         </button>
       </div>
     );
@@ -106,7 +112,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
         }}>
           Syverro
           <span style={{ fontSize: '12px', color: 'var(--primary)', marginLeft: '8px', letterSpacing: '0' }}>
-            Admin
+            {t.admin.brand}
           </span>
         </div>
 
@@ -227,7 +233,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
               {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
             </button>
             <span style={{ fontSize: '18px', fontWeight: '300', color: 'var(--text-secondary)' }}>
-              {navItems.find(item => isActive(item.path))?.label || 'Dashboard'}
+              {navItems.find(item => isActive(item.path))?.label || t.admin.nav.dashboard}
             </span>
           </div>
 

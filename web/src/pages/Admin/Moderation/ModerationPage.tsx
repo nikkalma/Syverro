@@ -5,16 +5,18 @@ import { AdminBook } from '../../../types/admin';
 import { useAdminStore } from '../../../store/adminStore';
 import { RefreshCw, CheckCircle, XCircle, Eye, Clock, User, BookOpen, Filter } from 'lucide-react';
 import { PUBLICATION_TYPE_LABELS, PUBLICATION_TYPE_COLORS, METADATA_STATUS_LABELS, METADATA_STATUS_COLORS } from '../../../types/admin';
+import { getLocaleData, getBrowserLocale } from '../../../locales';
+import type { LocaleData } from '../../../locales';
 
 const API_URL = import.meta.env.VITE_API_URL || 'https://api.syverro.com';
 
 type TabFilter = 'pending' | 'approved' | 'rejected' | 'all';
 
-const STATUS_LABELS: Record<string, string> = {
-  pending: 'На модерации',
-  approved: 'Одобрено',
-  rejected: 'Отклонено',
-};
+const getStatusLabels = (t: LocaleData) => ({
+  pending: t.admin.moderation.pending,
+  approved: t.admin.moderation.approved,
+  rejected: t.admin.moderation.rejected,
+});
 
 const STATUS_COLORS: Record<string, { bg: string; color: string; border: string }> = {
   pending: { bg: 'rgba(255,167,38,0.12)', color: '#FFA726', border: 'rgba(255,167,38,0.2)' },
@@ -23,6 +25,8 @@ const STATUS_COLORS: Record<string, { bg: string; color: string; border: string 
 };
 
 export default function ModerationPage() {
+  const locale = getBrowserLocale();
+  const t = getLocaleData(locale);
   const { page, limit, setPage, setLoading, isLoading } = useAdminStore();
 
   const [books, setBooks] = useState<AdminBook[]>([]);
@@ -152,10 +156,10 @@ export default function ModerationPage() {
   const totalPages = Math.ceil(total / limit);
 
   const tabs: { key: TabFilter; label: string; icon: React.ReactNode }[] = [
-    { key: 'pending', label: 'На модерации', icon: <Clock size={14} /> },
-    { key: 'approved', label: 'Одобрено', icon: <CheckCircle size={14} /> },
-    { key: 'rejected', label: 'Отклонено', icon: <XCircle size={14} /> },
-    { key: 'all', label: 'Все', icon: <Filter size={14} /> },
+    { key: 'pending', label: t.admin.moderation.pending, icon: <Clock size={14} /> },
+    { key: 'approved', label: t.admin.moderation.approved, icon: <CheckCircle size={14} /> },
+    { key: 'rejected', label: t.admin.moderation.rejected, icon: <XCircle size={14} /> },
+    { key: 'all', label: t.admin.common.all, icon: <Filter size={14} /> },
   ];
 
   return (
@@ -163,9 +167,9 @@ export default function ModerationPage() {
       {/* Header */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
         <h1 style={{ fontSize: '24px', fontWeight: '400', color: '#E6EDF3', margin: 0 }}>
-          🛡️ Модерация книг
+          🛡️ {t.admin.moderation.title}
           <span style={{ fontSize: '14px', color: '#97A6BA', marginLeft: '12px' }}>
-            {total} записей
+            {total} {t.admin.common.records}
           </span>
         </h1>
         <button
@@ -186,7 +190,7 @@ export default function ModerationPage() {
           }}
         >
           <RefreshCw size={14} className={isLoading ? 'spinner' : ''} />
-          Обновить
+          {t.admin.common.refresh}
         </button>
       </div>
 
@@ -222,7 +226,7 @@ export default function ModerationPage() {
       <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
         <input
           type="text"
-          placeholder="Поиск по названию или автору..."
+          placeholder={t.admin.metadata.searchPlaceholder}
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
           style={{
@@ -255,13 +259,13 @@ export default function ModerationPage() {
             border: '1px solid rgba(255,255,255,0.06)',
           }}>
             <BookOpen size={48} style={{ opacity: 0.3, marginBottom: '12px' }} />
-            <p>Нет книг для модерации</p>
+            <p>{t.admin.moderation.noBooksForModeration}</p>
           </div>
         ) : (
           <table style={{ width: '100%', borderCollapse: 'collapse' }}>
             <thead>
               <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
-                {['Обложка', 'Название', 'Автор', 'Тип', 'Отправил', 'Статус', 'Дата', 'Действия'].map((h) => (
+                {[t.admin.books.cover, t.admin.books.name, t.admin.books.author, t.admin.genres.type, t.admin.moderation.submittedBy, t.admin.books.status, t.admin.books.date, t.admin.books.actions].map((h) => (
                   <th key={h} style={{ padding: '12px 16px', textAlign: 'left', color: '#97A6BA', fontSize: '12px', fontWeight: '500' }}>
                     {h}
                   </th>
@@ -303,7 +307,7 @@ export default function ModerationPage() {
                         color: PUBLICATION_TYPE_COLORS[book.publication_type as keyof typeof PUBLICATION_TYPE_COLORS] || '#5B86A1',
                         border: `1px solid ${PUBLICATION_TYPE_COLORS[book.publication_type as keyof typeof PUBLICATION_TYPE_COLORS] || '#5B86A1'}30`,
                       }}>
-                        {book.publication_type === 'unofficial' ? '✏️ Неоф.' : '📚 Оф.'}
+                        {book.publication_type === 'unofficial' ? `✏️ ${t.admin.moderation.unofficial}` : `📚 ${t.admin.moderation.official}`}
                       </span>
                     </td>
                     <td style={{ padding: '12px 16px' }}>
@@ -317,7 +321,7 @@ export default function ModerationPage() {
                         padding: '4px 12px', borderRadius: '12px', fontSize: '12px', fontWeight: '500',
                         background: sc.bg, color: sc.color, border: `1px solid ${sc.border}`,
                       }}>
-                        {STATUS_LABELS[book.moderation_status] || book.moderation_status}
+                        {getStatusLabels(t)[book.moderation_status] || book.moderation_status}
                       </span>
                     </td>
                     <td style={{ padding: '12px 16px', color: '#5B86A1', fontSize: '12px' }}>
@@ -333,7 +337,7 @@ export default function ModerationPage() {
                           fontFamily: 'Inter, sans-serif', display: 'flex', alignItems: 'center', gap: '4px',
                         }}
                       >
-                        <Eye size={12} /> Просмотр
+                        <Eye size={12} /> {t.admin.moderation.view}
                       </button>
                     </td>
                   </tr>
@@ -350,7 +354,7 @@ export default function ModerationPage() {
             padding: '16px 0', borderTop: '1px solid rgba(255,255,255,0.06)', marginTop: '8px',
           }}>
             <div style={{ color: '#97A6BA', fontSize: '13px' }}>
-              Показано {books.length} из {total}
+              {t.admin.common.showing} {books.length} {t.admin.common.of} {total}
             </div>
             <div style={{ display: 'flex', gap: '8px' }}>
               <button
@@ -424,7 +428,7 @@ export default function ModerationPage() {
                   color: STATUS_COLORS[selectedBook.moderation_status]?.color || STATUS_COLORS.pending.color,
                   border: `1px solid ${STATUS_COLORS[selectedBook.moderation_status]?.border || STATUS_COLORS.pending.border}`,
                 }}>
-                  {STATUS_LABELS[selectedBook.moderation_status] || selectedBook.moderation_status}
+                  {getStatusLabels(t)[selectedBook.moderation_status] || selectedBook.moderation_status}
                 </span>
                 <span style={{
                   marginLeft: '8px', padding: '4px 10px', borderRadius: '10px', fontSize: '11px', fontWeight: '500',
@@ -432,7 +436,7 @@ export default function ModerationPage() {
                   color: PUBLICATION_TYPE_COLORS[selectedBook.publication_type as keyof typeof PUBLICATION_TYPE_COLORS] || '#5B86A1',
                   border: `1px solid ${PUBLICATION_TYPE_COLORS[selectedBook.publication_type as keyof typeof PUBLICATION_TYPE_COLORS] || '#5B86A1'}30`,
                 }}>
-                  {selectedBook.publication_type === 'unofficial' ? '✏️ Неофициальная' : '📚 Официальная'}
+                  {selectedBook.publication_type === 'unofficial' ? `✏️ ${t.admin.moderation.unofficial}` : `📚 ${t.admin.moderation.official}`}
                 </span>
               </div>
             </div>
@@ -440,19 +444,19 @@ export default function ModerationPage() {
             {/* Meta */}
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '20px' }}>
               <div style={{ padding: '10px 14px', background: 'rgba(255,255,255,0.03)', borderRadius: '8px' }}>
-                <div style={{ color: '#97A6BA', fontSize: '11px', marginBottom: '4px' }}>Жанры</div>
+                <div style={{ color: '#97A6BA', fontSize: '11px', marginBottom: '4px' }}>{t.admin.books.genres}</div>
                 <div style={{ color: '#E6EDF3', fontSize: '13px' }}>
                   {selectedBook.genres?.join(', ') || '—'}
                 </div>
               </div>
               <div style={{ padding: '10px 14px', background: 'rgba(255,255,255,0.03)', borderRadius: '8px' }}>
-                <div style={{ color: '#97A6BA', fontSize: '11px', marginBottom: '4px' }}>Страниц</div>
+                <div style={{ color: '#97A6BA', fontSize: '11px', marginBottom: '4px' }}>{t.admin.enrichment.pages}</div>
                 <div style={{ color: '#E6EDF3', fontSize: '13px' }}>
                   {selectedBook.total_pages || '—'}
                 </div>
               </div>
               <div style={{ padding: '10px 14px', background: 'rgba(255,255,255,0.03)', borderRadius: '8px' }}>
-                <div style={{ color: '#97A6BA', fontSize: '11px', marginBottom: '4px' }}>Метаданные</div>
+                <div style={{ color: '#97A6BA', fontSize: '11px', marginBottom: '4px' }}>{t.admin.metadata.title}</div>
                 <div style={{
                   color: METADATA_STATUS_COLORS[selectedBook.metadata_status as keyof typeof METADATA_STATUS_COLORS] || '#FFA726',
                   fontSize: '13px',
@@ -461,7 +465,7 @@ export default function ModerationPage() {
                 </div>
               </div>
               <div style={{ padding: '10px 14px', background: 'rgba(255,255,255,0.03)', borderRadius: '8px' }}>
-                <div style={{ color: '#97A6BA', fontSize: '11px', marginBottom: '4px' }}>Отправил</div>
+                <div style={{ color: '#97A6BA', fontSize: '11px', marginBottom: '4px' }}>{t.admin.moderation.submittedBy}</div>
                 <div style={{ color: '#5B86A1', fontSize: '13px' }}>
                   {selectedBook.created_by_email || '—'}
                 </div>
@@ -477,7 +481,7 @@ export default function ModerationPage() {
             {/* Description */}
             {selectedBook.description && (
               <div style={{ marginBottom: '20px' }}>
-                <div style={{ color: '#97A6BA', fontSize: '12px', marginBottom: '6px' }}>Описание</div>
+                <div style={{ color: '#97A6BA', fontSize: '12px', marginBottom: '6px' }}>{t.admin.enrichment.description}</div>
                 <div style={{
                   padding: '12px 16px', background: 'rgba(255,255,255,0.03)', borderRadius: '8px',
                   color: '#E6EDF3', fontSize: '14px', lineHeight: '1.5', whiteSpace: 'pre-wrap',
@@ -490,7 +494,7 @@ export default function ModerationPage() {
             {/* Previous rejection reason */}
             {selectedBook.moderation_status === 'rejected' && selectedBook.moderation_reason && (
               <div style={{ marginBottom: '20px' }}>
-                <div style={{ color: '#EF5350', fontSize: '12px', marginBottom: '6px' }}>Причина отклонения</div>
+                <div style={{ color: '#EF5350', fontSize: '12px', marginBottom: '6px' }}>{t.admin.moderation.rejectionReason}</div>
                 <div style={{
                   padding: '12px 16px', background: 'rgba(239,83,80,0.08)', borderRadius: '8px',
                   color: '#EF5350', fontSize: '14px', lineHeight: '1.5', whiteSpace: 'pre-wrap',
@@ -505,12 +509,12 @@ export default function ModerationPage() {
             {selectedBook.moderation_status === 'pending' && (
               <div style={{ marginBottom: '20px' }}>
                 <label style={{ color: '#97A6BA', fontSize: '12px', marginBottom: '6px', display: 'block' }}>
-                  Причина отклонения (необязательно)
+                  {t.admin.moderation.rejectionReasonOptional}
                 </label>
                 <textarea
                   value={rejectReason}
                   onChange={(e) => setRejectReason(e.target.value)}
-                  placeholder="Укажите причину отклонения..."
+                  placeholder={t.admin.moderation.rejectionPlaceholder}
                   style={{
                     width: '100%', minHeight: '80px', padding: '10px 14px',
                     background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)',
@@ -532,7 +536,7 @@ export default function ModerationPage() {
                   fontFamily: 'Inter, sans-serif',
                 }}
               >
-                Закрыть
+                {t.admin.common.close}
               </button>
               {selectedBook.moderation_status === 'pending' && (
                 <>
@@ -545,7 +549,7 @@ export default function ModerationPage() {
                       fontFamily: 'Inter, sans-serif', opacity: actionLoading ? 0.6 : 1,
                     }}
                   >
-                    ✕ Отклонить
+                    ✕ {t.admin.moderation.reject}
                   </button>
                   {selectedBook.publication_type === 'unofficial' && (
                     <button
@@ -557,7 +561,7 @@ export default function ModerationPage() {
                         fontFamily: 'Inter, sans-serif', opacity: actionLoading ? 0.6 : 1,
                       }}
                     >
-                      🔒 Только личное
+                      🔒 {t.admin.moderation.personalOnly}
                     </button>
                   )}
                   <button
@@ -569,7 +573,7 @@ export default function ModerationPage() {
                       fontFamily: 'Inter, sans-serif', opacity: actionLoading ? 0.6 : 1,
                     }}
                   >
-                    ✓ Одобрить
+                    ✓ {t.admin.moderation.approve}
                   </button>
                 </>
               )}

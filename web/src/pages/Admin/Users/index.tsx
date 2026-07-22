@@ -13,9 +13,12 @@ import { apiClient } from '../../../shared/api/client';
 import UsersTable from './UsersTable';
 import UsersFilters from './UsersFilters';
 import UserModal from './UserModal';
+import { getLocaleData, getBrowserLocale } from '../../../locales';
 
 
 export default function AdminUsers() {
+  const locale = getBrowserLocale();
+  const t = getLocaleData(locale);
   const {
     searchQuery,
     usersFilters,
@@ -258,7 +261,7 @@ export default function AdminUsers() {
       );
 
 
-      alert('Все сессии пользователя завершены');
+      alert(t.admin.users.sessionsTerminated);
 
 
     } catch (err: any) {
@@ -323,7 +326,7 @@ export default function AdminUsers() {
             margin: 0,
           }}
         >
-          👥 Пользователи
+          {t.admin.users.title}
 
           <span
             style={{
@@ -332,7 +335,7 @@ export default function AdminUsers() {
               marginLeft: '12px',
             }}
           >
-            {total} записей
+            {total} {t.admin.common.records}
           </span>
 
         </h1>
@@ -464,7 +467,7 @@ export default function AdminUsers() {
                   fontSize: '20px',
                 }}
               >
-                Удалить пользователя?
+                {t.admin.users.deleteConfirm}
               </h2>
 
 
@@ -475,7 +478,7 @@ export default function AdminUsers() {
                 }}
               >
 
-                Вы уверены, что хотите удалить{' '}
+                {t.admin.users.deleteConfirmText}{' '}
 
                 <strong
                   style={{
@@ -512,7 +515,7 @@ export default function AdminUsers() {
                   cursor: 'pointer',
                 }}
               >
-                🗑️ Удалить
+                {t.admin.common.delete}
               </button>
 
 
@@ -532,7 +535,7 @@ export default function AdminUsers() {
                   cursor: 'pointer',
                 }}
               >
-                Отмена
+                {t.admin.common.cancel}
               </button>
 
             </div>

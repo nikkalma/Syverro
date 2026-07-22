@@ -2,6 +2,8 @@
 
 import { useState, useMemo } from 'react';
 import { AdminGenre } from '../../../types/admin';
+import { getLocaleData, getBrowserLocale } from '../../../locales';
+import type { LocaleData } from '../../../locales';
 
 interface GenreTreeNode {
   id: string;
@@ -14,14 +16,6 @@ interface GenreTreeNode {
   children: GenreTreeNode[];
   created_at?: string;
 }
-
-const GENRE_TYPE_LABELS: Record<string, string> = {
-  literary: 'Литературные',
-  non_fiction: 'Нон-фикшн',
-  spiritual: 'Духовные',
-  cultural: 'Культурные',
-  practical: 'Практические',
-};
 
 const GENRE_TYPE_COLORS: Record<string, string> = {
   literary: '#5B86A1',
@@ -61,6 +55,7 @@ function TreeNode({
   onEdit,
   onDelete,
   onAddChild,
+  t,
 }: {
   node: GenreTreeNode;
   depth: number;
@@ -71,6 +66,7 @@ function TreeNode({
   onEdit: (g: AdminGenre) => void;
   onDelete: (g: AdminGenre) => void;
   onAddChild: (parentId: string) => void;
+  t: LocaleData;
 }) {
   const hasChildren = node.children && node.children.length > 0;
   const isExpanded = expanded.has(node.id);
@@ -160,7 +156,7 @@ function TreeNode({
             borderRadius: '10px',
             flexShrink: 0,
           }}>
-            {node.book_count} книг
+            {node.book_count} {t.admin.common.booksCount}
           </span>
         )}
 
@@ -172,7 +168,7 @@ function TreeNode({
           >
             <button
               onClick={() => onAddChild(node.id)}
-              title="Добавить поджанр"
+              title={t.admin.genres.addSubgenre}
               style={{
                 padding: '3px 8px',
                 background: 'none',
@@ -257,6 +253,7 @@ function TreeNode({
               onEdit={onEdit}
               onDelete={onDelete}
               onAddChild={onAddChild}
+              t={t}
             />
           ))}
         </div>
@@ -276,6 +273,7 @@ export default function GenresTree({
   onAddChild,
   onRefresh,
 }: GenresTreeProps) {
+  const t = getLocaleData(getBrowserLocale());
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
   const [expandedTypes, setExpandedTypes] = useState<Set<string>>(new Set(['literary', 'non_fiction', 'spiritual', 'cultural', 'practical']));
 
@@ -316,7 +314,7 @@ export default function GenresTree({
   if (loading) {
     return (
       <div style={{ padding: '20px', color: '#97A6BA', textAlign: 'center' }}>
-        Загрузка дерева жанров...
+        {t.admin.genres.loadingTree}
       </div>
     );
   }
@@ -346,7 +344,7 @@ export default function GenresTree({
             fontFamily: 'Inter, sans-serif',
           }}
         >
-          Повторить
+          {t.admin.common.retry}
         </button>
       </div>
     );
@@ -363,7 +361,7 @@ export default function GenresTree({
         border: '1px solid rgba(255,255,255,0.06)',
       }}>
         <div style={{ fontSize: '48px', marginBottom: '12px' }}>🏷</div>
-        <p>Жанры не найдены</p>
+        <p>{t.admin.genres.noGenres}</p>
       </div>
     );
   }
@@ -393,7 +391,7 @@ export default function GenresTree({
             fontFamily: 'Inter, sans-serif',
           }}
         >
-          Развернуть всё
+          {t.admin.genres.expandAll}
         </button>
         <button
           onClick={collapseAll}
@@ -408,7 +406,7 @@ export default function GenresTree({
             fontFamily: 'Inter, sans-serif',
           }}
         >
-          Свернуть всё
+          {t.admin.genres.collapseAll}
         </button>
       </div>
 
@@ -465,7 +463,7 @@ export default function GenresTree({
                 fontWeight: '500',
                 color,
               }}>
-                {GENRE_TYPE_LABELS[type] || type}
+                {t.admin.genreTypes[type as keyof typeof t.admin.genreTypes] || type}
               </span>
               <span style={{
                 fontSize: '12px',
@@ -493,6 +491,7 @@ export default function GenresTree({
                     onEdit={onEdit}
                     onDelete={onDelete}
                     onAddChild={onAddChild}
+                    t={t}
                   />
                 ))}
               </div>

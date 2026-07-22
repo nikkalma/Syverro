@@ -7,10 +7,13 @@ import BooksTable from './BooksTable';
 import BooksFilters from './BooksFilters';
 import BookModal from './BookModal';
 import { canManageBooks } from '../../../types/admin';
+import { getLocaleData, getBrowserLocale } from '../../../locales';
 
 const API_URL = import.meta.env.VITE_API_URL || 'https://api.syverro.com';
 
 export default function AdminBooks() {
+  const locale = getBrowserLocale();
+  const t = getLocaleData(locale);
   const { searchQuery, filters, page, limit, setLoading, isLoading, error, setError, clearError } = useAdminStore();
   
   const [books, setBooks] = useState<AdminBook[]>([]);
@@ -166,9 +169,9 @@ export default function AdminBooks() {
     <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <h1 style={{ fontSize: '24px', fontWeight: '400', color: '#E6EDF3', margin: 0 }}>
-          📚 Книги
+          {t.admin.books.title}
           <span style={{ fontSize: '14px', color: '#97A6BA', marginLeft: '12px' }}>
-            {total} записей
+            {total} {t.admin.common.records}
           </span>
         </h1>
         {canManage && (
@@ -189,7 +192,7 @@ export default function AdminBooks() {
             onMouseEnter={(e) => (e.currentTarget.style.background = '#4A7590')}
             onMouseLeave={(e) => (e.currentTarget.style.background = '#5B86A1')}
           >
-            + Добавить книгу
+            + {t.admin.books.addBook}
           </button>
         )}
       </div>
@@ -256,11 +259,11 @@ export default function AdminBooks() {
           >
             <div style={{ textAlign: 'center', marginBottom: '20px' }}>
               <div style={{ fontSize: '48px' }}>⚠️</div>
-              <h2 style={{ color: '#E6EDF3', fontSize: '20px', marginBottom: '8px' }}>Удалить книгу?</h2>
+              <h2 style={{ color: '#E6EDF3', fontSize: '20px', marginBottom: '8px' }}>{t.admin.books.deleteConfirm}</h2>
               <p style={{ color: '#97A6BA', fontSize: '14px' }}>
-                Вы уверены, что хотите удалить книгу <strong style={{ color: '#E6EDF3' }}>{bookToDelete.title}</strong>?
+                {t.admin.books.deleteConfirmText} <strong style={{ color: '#E6EDF3' }}>{bookToDelete.title}</strong>?
                 <br />
-                <span style={{ color: '#EF5350', fontSize: '13px' }}>Это действие нельзя отменить.</span>
+                <span style={{ color: '#EF5350', fontSize: '13px' }}>{t.admin.books.irreversible}</span>
               </p>
             </div>
             <div style={{ display: 'flex', gap: '12px' }}>
@@ -279,7 +282,7 @@ export default function AdminBooks() {
                   fontFamily: 'Inter, sans-serif',
                 }}
               >
-                🗑️ Удалить
+                {t.admin.common.delete}
               </button>
               <button
                 onClick={() => setIsDeleteModalOpen(false)}
@@ -295,7 +298,7 @@ export default function AdminBooks() {
                   fontFamily: 'Inter, sans-serif',
                 }}
               >
-                Отмена
+                {t.admin.common.cancel}
               </button>
             </div>
           </div>

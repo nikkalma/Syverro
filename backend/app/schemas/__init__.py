@@ -18,6 +18,13 @@ from app.schemas.sync import (
     PullUpdatedItem, PullDeletedItem,
     ConflictItem, ConflictResolution
 )
+from app.schemas.taxonomy import (
+    KnowledgeNodeBase, KnowledgeNodeCreate, KnowledgeNodeUpdate, KnowledgeNodeResponse, KnowledgeNodeTree,
+    KnowledgeRelationBase, KnowledgeRelationCreate, KnowledgeRelationResponse,
+    BookKnowledgeRelationBase, BookKnowledgeRelationCreate, BookKnowledgeRelationUpdate, BookKnowledgeRelationResponse,
+    UserBookExperienceBase, UserBookExperienceCreate, UserBookExperienceResponse,
+    KnowledgeGraphResponse, BookKnowledgeResponse,
+)
 
 __all__ = [
     # User
@@ -38,4 +45,10 @@ __all__ = [
     "AppliedItem", "RejectedItem", "MergedItem",
     "PullUpdatedItem", "PullDeletedItem",
     "ConflictItem", "ConflictResolution",
+    # Taxonomy
+    "KnowledgeNodeBase", "KnowledgeNodeCreate", "KnowledgeNodeUpdate", "KnowledgeNodeResponse", "KnowledgeNodeTree",
+    "KnowledgeRelationBase", "KnowledgeRelationCreate", "KnowledgeRelationResponse",
+    "BookKnowledgeRelationBase", "BookKnowledgeRelationCreate", "BookKnowledgeRelationUpdate", "BookKnowledgeRelationResponse",
+    "UserBookExperienceBase", "UserBookExperienceCreate", "UserBookExperienceResponse",
+    "KnowledgeGraphResponse", "BookKnowledgeResponse",
 ]

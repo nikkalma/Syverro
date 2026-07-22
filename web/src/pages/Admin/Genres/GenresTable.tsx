@@ -2,14 +2,7 @@
 
 import { AdminGenre } from '../../../types/admin';
 import { useAdminStore } from '../../../store/adminStore';
-
-const GENRE_TYPE_LABELS: Record<string, string> = {
-  literary: 'Литературные',
-  non_fiction: 'Нон-фикшн',
-  spiritual: 'Духовные',
-  cultural: 'Культурные',
-  practical: 'Практические',
-};
+import { getLocaleData, getBrowserLocale } from '../../../locales';
 
 const GENRE_TYPE_COLORS: Record<string, string> = {
   literary: '#5B86A1',
@@ -47,6 +40,7 @@ export default function GenresTable({
   onRefresh,
 }: GenresTableProps) {
   const { setPage } = useAdminStore();
+  const t = getLocaleData(getBrowserLocale());
   const totalPages = Math.ceil(total / limit);
 
   const getParentName = (parentId: string | null) => {
@@ -62,7 +56,7 @@ export default function GenresTable({
         <table style={{ width: '100%', borderCollapse: 'collapse' }}>
           <thead>
             <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
-              {['Название', 'Тип', 'Родитель', 'Slug', 'Описание', 'Книг', 'Дата', 'Действия'].map((h) => (
+              {[t.admin.genres.name, t.admin.genres.type, t.admin.genres.parent, t.admin.genres.slug, t.admin.genres.description, t.admin.genres.books, t.admin.genres.date, t.admin.genres.actions].map((h) => (
                 <th key={h} style={{ padding: '12px 16px', textAlign: 'left', color: '#97A6BA', fontSize: '12px', fontWeight: '500' }}>
                   {h}
                 </th>
@@ -111,7 +105,7 @@ export default function GenresTable({
             fontFamily: 'Inter, sans-serif',
           }}
         >
-          Повторить
+          {t.admin.common.retry}
         </button>
       </div>
     );
@@ -129,7 +123,7 @@ export default function GenresTable({
         border: '1px solid rgba(255,255,255,0.06)',
       }}>
         <div style={{ fontSize: '48px', marginBottom: '12px' }}>🏷️</div>
-        <p>Жанры не найдены</p>
+        <p>{t.admin.genres.noGenres}</p>
       </div>
     );
   }
@@ -140,14 +134,14 @@ export default function GenresTable({
       <table style={{ width: '100%', borderCollapse: 'collapse' }}>
         <thead>
           <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
-            <th style={{ padding: '12px 16px', textAlign: 'left', color: '#97A6BA', fontSize: '12px', fontWeight: '500' }}>Название</th>
-            <th style={{ padding: '12px 16px', textAlign: 'left', color: '#97A6BA', fontSize: '12px', fontWeight: '500' }}>Тип</th>
-            <th style={{ padding: '12px 16px', textAlign: 'left', color: '#97A6BA', fontSize: '12px', fontWeight: '500' }}>Родитель</th>
-            <th style={{ padding: '12px 16px', textAlign: 'left', color: '#97A6BA', fontSize: '12px', fontWeight: '500' }}>Slug</th>
-            <th style={{ padding: '12px 16px', textAlign: 'left', color: '#97A6BA', fontSize: '12px', fontWeight: '500' }}>Описание</th>
-            <th style={{ padding: '12px 16px', textAlign: 'left', color: '#97A6BA', fontSize: '12px', fontWeight: '500' }}>Книг</th>
-            <th style={{ padding: '12px 16px', textAlign: 'left', color: '#97A6BA', fontSize: '12px', fontWeight: '500' }}>Дата</th>
-            <th style={{ padding: '12px 16px', textAlign: 'left', color: '#97A6BA', fontSize: '12px', fontWeight: '500' }}>Действия</th>
+            <th style={{ padding: '12px 16px', textAlign: 'left', color: '#97A6BA', fontSize: '12px', fontWeight: '500' }}>{t.admin.genres.name}</th>
+            <th style={{ padding: '12px 16px', textAlign: 'left', color: '#97A6BA', fontSize: '12px', fontWeight: '500' }}>{t.admin.genres.type}</th>
+            <th style={{ padding: '12px 16px', textAlign: 'left', color: '#97A6BA', fontSize: '12px', fontWeight: '500' }}>{t.admin.genres.parent}</th>
+            <th style={{ padding: '12px 16px', textAlign: 'left', color: '#97A6BA', fontSize: '12px', fontWeight: '500' }}>{t.admin.genres.slug}</th>
+            <th style={{ padding: '12px 16px', textAlign: 'left', color: '#97A6BA', fontSize: '12px', fontWeight: '500' }}>{t.admin.genres.description}</th>
+            <th style={{ padding: '12px 16px', textAlign: 'left', color: '#97A6BA', fontSize: '12px', fontWeight: '500' }}>{t.admin.genres.books}</th>
+            <th style={{ padding: '12px 16px', textAlign: 'left', color: '#97A6BA', fontSize: '12px', fontWeight: '500' }}>{t.admin.genres.date}</th>
+            <th style={{ padding: '12px 16px', textAlign: 'left', color: '#97A6BA', fontSize: '12px', fontWeight: '500' }}>{t.admin.genres.actions}</th>
           </tr>
         </thead>
         <tbody>
@@ -175,7 +169,7 @@ export default function GenresTable({
                   background: `${GENRE_TYPE_COLORS[genre.type] || '#97A6BA'}20`,
                   border: `1px solid ${GENRE_TYPE_COLORS[genre.type] || '#97A6BA'}30`,
                 }}>
-                  {GENRE_TYPE_LABELS[genre.type] || genre.type}
+                  {t.admin.genreTypes[genre.type as keyof typeof t.admin.genreTypes] || genre.type}
                 </span>
               </td>
               <td style={{ padding: '12px 16px', color: '#97A6BA', fontSize: '13px' }}>
@@ -247,7 +241,7 @@ export default function GenresTable({
           marginTop: '8px',
         }}>
           <div style={{ color: '#97A6BA', fontSize: '13px' }}>
-            Показано {genres.length} из {total}
+            {t.admin.common.showing} {genres.length} {t.admin.common.of} {total}
           </div>
           <div style={{ display: 'flex', gap: '8px' }}>
             <button

@@ -1,0 +1,19 @@
+[33mcommit 6ec8a4fd089a5ef8bb75ae9061bc2ec0761d1478[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m)[m
+Author: Nika Alma <maramorghan@gmail.com>
+Date:   Tue Jul 21 22:04:41 2026 +0300
+
+    feat: stabilize moderation workflow, admin metadata, genres and library UX
+
+ backend/app/api/admin.py                           |   6 [32m+[m
+ backend/app/api/sync.py                            |  21 [32m+[m[31m-[m
+ backend/app/core/security.py                       |   7 [32m+[m[31m-[m
+ web/src/pages/Admin/Genres/GenresTree.tsx          | 505 [32m+++++++++++++++++++++[m
+ web/src/pages/Admin/Genres/index.tsx               | 162 [32m++++[m[31m---[m
+ .../pages/Admin/Metadata/BookEnrichmentPage.tsx    | 110 [32m++++[m[31m-[m
+ web/src/pages/MyLibraryPage/LibraryControls.tsx    |  49 [32m+[m[31m-[m
+ web/src/pages/MyLibraryPage/LibraryGrid.tsx        |   8 [32m+[m[31m-[m
+ web/src/pages/MyLibraryPage/LibraryHeader.tsx      |  18 [32m+[m[31m-[m
+ web/src/pages/MyLibraryPage/LibraryList.tsx        |   7 [32m+[m[31m-[m
+ web/src/pages/Profile/LibrarySection.tsx           | 114 [32m++[m[31m---[m
+ web/src/types/personalBook.ts                      |  12 [32m+[m[31m-[m
+ 12 files changed, 829 insertions(+), 190 deletions(-)

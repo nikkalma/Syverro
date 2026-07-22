@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useAdminStore } from '../../../store/adminStore';
 import { AdminDashboardStats } from '../../../types/admin';
+import { getLocaleData, getBrowserLocale } from '../../../locales';
 import StatCard from './StatCard';
 import RecentUsers from './RecentUsers';
 import RecentActivity from './RecentActivity';
@@ -14,6 +15,8 @@ export default function AdminDashboard() {
   const [stats, setStats] = useState<AdminDashboardStats | null>(null);
   const [recentUsers, setRecentUsers] = useState([]);
   const [recentLogs, setRecentLogs] = useState([]);
+  const locale = getBrowserLocale();
+  const t = getLocaleData(locale);
 
   useEffect(() => {
     fetchDashboardData();
@@ -77,7 +80,7 @@ export default function AdminDashboard() {
     return (
       <div style={{ padding: '40px', textAlign: 'center', color: '#EF5350' }}>
         <div style={{ fontSize: '48px', marginBottom: '16px' }}>⚠️</div>
-        <h2>Ошибка загрузки</h2>
+        <h2>{t.admin.dashboard.errorLoading}</h2>
         <p>{error}</p>
         <button
           onClick={fetchDashboardData}
@@ -92,7 +95,7 @@ export default function AdminDashboard() {
             fontFamily: 'Inter, sans-serif',
           }}
         >
-          Повторить
+          {t.admin.common.retry}
         </button>
       </div>
     );
@@ -101,7 +104,7 @@ export default function AdminDashboard() {
   if (!stats) {
     return (
       <div style={{ padding: '40px', textAlign: 'center', color: '#97A6BA' }}>
-        Нет данных для отображения
+        {t.admin.dashboard.noData}
       </div>
     );
   }
@@ -109,7 +112,7 @@ export default function AdminDashboard() {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
       <h1 style={{ fontSize: '24px', fontWeight: '400', color: '#E6EDF3', margin: 0 }}>
-        📊 Dashboard
+        📊 {t.admin.dashboard.title}
       </h1>
 
       {/* ===== СТАТИСТИКА ===== */}
@@ -118,12 +121,12 @@ export default function AdminDashboard() {
         gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))',
         gap: '16px',
       }}>
-        <StatCard label="Пользователи" value={stats.total_users} icon="👥" color="#5B86A1" />
-        <StatCard label="Книги" value={stats.total_books} icon="📚" color="#4CAF50" />
-        <StatCard label="Авторы" value={stats.total_authors} icon="✍️" color="#FFA726" />
-        <StatCard label="Жанры" value={stats.total_genres} icon="🏷️" color="#AB47BC" />
-        <StatCard label="Активные пользователи" value={stats.active_users} icon="🟢" color="#4CAF50" />
-        <StatCard label="Новых за 24ч" value={stats.new_users_24h} icon="🆕" color="#EF5350" />
+        <StatCard label={t.admin.dashboard.users} value={stats.total_users} icon="👥" color="#5B86A1" />
+        <StatCard label={t.admin.dashboard.books} value={stats.total_books} icon="📚" color="#4CAF50" />
+        <StatCard label={t.admin.dashboard.authors} value={stats.total_authors} icon="✍️" color="#FFA726" />
+        <StatCard label={t.admin.dashboard.genres} value={stats.total_genres} icon="🏷️" color="#AB47BC" />
+        <StatCard label={t.admin.dashboard.activeUsers} value={stats.active_users} icon="🟢" color="#4CAF50" />
+        <StatCard label={t.admin.dashboard.newUsers24h} value={stats.new_users_24h} icon="🆕" color="#EF5350" />
       </div>
 
       {/* ===== ТАБЛИЦЫ ===== */}

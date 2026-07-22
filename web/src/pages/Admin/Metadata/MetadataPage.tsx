@@ -4,12 +4,16 @@ import { AdminBook } from '../../../types/admin';
 import { useAdminStore } from '../../../store/adminStore';
 import { METADATA_STATUS_LABELS, METADATA_STATUS_COLORS, ENRICHMENT_FIELD_LABELS } from '../../../types/admin';
 import { RefreshCw, BookOpen, ArrowRight, Filter, Search } from 'lucide-react';
+import { getLocaleData, getBrowserLocale } from '../../../locales';
+import type { LocaleData } from '../../../locales';
 
 const API_URL = import.meta.env.VITE_API_URL || 'https://api.syverro.com';
 
 type TabFilter = 'all' | 'incomplete' | 'review_ready' | 'complete';
 
 export default function MetadataPage() {
+  const locale = getBrowserLocale();
+  const t = getLocaleData(locale);
   const { page, limit, setPage, setLoading, isLoading } = useAdminStore();
   const navigate = useNavigate();
 
@@ -51,19 +55,19 @@ export default function MetadataPage() {
   const totalPages = Math.ceil(total / limit);
 
   const tabs: { key: TabFilter; label: string }[] = [
-    { key: 'all', label: 'Все' },
-    { key: 'incomplete', label: 'Неполные' },
-    { key: 'review_ready', label: 'На проверке' },
-    { key: 'complete', label: 'Заполнены' },
+    { key: 'all', label: t.admin.common.all },
+    { key: 'incomplete', label: t.admin.metadata.incomplete },
+    { key: 'review_ready', label: t.admin.metadata.reviewReady },
+    { key: 'complete', label: t.admin.metadata.complete },
   ];
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
         <h1 style={{ fontSize: '24px', fontWeight: '400', color: '#E6EDF3', margin: 0 }}>
-          📋 Метаданные книг
+          📋 {t.admin.metadata.title}
           <span style={{ fontSize: '14px', color: '#97A6BA', marginLeft: '12px' }}>
-            {total} записей
+            {total} {t.admin.common.records}
           </span>
         </h1>
         <button
@@ -77,7 +81,7 @@ export default function MetadataPage() {
           }}
         >
           <RefreshCw size={14} className={isLoading ? 'spinner' : ''} />
-          Обновить
+          {t.admin.common.refresh}
         </button>
       </div>
 
@@ -105,7 +109,7 @@ export default function MetadataPage() {
           <Search size={16} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: '#5B86A1' }} />
           <input
             type="text"
-            placeholder="Поиск по названию или автору..."
+            placeholder={t.admin.metadata.searchPlaceholder}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             style={{
@@ -130,13 +134,13 @@ export default function MetadataPage() {
             border: '1px solid rgba(255,255,255,0.06)',
           }}>
             <BookOpen size={48} style={{ opacity: 0.3, marginBottom: '12px' }} />
-            <p>Нет книг, требующих обогащения</p>
+            <p>{t.admin.metadata.noBooksToEnrich}</p>
           </div>
         ) : (
           <table style={{ width: '100%', borderCollapse: 'collapse' }}>
             <thead>
               <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
-                {['Обложка', 'Название', 'Автор', 'Тип', 'Метаданные', 'Не хватает', 'Действие'].map((h) => (
+                {[t.admin.books.cover, t.admin.books.name, t.admin.books.author, t.admin.genres.type, t.admin.metadata.title, t.admin.enrichment.missing, t.admin.books.actions].map((h) => (
                   <th key={h} style={{ padding: '12px 16px', textAlign: 'left', color: '#97A6BA', fontSize: '12px', fontWeight: '500' }}>
                     {h}
                   </th>
@@ -193,10 +197,10 @@ export default function MetadataPage() {
                     <td style={{ padding: '12px 16px', fontSize: '12px', color: missingCount > 0 ? '#FFA726' : '#4CAF50' }}>
                       {missingCount > 0 ? (
                         <span title={book.missing_fields?.join(', ')}>
-                          {missingCount} полей
+                          {missingCount} {t.admin.metadata.missingFields}
                         </span>
                       ) : (
-                        <span>Все заполнены</span>
+                        <span>{t.admin.metadata.allComplete}</span>
                       )}
                     </td>
                     <td style={{ padding: '12px 16px' }}>

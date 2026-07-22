@@ -1,8 +1,8 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from app.api import auth, books, sync, admin
+from app.api import auth, books, sync, admin, taxonomy, admin_taxonomy
 from app.database import engine, Base
-from app.models import user, book, author, genre
+from app.models import user, book, author, genre, knowledge_node, knowledge_relation, book_knowledge_relation, user_book_experience
 from app.models.book_genre import book_genres  # noqa: F401 — ensures table is registered
 from app.models.session import ReadingSession  # ✅ НОВЫЙ
 from app.models.quote import Quote            # ✅ НОВЫЙ
@@ -36,6 +36,8 @@ app.include_router(auth.router)
 app.include_router(books.router)
 app.include_router(sync.router)  # ✅ ТЕПЕРЬ РАБОТАЕТ
 app.include_router(admin.router)
+app.include_router(taxonomy.router)
+app.include_router(admin_taxonomy.router)
 
 async def ensure_user_profile_columns(conn):
     """Add columns that create_all won't add to existing tables."""

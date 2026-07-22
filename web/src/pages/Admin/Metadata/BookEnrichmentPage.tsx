@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { AdminBook } from '../../../types/admin';
-import { METADATA_STATUS_LABELS, METADATA_STATUS_COLORS, ENRICHMENT_FIELD_LABELS, CREATION_TYPE_LABELS } from '../../../types/admin';
-import { Save, ArrowLeft, RefreshCw, AlertCircle, CheckCircle } from 'lucide-react';
+import { METADATA_STATUS_LABELS, METADATA_STATUS_COLORS, ENRICHMENT_FIELD_LABELS } from '../../../types/admin';
+import { Save, ArrowLeft, RefreshCw, AlertCircle, CheckCircle, X, Plus, UserPlus, Link2 } from 'lucide-react';
 import { getLocaleData, getBrowserLocale } from '../../../locales';
 
 const API_URL = import.meta.env.VITE_API_URL || 'https://api.syverro.com';
@@ -66,16 +66,13 @@ export default function BookEnrichmentPage() {
   const [totalPages, setTotalPages] = useState('');
   const [publicationType, setPublicationType] = useState('official');
 
-  // Author fields
-  const [authorId, setAuthorId] = useState('');
-  const [authorQuery, setAuthorQuery] = useState('');
-  const [authorSuggestions, setAuthorSuggestions] = useState<any[]>([]);
-  const [showAuthorDropdown, setShowAuthorDropdown] = useState(false);
-  const [authorCountry, setAuthorCountry] = useState('');
-  const [authorBio, setAuthorBio] = useState('');
-  const [authorBirthYear, setAuthorBirthYear] = useState('');
-  const [authorDeathYear, setAuthorDeathYear] = useState('');
-  const [authorCreationType, setAuthorCreationType] = useState('individual_author');
+  // Author management
+  const [linkedAuthors, setLinkedAuthors] = useState<Array<{ id: string; name: string; country?: string | null }>>([]);
+  const [authorSearchQuery, setAuthorSearchQuery] = useState('');
+  const [authorSearchResults, setAuthorSearchResults] = useState<any[]>([]);
+  const [showAuthorSearch, setShowAuthorSearch] = useState(false);
+  const [createAuthorName, setCreateAuthorName] = useState('');
+  const [showCreateAuthor, setShowCreateAuthor] = useState(false);
 
   // Fetch book data
   useEffect(() => {
@@ -101,13 +98,7 @@ export default function BookEnrichmentPage() {
         setSeriesPosition(data.series_position?.toString() || '');
         setThemes(data.themes || []);
         setMotifs(data.motifs || []);
-        setAuthorId(data.author_id || '');
-        setAuthorQuery(data.author_name || data.author || '');
-        setAuthorCountry(data.author_country || '');
-        setAuthorBio(data.author_bio || '');
-        setAuthorBirthYear(data.author_birth_year?.toString() || '');
-        setAuthorDeathYear(data.author_death_year?.toString() || '');
-        setAuthorCreationType(data.author_creation_type || 'individual_author');
+        setLinkedAuthors(data.authors || []);
         setTotalPages(data.total_pages?.toString() || '');
         setPublicationType(data.publication_type || 'official');
       })
@@ -115,22 +106,27 @@ export default function BookEnrichmentPage() {
       .finally(() => setLoading(false));
   }, [id, token]);
 
-  // Author search
+  // Author search (for linking existing authors)
   useEffect(() => {
-    if (!authorQuery || authorQuery.length < 1) {
-      setAuthorSuggestions([]);
+    if (!authorSearchQuery || authorSearchQuery.length < 1) {
+      setAuthorSearchResults([]);
       return;
     }
     const timer = setTimeout(() => {
-      fetch(`${API_URL}/admin/authors?search=${encodeURIComponent(authorQuery)}&limit=10`, {
+      fetch(`${API_URL}/admin/authors?search=${encodeURIComponent(authorSearchQuery)}&limit=10`, {
         headers: { Authorization: `Bearer ${token}` },
       })
         .then((r) => r.json())
-        .then((data) => setAuthorSuggestions(data.data || []))
+        .then((data) => {
+          const results = (data.data || []).filter(
+            (a: any) => !linkedAuthors.some((la) => la.id === a.id)
+          );
+          setAuthorSearchResults(results);
+        })
         .catch(() => {});
     }, 300);
     return () => clearTimeout(timer);
-  }, [authorQuery, token]);
+  }, [authorSearchQuery, token, linkedAuthors]);
 
   const handleAddToList = (value: string, list: string[], setList: (v: string[]) => void, setInput: (v: string) => void) => {
     if (value.trim() && !list.includes(value.trim())) {
@@ -169,7 +165,7 @@ export default function BookEnrichmentPage() {
         }
       }
 
-      // Step 2: Save enrichment fields via metadata endpoint
+      // Step 2: Save enrichment fields via metadata endpoint (author data not included — managed separately)
       const body: Record<string, any> = {
         subtitle: subtitle || null,
         original_title: originalTitle || null,
@@ -177,7 +173,6 @@ export default function BookEnrichmentPage() {
         cover: cover || null,
         genres: genres,
         genre_ids: genreIds.length > 0 ? genreIds : undefined,
-        author_id: authorId || null,
         original_language: originalLanguage || null,
         country_of_origin: countryOfOrigin || null,
         original_publication_year: originalPublicationYear ? parseInt(originalPublicationYear) : null,
@@ -185,11 +180,6 @@ export default function BookEnrichmentPage() {
         series_position: seriesPosition ? parseInt(seriesPosition) : null,
         themes: themes,
         motifs: motifs,
-        author_country: authorCountry || null,
-        author_bio: authorBio || null,
-        author_birth_year: authorBirthYear ? parseInt(authorBirthYear) : null,
-        author_death_year: authorDeathYear ? parseInt(authorDeathYear) : null,
-        author_creation_type: authorCreationType,
       };
 
       const response = await fetch(`${API_URL}/admin/metadata/books/${id}`, {
@@ -393,64 +383,146 @@ export default function BookEnrichmentPage() {
         </div>
       </div>
 
-      {/* AUTHOR */}
+      {/* AUTHORS — entity-based management */}
       <div style={sectionStyle}>
         <h3 style={sectionTitleStyle}>{t.admin.enrichment.authorSection}</h3>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
-          <div style={{ gridColumn: '1 / -1', position: 'relative' }}>
-            <label style={labelStyle}>{t.admin.enrichment.authorField} {authorId && <span style={{ color: '#4CAF50', fontSize: '11px' }}>{t.admin.enrichment.authorFromDb}</span>}</label>
-            <input
-              value={authorQuery}
-              onChange={(e) => { setAuthorQuery(e.target.value); setAuthorId(''); setShowAuthorDropdown(true); }}
-              onFocus={() => authorQuery.length >= 1 && setShowAuthorDropdown(true)}
-              onBlur={() => setTimeout(() => setShowAuthorDropdown(false), 200)}
-              placeholder={t.admin.enrichment.authorSearchPlaceholder}
-              style={inputStyle}
-            />
-            {showAuthorDropdown && authorSuggestions.length > 0 && (
-              <div style={{
-                position: 'absolute', top: '100%', left: 0, right: 0,
-                background: '#1A2832', border: '1px solid rgba(255,255,255,0.1)',
-                borderRadius: '8px', marginTop: '4px', maxHeight: '200px', overflowY: 'auto', zIndex: 10,
-              }}>
-                {authorSuggestions.map((a: any) => (
-                  <div
-                    key={a.id}
-                    onClick={() => { setAuthorId(a.id); setAuthorQuery(a.name); setShowAuthorDropdown(false); }}
-                    style={{ padding: '10px 14px', cursor: 'pointer', borderBottom: '1px solid rgba(255,255,255,0.04)', color: '#E6EDF3', fontSize: '14px' }}
+
+        {/* Linked authors list */}
+        <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginBottom: '12px' }}>
+          {linkedAuthors.length === 0 && (
+            <span style={{ color: '#97A6BA', fontSize: '13px', fontStyle: 'italic' }}>{t.admin.enrichment.noAuthors}</span>
+          )}
+          {linkedAuthors.map((a) => (
+            <span key={a.id} style={{
+              display: 'inline-flex', alignItems: 'center', gap: '6px',
+              padding: '4px 10px 4px 14px', background: 'rgba(91,134,161,0.15)', borderRadius: '16px',
+              fontSize: '13px', color: '#5B86A1', border: '1px solid rgba(91,134,161,0.3)',
+            }}>
+              <Link2 size={12} />
+              {a.name}
+              {a.country && <span style={{ color: '#97A6BA', fontSize: '11px' }}>({a.country})</span>}
+              {canEdit && (
+                <button
+                  onClick={async () => {
+                    await fetch(`${API_URL}/admin/books/${id}/authors/${a.id}`, {
+                      method: 'DELETE', headers: { Authorization: `Bearer ${token}` },
+                    });
+                    setLinkedAuthors((prev) => prev.filter((x) => x.id !== a.id));
+                  }}
+                  style={{ background: 'none', border: 'none', color: '#EF5350', cursor: 'pointer', padding: 0, display: 'flex' }}
+                  title={t.admin.enrichment.removeAuthor}
+                >
+                  <X size={14} />
+                </button>
+              )}
+            </span>
+          ))}
+        </div>
+
+        {/* Add author controls */}
+        {canEdit && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+            {!showCreateAuthor ? (
+              <div style={{ position: 'relative' }}>
+                <div style={{ display: 'flex', gap: '6px' }}>
+                  <input
+                    value={authorSearchQuery}
+                    onChange={(e) => { setAuthorSearchQuery(e.target.value); setShowAuthorSearch(true); }}
+                    onFocus={() => authorSearchQuery.length >= 1 && setShowAuthorSearch(true)}
+                    onBlur={() => setTimeout(() => setShowAuthorSearch(false), 200)}
+                    placeholder={t.admin.enrichment.authorSearchPlaceholder}
+                    style={{ ...inputStyle, flex: 1 }}
+                  />
+                  <button
+                    onClick={() => { setShowCreateAuthor(true); setCreateAuthorName(authorSearchQuery); }}
+                    style={{
+                      padding: '8px 12px', background: 'rgba(91,134,161,0.15)', border: '1px solid rgba(91,134,161,0.3)',
+                      borderRadius: '8px', color: '#5B86A1', cursor: 'pointer', fontSize: '13px',
+                      display: 'flex', alignItems: 'center', gap: '4px', whiteSpace: 'nowrap',
+                    }}
+                    title={t.admin.enrichment.createAuthor}
                   >
-                    {a.name}
-                    {a.country && <span style={{ color: '#5B86A1', fontSize: '12px', marginLeft: '8px' }}>{a.country}</span>}
+                    <UserPlus size={14} /> {t.admin.enrichment.createAuthor}
+                  </button>
+                </div>
+                {showAuthorSearch && authorSearchResults.length > 0 && (
+                  <div style={{
+                    position: 'absolute', top: '100%', left: 0, right: 0,
+                    background: '#1A2832', border: '1px solid rgba(255,255,255,0.1)',
+                    borderRadius: '8px', marginTop: '4px', maxHeight: '200px', overflowY: 'auto', zIndex: 10,
+                  }}>
+                    {authorSearchResults.map((a: any) => (
+                      <div
+                        key={a.id}
+                        onClick={async () => {
+                          await fetch(`${API_URL}/admin/books/${id}/authors?author_id=${a.id}`, {
+                            method: 'POST', headers: { Authorization: `Bearer ${token}` },
+                          });
+                          setLinkedAuthors((prev) => [...prev, { id: a.id, name: a.name, country: a.country }]);
+                          setAuthorSearchQuery('');
+                          setAuthorSearchResults([]);
+                          setShowAuthorSearch(false);
+                        }}
+                        style={{
+                          padding: '10px 14px', cursor: 'pointer', borderBottom: '1px solid rgba(255,255,255,0.04)',
+                          color: '#E6EDF3', fontSize: '14px', display: 'flex', alignItems: 'center', gap: '8px',
+                        }}
+                      >
+                        <Plus size={14} color="#5B86A1" />
+                        {a.name}
+                        {a.country && <span style={{ color: '#5B86A1', fontSize: '12px' }}>{a.country}</span>}
+                      </div>
+                    ))}
                   </div>
-                ))}
+                )}
+              </div>
+            ) : (
+              <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
+                <input
+                  value={createAuthorName}
+                  onChange={(e) => setCreateAuthorName(e.target.value)}
+                  placeholder={t.admin.enrichment.createAuthorPlaceholder}
+                  style={{ ...inputStyle, flex: 1 }}
+                  autoFocus
+                />
+                <button
+                  onClick={async () => {
+                    if (!createAuthorName.trim()) return;
+                    const res = await fetch(`${API_URL}/admin/authors`, {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+                      body: JSON.stringify({ name: createAuthorName.trim() }),
+                    });
+                    if (res.ok) {
+                      const newAuthor = await res.json();
+                      await fetch(`${API_URL}/admin/books/${id}/authors?author_id=${newAuthor.id}`, {
+                        method: 'POST', headers: { Authorization: `Bearer ${token}` },
+                      });
+                      setLinkedAuthors((prev) => [...prev, { id: newAuthor.id, name: newAuthor.name, country: newAuthor.country }]);
+                    }
+                    setCreateAuthorName('');
+                    setShowCreateAuthor(false);
+                  }}
+                  style={{
+                    padding: '8px 16px', background: '#5B86A1', border: 'none', borderRadius: '8px',
+                    color: '#0A1118', cursor: 'pointer', fontSize: '13px', fontWeight: '500',
+                  }}
+                >
+                  {t.admin.common.save}
+                </button>
+                <button
+                  onClick={() => { setShowCreateAuthor(false); setCreateAuthorName(''); }}
+                  style={{
+                    padding: '8px 12px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)',
+                    borderRadius: '8px', color: '#97A6BA', cursor: 'pointer', fontSize: '13px',
+                  }}
+                >
+                  {t.admin.common.cancel}
+                </button>
               </div>
             )}
           </div>
-          <div>
-            <label style={labelStyle}>{t.admin.enrichment.authorCountry}</label>
-            <input value={authorCountry} onChange={(e) => setAuthorCountry(e.target.value)} placeholder={t.admin.enrichment.countryPlaceholder} style={inputStyle} />
-          </div>
-          <div>
-            <label style={labelStyle}>{t.admin.enrichment.authorType}</label>
-            <select value={authorCreationType} onChange={(e) => setAuthorCreationType(e.target.value)} style={inputStyle}>
-              {Object.entries(CREATION_TYPE_LABELS).map(([key, label]) => (
-                <option key={key} value={key}>{label}</option>
-              ))}
-            </select>
-          </div>
-          <div>
-            <label style={labelStyle}>{t.admin.enrichment.birthYear}</label>
-            <input type="number" value={authorBirthYear} onChange={(e) => setAuthorBirthYear(e.target.value)} placeholder={t.admin.enrichment.yearPlaceholder} style={inputStyle} />
-          </div>
-          <div>
-            <label style={labelStyle}>{t.admin.enrichment.deathYear}</label>
-            <input type="number" value={authorDeathYear} onChange={(e) => setAuthorDeathYear(e.target.value)} placeholder={t.admin.enrichment.yearPlaceholder} style={inputStyle} />
-          </div>
-          <div style={{ gridColumn: '1 / -1' }}>
-            <label style={labelStyle}>{t.admin.enrichment.authorBio}</label>
-            <textarea value={authorBio} onChange={(e) => setAuthorBio(e.target.value)} placeholder={t.admin.enrichment.bioPlaceholder} rows={3} style={{ ...inputStyle, resize: 'vertical' }} />
-          </div>
-        </div>
+        )}
       </div>
 
       {/* CLASSIFICATION */}

@@ -76,13 +76,7 @@ class AdminBookResponse(BaseModel):
     themes: List[str] = []
     motifs: List[str] = []
     missing_fields: List[str] = []
-    # Author enrichment
-    author_name: Optional[str] = None
-    author_country: Optional[str] = None
-    author_bio: Optional[str] = None
-    author_birth_year: Optional[int] = None
-    author_death_year: Optional[int] = None
-    author_creation_type: Optional[str] = None
+    authors: List[dict] = []
 
 class AdminLogResponse(BaseModel):
     id: str
@@ -496,15 +490,21 @@ async def _find_or_create_author(db: AsyncSession, author_name: str) -> Author:
 
 
 async def _build_book_dict(db: AsyncSession, book: Book, include_missing: bool = False) -> dict:
-    """Build a full book response dict with author enrichment and optional missing_fields."""
-    author = None
-    if book.author_id:
-        result = await db.execute(select(Author).where(Author.id == book.author_id))
-        author = result.scalar_one_or_none()
+    """Build a full book response dict with linked authors and optional missing_fields."""
+    from app.models.book_author import book_authors
+
+    # Load linked authors via book_authors junction table
+    author_result = await db.execute(
+        select(Author.id, Author.name, Author.country)
+        .join(book_authors, book_authors.c.author_id == Author.id)
+        .where(book_authors.c.book_id == book.id)
+    )
+    author_rows = author_result.all()
+    authors = [{"id": str(a[0]), "name": a[1], "country": a[2]} for a in author_rows]
 
     missing = []
     if include_missing and book.metadata_status != "complete":
-        missing = calculate_missing_fields(book, author)
+        missing = calculate_missing_fields(book, author_count=len(authors))
 
     # Load genre relations via book_genres table
     genre_result = await db.execute(
@@ -546,12 +546,7 @@ async def _build_book_dict(db: AsyncSession, book: Book, include_missing: bool =
         "themes": book.themes or [],
         "motifs": book.motifs or [],
         "missing_fields": missing,
-        "author_name": author.name if author else None,
-        "author_country": author.country if author else None,
-        "author_bio": author.bio if author else None,
-        "author_birth_year": author.birth_year if author else None,
-        "author_death_year": author.death_year if author else None,
-        "author_creation_type": author.creation_type if author else None,
+        "authors": authors,
     }
 
 
@@ -924,8 +919,7 @@ async def update_metadata_book(
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db)
 ):
-    """Enrich book metadata (admin only). Recalculates metadata_status."""
-    # Moderators cannot enrich — only admin/owner
+    """Enrich book metadata (admin only). Author management uses /admin/books/{id}/authors endpoints."""
     if current_user.role == "moderator":
         raise HTTPException(status_code=403, detail="Moderators cannot enrich metadata")
 
@@ -934,7 +928,6 @@ async def update_metadata_book(
     if not book:
         raise HTTPException(status_code=404, detail="Book not found")
 
-    # Update book enrichment fields
     book_fields = ["subtitle", "original_title", "description", "cover",
                    "original_language", "country_of_origin", "original_publication_year",
                    "series_name", "series_position", "themes", "motifs"]
@@ -943,35 +936,18 @@ async def update_metadata_book(
         if val is not None:
             setattr(book, field, val)
 
-    # Handle genre_ids if provided
     if hasattr(data, 'genre_ids') and data.genre_ids is not None:
         await _sync_book_genres(db, book, data.genre_ids)
 
-    # Handle author linkage
-    author = None
-    if data.author_id:
-        book.author_id = data.author_id
-        result_a = await db.execute(select(Author).where(Author.id == data.author_id))
-        author = result_a.scalar_one_or_none()
-    elif book.author_id:
-        result_a = await db.execute(select(Author).where(Author.id == book.author_id))
-        author = result_a.scalar_one_or_none()
+    from app.models.book_author import book_authors
+    author_count_result = await db.execute(
+        select(func.count()).select_from(book_authors).where(book_authors.c.book_id == book.id)
+    )
+    author_count = author_count_result.scalar() or 0
 
-    # Update author enrichment fields
-    if author:
-        author_fields = {"author_name": "name", "author_country": "country",
-                         "author_bio": "bio", "author_birth_year": "birth_year",
-                         "author_death_year": "death_year", "author_creation_type": "creation_type"}
-        for data_key, model_key in author_fields.items():
-            val = getattr(data, data_key, None)
-            if val is not None:
-                setattr(author, model_key, val)
-
-    # Recalculate metadata status
-    missing = calculate_missing_fields(book, author)
+    missing = calculate_missing_fields(book, author_count=author_count)
     new_status = get_metadata_status(missing)
 
-    # Only auto-set complete/incomplete; don't override review_ready if set manually
     if book.metadata_status != "review_ready":
         book.metadata_status = new_status
 

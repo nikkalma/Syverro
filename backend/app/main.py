@@ -1,9 +1,11 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from app.api import auth, books, sync, admin, taxonomy, admin_taxonomy
-from app.database import engine, Base
+from app.api import auth, books, sync, admin, taxonomy, admin_taxonomy, admin_books, graph, graph_queries
+from app.database import engine, Base, AsyncSessionLocal
+from app.seeds.knowledge_graph_seed import seed_knowledge_graph
 from app.models import user, book, author, genre, knowledge_node, knowledge_relation, book_knowledge_relation, user_book_experience
 from app.models.book_genre import book_genres  # noqa: F401 — ensures table is registered
+from app.models.book_author import book_authors  # noqa: F401 — ensures table is registered
 from app.models.session import ReadingSession  # ✅ НОВЫЙ
 from app.models.quote import Quote            # ✅ НОВЫЙ
 from app.models.sync_state import SyncState   # ✅ НОВЫЙ
@@ -38,6 +40,9 @@ app.include_router(sync.router)  # ✅ ТЕПЕРЬ РАБОТАЕТ
 app.include_router(admin.router)
 app.include_router(taxonomy.router)
 app.include_router(admin_taxonomy.router)
+app.include_router(admin_books.router)
+app.include_router(graph.router)
+app.include_router(graph_queries.router)
 
 async def ensure_user_profile_columns(conn):
     """Add columns that create_all won't add to existing tables."""
@@ -238,6 +243,137 @@ async def migrate_json_genres_to_relations(conn):
     logger.info(f"✅ Migrated {migrated} book-genre relations")
 
 
+SEED_BOOKS = [
+    {
+        "title": "Dune",
+        "author": "Frank Herbert",
+        "author_country": "United States",
+        "description": "Set in the distant future, Dune tells the story of Paul Atreides on the desert planet Arrakis, the only source of the spice melange, the most important substance in the universe.",
+        "genres": ["science-fiction", "fiction"],
+        "themes": ["Power", "Ecology", "Religion"],
+        "cover": "https://covers.openlibrary.org/b/id/11153269-L.jpg",
+        "total_pages": 688,
+    },
+    {
+        "title": "1984",
+        "author": "George Orwell",
+        "author_country": "United Kingdom",
+        "description": "A dystopian novel set in a totalitarian society ruled by Big Brother, exploring themes of surveillance, truth manipulation, and individual freedom.",
+        "genres": ["fiction", "science-fiction"],
+        "themes": ["Totalitarianism", "Freedom", "Truth"],
+        "cover": "https://covers.openlibrary.org/b/id/12648523-L.jpg",
+        "total_pages": 328,
+    },
+    {
+        "title": "The Name of the Wind",
+        "author": "Patrick Rothfuss",
+        "author_country": "United States",
+        "description": "The story of Kvothe, a legendary figure who recounts his life from childhood to becoming the most famous wizard of his age.",
+        "genres": ["fantasy", "fiction"],
+        "themes": ["Knowledge", "Identity", "Storytelling"],
+        "cover": "https://covers.openlibrary.org/b/id/14628241-L.jpg",
+        "total_pages": 662,
+    },
+    {
+        "title": "Sapiens: A Brief History of Humankind",
+        "author": "Yuval Noah Harari",
+        "author_country": "Israel",
+        "description": "A sweeping history of humanity from the Stone Age to the present, exploring how Homo sapiens came to dominate the planet.",
+        "genres": ["non-fiction", "history"],
+        "themes": ["Evolution", "Civilization", "Culture"],
+        "cover": "https://covers.openlibrary.org/b/id/14632832-L.jpg",
+        "total_pages": 443,
+    },
+    {
+        "title": "Roadside Picnic",
+        "author": "Arkady and Boris Strugatsky",
+        "author_country": "Russia",
+        "description": "After an extraterrestrial visitation leaves mysterious Zones on Earth, stalkers risk their lives to venture into these dangerous areas and retrieve alien artifacts.",
+        "genres": ["science-fiction", "fiction"],
+        "themes": ["Unknown", "Human Nature", "Sacrifice"],
+        "cover": "https://covers.openlibrary.org/b/id/10837554-L.jpg",
+        "total_pages": 224,
+    },
+]
+
+
+async def seed_books(conn):
+    """Seed development books if the books table is empty."""
+    from sqlalchemy import text
+    import json
+
+    result = await conn.execute(text("SELECT count(*) FROM books"))
+    if result.scalar() and result.scalar() > 0:
+        logger.info(f"📚 Books table has {result.scalar()} books — skipping seed")
+        return
+
+    logger.info("🌱 Seeding development books...")
+    slug_to_id = {}
+    for slug in set(g for book in SEED_BOOKS for g in book["genres"]):
+        fetch = await conn.execute(text("SELECT id FROM genres WHERE slug = :slug"), {"slug": slug})
+        row = fetch.fetchone()
+        if row:
+            slug_to_id[slug] = row[0]
+
+    inserted = 0
+    for book_data in SEED_BOOKS:
+        author_name = book_data["author"]
+
+        author_result = await conn.execute(
+            text("SELECT id FROM authors WHERE name = :name"),
+            {"name": author_name},
+        )
+        author_row = author_result.fetchone()
+        if author_row:
+            author_id = author_row[0]
+        else:
+            author_result = await conn.execute(
+                text(
+                    "INSERT INTO authors (id, name, country) "
+                    "VALUES (gen_random_uuid(), :name, :country) RETURNING id"
+                ),
+                {"name": author_name, "country": book_data.get("author_country")},
+            )
+            author_id = author_result.fetchone()[0]
+
+        book_result = await conn.execute(
+            text(
+                "INSERT INTO books (id, title, author, author_id, description, cover, "
+                "total_pages, genres, themes, is_published, publication_type, "
+                "metadata_status, moderation_status) "
+                "VALUES (gen_random_uuid(), :title, :author, :author_id, :description, :cover, "
+                ":total_pages, :genres, :themes, true, 'official', "
+                "'incomplete', 'approved') RETURNING id"
+            ),
+            {
+                "title": book_data["title"],
+                "author": author_name,
+                "author_id": author_id,
+                "description": book_data["description"],
+                "cover": book_data.get("cover"),
+                "total_pages": book_data.get("total_pages"),
+                "genres": json.dumps(book_data["genres"]),
+                "themes": json.dumps(book_data.get("themes", [])),
+            },
+        )
+        book_id = book_result.fetchone()[0]
+
+        for genre_slug in book_data["genres"]:
+            genre_id = slug_to_id.get(genre_slug)
+            if genre_id:
+                await conn.execute(
+                    text(
+                        "INSERT INTO book_genres (book_id, genre_id) "
+                        "VALUES (:book_id, :genre_id) ON CONFLICT DO NOTHING"
+                    ),
+                    {"book_id": book_id, "genre_id": genre_id},
+                )
+
+        inserted += 1
+
+    logger.info(f"✅ Seeded {inserted} development books")
+
+
 @app.on_event("startup")
 async def startup():
     async with engine.begin() as conn:
@@ -245,7 +381,14 @@ async def startup():
         await ensure_user_profile_columns(conn)
         await seed_genres(conn)
         await migrate_json_genres_to_relations(conn)
-    logger.info("✅ Database tables created")
+        logger.info("🌱 Seeding books...")
+        await seed_books(conn)
+        logger.info("📚 Books seed completed")
+    async with AsyncSessionLocal() as session:
+        logger.info("🌱 Seeding knowledge graph...")
+        await seed_knowledge_graph(session)
+        logger.info("🔗 Knowledge graph seed completed")
+    logger.info("✅ Database setup complete")
 
 @app.get("/health")
 async def health():

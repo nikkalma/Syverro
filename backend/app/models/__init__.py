@@ -7,6 +7,7 @@ from app.models.session import ReadingSession
 from app.models.quote import Quote
 from app.models.sync_state import SyncState
 from app.models.change_log import ChangeLog
+from app.models.book_author import book_authors  # noqa: F401 — ensures table is registered
 from app.models.knowledge_node import KnowledgeNode
 from app.models.knowledge_relation import KnowledgeRelation
 from app.models.book_knowledge_relation import BookKnowledgeRelation

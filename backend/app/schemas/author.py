@@ -33,3 +33,12 @@ class AuthorResponse(AuthorBase):
 
     class Config:
         from_attributes = True
+
+
+class AuthorBrief(BaseModel):
+    id: UUID
+    name: str
+    country: Optional[str] = None
+
+    class Config:
+        from_attributes = True

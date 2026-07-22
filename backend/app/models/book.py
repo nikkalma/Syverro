@@ -55,7 +55,8 @@ class Book(Base):
 
     # Relationships
     user_books = relationship("UserBook", back_populates="book", cascade="all, delete-orphan")
-    author_ref = relationship("Author", back_populates="books")
+    author_ref = relationship("Author", back_populates="books")  # legacy one-to-many via author_id
+    authors = relationship("Author", secondary="book_authors", back_populates="book_refs")  # many-to-many
     genres_rel = relationship("Genre", secondary="book_genres", back_populates="books")
     
     __table_args__ = (

@@ -1,38 +1,26 @@
 """Metadata completeness calculator for the enrichment workflow."""
 
-from typing import List, Tuple
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select
+from typing import List
 from app.models.book import Book
-from app.models.author import Author
 
 
-REQUIRED_BOOK_FIELDS = ["title", "author_id", "description", "cover"]
-REQUIRED_AUTHOR_FIELDS = ["name", "country"]
+REQUIRED_BOOK_FIELDS = ["title", "description", "cover"]
 
 
-def calculate_missing_fields(book: Book, author: Author | None) -> List[str]:
+def calculate_missing_fields(book: Book, author_count: int = 0) -> List[str]:
     """Return list of field names that are missing for metadata completeness."""
     missing = []
 
-    # Book fields
     for field in REQUIRED_BOOK_FIELDS:
         val = getattr(book, field, None)
         if val is None or (isinstance(val, str) and not val.strip()):
             missing.append(field)
 
-    # At least one genre
     if not book.genres or len(book.genres) == 0:
         missing.append("genres")
 
-    # Author must be linked
-    if not author:
-        missing.append("author_id")
-    else:
-        for field in REQUIRED_AUTHOR_FIELDS:
-            val = getattr(author, field, None)
-            if val is None or (isinstance(val, str) and not val.strip()):
-                missing.append(f"author_{field}")
+    if author_count == 0:
+        missing.append("authors")
 
     return missing
 

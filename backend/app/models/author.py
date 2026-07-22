@@ -24,7 +24,12 @@ class Author(Base):
     books = relationship(
         "Book",
         back_populates="author_ref"
-    )
+    )  # legacy one-to-many via Book.author_id
+    book_refs = relationship(
+        "Book",
+        secondary="book_authors",
+        back_populates="authors"
+    )  # many-to-many via book_authors
 
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)

@@ -99,13 +99,7 @@ export interface AdminBook {
   themes?: string[];
   motifs?: string[];
   missing_fields?: string[];
-  // Author enrichment
-  author_name?: string | null;
-  author_country?: string | null;
-  author_bio?: string | null;
-  author_birth_year?: number | null;
-  author_death_year?: number | null;
-  author_creation_type?: string | null;
+  authors?: Array<{ id: string; name: string; country?: string | null }>;
 }
 
 export interface AdminBookFilters {
@@ -433,11 +427,10 @@ export const METADATA_STATUS_COLORS: Record<MetadataStatus, string> = {
 
 export const ENRICHMENT_FIELD_LABELS: Record<string, string> = {
   title: 'Название',
-  author_id: 'Автор',
+  authors: 'Авторы',
   description: 'Описание',
   cover: 'Обложка',
   genres: 'Жанры',
-  author_country: 'Страна автора',
   original_language: 'Язык оригинала',
   country_of_origin: 'Страна происхождения',
   original_publication_year: 'Год издания',

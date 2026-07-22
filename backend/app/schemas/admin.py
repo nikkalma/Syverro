@@ -6,7 +6,7 @@ from uuid import UUID
 
 # Импортируем схемы авторов и жанров
 from app.schemas.genre import GenreResponse, GenreCreate, GenreUpdate
-from app.schemas.author import AuthorResponse, AuthorCreate, AuthorUpdate
+from app.schemas.author import AuthorResponse, AuthorCreate, AuthorUpdate, AuthorBrief
 
 
 # ============================================================
@@ -72,13 +72,7 @@ class AdminBookResponse(BaseModel):
     themes: List[str] = []
     motifs: List[str] = []
     missing_fields: List[str] = []
-    # Author enrichment
-    author_name: Optional[str] = None
-    author_country: Optional[str] = None
-    author_bio: Optional[str] = None
-    author_birth_year: Optional[int] = None
-    author_death_year: Optional[int] = None
-    author_creation_type: Optional[str] = None
+    authors: List[AuthorBrief] = []
 
 
 class AdminBookCreate(BaseModel):
@@ -109,13 +103,13 @@ class AdminBookUpdate(BaseModel):
 
 
 class AdminBookEnrichment(BaseModel):
-    """Обогащение метаданных книги (только admin/owner)"""
+    """Book metadata enrichment (admin only). Author management uses /admin/books/{id}/authors endpoints."""
     subtitle: Optional[str] = None
     original_title: Optional[str] = None
     description: Optional[str] = None
     cover: Optional[str] = None
     genres: Optional[List[str]] = None
-    author_id: Optional[str] = None
+    genre_ids: Optional[List[str]] = None
     original_language: Optional[str] = None
     country_of_origin: Optional[str] = None
     original_publication_year: Optional[int] = None
@@ -123,13 +117,6 @@ class AdminBookEnrichment(BaseModel):
     series_position: Optional[int] = None
     themes: Optional[List[str]] = None
     motifs: Optional[List[str]] = None
-    # Author fields
-    author_name: Optional[str] = None
-    author_country: Optional[str] = None
-    author_bio: Optional[str] = None
-    author_birth_year: Optional[int] = None
-    author_death_year: Optional[int] = None
-    author_creation_type: Optional[str] = None
 
 
 # ============================================================

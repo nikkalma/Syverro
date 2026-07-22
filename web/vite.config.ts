@@ -13,9 +13,12 @@ export default defineConfig({
   server: {
     proxy: {
       '/api': {
-        target: 'https://api.syverro.com',
+        target: 'http://localhost:8000',
         changeOrigin: true,
-        secure: true,
+      },
+      '/auth': {
+        target: 'http://localhost:8000',
+        changeOrigin: true,
       },
     },
   },

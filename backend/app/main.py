@@ -182,7 +182,8 @@ async def migrate_json_genres_to_relations(conn):
 
     # Check if migration already ran (no books with genres JSON and no book_genres rows)
     result = await conn.execute(text("SELECT count(*) FROM book_genres"))
-    if result.scalar() and result.scalar() > 0:
+    bkr_count = result.scalar()
+    if bkr_count and bkr_count > 0:
         return
 
     result = await conn.execute(text(
@@ -303,8 +304,9 @@ async def seed_books(conn):
     import json
 
     result = await conn.execute(text("SELECT count(*) FROM books"))
-    if result.scalar() and result.scalar() > 0:
-        logger.info(f"📚 Books table has {result.scalar()} books — skipping seed")
+    count = result.scalar()
+    if count and count > 0:
+        logger.info(f"📚 Books table has {count} books — skipping seed")
         return
 
     logger.info("🌱 Seeding development books...")

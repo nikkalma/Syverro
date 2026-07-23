@@ -318,8 +318,12 @@ export interface LocaleData {
       seriesPosition: string;
       themes: string;
       themesPlaceholder: string;
+      noThemes: string;
+      createTheme: string;
       motifs: string;
       motifsPlaceholder: string;
+      noMotifs: string;
+      createMotif: string;
       saved: string;
       errorSave: string;
       bookNotFound: string;

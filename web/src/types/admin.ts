@@ -137,18 +137,70 @@ export interface AdminBookUpdate extends Partial<AdminBookCreate> {
 // АВТОРЫ
 // ============================================================
 
+export interface AuthorAward {
+  id: string;
+  author_id: string;
+  name: string;
+  year?: number | null;
+  organization?: string | null;
+  work?: string | null;
+  created_at: string;
+}
+
 export interface AdminAuthor {
   id: string;
   name: string;
-  photo?: string | null;
+  first_name?: string | null;
+  middle_name?: string | null;
+  last_name?: string | null;
+  native_name?: string | null;
+  sort_name?: string | null;
+  // Basic information
+  pseudonyms?: string[];
+  nationality?: string | null;
+  languages?: string[];
+  gender?: string;
+  official_website?: string | null;
+  wikipedia_url?: string | null;
+  // Biography
   bio?: string | null;
-  country?: string | null;
   birth_year?: number | null;
   death_year?: number | null;
+  birth_date?: string | null;
+  death_date?: string | null;
+  birth_place?: string | null;
+  death_place?: string | null;
+  // Career
+  occupations?: string[];
+  literary_movements?: string[];
+  active_from_year?: number | null;
+  active_to_year?: number | null;
+  // Bibliography
+  notable_works?: string[];
+  genres?: string[];
+  writing_languages?: string[];
+  // Media
+  photo?: string | null;
+  gallery?: string[];
+  signature_image?: string | null;
+  portrait_caption?: string | null;
+  // System
   creation_type: string;
   book_count: number;
+  awards?: AuthorAward[];
   created_at: string;
   updated_at: string;
+}
+
+export function getAuthorDisplayName(author: AdminAuthor): string {
+  if (author.native_name) return author.native_name;
+  if (author.first_name || author.last_name) {
+    return [author.first_name, author.middle_name, author.last_name]
+      .filter(Boolean)
+      .join(' ');
+  }
+  if (author.sort_name) return author.sort_name;
+  return author.name;
 }
 
 export interface AdminAuthorFilters {
@@ -162,14 +214,46 @@ export interface AdminAuthorFilters {
 
 export interface AdminAuthorCreate {
   name: string;
-  photo?: string | null;
+  first_name?: string | null;
+  middle_name?: string | null;
+  last_name?: string | null;
+  native_name?: string | null;
+  sort_name?: string | null;
+  pseudonyms?: string[];
+  nationality?: string | null;
+  languages?: string[];
+  gender?: string;
+  official_website?: string | null;
+  wikipedia_url?: string | null;
   bio?: string | null;
-  country?: string | null;
   birth_year?: number | null;
   death_year?: number | null;
+  birth_date?: string | null;
+  death_date?: string | null;
+  birth_place?: string | null;
+  death_place?: string | null;
+  occupations?: string[];
+  literary_movements?: string[];
+  active_from_year?: number | null;
+  active_to_year?: number | null;
+  notable_works?: string[];
+  genres?: string[];
+  writing_languages?: string[];
+  photo?: string | null;
+  gallery?: string[];
+  signature_image?: string | null;
+  portrait_caption?: string | null;
 }
 
 export interface AdminAuthorUpdate extends Partial<AdminAuthorCreate> {}
+
+export const GENDER_OPTIONS = [
+  { value: 'unknown', label: 'Не указан' },
+  { value: 'male', label: 'Мужской' },
+  { value: 'female', label: 'Женский' },
+  { value: 'nonbinary', label: 'Небинарный' },
+  { value: 'organization', label: 'Организация' },
+];
 
 // ============================================================
 // ЖАНРЫ

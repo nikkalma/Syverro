@@ -9,6 +9,7 @@ from app.models.user import User
 from app.models.book import Book
 from app.models.user_book import UserBook
 from app.models.author import Author
+from app.models.author_award import AuthorAward
 from app.models.genre import Genre
 from app.models.book_genre import book_genres
 from app.schemas.admin import (
@@ -16,6 +17,7 @@ from app.schemas.admin import (
     GenreCreate, GenreUpdate, GenreResponse,
     AdminStatsResponse, AdminBookEnrichment
 )
+from app.schemas.author import AuthorAwardCreate, AuthorAwardResponse
 from app.schemas.user import UserResponse
 import logging
 from datetime import datetime, timedelta
@@ -1028,11 +1030,30 @@ async def get_authors(
             "last_name": author.last_name,
             "native_name": author.native_name,
             "sort_name": author.sort_name,
-            "photo": author.photo,
+            "pseudonyms": author.pseudonyms or [],
+            "nationality": author.nationality,
+            "languages": author.languages or [],
+            "gender": author.gender or "unknown",
+            "official_website": author.official_website,
+            "wikipedia_url": author.wikipedia_url,
             "bio": author.bio,
-            "country": author.country,
             "birth_year": author.birth_year,
             "death_year": author.death_year,
+            "birth_date": author.birth_date,
+            "death_date": author.death_date,
+            "birth_place": author.birth_place,
+            "death_place": author.death_place,
+            "occupations": author.occupations or [],
+            "literary_movements": author.literary_movements or [],
+            "active_from_year": author.active_from_year,
+            "active_to_year": author.active_to_year,
+            "notable_works": author.notable_works or [],
+            "genres": author.genres or [],
+            "writing_languages": author.writing_languages or [],
+            "photo": author.photo,
+            "gallery": author.gallery or [],
+            "signature_image": author.signature_image,
+            "portrait_caption": author.portrait_caption,
             "creation_type": author.creation_type or "individual_author",
             "book_count": book_count,
             "created_at": author.created_at,
@@ -1063,6 +1084,12 @@ async def get_author_detail(
     book_count = await db.scalar(
         select(func.count()).select_from(Book).where(Book.author_id == author.id)
     ) or 0
+
+    # Load awards
+    awards_result = await db.execute(
+        select(AuthorAward).where(AuthorAward.author_id == author.id).order_by(AuthorAward.year)
+    )
+    awards = awards_result.scalars().all()
     
     return {
         "id": str(author.id),
@@ -1072,13 +1099,41 @@ async def get_author_detail(
         "last_name": author.last_name,
         "native_name": author.native_name,
         "sort_name": author.sort_name,
-        "photo": author.photo,
+        "pseudonyms": author.pseudonyms or [],
+        "nationality": author.nationality,
+        "languages": author.languages or [],
+        "gender": author.gender or "unknown",
+        "official_website": author.official_website,
+        "wikipedia_url": author.wikipedia_url,
         "bio": author.bio,
-        "country": author.country,
         "birth_year": author.birth_year,
         "death_year": author.death_year,
+        "birth_date": author.birth_date,
+        "death_date": author.death_date,
+        "birth_place": author.birth_place,
+        "death_place": author.death_place,
+        "occupations": author.occupations or [],
+        "literary_movements": author.literary_movements or [],
+        "active_from_year": author.active_from_year,
+        "active_to_year": author.active_to_year,
+        "notable_works": author.notable_works or [],
+        "genres": author.genres or [],
+        "writing_languages": author.writing_languages or [],
+        "photo": author.photo,
+        "gallery": author.gallery or [],
+        "signature_image": author.signature_image,
+        "portrait_caption": author.portrait_caption,
         "creation_type": author.creation_type or "individual_author",
         "book_count": book_count,
+        "awards": [{
+            "id": str(a.id),
+            "author_id": str(a.author_id),
+            "name": a.name,
+            "year": a.year,
+            "organization": a.organization,
+            "work": a.work,
+            "created_at": a.created_at,
+        } for a in awards],
         "created_at": author.created_at,
         "updated_at": author.updated_at,
     }
@@ -1153,6 +1208,121 @@ async def delete_author(
     await db.delete(author)
     await db.commit()
     return {"message": "Author deleted"}
+
+# ============================================================
+# 5a. AUTHOR AWARDS
+# ============================================================
+
+@router.get("/authors/{author_id}/awards", response_model=dict)
+async def get_author_awards(
+    author_id: str,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    await check_admin(current_user)
+
+    result = await db.execute(select(Author).where(Author.id == author_id))
+    author = result.scalar_one_or_none()
+    if not author:
+        raise HTTPException(status_code=404, detail="Author not found")
+
+    awards_result = await db.execute(
+        select(AuthorAward).where(AuthorAward.author_id == author_id).order_by(AuthorAward.year)
+    )
+    awards = awards_result.scalars().all()
+
+    return {
+        "data": [{
+            "id": str(a.id),
+            "author_id": str(a.author_id),
+            "name": a.name,
+            "year": a.year,
+            "organization": a.organization,
+            "work": a.work,
+            "created_at": a.created_at,
+        } for a in awards],
+    }
+
+
+@router.post("/authors/{author_id}/awards", status_code=201)
+async def create_author_award(
+    author_id: str,
+    data: AuthorAwardCreate,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    await check_admin(current_user)
+
+    result = await db.execute(select(Author).where(Author.id == author_id))
+    if not result.scalar_one_or_none():
+        raise HTTPException(status_code=404, detail="Author not found")
+
+    award = AuthorAward(author_id=author_id, **data.model_dump())
+    db.add(award)
+    await db.commit()
+    await db.refresh(award)
+    return {
+        "id": str(award.id),
+        "author_id": str(award.author_id),
+        "name": award.name,
+        "year": award.year,
+        "organization": award.organization,
+        "work": award.work,
+        "created_at": award.created_at,
+    }
+
+
+@router.put("/authors/{author_id}/awards/{award_id}")
+async def update_author_award(
+    author_id: str,
+    award_id: str,
+    data: AuthorAwardCreate,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    await check_admin(current_user)
+
+    result = await db.execute(
+        select(AuthorAward).where(AuthorAward.id == award_id, AuthorAward.author_id == author_id)
+    )
+    award = result.scalar_one_or_none()
+    if not award:
+        raise HTTPException(status_code=404, detail="Award not found")
+
+    for key, value in data.model_dump().items():
+        setattr(award, key, value)
+    await db.commit()
+    await db.refresh(award)
+    return {
+        "id": str(award.id),
+        "author_id": str(award.author_id),
+        "name": award.name,
+        "year": award.year,
+        "organization": award.organization,
+        "work": award.work,
+        "created_at": award.created_at,
+    }
+
+
+@router.delete("/authors/{author_id}/awards/{award_id}", status_code=204)
+async def delete_author_award(
+    author_id: str,
+    award_id: str,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    await check_admin(current_user)
+
+    result = await db.execute(
+        select(AuthorAward).where(AuthorAward.id == award_id, AuthorAward.author_id == author_id)
+    )
+    award = result.scalar_one_or_none()
+    if not award:
+        raise HTTPException(status_code=404, detail="Award not found")
+
+    await db.delete(award)
+    await db.commit()
+
 
 # ============================================================
 # 5. ЖАНРЫ (ПОЛНАЯ РЕАЛИЗАЦИЯ)

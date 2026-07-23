@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useAdminStore } from '../../../store/adminStore';
-import { AdminAuthor, AdminAuthorCreate } from '../../../types/admin';
+import { AdminAuthor, AdminAuthorCreate, getAuthorDisplayName } from '../../../types/admin';
 import AuthorsTable from './AuthorsTable';
 import AuthorsFilters from './AuthorsFilters';
 import AuthorModal from './AuthorModal';
@@ -240,7 +240,7 @@ export default function AdminAuthors() {
               <div style={{ fontSize: '48px' }}>⚠️</div>
               <h2 style={{ color: '#E6EDF3', fontSize: '20px', marginBottom: '8px' }}>{t.admin.authors.deleteConfirm}</h2>
               <p style={{ color: '#97A6BA', fontSize: '14px' }}>
-                {t.admin.authors.deleteConfirmText} <strong style={{ color: '#E6EDF3' }}>{authorToDelete.name}</strong>?
+                {t.admin.authors.deleteConfirmText} <strong style={{ color: '#E6EDF3' }}>{getAuthorDisplayName(authorToDelete)}</strong>?
                 <br />
                 <span style={{ color: '#EF5350', fontSize: '13px' }}>{t.admin.authors.irreversible}</span>
               </p>

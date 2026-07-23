@@ -36,6 +36,7 @@ from app.models import (  # noqa: F401
     KnowledgeNode, KnowledgeRelation, BookKnowledgeRelation, UserBookExperience,
     book_authors,  # noqa: F401
     book_genres,  # noqa: F401
+    AuthorAward,  # noqa: F401
 )
 
 target_metadata = Base.metadata

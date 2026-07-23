@@ -13,6 +13,7 @@ from app.models.knowledge_node import KnowledgeNode
 from app.models.knowledge_relation import KnowledgeRelation
 from app.models.book_knowledge_relation import BookKnowledgeRelation
 from app.models.user_book_experience import UserBookExperience
+from app.models.author_award import AuthorAward
 
 __all__ = [
     "User",
@@ -28,4 +29,5 @@ __all__ = [
     "KnowledgeRelation",
     "BookKnowledgeRelation",
     "UserBookExperience",
+    "AuthorAward",
 ]

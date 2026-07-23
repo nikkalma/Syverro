@@ -1,6 +1,6 @@
 // src/pages/Admin/Authors/AuthorsTable.tsx
 
-import { AdminAuthor } from '../../../types/admin';
+import { AdminAuthor, getAuthorDisplayName } from '../../../types/admin';
 import { useAdminStore } from '../../../store/adminStore';
 
 interface AuthorsTableProps {
@@ -150,14 +150,14 @@ export default function AuthorsTable({
                   overflow: 'hidden',
                 }}>
                   {author.photo ? (
-                    <img src={author.photo} alt={author.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                    <img src={author.photo} alt={getAuthorDisplayName(author)} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                   ) : (
-                    author.name?.charAt(0).toUpperCase() || '👤'
+                    getAuthorDisplayName(author).charAt(0).toUpperCase() || '👤'
                   )}
                 </div>
               </td>
               <td style={{ padding: '12px 16px', color: '#E6EDF3', fontSize: '14px', fontWeight: '500' }}>
-                {author.name}
+                {getAuthorDisplayName(author)}
               </td>
               <td style={{ padding: '12px 16px', color: '#97A6BA', fontSize: '13px' }}>
                 {author.country || '—'}

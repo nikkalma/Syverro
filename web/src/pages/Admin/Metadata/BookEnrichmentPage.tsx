@@ -1,8 +1,8 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { AdminBook } from '../../../types/admin';
 import { METADATA_STATUS_LABELS, METADATA_STATUS_COLORS, ENRICHMENT_FIELD_LABELS } from '../../../types/admin';
-import { Save, ArrowLeft, RefreshCw, AlertCircle, CheckCircle, X, Plus, UserPlus, Link2 } from 'lucide-react';
+import { Save, ArrowLeft, RefreshCw, AlertCircle, CheckCircle, X, Plus, UserPlus, Link2, Search } from 'lucide-react';
 import { getLocaleData, getBrowserLocale } from '../../../locales';
 
 const API_URL = import.meta.env.VITE_API_URL || 'https://api.syverro.com';
@@ -59,10 +59,16 @@ export default function BookEnrichmentPage() {
   const [originalPublicationYear, setOriginalPublicationYear] = useState('');
   const [seriesName, setSeriesName] = useState('');
   const [seriesPosition, setSeriesPosition] = useState('');
-  const [themes, setThemes] = useState<string[]>([]);
-  const [themeInput, setThemeInput] = useState('');
-  const [motifs, setMotifs] = useState<string[]>([]);
-  const [motifInput, setMotifInput] = useState('');
+  // Taxonomy relations (themes & motifs from knowledge graph)
+  const [themeRelations, setThemeRelations] = useState<Array<{ id: string; node_id: string; name: string; relation_type: string }>>([]);
+  const [motifRelations, setMotifRelations] = useState<Array<{ id: string; node_id: string; name: string; relation_type: string }>>([]);
+  const [themeSearchQuery, setThemeSearchQuery] = useState('');
+  const [motifSearchQuery, setMotifSearchQuery] = useState('');
+  const [themeSearchResults, setThemeSearchResults] = useState<any[]>([]);
+  const [motifSearchResults, setMotifSearchResults] = useState<any[]>([]);
+  const [showThemeSearch, setShowThemeSearch] = useState(false);
+  const [showMotifSearch, setShowMotifSearch] = useState(false);
+  const [taxonomyLoading, setTaxonomyLoading] = useState(false);
   const [totalPages, setTotalPages] = useState('');
   const [publicationType, setPublicationType] = useState('official');
 
@@ -78,33 +84,80 @@ export default function BookEnrichmentPage() {
   useEffect(() => {
     if (!id) return;
     setLoading(true);
-    fetch(`${API_URL}/admin/metadata/books/${id}`, {
-      headers: { Authorization: `Bearer ${token}` },
-    })
-      .then((r) => r.json())
-      .then((data: AdminBook) => {
-        setBook(data);
-        setTitle(data.title || '');
-        setSubtitle(data.subtitle || '');
-        setOriginalTitle(data.original_title || '');
-        setDescription(data.description || '');
-        setCover(data.cover || '');
-        setGenres(data.genres || []);
-        setGenreIds(data.genre_ids || []);
-        setOriginalLanguage(data.original_language || '');
-        setCountryOfOrigin(data.country_of_origin || '');
-        setOriginalPublicationYear(data.original_publication_year?.toString() || '');
-        setSeriesName(data.series_name || '');
-        setSeriesPosition(data.series_position?.toString() || '');
-        setThemes(data.themes || []);
-        setMotifs(data.motifs || []);
-        setLinkedAuthors(data.authors || []);
-        setTotalPages(data.total_pages?.toString() || '');
-        setPublicationType(data.publication_type || 'official');
+    Promise.all([
+      fetch(`${API_URL}/admin/metadata/books/${id}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      }).then((r) => r.json()),
+      fetch(`${API_URL}/admin/books/${id}/taxonomy`, {
+        headers: { Authorization: `Bearer ${token}` },
+      }).then((r) => r.json().catch(() => [])),
+    ])
+      .then(([bookData, taxonomyData]) => {
+        setBook(bookData);
+        setTitle(bookData.title || '');
+        setSubtitle(bookData.subtitle || '');
+        setOriginalTitle(bookData.original_title || '');
+        setDescription(bookData.description || '');
+        setCover(bookData.cover || '');
+        setGenres(bookData.genres || []);
+        setGenreIds(bookData.genre_ids || []);
+        setOriginalLanguage(bookData.original_language || '');
+        setCountryOfOrigin(bookData.country_of_origin || '');
+        setOriginalPublicationYear(bookData.original_publication_year?.toString() || '');
+        setSeriesName(bookData.series_name || '');
+        setSeriesPosition(bookData.series_position?.toString() || '');
+        setLinkedAuthors(bookData.authors || []);
+        setTotalPages(bookData.total_pages?.toString() || '');
+        setPublicationType(bookData.publication_type || 'official');
+        // Load taxonomy relations
+        if (Array.isArray(taxonomyData)) {
+          setThemeRelations(taxonomyData.filter((r: any) => r.relation_type === 'theme'));
+          setMotifRelations(taxonomyData.filter((r: any) => r.relation_type === 'motif'));
+        }
       })
       .catch((err) => console.error(err))
       .finally(() => setLoading(false));
   }, [id, token]);
+
+  // Theme search (debounced)
+  useEffect(() => {
+    if (!themeSearchQuery || themeSearchQuery.length < 1) {
+      setThemeSearchResults([]);
+      return;
+    }
+    const timer = setTimeout(() => {
+      fetch(`${API_URL}/taxonomy/nodes?node_type=theme&search=${encodeURIComponent(themeSearchQuery)}`)
+        .then((r) => r.json())
+        .then((results) => {
+          const filtered = (results || []).filter(
+            (n: any) => !themeRelations.some((r) => r.node_id === n.id)
+          );
+          setThemeSearchResults(filtered);
+        })
+        .catch(() => {});
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [themeSearchQuery, themeRelations]);
+
+  // Motif search (debounced)
+  useEffect(() => {
+    if (!motifSearchQuery || motifSearchQuery.length < 1) {
+      setMotifSearchResults([]);
+      return;
+    }
+    const timer = setTimeout(() => {
+      fetch(`${API_URL}/taxonomy/nodes?node_type=motif&search=${encodeURIComponent(motifSearchQuery)}`)
+        .then((r) => r.json())
+        .then((results) => {
+          const filtered = (results || []).filter(
+            (n: any) => !motifRelations.some((r) => r.node_id === n.id)
+          );
+          setMotifSearchResults(filtered);
+        })
+        .catch(() => {});
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [motifSearchQuery, motifRelations]);
 
   // Author search (for linking existing authors)
   useEffect(() => {
@@ -137,6 +190,67 @@ export default function BookEnrichmentPage() {
 
   const handleRemoveFromList = (item: string, list: string[], setList: (v: string[]) => void) => {
     setList(list.filter((i) => i !== item));
+  };
+
+  // ===== TAXONOMY HELPERS =====
+
+  const handleAddTaxonomyRelation = async (nodeId: string, relationType: string) => {
+    try {
+      const res = await fetch(`${API_URL}/admin/books/${id}/taxonomy`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ node_id: nodeId, relation_type: relationType, status: 'approved' }),
+      });
+      if (!res.ok) throw new Error('Failed to add taxonomy relation');
+      const relation = await res.json();
+      const entry = { id: relation.id, node_id: relation.node_id, name: relation.node_name, relation_type: relation.relation_type };
+      if (relationType === 'theme') {
+        setThemeRelations((prev) => [...prev, entry]);
+        setThemeSearchQuery('');
+        setThemeSearchResults([]);
+        setShowThemeSearch(false);
+      } else {
+        setMotifRelations((prev) => [...prev, entry]);
+        setMotifSearchQuery('');
+        setMotifSearchResults([]);
+        setShowMotifSearch(false);
+      }
+    } catch (err: any) {
+      setError(err.message);
+    }
+  };
+
+  const handleRemoveTaxonomyRelation = async (relationId: string, relationType: string) => {
+    try {
+      const res = await fetch(`${API_URL}/admin/books/${id}/taxonomy/${relationId}`, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!res.ok) throw new Error('Failed to remove taxonomy relation');
+      if (relationType === 'theme') {
+        setThemeRelations((prev) => prev.filter((r) => r.id !== relationId));
+      } else {
+        setMotifRelations((prev) => prev.filter((r) => r.id !== relationId));
+      }
+    } catch (err: any) {
+      setError(err.message);
+    }
+  };
+
+  const handleCreateTaxonomyNode = async (name: string, nodeType: string) => {
+    try {
+      const slug = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+      const res = await fetch(`${API_URL}/admin/taxonomy/nodes`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ name, slug, node_type: nodeType }),
+      });
+      if (!res.ok) throw new Error('Failed to create taxonomy node');
+      const node = await res.json();
+      await handleAddTaxonomyRelation(node.id, nodeType);
+    } catch (err: any) {
+      setError(err.message);
+    }
   };
 
   const handleSave = async () => {
@@ -178,8 +292,7 @@ export default function BookEnrichmentPage() {
         original_publication_year: originalPublicationYear ? parseInt(originalPublicationYear) : null,
         series_name: seriesName || null,
         series_position: seriesPosition ? parseInt(seriesPosition) : null,
-        themes: themes,
-        motifs: motifs,
+        // themes and motifs are now managed via /admin/books/{id}/taxonomy endpoints
       };
 
       const response = await fetch(`${API_URL}/admin/metadata/books/${id}`, {
@@ -549,61 +662,140 @@ export default function BookEnrichmentPage() {
             <label style={labelStyle}>{t.admin.enrichment.seriesPosition}</label>
             <input type="number" value={seriesPosition} onChange={(e) => setSeriesPosition(e.target.value)} placeholder="#" style={inputStyle} />
           </div>
+          {/* THEMES — knowledge-graph backed */}
           <div>
             <label style={labelStyle}>{t.admin.enrichment.themes}</label>
             <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', marginBottom: '6px' }}>
-              {themes.map((t) => (
-                <span key={t} onClick={() => handleRemoveFromList(t, themes, setThemes)} style={{
+              {themeRelations.length === 0 && (
+                <span style={{ color: '#97A6BA', fontSize: '13px', fontStyle: 'italic' }}>{t.admin.enrichment.noThemes}</span>
+              )}
+              {themeRelations.map((r) => (
+                <span key={r.id} style={{
                   padding: '3px 10px', background: 'rgba(168,85,247,0.12)', borderRadius: '12px',
-                  fontSize: '12px', color: '#A855F7', cursor: 'pointer', border: '1px solid rgba(168,85,247,0.25)',
+                  fontSize: '12px', color: '#A855F7', cursor: canEdit ? 'pointer' : 'default',
+                  border: '1px solid rgba(168,85,247,0.25)', display: 'inline-flex', alignItems: 'center', gap: '4px',
                 }}>
-                  {t} ×
+                  {r.name}
+                  {canEdit && (
+                    <span onClick={() => handleRemoveTaxonomyRelation(r.id, 'theme')} style={{ marginLeft: '2px' }}>×</span>
+                  )}
                 </span>
               ))}
             </div>
-            <div style={{ display: 'flex', gap: '6px' }}>
-              <input
-                value={themeInput}
-                onChange={(e) => setThemeInput(e.target.value)}
-                onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); handleAddToList(themeInput, themes, setThemes, setThemeInput); } }}
-                placeholder={t.admin.enrichment.themesPlaceholder}
-                style={{ ...inputStyle, flex: 1 }}
-              />
-              <button
-                onClick={() => handleAddToList(themeInput, themes, setThemes, setThemeInput)}
-                style={{ padding: '8px 12px', background: 'rgba(168,85,247,0.12)', border: '1px solid rgba(168,85,247,0.25)', borderRadius: '8px', color: '#A855F7', cursor: 'pointer', fontSize: '13px' }}
-              >
-                +
-              </button>
-            </div>
+            {canEdit && (
+              <div style={{ position: 'relative' }}>
+                <div style={{ display: 'flex', gap: '6px' }}>
+                  <input
+                    value={themeSearchQuery}
+                    onChange={(e) => { setThemeSearchQuery(e.target.value); setShowThemeSearch(true); }}
+                    onFocus={() => themeSearchQuery.length >= 1 && setShowThemeSearch(true)}
+                    onBlur={() => setTimeout(() => setShowThemeSearch(false), 200)}
+                    placeholder={t.admin.enrichment.themesPlaceholder}
+                    style={{ ...inputStyle, flex: 1 }}
+                  />
+                </div>
+                {showThemeSearch && (
+                  <div style={{
+                    position: 'absolute', top: '100%', left: 0, right: 0,
+                    background: '#1A2832', border: '1px solid rgba(255,255,255,0.1)',
+                    borderRadius: '8px', marginTop: '4px', maxHeight: '200px', overflowY: 'auto', zIndex: 10,
+                  }}>
+                    {themeSearchResults.length === 0 && themeSearchQuery.length >= 1 && (
+                      <div
+                        onClick={() => handleCreateTaxonomyNode(themeSearchQuery.trim(), 'theme')}
+                        style={{
+                          padding: '10px 14px', cursor: 'pointer', color: '#5B86A1',
+                          fontSize: '13px', display: 'flex', alignItems: 'center', gap: '8px',
+                        }}
+                      >
+                        <Plus size={14} /> {t.admin.enrichment.createTheme} "{themeSearchQuery}"
+                      </div>
+                    )}
+                    {themeSearchResults.map((node: any) => (
+                      <div
+                        key={node.id}
+                        onClick={() => handleAddTaxonomyRelation(node.id, 'theme')}
+                        style={{
+                          padding: '10px 14px', cursor: 'pointer', borderBottom: '1px solid rgba(255,255,255,0.04)',
+                          color: '#E6EDF3', fontSize: '14px', display: 'flex', alignItems: 'center', gap: '8px',
+                        }}
+                      >
+                        <Plus size={14} color="#A855F7" />
+                        {node.name}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
           </div>
+
+          {/* MOTIFS — knowledge-graph backed */}
           <div>
             <label style={labelStyle}>{t.admin.enrichment.motifs}</label>
             <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', marginBottom: '6px' }}>
-              {motifs.map((m) => (
-                <span key={m} onClick={() => handleRemoveFromList(m, motifs, setMotifs)} style={{
+              {motifRelations.length === 0 && (
+                <span style={{ color: '#97A6BA', fontSize: '13px', fontStyle: 'italic' }}>{t.admin.enrichment.noMotifs}</span>
+              )}
+              {motifRelations.map((r) => (
+                <span key={r.id} style={{
                   padding: '3px 10px', background: 'rgba(255,167,38,0.12)', borderRadius: '12px',
-                  fontSize: '12px', color: '#FFA726', cursor: 'pointer', border: '1px solid rgba(255,167,38,0.25)',
+                  fontSize: '12px', color: '#FFA726', cursor: canEdit ? 'pointer' : 'default',
+                  border: '1px solid rgba(255,167,38,0.25)', display: 'inline-flex', alignItems: 'center', gap: '4px',
                 }}>
-                  {m} ×
+                  {r.name}
+                  {canEdit && (
+                    <span onClick={() => handleRemoveTaxonomyRelation(r.id, 'motif')} style={{ marginLeft: '2px' }}>×</span>
+                  )}
                 </span>
               ))}
             </div>
-            <div style={{ display: 'flex', gap: '6px' }}>
-              <input
-                value={motifInput}
-                onChange={(e) => setMotifInput(e.target.value)}
-                onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); handleAddToList(motifInput, motifs, setMotifs, setMotifInput); } }}
-                placeholder={t.admin.enrichment.motifsPlaceholder}
-                style={{ ...inputStyle, flex: 1 }}
-              />
-              <button
-                onClick={() => handleAddToList(motifInput, motifs, setMotifs, setMotifInput)}
-                style={{ padding: '8px 12px', background: 'rgba(255,167,38,0.12)', border: '1px solid rgba(255,167,38,0.25)', borderRadius: '8px', color: '#FFA726', cursor: 'pointer', fontSize: '13px' }}
-              >
-                +
-              </button>
-            </div>
+            {canEdit && (
+              <div style={{ position: 'relative' }}>
+                <div style={{ display: 'flex', gap: '6px' }}>
+                  <input
+                    value={motifSearchQuery}
+                    onChange={(e) => { setMotifSearchQuery(e.target.value); setShowMotifSearch(true); }}
+                    onFocus={() => motifSearchQuery.length >= 1 && setShowMotifSearch(true)}
+                    onBlur={() => setTimeout(() => setShowMotifSearch(false), 200)}
+                    placeholder={t.admin.enrichment.motifsPlaceholder}
+                    style={{ ...inputStyle, flex: 1 }}
+                  />
+                </div>
+                {showMotifSearch && (
+                  <div style={{
+                    position: 'absolute', top: '100%', left: 0, right: 0,
+                    background: '#1A2832', border: '1px solid rgba(255,255,255,0.1)',
+                    borderRadius: '8px', marginTop: '4px', maxHeight: '200px', overflowY: 'auto', zIndex: 10,
+                  }}>
+                    {motifSearchResults.length === 0 && motifSearchQuery.length >= 1 && (
+                      <div
+                        onClick={() => handleCreateTaxonomyNode(motifSearchQuery.trim(), 'motif')}
+                        style={{
+                          padding: '10px 14px', cursor: 'pointer', color: '#FFA726',
+                          fontSize: '13px', display: 'flex', alignItems: 'center', gap: '8px',
+                        }}
+                      >
+                        <Plus size={14} /> {t.admin.enrichment.createMotif} "{motifSearchQuery}"
+                      </div>
+                    )}
+                    {motifSearchResults.map((node: any) => (
+                      <div
+                        key={node.id}
+                        onClick={() => handleAddTaxonomyRelation(node.id, 'motif')}
+                        style={{
+                          padding: '10px 14px', cursor: 'pointer', borderBottom: '1px solid rgba(255,255,255,0.04)',
+                          color: '#E6EDF3', fontSize: '14px', display: 'flex', alignItems: 'center', gap: '8px',
+                        }}
+                      >
+                        <Plus size={14} color="#FFA726" />
+                        {node.name}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         </div>
       </div>

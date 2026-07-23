@@ -497,7 +497,7 @@ async def _build_book_dict(db: AsyncSession, book: Book, include_missing: bool =
 
     # Load linked authors via book_authors junction table
     author_result = await db.execute(
-        select(Author.id, Author.name, Author.country)
+        select(Author.id, Author.name, Author.nationality)
         .join(book_authors, book_authors.c.author_id == Author.id)
         .where(book_authors.c.book_id == book.id)
     )
@@ -1007,8 +1007,8 @@ async def get_authors(
         count_query = count_query.where(Author.name.contains(search))
     
     if country:
-        query = query.where(Author.country == country)
-        count_query = count_query.where(Author.country == country)
+        query = query.where(Author.nationality == country)
+        count_query = count_query.where(Author.nationality == country)
 
     total = await db.scalar(count_query) or 0
     
@@ -1032,6 +1032,7 @@ async def get_authors(
             "sort_name": author.sort_name,
             "pseudonyms": author.pseudonyms or [],
             "nationality": author.nationality,
+            "country": author.nationality,  # backward-compat: frontend expects "country"
             "languages": author.languages or [],
             "gender": author.gender or "unknown",
             "official_website": author.official_website,
@@ -1101,6 +1102,7 @@ async def get_author_detail(
         "sort_name": author.sort_name,
         "pseudonyms": author.pseudonyms or [],
         "nationality": author.nationality,
+        "country": author.nationality,  # backward-compat
         "languages": author.languages or [],
         "gender": author.gender or "unknown",
         "official_website": author.official_website,

@@ -21,6 +21,7 @@ class Author(Base):
     # === BASIC INFORMATION ===
     pseudonyms = Column(ARRAY(String), nullable=True, server_default="{}")
     nationality = Column(String, nullable=True)
+    country = Column(String, nullable=True)  # legacy alias, retains DB column
     languages = Column(ARRAY(String), nullable=True, server_default="{}")
     gender = Column(String, nullable=True, server_default="unknown")
     official_website = Column(String, nullable=True)

@@ -38,7 +38,7 @@ async def _book_to_response_dict(db: AsyncSession, book: Book) -> dict:
     author_id = None
     if book.author_ref:
         author_name = book.author_ref.name
-        author_country = book.author_ref.country
+        author_country = book.author_ref.nationality
         author_bio = book.author_ref.bio
         author_id = book.author_id
 

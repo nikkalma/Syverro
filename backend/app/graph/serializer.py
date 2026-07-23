@@ -39,7 +39,7 @@ def serialize_author(author: Author) -> dict:
         "type": "author",
         "name": author.name,
         "metadata": {
-            "country": author.country,
+            "country": author.nationality,
             "bio": author.bio,
             "birth_year": author.birth_year,
             "death_year": author.death_year,

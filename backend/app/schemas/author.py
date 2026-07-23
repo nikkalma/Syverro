@@ -6,6 +6,11 @@ from uuid import UUID
 
 class AuthorBase(BaseModel):
     name: str
+    first_name: Optional[str] = None
+    middle_name: Optional[str] = None
+    last_name: Optional[str] = None
+    native_name: Optional[str] = None
+    sort_name: Optional[str] = None
     photo: Optional[str] = None
     bio: Optional[str] = None
     country: Optional[str] = None
@@ -19,6 +24,11 @@ class AuthorCreate(AuthorBase):
 
 class AuthorUpdate(BaseModel):
     name: Optional[str] = None
+    first_name: Optional[str] = None
+    middle_name: Optional[str] = None
+    last_name: Optional[str] = None
+    native_name: Optional[str] = None
+    sort_name: Optional[str] = None
     photo: Optional[str] = None
     bio: Optional[str] = None
     country: Optional[str] = None
@@ -38,6 +48,11 @@ class AuthorResponse(AuthorBase):
 class AuthorBrief(BaseModel):
     id: UUID
     name: str
+    first_name: Optional[str] = None
+    middle_name: Optional[str] = None
+    last_name: Optional[str] = None
+    native_name: Optional[str] = None
+    sort_name: Optional[str] = None
     country: Optional[str] = None
 
     class Config:

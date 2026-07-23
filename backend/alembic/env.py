@@ -16,6 +16,18 @@ config = context.config
 if config.config_file_name is not None:
     fileConfig(config.config_file_name)
 
+# Override sqlalchemy.url from DATABASE_URL env var (Docker support).
+# The hardcoded URL in alembic.ini is a dev default; in Docker the
+# app's DATABASE_URL must be used to reach the postgres container.
+import os
+database_url = os.environ.get("DATABASE_URL")
+if database_url:
+    if database_url.startswith("postgres://"):
+        database_url = database_url.replace("postgres://", "postgresql+asyncpg://", 1)
+    elif database_url.startswith("postgresql://") and "+asyncpg" not in database_url:
+        database_url = database_url.replace("postgresql://", "postgresql+asyncpg://", 1)
+    config.set_main_option("sqlalchemy.url", database_url)
+
 # Import all models so they register on Base.metadata
 from app.database import Base
 from app.models import (  # noqa: F401
@@ -23,6 +35,7 @@ from app.models import (  # noqa: F401
     SyncState, ChangeLog,
     KnowledgeNode, KnowledgeRelation, BookKnowledgeRelation, UserBookExperience,
     book_authors,  # noqa: F401
+    book_genres,  # noqa: F401
 )
 
 target_metadata = Base.metadata

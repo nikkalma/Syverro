@@ -1023,6 +1023,11 @@ async def get_authors(
         authors_data.append({
             "id": str(author.id),
             "name": author.name,
+            "first_name": author.first_name,
+            "middle_name": author.middle_name,
+            "last_name": author.last_name,
+            "native_name": author.native_name,
+            "sort_name": author.sort_name,
             "photo": author.photo,
             "bio": author.bio,
             "country": author.country,
@@ -1062,6 +1067,11 @@ async def get_author_detail(
     return {
         "id": str(author.id),
         "name": author.name,
+        "first_name": author.first_name,
+        "middle_name": author.middle_name,
+        "last_name": author.last_name,
+        "native_name": author.native_name,
+        "sort_name": author.sort_name,
         "photo": author.photo,
         "bio": author.bio,
         "country": author.country,

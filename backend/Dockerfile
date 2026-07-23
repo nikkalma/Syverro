@@ -40,6 +40,8 @@ RUN apt-get update \
 
 COPY --from=builder /opt/venv /opt/venv
 COPY app ./app
+COPY alembic ./alembic
+COPY alembic.ini .
 
 USER appuser
 

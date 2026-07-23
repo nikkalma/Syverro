@@ -12,6 +12,11 @@ class Author(Base):
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     name = Column(String, nullable=False, index=True)
+    first_name = Column(String, nullable=True)
+    middle_name = Column(String, nullable=True)
+    last_name = Column(String, nullable=True)
+    native_name = Column(String, nullable=True)
+    sort_name = Column(String, nullable=True)
     photo = Column(String, nullable=True)
     bio = Column(Text, nullable=True)
     country = Column(String, nullable=True)

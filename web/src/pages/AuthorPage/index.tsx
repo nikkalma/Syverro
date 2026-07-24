@@ -103,6 +103,8 @@ export default function AuthorPage() {
       });
   }, [id]);
 
+  const t = getLocaleData(getBrowserLocale());
+
   if (loading) {
     return (
       <div style={{ maxWidth: '960px', margin: '0 auto', padding: '40px 24px' }}>
@@ -125,7 +127,6 @@ export default function AuthorPage() {
     );
   }
 
-  const t = getLocaleData(getBrowserLocale());
   const displayName = formatAuthorName(author.name, author.first_name, author.last_name);
   const showNative = author.native_name && author.native_name !== author.name;
 

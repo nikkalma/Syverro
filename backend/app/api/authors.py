@@ -1,9 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, func
-from sqlalchemy.orm import selectinload
+from sqlalchemy import select, func, text as sa_text
 from app.core.deps import get_db
-from app.models.author import Author
 from app.models.book import Book
 from app.models.book_author import book_authors
 from app.models.book_genre import book_genres
@@ -24,11 +22,22 @@ async def get_author(
     db: AsyncSession = Depends(get_db),
 ):
     result = await db.execute(
-        select(Author).where(Author.id == author_id)
+        sa_text("SELECT * FROM authors WHERE id = :author_id"),
+        {"author_id": author_id},
     )
-    author = result.scalar_one_or_none()
-    if not author:
+    row = result.mappings().one_or_none()
+    if not row:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Author not found")
+
+    name = row.get("name", "")
+    bio = row.get("bio")
+    photo = row.get("photo")
+
+    nationality = row.get("nationality") or row.get("country")
+    raw_birth = row.get("birth_date") or row.get("birth_year")
+    raw_death = row.get("death_date") or row.get("death_year")
+    birth_date = str(raw_birth) if raw_birth is not None else None
+    death_date = str(raw_death) if raw_death is not None else None
 
     book_rows = await db.execute(
         select(Book.id, Book.title, Book.cover)
@@ -38,49 +47,53 @@ async def get_author(
         .where(Book.is_published == True)
         .order_by(Book.title)
     )
-    books = [AuthorBookBrief(id=row[0], title=row[1], cover=row[2]) for row in book_rows]
-
+    books = [AuthorBookBrief(id=r[0], title=r[1], cover=r[2]) for r in book_rows]
     book_ids = [b.id for b in books]
 
-    genre_rows = await db.execute(
-        select(func.distinct(Genre.name))
-        .select_from(book_genres)
-        .join(Genre, book_genres.c.genre_id == Genre.id)
-        .where(book_genres.c.book_id.in_(book_ids))
-        .order_by(Genre.name)
-    )
-    genres = [row[0] for row in genre_rows]
+    genres = []
+    themes = []
+    motifs = []
 
-    theme_rows = await db.execute(
-        select(func.distinct(KnowledgeNode.name))
-        .select_from(BookKnowledgeRelation)
-        .join(KnowledgeNode, BookKnowledgeRelation.node_id == KnowledgeNode.id)
-        .where(BookKnowledgeRelation.book_id.in_(book_ids))
-        .where(BookKnowledgeRelation.status == "approved")
-        .where(KnowledgeNode.node_type == "theme")
-        .order_by(KnowledgeNode.name)
-    )
-    themes = [row[0] for row in theme_rows]
+    if book_ids:
+        genre_rows = await db.execute(
+            select(func.distinct(Genre.name))
+            .select_from(book_genres)
+            .join(Genre, book_genres.c.genre_id == Genre.id)
+            .where(book_genres.c.book_id.in_(book_ids))
+            .order_by(Genre.name)
+        )
+        genres = [r[0] for r in genre_rows]
 
-    motif_rows = await db.execute(
-        select(func.distinct(KnowledgeNode.name))
-        .select_from(BookKnowledgeRelation)
-        .join(KnowledgeNode, BookKnowledgeRelation.node_id == KnowledgeNode.id)
-        .where(BookKnowledgeRelation.book_id.in_(book_ids))
-        .where(BookKnowledgeRelation.status == "approved")
-        .where(KnowledgeNode.node_type == "motif")
-        .order_by(KnowledgeNode.name)
-    )
-    motifs = [row[0] for row in motif_rows]
+        theme_rows = await db.execute(
+            select(func.distinct(KnowledgeNode.name))
+            .select_from(BookKnowledgeRelation)
+            .join(KnowledgeNode, BookKnowledgeRelation.node_id == KnowledgeNode.id)
+            .where(BookKnowledgeRelation.book_id.in_(book_ids))
+            .where(BookKnowledgeRelation.status == "approved")
+            .where(KnowledgeNode.node_type == "theme")
+            .order_by(KnowledgeNode.name)
+        )
+        themes = [r[0] for r in theme_rows]
+
+        motif_rows = await db.execute(
+            select(func.distinct(KnowledgeNode.name))
+            .select_from(BookKnowledgeRelation)
+            .join(KnowledgeNode, BookKnowledgeRelation.node_id == KnowledgeNode.id)
+            .where(BookKnowledgeRelation.book_id.in_(book_ids))
+            .where(BookKnowledgeRelation.status == "approved")
+            .where(KnowledgeNode.node_type == "motif")
+            .order_by(KnowledgeNode.name)
+        )
+        motifs = [r[0] for r in motif_rows]
 
     return AuthorPublicResponse(
-        id=author.id,
-        name=author.name,
-        nationality=author.nationality,
-        birth_date=author.birth_date,
-        death_date=author.death_date,
-        biography=author.bio,
-        photo_url=author.photo,
+        id=author_id,
+        name=name,
+        nationality=nationality,
+        birth_date=birth_date,
+        death_date=death_date,
+        biography=bio,
+        photo_url=photo,
         books=books,
         metadata=AuthorMetadata(genres=genres, themes=themes, motifs=motifs),
     )

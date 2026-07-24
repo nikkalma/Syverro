@@ -25,6 +25,7 @@ app.add_middleware(
         "http://localhost:3001",
         "http://localhost:5173",
         "https://syverro.com",
+        "https://www.syverro.com",
         "https://api.syverro.com",
         "http://77.233.220.197:3002",
     ],

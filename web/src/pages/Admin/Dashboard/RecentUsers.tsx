@@ -44,7 +44,7 @@ export default function RecentUsers({ users }: RecentUsersProps) {
         {users.slice(0, 5).map((user) => (
           <div
             key={user.id}
-            onClick={() => navigate(`/admin/users/${user.id}`)}
+            onClick={() => navigate('/admin/users')}
             style={{
               display: 'flex',
               justifyContent: 'space-between',

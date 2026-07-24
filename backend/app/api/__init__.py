@@ -5,6 +5,7 @@ from .admin import router as admin_router
 from .taxonomy import router as taxonomy_router
 from .admin_taxonomy import router as admin_taxonomy_router
 from .admin_books import router as admin_books_router
+from .authors import router as authors_router
 from .graph import router as graph_router
 from .graph_queries import router as graph_queries_router
 from .user_book_experience import router as user_book_experience_router
@@ -17,6 +18,7 @@ routers = [
     taxonomy_router,
     admin_taxonomy_router,
     admin_books_router,
+    authors_router,
     graph_router,
     graph_queries_router,
     user_book_experience_router,

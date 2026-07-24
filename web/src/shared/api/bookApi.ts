@@ -75,6 +75,8 @@ function mapBookResponseToGlobalBook(data: BookResponse): GlobalBook {
     id: data.id,
     title: data.title,
     author: data.author,
+    authorId: data.author_id ?? null,
+    authorName: data.author_name ?? null,
     authorCountry: data.author_country ?? null,
     description: data.description ?? null,
     cover: data.cover,

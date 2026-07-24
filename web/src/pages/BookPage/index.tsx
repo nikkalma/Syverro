@@ -120,7 +120,18 @@ export default function BookPage() {
             </h2>
           )}
 
-          <p style={{ fontSize: '18px', color: '#97A6BA', marginBottom: '12px' }}>{book.author}</p>
+          {book.authorId ? (
+            <span
+              onClick={() => navigate(`/authors/${book.authorId}`)}
+              style={{ fontSize: '18px', color: '#5B86A1', marginBottom: '12px', cursor: 'pointer', display: 'inline-block', textDecoration: 'none' }}
+              onMouseEnter={(e) => e.currentTarget.style.color = '#7BA5C1'}
+              onMouseLeave={(e) => e.currentTarget.style.color = '#5B86A1'}
+            >
+              {book.author}
+            </span>
+          ) : (
+            <p style={{ fontSize: '18px', color: '#97A6BA', marginBottom: '12px' }}>{book.author}</p>
+          )}
 
           {book.series && (
             <p style={{ fontSize: '14px', color: '#5B86A1', marginBottom: '10px' }}>

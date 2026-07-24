@@ -132,3 +132,33 @@ class AuthorBrief(BaseModel):
 
     class Config:
         from_attributes = True
+
+
+class AuthorBookBrief(BaseModel):
+    id: UUID
+    title: str
+    cover: Optional[str] = None
+
+    class Config:
+        from_attributes = True
+
+
+class AuthorMetadata(BaseModel):
+    genres: List[str] = []
+    themes: List[str] = []
+    motifs: List[str] = []
+
+
+class AuthorPublicResponse(BaseModel):
+    id: UUID
+    name: str
+    nationality: Optional[str] = None
+    birth_date: Optional[str] = None
+    death_date: Optional[str] = None
+    biography: Optional[str] = None
+    photo_url: Optional[str] = None
+    books: List[AuthorBookBrief] = []
+    metadata: AuthorMetadata = AuthorMetadata()
+
+    class Config:
+        from_attributes = True

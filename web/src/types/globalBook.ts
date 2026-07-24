@@ -7,6 +7,10 @@ export interface GlobalBook {
 
   author: string;
 
+  authorId?: string | null;
+
+  authorName?: string | null;
+
   authors?: string[];
 
   cover: string | null;

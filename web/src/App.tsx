@@ -10,6 +10,7 @@ import WorldMap from './pages/WorldMap';
 import Profile from './pages/Profile';
 import Settings from './pages/Settings';
 import BookPage from './pages/BookPage';
+import AuthorPage from './pages/AuthorPage';
 import MyLibraryPage from './pages/MyLibraryPage';
 
 import AdminRoute from './pages/Admin/AdminRoute';
@@ -46,6 +47,8 @@ export default function App() {
           <Route path="/settings" element={<Settings />} />
 
           <Route path="/book/:id" element={<BookPage />} />
+
+          <Route path="/authors/:id" element={<AuthorPage />} />
 
           <Route path="/my-library" element={<MyLibraryPage />} />
 

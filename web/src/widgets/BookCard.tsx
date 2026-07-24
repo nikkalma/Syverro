@@ -2,6 +2,7 @@
 import type { EnrichedBook } from '../types/globalBook';
 import type { PersonalBook } from '../types/personalBook';
 import { BookOpen, CheckCircle, RotateCcw } from 'lucide-react';
+import { formatAuthorName } from '../shared/utils/formatAuthorName';
 
 interface BookCardProps {
   book: EnrichedBook;
@@ -10,6 +11,7 @@ interface BookCardProps {
 }
 
 export default function BookCard({ book, personalBook, onClick }: BookCardProps) {
+  const displayAuthor = formatAuthorName(book.author);
   const progress = personalBook && book.totalPages > 0
     ? Math.round((personalBook.currentPage / book.totalPages) * 100)
     : 0;
@@ -106,7 +108,7 @@ export default function BookCard({ book, personalBook, onClick }: BookCardProps)
             whiteSpace: 'nowrap',
           }}
         >
-          {book.author}
+          {displayAuthor}
         </div>
 
         {personalBook?.status === 'reading' && progress > 0 && (

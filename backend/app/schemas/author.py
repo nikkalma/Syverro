@@ -152,6 +152,9 @@ class AuthorMetadata(BaseModel):
 class AuthorPublicResponse(BaseModel):
     id: UUID
     name: str
+    first_name: Optional[str] = None
+    last_name: Optional[str] = None
+    native_name: Optional[str] = None
     nationality: Optional[str] = None
     birth_date: Optional[str] = None
     death_date: Optional[str] = None

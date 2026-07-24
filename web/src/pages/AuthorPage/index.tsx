@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { apiClient } from '../../shared/api/client';
+import { formatAuthorName } from '../../shared/utils/formatAuthorName';
 
 interface AuthorBook {
   id: string;
@@ -17,6 +18,9 @@ interface AuthorMetadata {
 interface AuthorResponse {
   id: string;
   name: string;
+  first_name: string | null;
+  last_name: string | null;
+  native_name: string | null;
   nationality: string | null;
   birth_date: string | null;
   death_date: string | null;
@@ -120,6 +124,9 @@ export default function AuthorPage() {
     );
   }
 
+  const displayName = formatAuthorName(author.name, author.first_name, author.last_name);
+  const showNative = author.native_name && author.native_name !== author.name;
+
   const hasBio = author.biography && author.biography.trim().length > 0;
   const bioIsLong = hasBio && (author.biography!.length > 300);
   const shortDescription = hasBio
@@ -157,16 +164,21 @@ export default function AuthorPage() {
           flexShrink: 0, overflow: 'hidden',
         }}>
           {author.photo_url ? (
-            <img src={author.photo_url} alt={author.name}
+            <img src={author.photo_url} alt={displayName}
               style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
           ) : (
-            author.name.charAt(0).toUpperCase()
+            displayName.charAt(0).toUpperCase()
           )}
         </div>
         <div style={{ paddingBottom: '6px' }}>
           <h1 style={{ fontSize: '28px', fontWeight: '500', color: '#E6EDF3', margin: 0, lineHeight: 1.2 }}>
-            {author.name}
+            {displayName}
           </h1>
+          {showNative && (
+            <div style={{ fontSize: '14px', color: '#5B86A1', marginTop: '2px' }}>
+              {author.native_name}
+            </div>
+          )}
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', fontSize: '13px', color: '#97A6BA', marginTop: '4px' }}>
             {author.nationality && <span>{author.nationality}</span>}
             {author.birth_date && (

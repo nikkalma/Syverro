@@ -1,22 +1,20 @@
-// src/components/Layout.tsx
-
 import { ReactNode, useState, useRef, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuthStore } from '../store/authStore';
 import { 
-  BookOpen, 
-  Globe, 
+  BookOpen,
   User, 
   Settings, 
   LogOut, 
   Sun, 
   Moon,
-  Sparkles,
+  Search,
+  Bell,
   UserCircle,
   Crown,
-  Library,
   Shield
 } from 'lucide-react';
+import Sidebar from './Sidebar';
 
 interface LayoutProps {
   children: ReactNode;
@@ -73,7 +71,7 @@ export default function Layout({ children }: LayoutProps) {
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',
-        padding: '16px 24px',
+        padding: '12px 24px',
         borderBottom: '1px solid var(--border-soft)',
         background: 'var(--surface)',
         position: 'sticky',
@@ -81,108 +79,56 @@ export default function Layout({ children }: LayoutProps) {
         zIndex: 10,
         flexShrink: 0,
       }}>
-        <div
-          onClick={() => navigate('/')}
-          style={{
-            fontFamily: "'Playfair Display', serif",
-            fontSize: '28px',
-            fontWeight: '600',
-            color: 'var(--text-primary)',
-            letterSpacing: '6px',
-            whiteSpace: 'nowrap',
-            cursor: 'pointer',
-            textTransform: 'uppercase',
+        <div style={{ display: 'flex', alignItems: 'center', gap: '24px' }}>
+          <div
+            onClick={() => navigate('/')}
+            style={{
+              fontFamily: "'Playfair Display', serif",
+              fontSize: '24px',
+              fontWeight: '600',
+              color: 'var(--text-primary)',
+              letterSpacing: '5px',
+              whiteSpace: 'nowrap',
+              cursor: 'pointer',
+              textTransform: 'uppercase',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '10px',
+            }}
+          >
+            <BookOpen size={24} color="var(--primary)" />
+            Syverro
+          </div>
+          <div style={{
             display: 'flex',
             alignItems: 'center',
-            gap: '12px',
-          }}
-        >
-          <BookOpen size={28} color="var(--primary)" />
-          Syverro
+            background: 'var(--bg)',
+            borderRadius: '8px',
+            padding: '4px 12px',
+            width: '280px',
+            border: '1px solid var(--border-soft)',
+          }}>
+            <Search size={16} color="var(--text-secondary)" />
+            <input
+              placeholder="Search books, authors, genres..."
+              style={{
+                background: 'none',
+                border: 'none',
+                outline: 'none',
+                color: 'var(--text-primary)',
+                fontSize: '14px',
+                width: '100%',
+                padding: '6px 8px',
+                fontFamily: 'Inter, sans-serif',
+              }}
+            />
+          </div>
         </div>
-
-        <nav style={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: '32px',
-          fontSize: '15px',
-          flexWrap: 'nowrap',
-        }}>
-          <span
-            onClick={() => navigate('/insights')}
-            style={{
-              color: location.pathname === '/insights' ? 'var(--text-primary)' : 'var(--text-secondary)',
-              cursor: 'pointer',
-              fontFamily: 'Inter, sans-serif',
-              transition: 'color 0.2s',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '6px',
-            }}
-          >
-            <Sparkles size={18} />
-            Инсайты
-          </span>
-          <span
-            onClick={() => navigate('/worldmap')}
-            style={{
-              color: location.pathname === '/worldmap' ? 'var(--text-primary)' : 'var(--text-secondary)',
-              cursor: 'pointer',
-              fontFamily: 'Inter, sans-serif',
-              transition: 'color 0.2s',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '6px',
-            }}
-          >
-            <Globe size={18} />
-            Карта миров
-          </span>
-          {user && (
-            <span
-              onClick={() => navigate('/my-library')}
-              style={{
-                color: location.pathname === '/my-library' ? 'var(--text-primary)' : 'var(--text-secondary)',
-                cursor: 'pointer',
-                fontFamily: 'Inter, sans-serif',
-                transition: 'color 0.2s',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '6px',
-              }}
-            >
-              <Library size={18} />
-              Моя библиотека
-            </span>
-          )}
-          {isAdmin && (
-            <span
-              onClick={() => navigate('/admin')}
-              style={{
-                color: location.pathname.startsWith('/admin') ? 'var(--primary)' : 'var(--text-secondary)',
-                cursor: 'pointer',
-                fontFamily: 'Inter, sans-serif',
-                transition: 'color 0.2s',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '6px',
-                fontWeight: location.pathname.startsWith('/admin') ? '500' : '400',
-              }}
-              onMouseEnter={(e) => { e.currentTarget.style.color = 'var(--primary)'; }}
-              onMouseLeave={(e) => { e.currentTarget.style.color = location.pathname.startsWith('/admin') ? 'var(--primary)' : 'var(--text-secondary)'; }}
-            >
-              <Shield size={18} />
-              Админка
-            </span>
-          )}
-        </nav>
 
         <div style={{
           display: 'flex',
           alignItems: 'center',
-          gap: '16px',
-          minWidth: '120px',
-          justifyContent: 'flex-end',
+          gap: '12px',
         }}>
           <button
             onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
@@ -191,13 +137,29 @@ export default function Layout({ children }: LayoutProps) {
               border: 'none',
               color: 'var(--text-secondary)',
               cursor: 'pointer',
-              padding: '4px 8px',
+              padding: '4px',
               transition: 'color 0.2s',
               display: 'flex',
               alignItems: 'center',
             }}
           >
-            {theme === 'dark' ? <Sun size={20} /> : <Moon size={20} />}
+            {theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
+          </button>
+
+          <button
+            style={{
+              background: 'none',
+              border: 'none',
+              color: 'var(--text-secondary)',
+              cursor: 'default',
+              padding: '4px',
+              display: 'flex',
+              alignItems: 'center',
+              opacity: 0.6,
+            }}
+            title="Notifications — coming soon"
+          >
+            <Bell size={18} />
           </button>
 
           {user ? (
@@ -211,7 +173,7 @@ export default function Layout({ children }: LayoutProps) {
                   display: 'flex',
                   alignItems: 'center',
                   gap: '6px',
-                  fontSize: '15px',
+                  fontSize: '14px',
                   transition: 'color 0.2s',
                 }}
               >
@@ -235,10 +197,7 @@ export default function Layout({ children }: LayoutProps) {
                   zIndex: 100,
                 }}>
                   <div
-                    onClick={() => {
-                      setIsDropdownOpen(false);
-                      navigate('/profile');
-                    }}
+                    onClick={() => { setIsDropdownOpen(false); navigate('/profile'); }}
                     style={{
                       padding: '10px 20px',
                       color: 'var(--text-primary)',
@@ -258,10 +217,7 @@ export default function Layout({ children }: LayoutProps) {
 
                   {isAdmin && (
                     <div
-                      onClick={() => {
-                        setIsDropdownOpen(false);
-                        navigate('/admin');
-                      }}
+                      onClick={() => { setIsDropdownOpen(false); navigate('/admin'); }}
                       style={{
                         padding: '10px 20px',
                         color: 'var(--primary)',
@@ -281,10 +237,7 @@ export default function Layout({ children }: LayoutProps) {
                   )}
 
                   <div
-                    onClick={() => {
-                      setIsDropdownOpen(false);
-                      navigate('/settings');
-                    }}
+                    onClick={() => { setIsDropdownOpen(false); navigate('/settings'); }}
                     style={{
                       padding: '10px 20px',
                       color: 'var(--text-primary)',
@@ -331,7 +284,7 @@ export default function Layout({ children }: LayoutProps) {
               style={{
                 color: 'var(--text-secondary)',
                 cursor: 'pointer',
-                fontSize: '15px',
+                fontSize: '14px',
                 fontFamily: 'Inter, sans-serif',
                 transition: 'color 0.2s',
                 display: 'flex',
@@ -347,7 +300,12 @@ export default function Layout({ children }: LayoutProps) {
           )}
         </div>
       </header>
-      <div style={{ flex: 1, background: 'var(--bg)' }}>{children}</div>
+      <div style={{ flex: 1, display: 'flex', overflow: 'hidden' }}>
+        <Sidebar />
+        <main style={{ flex: 1, overflowY: 'auto', background: 'var(--bg)' }}>
+          {children}
+        </main>
+      </div>
     </div>
   );
 }

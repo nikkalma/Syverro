@@ -6,6 +6,7 @@ import { useLibrary } from '../../hooks/useLibrary';
 import { EditModal } from './EditModal';
 import { AddToLibraryModal } from './AddToLibraryModal';
 import type { PersonalBookStatus } from '../../types/personalBook';
+import { formatAuthorName } from '../../shared/utils/formatAuthorName';
 
 // ===== ОФФЛАЙН-СЛОЙ =====
 import { useOffline } from '@/lib/offline';
@@ -23,6 +24,7 @@ export default function BookPage() {
   const book = books.find((b) => b.id === id);
   const personalBook = book?.personal ?? null;
   const isInLibrary = !!personalBook;
+  const displayAuthor = book ? formatAuthorName(book.author) : '';
 
   if (!book) {
     return (
@@ -127,10 +129,10 @@ export default function BookPage() {
               onMouseEnter={(e) => e.currentTarget.style.color = '#7BA5C1'}
               onMouseLeave={(e) => e.currentTarget.style.color = '#5B86A1'}
             >
-              {book.author}
+              {displayAuthor}
             </span>
           ) : (
-            <p style={{ fontSize: '18px', color: '#97A6BA', marginBottom: '12px' }}>{book.author}</p>
+            <p style={{ fontSize: '18px', color: '#97A6BA', marginBottom: '12px' }}>{displayAuthor}</p>
           )}
 
           {book.series && (

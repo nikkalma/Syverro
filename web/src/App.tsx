@@ -11,6 +11,12 @@ import Profile from './pages/Profile';
 import Settings from './pages/Settings';
 import BookPage from './pages/BookPage';
 import AuthorPage from './pages/AuthorPage';
+import AuthorsPage from './pages/AuthorsPage';
+import GenresThemesPage from './pages/GenresThemesPage';
+import AtmospheresPage from './pages/AtmospheresPage';
+import CharactersPage from './pages/CharactersPage';
+import QuotesPage from './pages/QuotesPage';
+import CollectionsPage from './pages/CollectionsPage';
 import MyLibraryPage from './pages/MyLibraryPage';
 
 import AdminRoute from './pages/Admin/AdminRoute';
@@ -39,6 +45,18 @@ export default function App() {
           <Route path="/register" element={<Register />} />
 
           <Route path="/insights" element={<Insights />} />
+
+          <Route path="/authors" element={<AuthorsPage />} />
+
+          <Route path="/genres-themes" element={<GenresThemesPage />} />
+
+          <Route path="/atmospheres" element={<AtmospheresPage />} />
+
+          <Route path="/characters" element={<CharactersPage />} />
+
+          <Route path="/quotes" element={<QuotesPage />} />
+
+          <Route path="/collections" element={<CollectionsPage />} />
 
           <Route path="/worldmap" element={<WorldMap />} />
 

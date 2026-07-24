@@ -21,23 +21,15 @@ async def get_author(
     author_id: UUID,
     db: AsyncSession = Depends(get_db),
 ):
+    cols = ["id", "name", "first_name", "last_name", "native_name",
+            "bio", "photo", "country", "birth_year", "death_year"]
     result = await db.execute(
-        sa_text("SELECT * FROM authors WHERE id = :author_id"),
-        {"author_id": author_id},
+        sa_text("SELECT " + ", ".join(cols) + " FROM authors WHERE id = :aid"),
+        {"aid": str(author_id)},
     )
     row = result.mappings().one_or_none()
     if not row:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Author not found")
-
-    name = row.get("name", "")
-    bio = row.get("bio")
-    photo = row.get("photo")
-
-    nationality = row.get("nationality") or row.get("country")
-    raw_birth = row.get("birth_date") or row.get("birth_year")
-    raw_death = row.get("death_date") or row.get("death_year")
-    birth_date = str(raw_birth) if raw_birth is not None else None
-    death_date = str(raw_death) if raw_death is not None else None
 
     book_rows = await db.execute(
         select(Book.id, Book.title, Book.cover)
@@ -86,14 +78,21 @@ async def get_author(
         )
         motifs = [r[0] for r in motif_rows]
 
+    name = row.get("name", "")
+    raw_birth = row.get("birth_year")
+    raw_death = row.get("death_year")
+
     return AuthorPublicResponse(
         id=author_id,
         name=name,
-        nationality=nationality,
-        birth_date=birth_date,
-        death_date=death_date,
-        biography=bio,
-        photo_url=photo,
+        first_name=row.get("first_name"),
+        last_name=row.get("last_name"),
+        native_name=row.get("native_name"),
+        nationality=row.get("country"),
+        birth_date=str(raw_birth) if raw_birth is not None else None,
+        death_date=str(raw_death) if raw_death is not None else None,
+        biography=row.get("bio"),
+        photo_url=row.get("photo"),
         books=books,
         metadata=AuthorMetadata(genres=genres, themes=themes, motifs=motifs),
     )

@@ -3,6 +3,7 @@ import { EnrichedBook } from '@/types/globalBook';
 import { PersonalBook } from '../../types/personalBook';
 import { personalBookStatusLabels, personalBookStatusColors, PersonalBookStatus } from '../../types/personalBook';
 import { useLibraryStore } from '../../store/libraryStore';
+import { formatAuthorName } from '../../shared/utils/formatAuthorName';
 
 interface LibraryGridProps {
   books: EnrichedBook[];
@@ -22,6 +23,7 @@ export default function LibraryGrid({ books, onBookClick }: LibraryGridProps) {
       }}
     >
       {books.map((book: EnrichedBook) => {
+        const displayAuthor = formatAuthorName(book.author);
         const userBook = userBookMap.get(book.id);
         if (!userBook) return null;
 
@@ -136,7 +138,7 @@ export default function LibraryGrid({ books, onBookClick }: LibraryGridProps) {
                   whiteSpace: 'nowrap',
                 }}
               >
-                {book.author}
+                {displayAuthor}
               </div>
             </div>
           </div>

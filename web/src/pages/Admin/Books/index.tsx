@@ -107,16 +107,26 @@ export default function AdminBooks() {
     }
   };
 
-  // ===== ПУБЛИКАЦИЯ / СКРЫТИЕ =====
+  // ===== ПУБЛИКАЦИЯ / СМЕНА СТАТУСА =====
   const handleTogglePublish = async (id: string, isPublished: boolean) => {
     try {
+      const book = books.find((b) => b.id === id);
+      if (!book) return;
+
+      let nextStatus = 'draft';
+      if (book.moderation_status === 'draft') nextStatus = 'pending';
+      else if (book.moderation_status === 'pending') nextStatus = 'pending';
+      else if (book.moderation_status === 'approved') nextStatus = 'published';
+      else if (book.moderation_status === 'published') nextStatus = 'archived';
+      else nextStatus = 'draft';
+
       const response = await fetch(`${API_URL}/admin/books/${id}/publish`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({ is_published: !isPublished }),
+        body: JSON.stringify({ moderation_status: nextStatus }),
       });
 
       if (!response.ok) throw new Error('Ошибка изменения статуса');

@@ -2,6 +2,7 @@
 
 import { AdminBook } from '../../../types/admin';
 import { useAdminStore } from '../../../store/adminStore';
+import { MODERATION_STATUS_LABELS, MODERATION_STATUS_COLORS } from '../../../types/admin';
 
 interface BooksTableProps {
   books: AdminBook[];
@@ -192,11 +193,11 @@ export default function BooksTable({
                   padding: '4px 12px',
                   borderRadius: '12px',
                   fontSize: '12px',
-                  color: book.is_published ? '#4CAF50' : '#97A6BA',
-                  background: book.is_published ? 'rgba(76,175,80,0.1)' : 'rgba(255,255,255,0.05)',
-                  border: `1px solid ${book.is_published ? 'rgba(76,175,80,0.2)' : 'rgba(255,255,255,0.06)'}`,
+                  color: MODERATION_STATUS_COLORS[book.moderation_status as keyof typeof MODERATION_STATUS_COLORS] || '#97A6BA',
+                  background: `${MODERATION_STATUS_COLORS[book.moderation_status as keyof typeof MODERATION_STATUS_COLORS] || '#97A6BA'}18`,
+                  border: `1px solid ${MODERATION_STATUS_COLORS[book.moderation_status as keyof typeof MODERATION_STATUS_COLORS] || '#97A6BA'}30`,
                 }}>
-                  {book.is_published ? '📗 Опубликована' : '📕 Черновик'}
+                  {MODERATION_STATUS_LABELS[book.moderation_status as keyof typeof MODERATION_STATUS_LABELS] || book.moderation_status}
                 </span>
               </td>
               <td style={{ padding: '12px 16px', color: '#5B86A1', fontSize: '12px' }}>
@@ -213,13 +214,17 @@ export default function BooksTable({
                           background: 'rgba(255,255,255,0.05)',
                           border: '1px solid rgba(255,255,255,0.08)',
                           borderRadius: '6px',
-                          color: book.is_published ? '#FFA726' : '#4CAF50',
+                          color: book.moderation_status === 'published' ? '#FFA726' : '#4CAF50',
                           fontSize: '11px',
                           cursor: 'pointer',
                           fontFamily: 'Inter, sans-serif',
                         }}
                       >
-                        {book.is_published ? '🔒 Скрыть' : '📢 Опубликовать'}
+                        {book.moderation_status === 'draft' ? '📢 На модерацию' :
+                         book.moderation_status === 'pending' ? '⏳ Ожидает' :
+                         book.moderation_status === 'approved' ? '📗 Опубликовать' :
+                         book.moderation_status === 'published' ? '📦 Архивировать' :
+                         '📢 Опубликовать'}
                       </button>
                       <button
                         onClick={() => onEdit(book)}

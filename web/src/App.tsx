@@ -35,134 +35,35 @@ import BookEnrichmentPage from "./pages/Admin/Metadata/BookEnrichmentPage";
 export default function App() {
   return (
     <BrowserRouter>
-      <Layout>
-        <Routes>
+      <Routes>
+        <Route path="/" element={<Layout><LibraryPage /></Layout>} />
+        <Route path="/login" element={<Layout><Login /></Layout>} />
+        <Route path="/register" element={<Layout><Register /></Layout>} />
+        <Route path="/insights" element={<Layout><Insights /></Layout>} />
+        <Route path="/authors" element={<Layout><AuthorsPage /></Layout>} />
+        <Route path="/genres-themes" element={<Layout><GenresThemesPage /></Layout>} />
+        <Route path="/atmospheres" element={<Layout><AtmospheresPage /></Layout>} />
+        <Route path="/characters" element={<Layout><CharactersPage /></Layout>} />
+        <Route path="/quotes" element={<Layout><QuotesPage /></Layout>} />
+        <Route path="/collections" element={<Layout><CollectionsPage /></Layout>} />
+        <Route path="/worldmap" element={<Layout><WorldMap /></Layout>} />
+        <Route path="/profile" element={<Layout><Profile /></Layout>} />
+        <Route path="/settings" element={<Layout><Settings /></Layout>} />
+        <Route path="/book/:id" element={<Layout><BookPage /></Layout>} />
+        <Route path="/authors/:id" element={<Layout><AuthorPage /></Layout>} />
+        <Route path="/my-library" element={<Layout><MyLibraryPage /></Layout>} />
 
-          <Route path="/" element={<LibraryPage />} />
-
-          <Route path="/login" element={<Login />} />
-
-          <Route path="/register" element={<Register />} />
-
-          <Route path="/insights" element={<Insights />} />
-
-          <Route path="/authors" element={<AuthorsPage />} />
-
-          <Route path="/genres-themes" element={<GenresThemesPage />} />
-
-          <Route path="/atmospheres" element={<AtmospheresPage />} />
-
-          <Route path="/characters" element={<CharactersPage />} />
-
-          <Route path="/quotes" element={<QuotesPage />} />
-
-          <Route path="/collections" element={<CollectionsPage />} />
-
-          <Route path="/worldmap" element={<WorldMap />} />
-
-          <Route path="/profile" element={<Profile />} />
-
-          <Route path="/settings" element={<Settings />} />
-
-          <Route path="/book/:id" element={<BookPage />} />
-
-          <Route path="/authors/:id" element={<AuthorPage />} />
-
-          <Route path="/my-library" element={<MyLibraryPage />} />
-
-
-          <Route
-            path="/admin"
-            element={
-              <AdminRoute>
-                <AdminDashboard />
-              </AdminRoute>
-            }
-          />
-
-          <Route 
- path="/admin/users" 
- element={
-   <AdminRoute>
-     <AdminUsers />
-   </AdminRoute>
- }
-/>
-
-<Route 
- path="/admin/books" 
- element={
-   <AdminRoute>
-     <AdminBooks />
-   </AdminRoute>
- }
-/>
-
-<Route 
- path="/admin/authors" 
- element={
-   <AdminRoute>
-     <AdminAuthors />
-   </AdminRoute>
- }
-/>
-
-<Route 
- path="/admin/genres" 
- element={
-   <AdminRoute>
-     <AdminGenres />
-   </AdminRoute>
- }
-/>
-
-<Route 
- path="/admin/logs" 
- element={
-   <AdminRoute>
-     <AdminLogs />
-   </AdminRoute>
- }
-/>
-
-<Route 
- path="/admin/settings" 
- element={
-   <AdminRoute>
-     <AdminSettings />
-   </AdminRoute>
- }
-/>
-
-<Route 
- path="/admin/moderation" 
- element={
-   <AdminRoute>
-     <AdminModeration />
-   </AdminRoute>
- }
-/>
-
-<Route 
- path="/admin/metadata" 
- element={
-   <AdminRoute>
-     <AdminMetadata />
-   </AdminRoute>
- }
-/>
-
-<Route 
- path="/admin/books/:id/enrichment" 
- element={
-   <AdminRoute>
-     <BookEnrichmentPage />
-   </AdminRoute>
- }
-/>
-
-        </Routes>
-      </Layout>
+        <Route path="/admin" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
+        <Route path="/admin/users" element={<AdminRoute><AdminUsers /></AdminRoute>} />
+        <Route path="/admin/books" element={<AdminRoute><AdminBooks /></AdminRoute>} />
+        <Route path="/admin/authors" element={<AdminRoute><AdminAuthors /></AdminRoute>} />
+        <Route path="/admin/genres" element={<AdminRoute><AdminGenres /></AdminRoute>} />
+        <Route path="/admin/logs" element={<AdminRoute><AdminLogs /></AdminRoute>} />
+        <Route path="/admin/settings" element={<AdminRoute><AdminSettings /></AdminRoute>} />
+        <Route path="/admin/moderation" element={<AdminRoute><AdminModeration /></AdminRoute>} />
+        <Route path="/admin/metadata" element={<AdminRoute><AdminMetadata /></AdminRoute>} />
+        <Route path="/admin/books/:id/enrichment" element={<AdminRoute><BookEnrichmentPage /></AdminRoute>} />
+      </Routes>
     </BrowserRouter>
   );
 }

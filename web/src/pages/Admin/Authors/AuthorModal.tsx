@@ -1,5 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { AdminAuthor, AuthorAward, GENDER_OPTIONS } from '../../../types/admin';
+import ChipInput from '../../../components/ChipInput';
 
 const API_URL = import.meta.env.VITE_API_URL || 'https://api.syverro.com';
 
@@ -40,23 +41,38 @@ const sectionTitleStyle: React.CSSProperties = {
   paddingBottom: '8px', borderBottom: '1px solid rgba(255,255,255,0.06)',
 };
 
-const tagStyle = (color: string): React.CSSProperties => ({
-  padding: '3px 10px', background: `${color}12`, borderRadius: '12px',
-  fontSize: '12px', color, cursor: 'pointer',
-  border: `1px solid ${color}25`, display: 'inline-flex', alignItems: 'center', gap: '4px',
-});
-
 const tagColors: Record<string, string> = {
   pseudonyms: '#A855F7', languages: '#5B86A1', occupations: '#FFA726',
   literary_movements: '#4CAF50', notable_works: '#EF5350',
   genres: '#5B86A1', writing_languages: '#A855F7',
 };
 
-export default function AuthorModal({ isOpen, mode, author, onClose, onSave }: AuthorModalProps) {
-  const token = localStorage.getItem('token');
+const DICT_KEYS = ['languages', 'occupations', 'literary_movements', 'writing_languages', 'genres'] as const;
 
+function loadDict(): Record<string, string[]> {
+  try {
+    return JSON.parse(localStorage.getItem('syverro_chip_dict') || '{}');
+  } catch { return {}; }
+}
+
+function saveDict(dict: Record<string, string[]>) {
+  localStorage.setItem('syverro_chip_dict', JSON.stringify(dict));
+}
+
+function addToDict(key: string, value: string) {
+  const dict = loadDict();
+  const list = dict[key] || [];
+  const normalized = value.trim().replace(/\s+/g, ' ');
+  if (!normalized) return;
+  if (list.some((item) => item.toLowerCase() === normalized.toLowerCase())) return;
+  dict[key] = [...list, normalized];
+  saveDict(dict);
+}
+
+export default function AuthorModal({ isOpen, mode, author, onClose, onSave }: AuthorModalProps) {
   // --- Identity ---
   const [name, setName] = useState('');
+  const [birthName, setBirthName] = useState('');
   const [firstName, setFirstName] = useState('');
   const [middleName, setMiddleName] = useState('');
   const [lastName, setLastName] = useState('');
@@ -65,18 +81,14 @@ export default function AuthorModal({ isOpen, mode, author, onClose, onSave }: A
 
   // --- Basic Information ---
   const [pseudonyms, setPseudonyms] = useState<string[]>([]);
-  const [pseudonymInput, setPseudonymInput] = useState('');
   const [nationality, setNationality] = useState('');
   const [languages, setLanguages] = useState<string[]>([]);
-  const [languageInput, setLanguageInput] = useState('');
   const [gender, setGender] = useState('unknown');
   const [officialWebsite, setOfficialWebsite] = useState('');
   const [wikipediaUrl, setWikipediaUrl] = useState('');
 
   // --- Biography ---
   const [bio, setBio] = useState('');
-  const [birthYear, setBirthYear] = useState('');
-  const [deathYear, setDeathYear] = useState('');
   const [birthDate, setBirthDate] = useState('');
   const [deathDate, setDeathDate] = useState('');
   const [birthPlace, setBirthPlace] = useState('');
@@ -84,19 +96,7 @@ export default function AuthorModal({ isOpen, mode, author, onClose, onSave }: A
 
   // --- Career ---
   const [occupations, setOccupations] = useState<string[]>([]);
-  const [occupationInput, setOccupationInput] = useState('');
   const [literaryMovements, setLiteraryMovements] = useState<string[]>([]);
-  const [literaryMovementInput, setLiteraryMovementInput] = useState('');
-  const [activeFromYear, setActiveFromYear] = useState('');
-  const [activeToYear, setActiveToYear] = useState('');
-
-  // --- Bibliography ---
-  const [notableWorks, setNotableWorks] = useState<string[]>([]);
-  const [notableWorkInput, setNotableWorkInput] = useState('');
-  const [authorGenres, setAuthorGenres] = useState<string[]>([]);
-  const [authorGenreInput, setAuthorGenreInput] = useState('');
-  const [writingLanguages, setWritingLanguages] = useState<string[]>([]);
-  const [writingLanguageInput, setWritingLanguageInput] = useState('');
 
   // --- Awards ---
   const [awards, setAwards] = useState<AuthorAward[]>([]);
@@ -117,10 +117,18 @@ export default function AuthorModal({ isOpen, mode, author, onClose, onSave }: A
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // Chip dictionary for autocomplete
+  const [chipDict] = useState(() => loadDict());
+
+  const recordChip = useCallback((key: string, value: string) => {
+    addToDict(key, value);
+  }, []);
+
   useEffect(() => {
     if (!isOpen) return;
     if (mode === 'edit' && author) {
       setName(author.name || '');
+      setBirthName(author.birth_name || '');
       setFirstName(author.first_name || '');
       setMiddleName(author.middle_name || '');
       setLastName(author.last_name || '');
@@ -133,19 +141,12 @@ export default function AuthorModal({ isOpen, mode, author, onClose, onSave }: A
       setOfficialWebsite(author.official_website || '');
       setWikipediaUrl(author.wikipedia_url || '');
       setBio(author.bio || '');
-      setBirthYear(author.birth_year?.toString() || '');
-      setDeathYear(author.death_year?.toString() || '');
       setBirthDate(author.birth_date || '');
       setDeathDate(author.death_date || '');
       setBirthPlace(author.birth_place || '');
       setDeathPlace(author.death_place || '');
       setOccupations(author.occupations || []);
       setLiteraryMovements(author.literary_movements || []);
-      setActiveFromYear(author.active_from_year?.toString() || '');
-      setActiveToYear(author.active_to_year?.toString() || '');
-      setNotableWorks(author.notable_works || []);
-      setAuthorGenres(author.genres || []);
-      setWritingLanguages(author.writing_languages || []);
       setAwards(author.awards || []);
       setPhoto(author.photo || '');
       setGallery(author.gallery || []);
@@ -153,6 +154,7 @@ export default function AuthorModal({ isOpen, mode, author, onClose, onSave }: A
       setPortraitCaption(author.portrait_caption || '');
     } else {
       setName('');
+      setBirthName('');
       setFirstName('');
       setMiddleName('');
       setLastName('');
@@ -165,19 +167,12 @@ export default function AuthorModal({ isOpen, mode, author, onClose, onSave }: A
       setOfficialWebsite('');
       setWikipediaUrl('');
       setBio('');
-      setBirthYear('');
-      setDeathYear('');
       setBirthDate('');
       setDeathDate('');
       setBirthPlace('');
       setDeathPlace('');
       setOccupations([]);
       setLiteraryMovements([]);
-      setActiveFromYear('');
-      setActiveToYear('');
-      setNotableWorks([]);
-      setAuthorGenres([]);
-      setWritingLanguages([]);
       setAwards([]);
       setPhoto('');
       setGallery([]);
@@ -191,24 +186,24 @@ export default function AuthorModal({ isOpen, mode, author, onClose, onSave }: A
 
   if (!isOpen) return null;
 
-  // ===== Tag helpers =====
-  const addTag = (value: string, list: string[], setList: (v: string[]) => void, setInput: (v: string) => void) => {
-    if (value.trim() && !list.includes(value.trim())) {
-      setList([...list, value.trim()]);
-    }
-    setInput('');
-  };
-
-  const removeTag = (item: string, list: string[], setList: (v: string[]) => void) => {
-    setList(list.filter((i) => i !== item));
-  };
-
   // ===== Award helpers =====
   const handleAddAward = async () => {
     if (!awardName.trim()) return;
-    if (!author || mode === 'create') return;
-
+    if (!author || mode === 'create') {
+      setAwards((prev) => [...prev, {
+        id: `temp-${Date.now()}`,
+        author_id: author?.id || '',
+        name: awardName.trim(),
+        year: awardYear ? parseInt(awardYear) : null,
+        organization: awardOrganization.trim() || null,
+        work: awardWork.trim() || null,
+        created_at: new Date().toISOString(),
+      }]);
+      resetAwardForm();
+      return;
+    }
     try {
+      const token = localStorage.getItem('token');
       const res = await fetch(`${API_URL}/admin/authors/${author.id}/awards`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
@@ -230,8 +225,13 @@ export default function AuthorModal({ isOpen, mode, author, onClose, onSave }: A
 
   const handleUpdateAward = async () => {
     if (!awardName.trim() || !editingAwardId || !author) return;
-
+    if (editingAwardId.startsWith('temp-')) {
+      setAwards((prev) => prev.map((a) => a.id === editingAwardId ? { ...a, name: awardName.trim(), year: awardYear ? parseInt(awardYear) : null, organization: awardOrganization.trim() || null, work: awardWork.trim() || null } : a));
+      resetAwardForm();
+      return;
+    }
     try {
+      const token = localStorage.getItem('token');
       const res = await fetch(`${API_URL}/admin/authors/${author.id}/awards/${editingAwardId}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
@@ -252,8 +252,13 @@ export default function AuthorModal({ isOpen, mode, author, onClose, onSave }: A
   };
 
   const handleDeleteAward = async (awardId: string) => {
+    if (awardId.startsWith('temp-')) {
+      setAwards((prev) => prev.filter((a) => a.id !== awardId));
+      return;
+    }
     if (!author) return;
     try {
+      const token = localStorage.getItem('token');
       await fetch(`${API_URL}/admin/authors/${author.id}/awards/${awardId}`, {
         method: 'DELETE',
         headers: { Authorization: `Bearer ${token}` },
@@ -291,6 +296,7 @@ export default function AuthorModal({ isOpen, mode, author, onClose, onSave }: A
     try {
       const submitData: Record<string, any> = {
         name: name.trim(),
+        birth_name: birthName.trim() || null,
         first_name: firstName.trim() || null,
         middle_name: middleName.trim() || null,
         last_name: lastName.trim() || null,
@@ -303,19 +309,18 @@ export default function AuthorModal({ isOpen, mode, author, onClose, onSave }: A
         official_website: officialWebsite.trim() || null,
         wikipedia_url: wikipediaUrl.trim() || null,
         bio: bio.trim() || null,
-        birth_year: birthYear ? parseInt(birthYear) : null,
-        death_year: deathYear ? parseInt(deathYear) : null,
         birth_date: birthDate.trim() || null,
         death_date: deathDate.trim() || null,
         birth_place: birthPlace.trim() || null,
         death_place: deathPlace.trim() || null,
         occupations: occupations.length > 0 ? occupations : null,
         literary_movements: literaryMovements.length > 0 ? literaryMovements : null,
-        active_from_year: activeFromYear ? parseInt(activeFromYear) : null,
-        active_to_year: activeToYear ? parseInt(activeToYear) : null,
-        notable_works: notableWorks.length > 0 ? notableWorks : null,
-        genres: authorGenres.length > 0 ? authorGenres : null,
-        writing_languages: writingLanguages.length > 0 ? writingLanguages : null,
+        awards: awards.map((a) => ({
+          name: a.name,
+          year: a.year,
+          organization: a.organization,
+          work: a.work,
+        })),
         photo: photo.trim() || null,
         gallery: gallery.length > 0 ? gallery : null,
         signature_image: signatureImage.trim() || null,
@@ -334,44 +339,18 @@ export default function AuthorModal({ isOpen, mode, author, onClose, onSave }: A
     }
   };
 
-  // ===== Tag input renderer =====
-  const renderTagInput = (
-    tags: string[],
-    input: string,
-    setInput: (v: string) => void,
-    setTags: (v: string[]) => void,
-    placeholder: string,
-    field: string,
-  ) => (
-    <div>
-      <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', marginBottom: '6px' }}>
-        {tags.map((t) => (
-          <span key={t} onClick={() => removeTag(t, tags, setTags)}
-            style={tagStyle(tagColors[field] || '#5B86A1')}>
-            {t} <span style={{ marginLeft: '2px' }}>×</span>
-          </span>
-        ))}
-      </div>
-      <div style={{ display: 'flex', gap: '6px' }}>
-        <input
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          onKeyDown={(e) => {
-            if (e.key === 'Enter') { e.preventDefault(); addTag(input, tags, setTags, setInput); }
-          }}
-          placeholder={placeholder}
-          style={{ ...inputStyle, flex: 1 }}
-        />
-        <button
-          onClick={() => addTag(input, tags, setTags, setInput)}
-          style={{ padding: '8px 12px', background: `${tagColors[field] || '#5B86A1'}20`,
-            border: `1px solid ${tagColors[field] || '#5B86A1'}40`, borderRadius: '8px',
-            color: tagColors[field] || '#5B86A1', cursor: 'pointer', fontSize: '13px' }}>
-          +
-        </button>
-      </div>
-    </div>
-  );
+  // ===== Gallery helpers =====
+  const addGalleryItem = () => {
+    const val = galleryInput.trim();
+    if (val && !gallery.includes(val)) {
+      setGallery([...gallery, val]);
+    }
+    setGalleryInput('');
+  };
+
+  const removeGalleryItem = (item: string) => {
+    setGallery(gallery.filter((i) => i !== item));
+  };
 
   const grid2Style: React.CSSProperties = {
     display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '12px',
@@ -409,11 +388,16 @@ export default function AuthorModal({ isOpen, mode, author, onClose, onSave }: A
           {/* ===== 1. IDENTITY ===== */}
           <div style={sectionStyle}>
             <h3 style={sectionTitleStyle}>ИДЕНТИФИКАЦИЯ</h3>
+            <div style={{ marginBottom: '12px' }}>
+              <label style={labelStyle}>Имя *</label>
+              <input value={name} onChange={(e) => setName(e.target.value)}
+                placeholder="Полное имя автора" required style={inputStyle} />
+            </div>
             <div style={grid2Style}>
               <div>
-                <label style={labelStyle}>Имя *</label>
-                <input value={name} onChange={(e) => setName(e.target.value)}
-                  placeholder="Полное имя автора" required style={inputStyle} />
+                <label style={labelStyle}>Имя при рождении</label>
+                <input value={birthName} onChange={(e) => setBirthName(e.target.value)}
+                  placeholder="Имя, данное при рождении" style={inputStyle} />
               </div>
               <div>
                 <label style={labelStyle}>Имя (first_name)</label>
@@ -452,7 +436,8 @@ export default function AuthorModal({ isOpen, mode, author, onClose, onSave }: A
             <h3 style={sectionTitleStyle}>ОСНОВНАЯ ИНФОРМАЦИЯ</h3>
             <div style={{ marginBottom: '12px' }}>
               <label style={labelStyle}>Псевдонимы</label>
-              {renderTagInput(pseudonyms, pseudonymInput, setPseudonymInput, setPseudonyms, 'Добавить псевдоним...', 'pseudonyms')}
+              <ChipInput tags={pseudonyms} onChange={(v) => { setPseudonyms(v); v.forEach((t) => recordChip('pseudonyms', t)); }}
+                placeholder="Добавить псевдоним..." color={tagColors.pseudonyms} />
             </div>
             <div style={grid2Style}>
               <div>
@@ -462,7 +447,8 @@ export default function AuthorModal({ isOpen, mode, author, onClose, onSave }: A
               </div>
               <div>
                 <label style={labelStyle}>Языки</label>
-                {renderTagInput(languages, languageInput, setLanguageInput, setLanguages, 'Добавить язык...', 'languages')}
+                <ChipInput tags={languages} onChange={(v) => { setLanguages(v); v.forEach((t) => recordChip('languages', t)); }}
+                  placeholder="Добавить язык..." color={tagColors.languages} suggestions={chipDict.languages || []} />
               </div>
             </div>
             <div style={grid2Style}>
@@ -497,26 +483,14 @@ export default function AuthorModal({ isOpen, mode, author, onClose, onSave }: A
             </div>
             <div style={grid2Style}>
               <div>
-                <label style={labelStyle}>Год рождения</label>
-                <input type="number" value={birthYear} onChange={(e) => setBirthYear(e.target.value)}
-                  placeholder="1900" style={inputStyle} />
-              </div>
-              <div>
-                <label style={labelStyle}>Год смерти</label>
-                <input type="number" value={deathYear} onChange={(e) => setDeathYear(e.target.value)}
-                  placeholder="2000" style={inputStyle} />
-              </div>
-            </div>
-            <div style={grid2Style}>
-              <div>
-                <label style={labelStyle}>Дата рождения</label>
+                <label style={labelStyle}>Дата рождения (ДД/ММ/ГГГГ)</label>
                 <input value={birthDate} onChange={(e) => setBirthDate(e.target.value)}
-                  placeholder="1900-01-15" style={inputStyle} />
+                  placeholder="15.01.1900" style={inputStyle} />
               </div>
               <div>
-                <label style={labelStyle}>Дата смерти</label>
+                <label style={labelStyle}>Дата смерти (ДД/ММ/ГГГГ)</label>
                 <input value={deathDate} onChange={(e) => setDeathDate(e.target.value)}
-                  placeholder="2000-06-05" style={inputStyle} />
+                  placeholder="05.06.2000" style={inputStyle} />
               </div>
             </div>
             <div style={grid2Style}>
@@ -538,49 +512,17 @@ export default function AuthorModal({ isOpen, mode, author, onClose, onSave }: A
             <h3 style={sectionTitleStyle}>КАРЬЕРА</h3>
             <div style={{ marginBottom: '12px' }}>
               <label style={labelStyle}>Профессии / Роли</label>
-              {renderTagInput(occupations, occupationInput, setOccupationInput, setOccupations,
-                'Добавить профессию...', 'occupations')}
+              <ChipInput tags={occupations} onChange={(v) => { setOccupations(v); v.forEach((t) => recordChip('occupations', t)); }}
+                placeholder="Добавить профессию..." color={tagColors.occupations} suggestions={chipDict.occupations || []} />
             </div>
             <div style={{ marginBottom: '12px' }}>
               <label style={labelStyle}>Литературные направления</label>
-              {renderTagInput(literaryMovements, literaryMovementInput, setLiteraryMovementInput, setLiteraryMovements,
-                'Добавить направление...', 'literary_movements')}
-            </div>
-            <div style={grid2Style}>
-              <div>
-                <label style={labelStyle}>Активен с года</label>
-                <input type="number" value={activeFromYear} onChange={(e) => setActiveFromYear(e.target.value)}
-                  placeholder="1920" style={inputStyle} />
-              </div>
-              <div>
-                <label style={labelStyle}>Активен по год</label>
-                <input type="number" value={activeToYear} onChange={(e) => setActiveToYear(e.target.value)}
-                  placeholder="2000" style={inputStyle} />
-              </div>
+              <ChipInput tags={literaryMovements} onChange={(v) => { setLiteraryMovements(v); v.forEach((t) => recordChip('literary_movements', t)); }}
+                placeholder="Добавить направление..." color={tagColors.literary_movements} suggestions={chipDict.literary_movements || []} />
             </div>
           </div>
 
-          {/* ===== 5. BIBLIOGRAPHY ===== */}
-          <div style={sectionStyle}>
-            <h3 style={sectionTitleStyle}>БИБЛИОГРАФИЯ</h3>
-            <div style={{ marginBottom: '12px' }}>
-              <label style={labelStyle}>Известные произведения</label>
-              {renderTagInput(notableWorks, notableWorkInput, setNotableWorkInput, setNotableWorks,
-                'Добавить произведение...', 'notable_works')}
-            </div>
-            <div style={{ marginBottom: '12px' }}>
-              <label style={labelStyle}>Жанры</label>
-              {renderTagInput(authorGenres, authorGenreInput, setAuthorGenreInput, setAuthorGenres,
-                'Добавить жанр...', 'genres')}
-            </div>
-            <div>
-              <label style={labelStyle}>Языки письма</label>
-              {renderTagInput(writingLanguages, writingLanguageInput, setWritingLanguageInput, setWritingLanguages,
-                'Добавить язык...', 'writing_languages')}
-            </div>
-          </div>
-
-          {/* ===== 6. AWARDS ===== */}
+          {/* ===== 5. AWARDS ===== */}
           <div style={sectionStyle}>
             <h3 style={sectionTitleStyle}>НАГРАДЫ</h3>
 
@@ -680,7 +622,7 @@ export default function AuthorModal({ isOpen, mode, author, onClose, onSave }: A
             )}
           </div>
 
-          {/* ===== 7. MEDIA ===== */}
+          {/* ===== 6. MEDIA ===== */}
           <div style={sectionStyle}>
             <h3 style={sectionTitleStyle}>МЕДИА</h3>
             <div style={grid2Style}>
@@ -704,8 +646,12 @@ export default function AuthorModal({ isOpen, mode, author, onClose, onSave }: A
               <label style={labelStyle}>Галерея (URL изображений)</label>
               <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', marginBottom: '6px' }}>
                 {gallery.map((url, i) => (
-                  <span key={i} onClick={() => removeTag(url, gallery, setGallery)}
-                    style={tagStyle('#5B86A1')}>
+                  <span key={i} onClick={() => removeGalleryItem(url)}
+                    style={{
+                      padding: '3px 10px', background: '#5B86A112', borderRadius: '12px',
+                      fontSize: '12px', color: '#5B86A1', cursor: 'pointer',
+                      border: '1px solid #5B86A125', display: 'inline-flex', alignItems: 'center', gap: '4px',
+                    }}>
                     {url.substring(0, 30)}… <span style={{ marginLeft: '2px' }}>×</span>
                   </span>
                 ))}
@@ -713,10 +659,10 @@ export default function AuthorModal({ isOpen, mode, author, onClose, onSave }: A
               <div style={{ display: 'flex', gap: '6px' }}>
                 <input value={galleryInput} onChange={(e) => setGalleryInput(e.target.value)}
                   onKeyDown={(e) => {
-                    if (e.key === 'Enter') { e.preventDefault(); addTag(galleryInput, gallery, setGallery, setGalleryInput); }
+                    if (e.key === 'Enter') { e.preventDefault(); addGalleryItem(); }
                   }}
                   placeholder="https://example.com/image.jpg" style={{ ...inputStyle, flex: 1 }} />
-                <button onClick={() => addTag(galleryInput, gallery, setGallery, setGalleryInput)}
+                <button onClick={addGalleryItem}
                   style={{ padding: '8px 12px', background: 'rgba(91,134,161,0.15)',
                     border: '1px solid rgba(91,134,161,0.3)', borderRadius: '8px',
                     color: '#5B86A1', cursor: 'pointer', fontSize: '13px' }}>+
@@ -725,7 +671,7 @@ export default function AuthorModal({ isOpen, mode, author, onClose, onSave }: A
             </div>
           </div>
 
-          {/* ===== 8. METADATA (read-only, visually separated) ===== */}
+          {/* ===== 7. METADATA (read-only) ===== */}
           {mode === 'edit' && author && (
             <div style={{
               ...sectionStyle,
@@ -758,6 +704,10 @@ export default function AuthorModal({ isOpen, mode, author, onClose, onSave }: A
                 <div>
                   <label style={{ ...labelStyle, fontSize: '11px', color: '#6B7A8D' }}>Обновлён</label>
                   <div style={{ color: '#97A6BA', fontSize: '12px' }}>{new Date(author.updated_at).toLocaleString()}</div>
+                </div>
+                <div style={{ gridColumn: '1 / -1' }}>
+                  <label style={{ ...labelStyle, fontSize: '11px', color: '#6B7A8D' }}>Книг в каталоге</label>
+                  <div style={{ color: '#97A6BA', fontSize: '12px' }}>{author.book_count || 0}</div>
                 </div>
               </div>
             </div>

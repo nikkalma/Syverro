@@ -37,7 +37,7 @@ export default function AuthScreen({ navigation }: any) {
     try {
       if (isLogin) {
         await authService.login(email, password);
-        navigation.replace('MainTabs');  // ← ИСПРАВЛЕНО
+        navigation.replace('Main');
       } else {
         await authService.register(email, password);
         await authService.login(email, password);

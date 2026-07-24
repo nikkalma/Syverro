@@ -1,6 +1,6 @@
 // src/components/Admin/AdminLayout.tsx
 
-import { ReactNode, useState } from 'react';
+import { ReactNode, useState, useEffect } from 'react';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { useAuthStore } from '../../store/authStore';
 import { useAdminTheme } from '../../store/adminStore';
@@ -40,6 +40,10 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
     { path: '/admin/logs', label: t.admin.nav.logs, icon: '📋' },
     { path: '/admin/settings', label: t.admin.nav.settings, icon: '⚙️' },
   ];
+
+  useEffect(() => {
+    document.documentElement.setAttribute('data-theme', theme);
+  }, [theme]);
 
   const navItems = getNavItems(t);
 

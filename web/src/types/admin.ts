@@ -77,10 +77,11 @@ export interface AdminBook {
   genre_objects?: Array<{ id: string; name: string; slug: string }>;
   description?: string | null;
   total_pages?: number | null;
+  publication_format?: string | null;
   publication_type: 'official' | 'unofficial';
   metadata_status: 'draft' | 'incomplete' | 'review_ready' | 'complete';
   is_published: boolean;
-  moderation_status: 'pending' | 'approved' | 'rejected';
+  moderation_status: 'draft' | 'pending' | 'approved' | 'published' | 'archived';
   moderation_reason?: string | null;
   moderated_by?: string | null;
   moderated_at?: string | null;
@@ -124,12 +125,13 @@ export interface AdminBookCreate {
   genres?: string[];
   genre_ids?: string[];
   description?: string | null;
-  total_pages?: number | null;
+  publication_format?: string | null;
   publication_type?: 'official' | 'unofficial';
 }
 
 export interface AdminBookUpdate extends Partial<AdminBookCreate> {
   is_published?: boolean;
+  moderation_status?: 'draft' | 'pending' | 'approved' | 'published' | 'archived';
   metadata_status?: 'draft' | 'incomplete' | 'review_ready' | 'complete';
 }
 
@@ -150,6 +152,7 @@ export interface AuthorAward {
 export interface AdminAuthor {
   id: string;
   name: string;
+  birth_name?: string | null;
   first_name?: string | null;
   middle_name?: string | null;
   last_name?: string | null;
@@ -165,8 +168,6 @@ export interface AdminAuthor {
   wikipedia_url?: string | null;
   // Biography
   bio?: string | null;
-  birth_year?: number | null;
-  death_year?: number | null;
   birth_date?: string | null;
   death_date?: string | null;
   birth_place?: string | null;
@@ -215,6 +216,7 @@ export interface AdminAuthorFilters {
 
 export interface AdminAuthorCreate {
   name: string;
+  birth_name?: string | null;
   first_name?: string | null;
   middle_name?: string | null;
   last_name?: string | null;
@@ -227,8 +229,6 @@ export interface AdminAuthorCreate {
   official_website?: string | null;
   wikipedia_url?: string | null;
   bio?: string | null;
-  birth_year?: number | null;
-  death_year?: number | null;
   birth_date?: string | null;
   death_date?: string | null;
   birth_place?: string | null;
@@ -468,18 +468,22 @@ export function canModerateFull(role: AdminRole): boolean {
   return role === 'owner' || role === 'admin';
 }
 
-export type ModerationStatus = 'pending' | 'approved' | 'rejected';
+export type ModerationStatus = 'draft' | 'pending' | 'approved' | 'published' | 'archived';
 
 export const MODERATION_STATUS_LABELS: Record<ModerationStatus, string> = {
+  draft: 'Черновик',
   pending: 'На модерации',
   approved: 'Одобрено',
-  rejected: 'Отклонено',
+  published: 'Опубликована',
+  archived: 'Архивирована',
 };
 
 export const MODERATION_STATUS_COLORS: Record<ModerationStatus, string> = {
+  draft: '#97A6BA',
   pending: '#FFA726',
   approved: '#4CAF50',
-  rejected: '#EF5350',
+  published: '#5B86A1',
+  archived: '#EF5350',
 };
 
 export type PublicationType = 'official' | 'unofficial';

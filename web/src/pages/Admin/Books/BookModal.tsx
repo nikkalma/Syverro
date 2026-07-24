@@ -36,7 +36,7 @@ export default function BookModal({ isOpen, mode, book, onClose, onSave }: BookM
     cover: '',
     genres: [] as string[],
     genre_ids: [] as string[],
-    total_pages: '',
+    publication_format: '',
     description: '',
     publication_type: 'official' as 'official' | 'unofficial',
     is_published: false,
@@ -60,7 +60,7 @@ export default function BookModal({ isOpen, mode, book, onClose, onSave }: BookM
         cover: book.cover || '',
         genres: book.genres || [],
         genre_ids: book.genre_ids || [],
-        total_pages: book.total_pages?.toString() || '',
+        publication_format: book.publication_format || '',
         description: book.description || '',
         publication_type: (book.publication_type as 'official' | 'unofficial') || 'official',
         is_published: book.is_published || false,
@@ -74,7 +74,7 @@ export default function BookModal({ isOpen, mode, book, onClose, onSave }: BookM
         cover: '',
         genres: [],
         genre_ids: [],
-        total_pages: '',
+        publication_format: '',
         description: '',
         publication_type: 'official',
         is_published: false,
@@ -159,7 +159,7 @@ export default function BookModal({ isOpen, mode, book, onClose, onSave }: BookM
         cover: formData.cover.trim() || null,
         genres: formData.genres,
         genre_ids: formData.genre_ids,
-        total_pages: formData.total_pages ? parseInt(formData.total_pages) : null,
+        publication_format: formData.publication_format || null,
         description: formData.description.trim() || null,
         publication_type: formData.publication_type,
         is_published: formData.is_published,
@@ -333,20 +333,31 @@ export default function BookModal({ isOpen, mode, book, onClose, onSave }: BookM
             />
           </div>
 
-          {/* СТРАНИЦЫ */}
+          {/* ФОРМАТ ПУБЛИКАЦИИ */}
           {!(isModerator && mode === 'edit') && (
             <div style={{ marginBottom: '16px' }}>
               <label style={{ color: '#97A6BA', fontSize: '13px', display: 'block', marginBottom: '4px' }}>
-                Количество страниц
+                Формат публикации
               </label>
-              <input
-                type="number"
-                value={formData.total_pages}
-                onChange={(e) => setFormData({ ...formData, total_pages: e.target.value })}
-                placeholder="0"
-                min="0"
-                style={inputStyle}
-              />
+              <select
+                value={formData.publication_format}
+                onChange={(e) => setFormData({ ...formData, publication_format: e.target.value })}
+                style={{
+                  ...inputStyle,
+                  background: 'rgba(0,0,0,0.3)',
+                  cursor: 'pointer',
+                }}
+              >
+                <option value="">— Не указано —</option>
+                <option value="novel">Роман</option>
+                <option value="short_story">Рассказ</option>
+                <option value="journal">Журнальная публикация</option>
+                <option value="magazine">Газетная публикация</option>
+                <option value="anthology">Антология</option>
+                <option value="collection">Сборник</option>
+                <option value="web">Веб-публикация</option>
+                <option value="other">Другое</option>
+              </select>
             </div>
           )}
 

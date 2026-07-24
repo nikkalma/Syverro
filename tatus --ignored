@@ -1,0 +1,17 @@
+[33mcommit c6cdce1b5f2152c1292752b3783ddc409ba907d1[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m)[m
+Author: Nika Alma <maramorghan@gmail.com>
+Date:   Fri Jul 24 10:59:10 2026 +0300
+
+    docs: create Syverro architecture checkpoint
+
+ docs/ARCHITECTURE_DIRECTION.md      | 170 [32m+++++++++++[m
+ docs/DATABASE_SCHEMA.md             | 582 [32m++++++++++++++++++++++++++++++++++++[m
+ docs/DESIGN_SYSTEM.md               | 166 [32m++++++++++[m
+ docs/MIGRATION_CHECKPOINT.md        | 199 [32m++++++++++++[m
+ docs/MIGRATION_NOTES.md             | 123 [32m++++++++[m
+ docs/MOBILE_V1_REQUIREMENTS.md      | 295 [32m++++++++++++++++++[m
+ docs/PRODUCT_DECISIONS.md           |  58 [32m++++[m
+ docs/SESSION_ENGINE.md              | 199 [32m++++++++++++[m
+ docs/SYVERRO_STUDIO_REQUIREMENTS.md | 378 [32m+++++++++++++++++++++++[m
+ docs/UX_PATTERNS.md                 | 300 [32m+++++++++++++++++++[m
+ 10 files changed, 2470 insertions(+)

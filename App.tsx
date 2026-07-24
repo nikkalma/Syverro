@@ -2,15 +2,15 @@ import React, { useEffect, useState } from 'react';
 import { View, ActivityIndicator } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import { ThemeProvider } from './mobile-app/src/context/ThemeContext';
-import { LanguageProvider } from './mobile-app/src/context/LanguageContext';
-import { LightingProvider } from './mobile-app/src/context/LightingContext';
-import { authService } from './mobile-app/src/services/auth.service';
-import { initDatabase } from './mobile-app/src/db/database';
-import { startSync } from './mobile-app/src/sync/bootstrap';
-import { useStore } from './mobile-app/src/store';
-import AuthScreen from './mobile-app/src/screens/AuthScreen';
-import AppNavigator from './mobile-app/src/navigation/AppNavigator';
+import { ThemeProvider } from './mobile/src/context/ThemeContext';
+import { LanguageProvider } from './mobile/src/context/LanguageContext';
+import { LightingProvider } from './mobile/src/context/LightingContext';
+import { authService } from './mobile/src/services/auth.service';
+import { initDatabase } from './mobile/src/db/database';
+import { startSync } from './mobile/src/sync/bootstrap';
+import { useStore } from './mobile/src/store';
+import AuthScreen from './mobile/src/screens/AuthScreen';
+import AppNavigator from './mobile/src/navigation/AppNavigator';
 
 const Stack = createNativeStackNavigator();
 

@@ -8,12 +8,37 @@ from app.models.book_genre import book_genres
 from app.models.genre import Genre
 from app.models.book_knowledge_relation import BookKnowledgeRelation
 from app.models.knowledge_node import KnowledgeNode
-from app.schemas.author import AuthorPublicResponse, AuthorBookBrief, AuthorMetadata
+from app.schemas.author import AuthorPublicResponse, AuthorBookBrief, AuthorMetadata, AuthorListBrief
 from uuid import UUID
 import logging
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/authors", tags=["authors"])
+
+
+@router.get("", response_model=list[AuthorListBrief])
+async def list_authors(db: AsyncSession = Depends(get_db)):
+    cols = ["id", "name", "first_name", "last_name", "native_name",
+            "bio", "photo", "country"]
+    result = await db.execute(
+        sa_text("SELECT " + ", ".join(cols) + " FROM authors ORDER BY name"),
+    )
+    rows = result.mappings().all()
+    out = []
+    for row in rows:
+        bio = row.get("bio") or ""
+        excerpt = bio[:200] + "..." if len(bio) > 200 else bio if bio else None
+        out.append(AuthorListBrief(
+            id=row["id"],
+            name=row.get("name", ""),
+            first_name=row.get("first_name"),
+            last_name=row.get("last_name"),
+            native_name=row.get("native_name"),
+            biography_excerpt=excerpt,
+            photo_url=row.get("photo"),
+            nationality=row.get("country"),
+        ))
+    return out
 
 
 @router.get("/{author_id}", response_model=AuthorPublicResponse)

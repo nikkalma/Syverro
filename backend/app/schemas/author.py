@@ -149,6 +149,17 @@ class AuthorMetadata(BaseModel):
     motifs: List[str] = []
 
 
+class AuthorListBrief(BaseModel):
+    id: UUID
+    name: str
+    first_name: Optional[str] = None
+    last_name: Optional[str] = None
+    native_name: Optional[str] = None
+    biography_excerpt: Optional[str] = None
+    photo_url: Optional[str] = None
+    nationality: Optional[str] = None
+
+
 class AuthorPublicResponse(BaseModel):
     id: UUID
     name: str

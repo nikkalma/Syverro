@@ -187,7 +187,7 @@ async def migrate_json_genres_to_relations(conn):
         return
 
     result = await conn.execute(text(
-        "SELECT count(*) FROM books WHERE genres IS NOT NULL AND jsonb_array_length(genres) > 0"
+        "SELECT count(*) FROM books WHERE genres IS NOT NULL AND jsonb_array_length(genres::jsonb) > 0"
     ))
     book_count = result.scalar()
     if not book_count or book_count == 0:
@@ -197,7 +197,7 @@ async def migrate_json_genres_to_relations(conn):
 
     # Get all books with genres
     result = await conn.execute(text(
-        "SELECT id, genres FROM books WHERE genres IS NOT NULL AND jsonb_array_length(genres) > 0"
+        "SELECT id, genres FROM books WHERE genres IS NOT NULL AND jsonb_array_length(genres::jsonb) > 0"
     ))
     books = result.fetchall()
 
@@ -341,10 +341,10 @@ async def seed_books(conn):
         book_result = await conn.execute(
             text(
                 "INSERT INTO books (id, title, author, author_id, description, cover, "
-                "total_pages, genres, themes, is_published, publication_type, "
+                "total_pages, genres, themes, version, is_published, publication_type, "
                 "metadata_status, moderation_status) "
                 "VALUES (gen_random_uuid(), :title, :author, :author_id, :description, :cover, "
-                ":total_pages, :genres, :themes, true, 'official', "
+                ":total_pages, :genres, :themes, 1, true, 'official', "
                 "'incomplete', 'approved') RETURNING id"
             ),
             {

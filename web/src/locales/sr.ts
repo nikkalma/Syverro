@@ -483,6 +483,35 @@ export const sr: LocaleData = {
     },
   },
 
+  // ===== AUTHOR PAGE =====
+  author: {
+    aboutAuthor: 'O autoru',
+    timeline: 'Hronologija',
+    atmosphere: 'Atmosfera',
+    authorBooks: 'Knjige autora',
+    quote: 'Citat',
+    connections: 'Veze',
+    collections: 'Kolekcije',
+    youMayAlsoLike: 'Možda će vam se svideti',
+    tabAbout: 'O autoru',
+    tabBooks: 'Knjige',
+    tabWorlds: 'Svetovi',
+    tabConnections: 'Veze',
+    tabQuotes: 'Citati',
+    readMore: 'Pročitaj više',
+    showLess: 'Prikaži manje',
+    noBiography: 'Biografija nije dostupna',
+    noAtmosphere: 'Podaci o atmosferi nisu dostupni',
+    noBooks: 'Knjige nisu pronađene',
+    timelineComingSoon: 'Hronologija — uskoro',
+    quoteComingSoon: 'Citati — uskoro',
+    graphComingSoon: 'Graf veza — uskoro',
+    collectionsComingSoon: 'Kolekcije — uskoro',
+    recommendationsComingSoon: 'Preporuke — uskoro',
+    loading: 'Učitavanje...',
+    authorNotFound: 'Autor nije pronađen',
+  },
+
   // ===== NAVIGATION =====
   nav: {
     insights: 'Insights',

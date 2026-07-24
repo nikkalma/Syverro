@@ -483,6 +483,35 @@ export const be: LocaleData = {
     },
   },
 
+  // ===== АЎТАР =====
+  author: {
+    aboutAuthor: 'Пра аўтара',
+    timeline: 'Храналогія',
+    atmosphere: 'Атмасфера',
+    authorBooks: 'Кнігі аўтара',
+    quote: 'Цытата',
+    connections: 'Сувязі',
+    collections: 'Калекцыі',
+    youMayAlsoLike: 'Вам можа спадабацца',
+    tabAbout: 'Пра аўтара',
+    tabBooks: 'Кнігі',
+    tabWorlds: 'Светы',
+    tabConnections: 'Сувязі',
+    tabQuotes: 'Цытаты',
+    readMore: 'Чытаць далей',
+    showLess: 'Згарнуць',
+    noBiography: 'Біяграфія адсутнічае',
+    noAtmosphere: 'Даныя пра атмасферу адсутнічаюць',
+    noBooks: 'Кнігі не знойдзены',
+    timelineComingSoon: 'Храналогія — хутка',
+    quoteComingSoon: 'Цытаты — хутка',
+    graphComingSoon: 'Граф сувязяў — хутка',
+    collectionsComingSoon: 'Калекцыі — хутка',
+    recommendationsComingSoon: 'Рэкамендацыі — хутка',
+    loading: 'Загрузка...',
+    authorNotFound: 'Аўтар не знойдзены',
+  },
+
   // ===== НАВИГАЦИЯ =====
   nav: {
     insights: 'Инсайты',

@@ -483,6 +483,35 @@ export const kk: LocaleData = {
     },
   },
 
+  // ===== AUTHOR PAGE =====
+  author: {
+    aboutAuthor: 'Автор туралы',
+    timeline: 'Өмірбаян',
+    atmosphere: 'Атмосфера',
+    authorBooks: 'Автордың кітаптары',
+    quote: 'Цитата',
+    connections: 'Байланыстар',
+    collections: 'Коллекциялар',
+    youMayAlsoLike: 'Сізге ұнауы мүмкін',
+    tabAbout: 'Автор туралы',
+    tabBooks: 'Кітаптар',
+    tabWorlds: 'Әлемдер',
+    tabConnections: 'Байланыстар',
+    tabQuotes: 'Цитаталар',
+    readMore: 'Толығырақ',
+    showLess: 'Жасыру',
+    noBiography: 'Өмірбаяны жоқ',
+    noAtmosphere: 'Атмосфера туралы деректер жоқ',
+    noBooks: 'Кітаптар тізімі бос',
+    timelineComingSoon: 'Өмірбаян — жақын арада',
+    quoteComingSoon: 'Цитата — жақын арада',
+    graphComingSoon: 'Байланыс графигі — жақын арада',
+    collectionsComingSoon: 'Коллекциялар — жақын арада',
+    recommendationsComingSoon: 'Ұсыныстар — жақын арада',
+    loading: 'Жүктелуде...',
+    authorNotFound: 'Автор табылмады',
+  },
+
   // ===== NAVIGATION =====
   nav: {
     insights: 'Insights',

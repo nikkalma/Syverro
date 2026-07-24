@@ -483,6 +483,35 @@ export const uk: LocaleData = {
     },
   },
 
+  // ===== AUTHOR PAGE =====
+  author: {
+    aboutAuthor: 'Про автора',
+    timeline: 'Хронологія',
+    atmosphere: 'Атмосфера',
+    authorBooks: 'Книги автора',
+    quote: 'Цитата',
+    connections: "Зв'язки",
+    collections: 'Колекції',
+    youMayAlsoLike: 'Вам може сподобатися',
+    tabAbout: 'Про автора',
+    tabBooks: 'Книги',
+    tabWorlds: 'Світи',
+    tabConnections: "Зв'язки",
+    tabQuotes: 'Цитати',
+    readMore: 'Читати далі',
+    showLess: 'Згорнути',
+    noBiography: 'Біографія відсутня',
+    noAtmosphere: 'Дані про атмосферу відсутні',
+    noBooks: 'Книги не знайдені',
+    timelineComingSoon: 'Хронологія — незабаром',
+    quoteComingSoon: 'Цитати — незабаром',
+    graphComingSoon: 'Граф зв\'язків — незабаром',
+    collectionsComingSoon: 'Колекції — незабаром',
+    recommendationsComingSoon: 'Рекомендації — незабаром',
+    loading: 'Завантаження...',
+    authorNotFound: 'Автора не знайдено',
+  },
+
   // ===== NAVIGATION =====
   nav: {
     insights: 'Insights',

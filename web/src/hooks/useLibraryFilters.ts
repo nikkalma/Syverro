@@ -92,7 +92,9 @@ export function useLibraryFilters(books: EnrichedBook[]) {
 
   const allGenres = Array.from(
     new Set(
-      books.flatMap(book => book.genres || [])
+      books.flatMap(book =>
+        book.genreObjects?.map(g => g.name) || book.genres || []
+      )
     )
   );
 
@@ -126,9 +128,10 @@ export function useLibraryFilters(books: EnrichedBook[]) {
     }
 
 
+    const bookGenreNames = book.genreObjects?.map(g => g.name) || book.genres || [];
     if (
       selectedGenres.length > 0 &&
-      !book.genres?.some(genre => selectedGenres.includes(genre))
+      !bookGenreNames.some(genre => selectedGenres.includes(genre))
     ) {
       return false;
     }

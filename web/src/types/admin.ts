@@ -158,6 +158,7 @@ export interface AdminAuthor {
   // Basic information
   pseudonyms?: string[];
   nationality?: string | null;
+  country?: string | null;  // backward-compat alias populated from nationality
   languages?: string[];
   gender?: string;
   official_website?: string | null;

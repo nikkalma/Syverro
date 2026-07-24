@@ -3,6 +3,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func, and_, or_
 from sqlalchemy.sql import text
 from app.core.deps import get_current_user, get_db
+from app.core.author_service import find_or_create_author
+from app.services.book_service import link_author, get_primary_author, sync_author_cache
 from app.models.user import User
 from app.models.book import Book
 from app.models.user_book import UserBook
@@ -348,6 +350,14 @@ async def process_book_change(user_id: UUID, entity_id: str, operation: str, pay
             for key, value in payload.items():
                 if hasattr(existing, key) and key not in ({"id", "created_at", "created_by"} | SYNC_BLOCKED_BOOK_FIELDS):
                     setattr(existing, key, value)
+
+            # Keep M:N author cache in sync
+            if "author" in payload:
+                author = await get_primary_author(db, existing)
+                if not author and existing.author:
+                    author = await find_or_create_author(db, existing.author)
+                    await link_author(db, existing, author)
+
             existing.version += 1
             existing.last_modified_at = datetime.now(timezone.utc)
             await db.commit()
@@ -366,6 +376,14 @@ async def process_book_change(user_id: UUID, entity_id: str, operation: str, pay
             **safe_payload,
         )
         db.add(book)
+        await db.flush()
+
+        # Sync M:N author relation if author name was provided
+        author_name = payload.get("author") or safe_payload.get("author")
+        if author_name:
+            author = await find_or_create_author(db, author_name)
+            await link_author(db, book, author)
+
         await db.commit()
         await db.refresh(book)
         return {"status": "applied", "entity_id": entity_id, "version": book.version}
@@ -386,6 +404,18 @@ async def process_book_change(user_id: UUID, entity_id: str, operation: str, pay
         for key, value in payload.items():
             if hasattr(existing, key) and key not in ({"id", "created_at", "created_by", "version"} | SYNC_BLOCKED_BOOK_FIELDS):
                 setattr(existing, key, value)
+
+        # Keep M:N author cache in sync
+        if "author" in payload:
+            author = await get_primary_author(db, existing)
+            if author and existing.author != author.name:
+                existing.author = author.name
+            elif not author and existing.author:
+                author = await find_or_create_author(db, existing.author)
+                await link_author(db, existing, author)
+            elif author and existing.author == author.name:
+                pass  # already in sync
+
         existing.version += 1
         existing.last_modified_at = datetime.now(timezone.utc)
         await db.commit()

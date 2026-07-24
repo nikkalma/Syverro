@@ -12,6 +12,7 @@ from app.schemas.taxonomy import (
     KnowledgeRelationCreate, KnowledgeRelationResponse,
     BookKnowledgeRelationCreate, BookKnowledgeRelationUpdate, BookKnowledgeRelationResponse,
 )
+from app.services.metadata_service import recalculate_metadata_status
 from typing import List
 from uuid import UUID
 import logging
@@ -194,7 +195,8 @@ async def connect_book_to_node(
 
     # Verify book exists
     book_result = await db.execute(select(Book).where(Book.id == book_id))
-    if not book_result.scalar_one_or_none():
+    book = book_result.scalar_one_or_none()
+    if not book:
         raise HTTPException(status_code=404, detail="Book not found")
 
     # Verify node exists
@@ -220,6 +222,7 @@ async def connect_book_to_node(
         confidence=data.confidence,
     )
     db.add(relation)
+    await recalculate_metadata_status(db, book)
     await db.commit()
     await db.refresh(relation)
 
@@ -356,4 +359,8 @@ async def delete_book_relation(
         raise HTTPException(status_code=404, detail="Book relation not found")
 
     await db.delete(relation)
+    book_result = await db.execute(select(Book).where(Book.id == book_id))
+    book = book_result.scalar_one_or_none()
+    if book:
+        await recalculate_metadata_status(db, book)
     await db.commit()

@@ -35,6 +35,16 @@ interface BookResponse {
   metadata_status: string;
   moderation_status: string;
   moderation_reason: string | null;
+  themes?: string[];
+  motifs?: string[];
+  subgenres?: string[];
+  mood?: string[];
+  vibe?: string[];
+  subtitle?: string | null;
+  original_language?: string | null;
+  original_publication_year?: number | null;
+  series_name?: string | null;
+  series_position?: number | null;
   created_at: string;
   updated_at: string | null;
 }
@@ -71,6 +81,16 @@ function mapBookResponseToGlobalBook(data: BookResponse): GlobalBook {
     genres: data.genres ?? [],
     genreIds: data.genre_ids ?? [],
     genreObjects: data.genre_objects ?? [],
+    themes: data.themes ?? [],
+    motifs: data.motifs ?? [],
+    subgenres: data.subgenres ?? [],
+    mood: data.mood ?? [],
+    vibe: data.vibe ?? [],
+    subtitle: data.subtitle ?? null,
+    originalLanguage: data.original_language ?? null,
+    originalYear: data.original_publication_year ?? null,
+    series: data.series_name ?? null,
+    seriesPosition: data.series_position ?? null,
     totalPages: data.total_pages ?? 0,
     publicationType: (data.publication_type as 'official' | 'unofficial') ?? 'official',
     metadataStatus: (data.metadata_status as 'draft' | 'incomplete' | 'review_ready' | 'complete') ?? 'draft',

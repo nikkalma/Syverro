@@ -6,6 +6,8 @@ from app.models.user import User
 from app.models.book import Book
 from app.models.author import Author
 from app.models.book_author import book_authors
+from app.services.book_service import link_author, unlink_author
+from app.services.metadata_service import recalculate_metadata_status
 from app.schemas.author import AuthorResponse
 from typing import List, Optional
 from uuid import UUID
@@ -72,19 +74,8 @@ async def link_author_to_book(
     if not author:
         raise HTTPException(status_code=404, detail="Author not found")
 
-    # Check if already linked
-    existing = await db.execute(
-        select(book_authors).where(
-            book_authors.c.book_id == book_id,
-            book_authors.c.author_id == author_id,
-        )
-    )
-    if existing.fetchone():
-        raise HTTPException(status_code=409, detail="Author already linked to this book")
-
-    await db.execute(
-        book_authors.insert().values(book_id=book_id, author_id=author_id)
-    )
+    await link_author(db, book, author)
+    await recalculate_metadata_status(db, book)
     await db.commit()
     logger.info(f"Book {book_id} linked to author {author_id} by {current_user.email}")
     return {"message": "Author linked to book", "author_id": str(author_id)}
@@ -99,6 +90,11 @@ async def unlink_author_from_book(
 ):
     await check_moderator(current_user)
 
+    book_result = await db.execute(select(Book).where(Book.id == book_id))
+    book = book_result.scalar_one_or_none()
+    if not book:
+        raise HTTPException(status_code=404, detail="Book not found")
+
     existing = await db.execute(
         select(book_authors).where(
             book_authors.c.book_id == book_id,
@@ -108,12 +104,8 @@ async def unlink_author_from_book(
     if not existing.fetchone():
         raise HTTPException(status_code=404, detail="Author not linked to this book")
 
-    await db.execute(
-        delete(book_authors).where(
-            book_authors.c.book_id == book_id,
-            book_authors.c.author_id == author_id,
-        )
-    )
+    await unlink_author(db, book, author_id)
+    await recalculate_metadata_status(db, book)
     await db.commit()
     logger.info(f"Book {book_id} unlinked from author {author_id} by {current_user.email}")
     return {"message": "Author unlinked from book"}

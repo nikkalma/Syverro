@@ -5,6 +5,14 @@ from sqlalchemy import select, func, or_, and_
 from sqlalchemy.orm import selectinload
 from app.core.deps import get_current_user, get_db
 from app.core.metadata import calculate_missing_fields, get_metadata_status
+from app.core.author_service import find_or_create_author
+from app.services.book_service import (
+    get_author_book_count, get_book_authors, get_book_authors_data,
+    get_book_genre_ids, get_book_genre_objects,
+    get_book_taxonomy_items, get_primary_author,
+    link_author, sync_book_genres, unlink_author,
+)
+from app.services.metadata_service import recalculate_metadata_status
 from app.models.user import User
 from app.models.book import Book
 from app.models.user_book import UserBook
@@ -12,6 +20,7 @@ from app.models.author import Author
 from app.models.author_award import AuthorAward
 from app.models.genre import Genre
 from app.models.book_genre import book_genres
+from app.models.book_author import book_authors
 from app.schemas.admin import (
     AuthorCreate, AuthorUpdate, AuthorResponse,
     GenreCreate, GenreUpdate, GenreResponse,
@@ -424,8 +433,18 @@ async def get_books(
         count_query = count_query.where(search_filter)
     
     if genre:
-        query = query.where(Book.genres.contains([genre]))
-        count_query = count_query.where(Book.genres.contains([genre]))
+        genre_result = await db.execute(
+            select(Genre.id).where(Genre.name == genre).limit(1)
+        )
+        genre_row = genre_result.one_or_none()
+        if genre_row:
+            gid = genre_row[0]
+            query = query.where(Book.id.in_(
+                select(book_genres.c.book_id).where(book_genres.c.genre_id == gid)
+            ))
+            count_query = count_query.where(Book.id.in_(
+                select(book_genres.c.book_id).where(book_genres.c.genre_id == gid)
+            ))
     
     if is_published is not None:
         query = query.where(Book.is_published == is_published)
@@ -466,57 +485,24 @@ async def get_book_detail(
 
 async def _sync_book_genres(db: AsyncSession, book: Book, genre_ids: list):
     """Replace book's genre relations with the given list of genre UUIDs."""
-    from sqlalchemy import delete
-    # Clear existing
-    await db.execute(
-        delete(book_genres).where(book_genres.c.book_id == book.id)
-    )
-    # Insert new
-    for gid in genre_ids:
-        await db.execute(
-            book_genres.insert().values(book_id=book.id, genre_id=gid)
-        )
-
-
-async def _find_or_create_author(db: AsyncSession, author_name: str) -> Author:
-    """Find author by name (case-insensitive) or create new one."""
-    result = await db.execute(
-        select(Author).where(func.lower(Author.name) == author_name.strip().lower())
-    )
-    author = result.scalar_one_or_none()
-    if not author:
-        author = Author(name=author_name.strip())
-        db.add(author)
-        await db.flush()
-    return author
+    await sync_book_genres(db, book, genre_ids)
 
 
 async def _build_book_dict(db: AsyncSession, book: Book, include_missing: bool = False) -> dict:
     """Build a full book response dict with linked authors and optional missing_fields."""
-    from app.models.book_author import book_authors
+    authors = await get_book_authors_data(db, book)
+    author_count = len(authors)
 
-    # Load linked authors via book_authors junction table
-    author_result = await db.execute(
-        select(Author.id, Author.name, Author.nationality)
-        .join(book_authors, book_authors.c.author_id == Author.id)
-        .where(book_authors.c.book_id == book.id)
-    )
-    author_rows = author_result.all()
-    authors = [{"id": str(a[0]), "name": a[1], "country": a[2]} for a in author_rows]
+    genre_rows = await get_book_genre_objects(db, book)
+    genre_ids = [str(g[0]) for g in genre_rows]
+    genre_objects = [{"id": str(g[0]), "name": g[1], "slug": g[2]} for g in genre_rows]
 
     missing = []
     if include_missing and book.metadata_status != "complete":
-        missing = calculate_missing_fields(book, author_count=len(authors))
+        missing = calculate_missing_fields(book, author_count=author_count, genre_count=len(genre_ids))
 
-    # Load genre relations via book_genres table
-    genre_result = await db.execute(
-        select(Genre.id, Genre.name, Genre.slug)
-        .join(book_genres, book_genres.c.genre_id == Genre.id)
-        .where(book_genres.c.book_id == book.id)
-    )
-    genre_rows = genre_result.all()
-    genre_ids = [str(g[0]) for g in genre_rows]
-    genre_objects = [{"id": str(g[0]), "name": g[1], "slug": g[2]} for g in genre_rows]
+    themes = await get_book_taxonomy_items(db, book, node_type="theme")
+    motifs = await get_book_taxonomy_items(db, book, node_type="motif")
 
     return {
         "id": str(book.id),
@@ -545,8 +531,8 @@ async def _build_book_dict(db: AsyncSession, book: Book, include_missing: bool =
         "original_publication_year": book.original_publication_year,
         "series_name": book.series_name,
         "series_position": book.series_position,
-        "themes": book.themes or [],
-        "motifs": book.motifs or [],
+        "themes": themes,
+        "motifs": motifs,
         "missing_fields": missing,
         "authors": authors,
     }
@@ -570,7 +556,7 @@ async def create_book(
     if existing.scalar_one_or_none():
         raise HTTPException(status_code=400, detail="Book already exists")
 
-    author = await _find_or_create_author(db, data["author"])
+    author = await find_or_create_author(db, data["author"])
 
     book = Book(
         title=data["title"],
@@ -589,11 +575,15 @@ async def create_book(
     db.add(book)
     await db.flush()
 
+    # Link author via M:N (also syncs cache fields)
+    await link_author(db, book, author)
+
     # Sync genre_ids if provided
     genre_ids = data.get("genre_ids", [])
     if genre_ids:
         await _sync_book_genres(db, book, genre_ids)
 
+    await recalculate_metadata_status(db, book)
     await db.commit()
     await db.refresh(book)
     return {"id": str(book.id), "message": "Book created"}
@@ -614,10 +604,13 @@ async def update_book(
 
     # Handle author: explicit author_id wins, else find-or-create from author name
     if "author_id" in data and data["author_id"]:
-        book.author_id = data["author_id"]
+        author_uuid = UUID(data["author_id"]) if isinstance(data["author_id"], str) else data["author_id"]
+        author = await db.get(Author, author_uuid)
+        if author:
+            await link_author(db, book, author)
     elif "author" in data and data["author"] and data["author"] != book.author:
-        author = await _find_or_create_author(db, data["author"])
-        book.author_id = author.id
+        author = await find_or_create_author(db, data["author"])
+        await link_author(db, book, author)
 
     # Moderators can only edit basic fields; admins/owners can edit everything
     moderator_fields = ["title", "author", "cover", "genres", "description", "publication_type"]
@@ -632,6 +625,7 @@ async def update_book(
     if "genre_ids" in data:
         await _sync_book_genres(db, book, data["genre_ids"] or [])
 
+    await recalculate_metadata_status(db, book)
     await db.commit()
     await db.refresh(book)
     return {"message": "Book updated"}
@@ -783,7 +777,6 @@ async def approve_book(
     book.moderated_by = current_user.id
     book.moderated_at = datetime.utcnow()
     book.is_published = True
-    book.metadata_status = "incomplete"
 
     await db.commit()
     logger.info(f"✅ Book APPROVED: {book.id} '{book.title}' by moderator {current_user.id} — now visible in Global Library")
@@ -834,7 +827,6 @@ async def set_personal_only(
     book.moderated_by = current_user.id
     book.moderated_at = datetime.utcnow()
     book.is_published = False
-    book.metadata_status = "incomplete"
 
     await db.commit()
     logger.info(f"🔒 Book set to PERSONAL-ONLY: {book.id} '{book.title}' — not in Global Library, only for owner")
@@ -932,7 +924,7 @@ async def update_metadata_book(
 
     book_fields = ["subtitle", "original_title", "description", "cover",
                    "original_language", "country_of_origin", "original_publication_year",
-                   "series_name", "series_position", "themes", "motifs"]
+                   "series_name", "series_position"]
     for field in book_fields:
         val = getattr(data, field, None)
         if val is not None:
@@ -941,17 +933,7 @@ async def update_metadata_book(
     if hasattr(data, 'genre_ids') and data.genre_ids is not None:
         await _sync_book_genres(db, book, data.genre_ids)
 
-    from app.models.book_author import book_authors
-    author_count_result = await db.execute(
-        select(func.count()).select_from(book_authors).where(book_authors.c.book_id == book.id)
-    )
-    author_count = author_count_result.scalar() or 0
-
-    missing = calculate_missing_fields(book, author_count=author_count)
-    new_status = get_metadata_status(missing)
-
-    if book.metadata_status != "review_ready":
-        book.metadata_status = new_status
+    await recalculate_metadata_status(db, book)
 
     await db.commit()
     await db.refresh(book)
@@ -1016,12 +998,10 @@ async def get_authors(
     result = await db.execute(query)
     authors = result.scalars().all()
 
-    # Считаем книги для каждого автора
+    # Считаем книги для каждого автора (via M:N book_authors)
     authors_data = []
     for author in authors:
-        book_count = await db.scalar(
-            select(func.count()).select_from(Book).where(Book.author_id == author.id)
-        ) or 0
+        book_count = await get_author_book_count(db, author.id)
         authors_data.append({
             "id": str(author.id),
             "name": author.name,
@@ -1082,9 +1062,7 @@ async def get_author_detail(
     if not author:
         raise HTTPException(status_code=404, detail="Author not found")
     
-    book_count = await db.scalar(
-        select(func.count()).select_from(Book).where(Book.author_id == author.id)
-    ) or 0
+    book_count = await get_author_book_count(db, author.id)
 
     # Load awards
     awards_result = await db.execute(
@@ -1196,10 +1174,8 @@ async def delete_author(
     if not author:
         raise HTTPException(status_code=404, detail="Author not found")
 
-    # Проверяем, есть ли книги у автора
-    book_count = await db.scalar(
-        select(func.count()).select_from(Book).where(Book.author_id == author.id)
-    ) or 0
+    # Проверяем, есть ли книги у автора (via M:N book_authors)
+    book_count = await get_author_book_count(db, author.id)
     
     if book_count > 0:
         raise HTTPException(

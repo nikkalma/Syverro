@@ -103,20 +103,20 @@ class AdminBookUpdate(BaseModel):
 
 
 class AdminBookEnrichment(BaseModel):
-    """Book metadata enrichment (admin only). Author management uses /admin/books/{id}/authors endpoints."""
+    """Book metadata enrichment (admin only). Author management uses /admin/books/{id}/authors endpoints.
+    Genre management uses genre_ids (M:N) — the legacy genres string list is not accepted.
+    """
     subtitle: Optional[str] = None
     original_title: Optional[str] = None
     description: Optional[str] = None
     cover: Optional[str] = None
-    genres: Optional[List[str]] = None
     genre_ids: Optional[List[str]] = None
     original_language: Optional[str] = None
     country_of_origin: Optional[str] = None
     original_publication_year: Optional[int] = None
     series_name: Optional[str] = None
     series_position: Optional[int] = None
-    themes: Optional[List[str]] = None
-    motifs: Optional[List[str]] = None
+
 
 
 # ============================================================

@@ -3,6 +3,12 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func
 from sqlalchemy.orm import selectinload
 from app.core.deps import get_current_user, get_db
+from app.core.author_service import find_or_create_author
+from app.services.book_service import (
+    get_book_authors_data, get_book_genre_ids, get_book_genre_objects,
+    get_book_taxonomy_items, get_primary_author, link_author,
+)
+from app.models.book_author import book_authors
 from app.models.user import User
 from app.models.book import Book
 from app.models.author import Author
@@ -17,39 +23,20 @@ logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/books", tags=["books"])
 
 
-async def _find_or_create_author(db: AsyncSession, author_name: str) -> Author:
-    """Find author by name (case-insensitive) or create new one."""
-    result = await db.execute(
-        select(Author).where(func.lower(Author.name) == author_name.strip().lower())
-    )
-    author = result.scalar_one_or_none()
-    if not author:
-        author = Author(name=author_name.strip())
-        db.add(author)
-        await db.flush()
-    return author
-
-
 async def _book_to_response_dict(db: AsyncSession, book: Book) -> dict:
     """Build BookResponse dict with author info and genre objects."""
-    author_name = None
-    author_country = None
-    author_bio = None
-    author_id = None
-    if book.author_ref:
-        author_name = book.author_ref.name
-        author_country = book.author_ref.nationality
-        author_bio = book.author_ref.bio
-        author_id = book.author_id
+    primary = await get_primary_author(db, book)
+    author_name = primary.name if primary else None
+    author_country = primary.nationality if primary else None
+    author_bio = primary.bio if primary else None
+    author_id = primary.id if primary else None
 
-    genre_result = await db.execute(
-        select(Genre.id, Genre.name, Genre.slug)
-        .join(book_genres, book_genres.c.genre_id == Genre.id)
-        .where(book_genres.c.book_id == book.id)
-    )
-    genre_rows = genre_result.all()
+    genre_rows = await get_book_genre_objects(db, book)
     genre_objects = [{"id": str(g[0]), "name": g[1], "slug": g[2]} for g in genre_rows]
     genre_ids = [str(g[0]) for g in genre_rows]
+
+    themes = await get_book_taxonomy_items(db, book, node_type="theme")
+    motifs = await get_book_taxonomy_items(db, book, node_type="motif")
 
     return {
         "id": book.id,
@@ -69,6 +56,8 @@ async def _book_to_response_dict(db: AsyncSession, book: Book) -> dict:
         "metadata_status": book.metadata_status or "incomplete",
         "moderation_status": book.moderation_status or "pending",
         "moderation_reason": book.moderation_reason,
+        "themes": themes,
+        "motifs": motifs,
         "created_at": book.created_at,
         "updated_at": book.updated_at,
     }
@@ -83,7 +72,7 @@ async def get_catalog(
     try:
         query = (
             select(Book)
-            .options(selectinload(Book.author_ref))
+            .options(selectinload(Book.authors))
             .where(Book.is_published == True, Book.moderation_status == "approved")
         )
         if genre_id:
@@ -106,7 +95,7 @@ async def get_user_books(
     try:
         result = await db.execute(
             select(Book)
-            .options(selectinload(Book.author_ref))
+            .options(selectinload(Book.authors))
             .join(UserBook)
             .where(UserBook.user_id == current_user.id)
         )
@@ -148,10 +137,9 @@ async def create_book(
                 db.add(user_book)
                 await db.commit()
                 logger.info(f"📚 UserBook created for existing book {existing_book.id} by user {current_user.id}")
-            await db.refresh(existing_book, ["author_ref"])
             return await _book_to_response_dict(db, existing_book)
 
-        author = await _find_or_create_author(db, book_data.author)
+        author = await find_or_create_author(db, book_data.author)
 
         new_book = Book(
             title=book_data.title,
@@ -170,6 +158,8 @@ async def create_book(
         db.add(new_book)
         await db.flush()
 
+        await link_author(db, new_book, author)
+
         user_book = UserBook(
             user_id=current_user.id,
             book_id=new_book.id,
@@ -178,7 +168,7 @@ async def create_book(
         db.add(user_book)
 
         await db.commit()
-        await db.refresh(new_book, ["author_ref"])
+        await db.refresh(new_book, ["authors"])
 
         logger.info(f"✅ Book created: {new_book.id} '{new_book.title}' by user {current_user.id} — moderation_status=pending, is_published=False")
 
@@ -201,8 +191,6 @@ async def get_user_books_with_status(
         user_books = result.scalars().all()
         for ub in user_books:
             await db.refresh(ub, attribute_names=["book"])
-            if ub.book:
-                await db.refresh(ub.book, ["author_ref"])
         return user_books
     except Exception as e:
         print(f"Error: {e}")

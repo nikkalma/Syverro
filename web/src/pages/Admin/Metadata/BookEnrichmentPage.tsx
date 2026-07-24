@@ -285,7 +285,6 @@ export default function BookEnrichmentPage() {
         original_title: originalTitle || null,
         description: description || null,
         cover: cover || null,
-        genres: genres,
         genre_ids: genreIds.length > 0 ? genreIds : undefined,
         original_language: originalLanguage || null,
         country_of_origin: countryOfOrigin || null,

@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { apiClient } from '../../shared/api/client';
 import { formatAuthorName } from '../../shared/utils/formatAuthorName';
+import { getLocaleData, getBrowserLocale } from '../../locales';
 
 interface AuthorBook {
   id: string;
@@ -105,7 +106,7 @@ export default function AuthorPage() {
   if (loading) {
     return (
       <div style={{ maxWidth: '960px', margin: '0 auto', padding: '40px 24px' }}>
-        <div style={{ color: '#97A6BA', fontSize: '14px' }}>Loading...</div>
+        <div style={{ color: '#97A6BA', fontSize: '14px' }}>{t.author.loading}</div>
       </div>
     );
   }
@@ -118,12 +119,13 @@ export default function AuthorPage() {
           background: 'rgba(18, 28, 36, 0.6)', borderRadius: '12px',
           border: '1px solid rgba(239,83,80,0.2)',
         }}>
-          <p>{error || 'Author not found'}</p>
+          <p>{error || t.author.authorNotFound}</p>
         </div>
       </div>
     );
   }
 
+  const t = getLocaleData(getBrowserLocale());
   const displayName = formatAuthorName(author.name, author.first_name, author.last_name);
   const showNative = author.native_name && author.native_name !== author.name;
 
@@ -217,11 +219,11 @@ export default function AuthorPage() {
         display: 'flex', gap: '4px', marginTop: '28px',
         borderBottom: '1px solid rgba(255,255,255,0.06)',
       }}>
-        <button style={tabStyle(true)}>About</button>
-        <button style={tabStyle(false)}>Books</button>
-        <button style={tabStyle(false)}>Worlds</button>
-        <button style={tabStyle(false)}>Connections</button>
-        <button style={tabStyle(false)}>Quotes</button>
+        <button style={tabStyle(true)}>{t.author.tabAbout}</button>
+        <button style={tabStyle(false)}>{t.author.tabBooks}</button>
+        <button style={tabStyle(false)}>{t.author.tabWorlds}</button>
+        <button style={tabStyle(false)}>{t.author.tabConnections}</button>
+        <button style={tabStyle(false)}>{t.author.tabQuotes}</button>
       </div>
 
       {/* ──────── CONTENT GRID ──────── */}
@@ -234,7 +236,7 @@ export default function AuthorPage() {
       }}>
         {/* About Author */}
         <div>
-          <div style={sectionTitleStyle}>About Author</div>
+          <div style={sectionTitleStyle}>{t.author.aboutAuthor}</div>
           <div style={cardStyle}>
             {hasBio ? (
               <div>
@@ -252,27 +254,27 @@ export default function AuthorPage() {
                       fontFamily: 'Inter, sans-serif',
                     }}
                   >
-                    {bioExpanded ? 'Show less' : 'Read more'}
+                    {bioExpanded ? t.author.showLess : t.author.readMore}
                   </button>
                 )}
               </div>
             ) : (
-              <p style={{ fontSize: '13px', color: '#5B86A1', margin: 0 }}>No biography available</p>
+              <p style={{ fontSize: '13px', color: '#5B86A1', margin: 0 }}>{t.author.noBiography}</p>
             )}
           </div>
         </div>
 
         {/* Timeline */}
         <div>
-          <div style={sectionTitleStyle}>Timeline</div>
+          <div style={sectionTitleStyle}>{t.author.timeline}</div>
           <div style={placeholderStyle}>
-            Timeline — coming soon
+            {t.author.timelineComingSoon}
           </div>
         </div>
 
         {/* Atmosphere */}
         <div>
-          <div style={sectionTitleStyle}>Atmosphere</div>
+          <div style={sectionTitleStyle}>{t.author.atmosphere}</div>
           <div style={cardStyle}>
             {hasThemes ? (
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
@@ -284,7 +286,7 @@ export default function AuthorPage() {
                 ))}
               </div>
             ) : (
-              <p style={{ fontSize: '13px', color: '#5B86A1', margin: 0 }}>No atmosphere data yet</p>
+              <p style={{ fontSize: '13px', color: '#5B86A1', margin: 0 }}>{t.author.noAtmosphere}</p>
             )}
           </div>
         </div>
@@ -299,7 +301,7 @@ export default function AuthorPage() {
       }}>
         {/* Author Books */}
         <div>
-          <div style={sectionTitleStyle}>Author Books</div>
+          <div style={sectionTitleStyle}>{t.author.authorBooks}</div>
           {author.books.length > 0 ? (
             <div style={{
               display: 'flex', gap: '14px', overflowX: 'auto', paddingBottom: '8px',
@@ -341,15 +343,15 @@ export default function AuthorPage() {
               ))}
             </div>
           ) : (
-            <div style={placeholderStyle}>No books listed yet</div>
+            <div style={placeholderStyle}>{t.author.noBooks}</div>
           )}
         </div>
 
         {/* Quote */}
         <div>
-          <div style={sectionTitleStyle}>Quote</div>
+          <div style={sectionTitleStyle}>{t.author.quote}</div>
           <div style={placeholderStyle}>
-            Quote — coming soon
+            {t.author.quoteComingSoon}
           </div>
         </div>
       </div>
@@ -363,31 +365,31 @@ export default function AuthorPage() {
       }}>
         {/* Connections */}
         <div>
-          <div style={sectionTitleStyle}>Connections</div>
+          <div style={sectionTitleStyle}>{t.author.connections}</div>
           <div style={{
             padding: '40px 20px', borderRadius: '12px', textAlign: 'center',
             background: 'rgba(18, 28, 36, 0.4)', border: '1px solid rgba(255,255,255,0.06)',
             color: '#5B86A1', fontSize: '13px',
           }}>
             <div style={{ fontSize: '28px', marginBottom: '8px', opacity: 0.4 }}>🔮</div>
-            Graph visualization — coming soon
+            {t.author.graphComingSoon}
           </div>
         </div>
 
         {/* Collections */}
         <div>
-          <div style={sectionTitleStyle}>Collections</div>
+          <div style={sectionTitleStyle}>{t.author.collections}</div>
           <div style={placeholderStyle}>
-            Collections — coming soon
+            {t.author.collectionsComingSoon}
           </div>
         </div>
       </div>
 
       {/* ──────── BOTTOM: YOU MAY ALSO LIKE ──────── */}
       <div style={{ marginTop: '32px' }}>
-        <div style={sectionTitleStyle}>You may also like</div>
+        <div style={sectionTitleStyle}>{t.author.youMayAlsoLike}</div>
         <div style={placeholderStyle}>
-          Recommendations — coming soon
+          {t.author.recommendationsComingSoon}
         </div>
       </div>
 

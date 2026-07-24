@@ -483,6 +483,35 @@ export const ru: LocaleData = {
     },
   },
 
+  // ===== СТРАНИЦА АВТОРА =====
+  author: {
+    aboutAuthor: 'Об авторе',
+    timeline: 'Хронология',
+    atmosphere: 'Атмосфера',
+    authorBooks: 'Книги автора',
+    quote: 'Цитата',
+    connections: 'Связи',
+    collections: 'Коллекции',
+    youMayAlsoLike: 'Вам может понравиться',
+    tabAbout: 'Об авторе',
+    tabBooks: 'Книги',
+    tabWorlds: 'Миры',
+    tabConnections: 'Связи',
+    tabQuotes: 'Цитаты',
+    readMore: 'Читать далее',
+    showLess: 'Свернуть',
+    noBiography: 'Биография не указана',
+    noAtmosphere: 'Данные об атмосфере отсутствуют',
+    noBooks: 'Книги ещё не добавлены',
+    timelineComingSoon: 'Хронология — скоро',
+    quoteComingSoon: 'Цитата — скоро',
+    graphComingSoon: 'Граф связей — скоро',
+    collectionsComingSoon: 'Коллекции — скоро',
+    recommendationsComingSoon: 'Рекомендации — скоро',
+    loading: 'Загрузка...',
+    authorNotFound: 'Автор не найден',
+  },
+
   // ===== НАВИГАЦИЯ =====
   nav: {
     insights: 'Инсайты',

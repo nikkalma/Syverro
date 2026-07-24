@@ -483,6 +483,35 @@ export const en: LocaleData = {
     },
   },
 
+  // ===== AUTHOR PAGE =====
+  author: {
+    aboutAuthor: 'About Author',
+    timeline: 'Timeline',
+    atmosphere: 'Atmosphere',
+    authorBooks: 'Author Books',
+    quote: 'Quote',
+    connections: 'Connections',
+    collections: 'Collections',
+    youMayAlsoLike: 'You May Also Like',
+    tabAbout: 'About',
+    tabBooks: 'Books',
+    tabWorlds: 'Worlds',
+    tabConnections: 'Connections',
+    tabQuotes: 'Quotes',
+    readMore: 'Read more',
+    showLess: 'Show less',
+    noBiography: 'No biography available',
+    noAtmosphere: 'No atmosphere data yet',
+    noBooks: 'No books listed yet',
+    timelineComingSoon: 'Timeline — coming soon',
+    quoteComingSoon: 'Quote — coming soon',
+    graphComingSoon: 'Graph visualization — coming soon',
+    collectionsComingSoon: 'Collections — coming soon',
+    recommendationsComingSoon: 'Recommendations — coming soon',
+    loading: 'Loading...',
+    authorNotFound: 'Author not found',
+  },
+
   // ===== NAVIGATION =====
   nav: {
     insights: 'Insights',

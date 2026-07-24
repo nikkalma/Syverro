@@ -394,4 +394,33 @@ export interface LocaleData {
     empty: string;
     emptyFiltered: string;
   };
+
+  // ===== AUTHOR PAGE =====
+  author: {
+    aboutAuthor: string;
+    timeline: string;
+    atmosphere: string;
+    authorBooks: string;
+    quote: string;
+    connections: string;
+    collections: string;
+    youMayAlsoLike: string;
+    tabAbout: string;
+    tabBooks: string;
+    tabWorlds: string;
+    tabConnections: string;
+    tabQuotes: string;
+    readMore: string;
+    showLess: string;
+    noBiography: string;
+    noAtmosphere: string;
+    noBooks: string;
+    timelineComingSoon: string;
+    quoteComingSoon: string;
+    graphComingSoon: string;
+    collectionsComingSoon: string;
+    recommendationsComingSoon: string;
+    loading: string;
+    authorNotFound: string;
+  };
 }

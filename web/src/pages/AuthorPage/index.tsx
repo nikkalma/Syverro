@@ -19,6 +19,8 @@ interface AuthorMetadata {
 interface AuthorResponse {
   id: string;
   name: string;
+  display_name?: string | null;
+  display_name_mode?: string | null;
   first_name: string | null;
   last_name: string | null;
   native_name: string | null;
@@ -127,8 +129,8 @@ export default function AuthorPage() {
     );
   }
 
-  const displayName = formatAuthorName(author.name, author.first_name, author.last_name);
-  const showNative = author.native_name && author.native_name !== author.name;
+  const displayName = author.display_name || formatAuthorName(author.name, author.first_name, author.last_name);
+  const showNative = author.native_name && author.native_name !== displayName;
 
   const hasBio = author.biography && author.biography.trim().length > 0;
   const bioIsLong = hasBio && (author.biography!.length > 300);

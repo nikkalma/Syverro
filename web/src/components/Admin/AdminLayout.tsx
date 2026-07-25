@@ -35,6 +35,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
     { path: '/admin/books', label: t.admin.nav.books, icon: '📚' },
     { path: '/admin/authors', label: t.admin.nav.authors, icon: '✍️' },
     { path: '/admin/genres', label: t.admin.nav.genres, icon: '🏷️' },
+    { path: '/admin/taxonomy', label: (t.admin.nav as any).taxonomy || 'Таксономия', icon: '🏛️' },
     { path: '/admin/moderation', label: t.admin.nav.moderation, icon: '🛡️' },
     { path: '/admin/metadata', label: t.admin.nav.metadata, icon: '📝' },
     { path: '/admin/logs', label: t.admin.nav.logs, icon: '📋' },

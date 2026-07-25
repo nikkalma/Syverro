@@ -1,6 +1,8 @@
-import { useState, useEffect, useCallback } from 'react';
-import { AdminAuthor, AuthorAward, GENDER_OPTIONS } from '../../../types/admin';
+import { useState, useEffect, useCallback, useMemo } from 'react';
+import { AdminAuthor, AuthorAward, GENDER_OPTIONS, DISPLAY_NAME_MODE_LABELS, computeDisplayName } from '../../../types/admin';
+import type { DisplayNameMode } from '../../../types/admin';
 import ChipInput from '../../../components/ChipInput';
+import { computeSearchAliases } from '../../../shared/utils/normalizeSearch';
 
 const API_URL = import.meta.env.VITE_API_URL || 'https://api.syverro.com';
 
@@ -42,12 +44,10 @@ const sectionTitleStyle: React.CSSProperties = {
 };
 
 const tagColors: Record<string, string> = {
-  pseudonyms: '#A855F7', languages: '#5B86A1', occupations: '#FFA726',
+  pen_names: '#A855F7', languages: '#5B86A1', occupations: '#FFA726',
   literary_movements: '#4CAF50', notable_works: '#EF5350',
   genres: '#5B86A1', writing_languages: '#A855F7',
 };
-
-const DICT_KEYS = ['languages', 'occupations', 'literary_movements', 'writing_languages', 'genres'] as const;
 
 function loadDict(): Record<string, string[]> {
   try {
@@ -69,18 +69,30 @@ function addToDict(key: string, value: string) {
   saveDict(dict);
 }
 
+const DISPLAY_NAME_OPTIONS: { value: DisplayNameMode; label: string }[] = [
+  { value: 'real_name', label: DISPLAY_NAME_MODE_LABELS.real_name },
+  { value: 'birth_name', label: DISPLAY_NAME_MODE_LABELS.birth_name },
+  { value: 'pen_name', label: DISPLAY_NAME_MODE_LABELS.pen_name },
+  { value: 'custom', label: DISPLAY_NAME_MODE_LABELS.custom },
+];
+
 export default function AuthorModal({ isOpen, mode, author, onClose, onSave }: AuthorModalProps) {
   // --- Identity ---
-  const [name, setName] = useState('');
-  const [birthName, setBirthName] = useState('');
   const [firstName, setFirstName] = useState('');
-  const [middleName, setMiddleName] = useState('');
   const [lastName, setLastName] = useState('');
+  const [middleName, setMiddleName] = useState('');
+  const [birthName, setBirthName] = useState('');
   const [nativeName, setNativeName] = useState('');
-  const [sortName, setSortName] = useState('');
+
+  // --- Display Name ---
+  const [displayNameMode, setDisplayNameMode] = useState<DisplayNameMode>('real_name');
+  const [customDisplayName, setCustomDisplayName] = useState('');
+
+  // --- Pen Names ---
+  const [penNames, setPenNames] = useState<string[]>([]);
 
   // --- Basic Information ---
-  const [pseudonyms, setPseudonyms] = useState<string[]>([]);
+  const [sortName, setSortName] = useState('');
   const [nationality, setNationality] = useState('');
   const [languages, setLanguages] = useState<string[]>([]);
   const [gender, setGender] = useState('unknown');
@@ -117,24 +129,31 @@ export default function AuthorModal({ isOpen, mode, author, onClose, onSave }: A
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Chip dictionary for autocomplete
   const [chipDict] = useState(() => loadDict());
 
   const recordChip = useCallback((key: string, value: string) => {
     addToDict(key, value);
   }, []);
 
+  const computedDisplayName = useMemo(() => {
+    if (displayNameMode === 'custom') return customDisplayName.trim();
+    return computeDisplayName(displayNameMode, firstName, lastName, middleName, birthName, penNames);
+  }, [displayNameMode, firstName, lastName, middleName, birthName, penNames, customDisplayName]);
+
   useEffect(() => {
     if (!isOpen) return;
     if (mode === 'edit' && author) {
-      setName(author.name || '');
-      setBirthName(author.birth_name || '');
       setFirstName(author.first_name || '');
-      setMiddleName(author.middle_name || '');
       setLastName(author.last_name || '');
+      setMiddleName(author.middle_name || '');
+      setBirthName(author.birth_name || '');
       setNativeName(author.native_name || '');
+      setDisplayNameMode(author.display_name_mode || 'real_name');
+      setCustomDisplayName(
+        author.display_name_mode === 'custom' ? (author.display_name || '') : '',
+      );
+      setPenNames(author.pen_names || author.pseudonyms || []);
       setSortName(author.sort_name || '');
-      setPseudonyms(author.pseudonyms || []);
       setNationality(author.nationality || '');
       setLanguages(author.languages || []);
       setGender(author.gender || 'unknown');
@@ -153,14 +172,15 @@ export default function AuthorModal({ isOpen, mode, author, onClose, onSave }: A
       setSignatureImage(author.signature_image || '');
       setPortraitCaption(author.portrait_caption || '');
     } else {
-      setName('');
-      setBirthName('');
       setFirstName('');
-      setMiddleName('');
       setLastName('');
+      setMiddleName('');
+      setBirthName('');
       setNativeName('');
+      setDisplayNameMode('real_name');
+      setCustomDisplayName('');
+      setPenNames([]);
       setSortName('');
-      setPseudonyms([]);
       setNationality('');
       setLanguages([]);
       setGender('unknown');
@@ -294,15 +314,32 @@ export default function AuthorModal({ isOpen, mode, author, onClose, onSave }: A
     setError(null);
 
     try {
+      const displayName = computedDisplayName || [firstName, lastName].filter(Boolean).join(' ') || birthName || penNames[0] || '';
+      if (!displayName) {
+        throw new Error('Имя автора обязательно');
+      }
+
+      const searchAliases = computeSearchAliases(
+        displayName,
+        [firstName, middleName, lastName].filter(Boolean).join(' '),
+        birthName,
+        nativeName,
+        ...penNames,
+      );
+
       const submitData: Record<string, any> = {
-        name: name.trim(),
+        name: displayName,
+        display_name_mode: displayNameMode,
+        display_name: displayName,
+        pen_names: penNames.length > 0 ? penNames : null,
+        pseudonyms: penNames.length > 0 ? penNames : null,
+        search_aliases: searchAliases || null,
         birth_name: birthName.trim() || null,
         first_name: firstName.trim() || null,
         middle_name: middleName.trim() || null,
         last_name: lastName.trim() || null,
         native_name: nativeName.trim() || null,
         sort_name: sortName.trim() || null,
-        pseudonyms: pseudonyms.length > 0 ? pseudonyms : null,
         nationality: nationality.trim() || null,
         languages: languages.length > 0 ? languages : null,
         gender: gender || 'unknown',
@@ -326,10 +363,6 @@ export default function AuthorModal({ isOpen, mode, author, onClose, onSave }: A
         signature_image: signatureImage.trim() || null,
         portrait_caption: portraitCaption.trim() || null,
       };
-
-      if (!submitData.name) {
-        throw new Error('Имя автора обязательно');
-      }
 
       onSave(submitData);
       setLoading(false);
@@ -388,21 +421,16 @@ export default function AuthorModal({ isOpen, mode, author, onClose, onSave }: A
           {/* ===== 1. IDENTITY ===== */}
           <div style={sectionStyle}>
             <h3 style={sectionTitleStyle}>ИДЕНТИФИКАЦИЯ</h3>
-            <div style={{ marginBottom: '12px' }}>
-              <label style={labelStyle}>Имя *</label>
-              <input value={name} onChange={(e) => setName(e.target.value)}
-                placeholder="Полное имя автора" required style={inputStyle} />
-            </div>
             <div style={grid2Style}>
-              <div>
-                <label style={labelStyle}>Имя при рождении</label>
-                <input value={birthName} onChange={(e) => setBirthName(e.target.value)}
-                  placeholder="Имя, данное при рождении" style={inputStyle} />
-              </div>
               <div>
                 <label style={labelStyle}>Имя (first_name)</label>
                 <input value={firstName} onChange={(e) => setFirstName(e.target.value)}
-                  placeholder="Рэй" style={inputStyle} />
+                  placeholder="Лев" style={inputStyle} />
+              </div>
+              <div>
+                <label style={labelStyle}>Фамилия (last_name)</label>
+                <input value={lastName} onChange={(e) => setLastName(e.target.value)}
+                  placeholder="Толстой" style={inputStyle} />
               </div>
             </div>
             <div style={grid2Style}>
@@ -412,38 +440,89 @@ export default function AuthorModal({ isOpen, mode, author, onClose, onSave }: A
                   placeholder="Николаевич" style={inputStyle} />
               </div>
               <div>
-                <label style={labelStyle}>Фамилия (last_name)</label>
-                <input value={lastName} onChange={(e) => setLastName(e.target.value)}
-                  placeholder="Брэдбери" style={inputStyle} />
+                <label style={labelStyle}>Имя при рождении</label>
+                <input value={birthName} onChange={(e) => setBirthName(e.target.value)}
+                  placeholder="Граф Лев Николаевич Толстой" style={inputStyle} />
               </div>
             </div>
-            <div style={grid2Style}>
-              <div>
-                <label style={labelStyle}>Имя на родном языке (native_name)</label>
-                <input value={nativeName} onChange={(e) => setNativeName(e.target.value)}
-                  placeholder="Рэй Брэдбери" style={inputStyle} />
-              </div>
-              <div>
-                <label style={labelStyle}>Sort name (для сортировки)</label>
-                <input value={sortName} onChange={(e) => setSortName(e.target.value)}
-                  placeholder="Брэдбери, Рэй" style={inputStyle} />
-              </div>
+            <div>
+              <label style={labelStyle}>Имя на родном языке (native_name)</label>
+              <input value={nativeName} onChange={(e) => setNativeName(e.target.value)}
+                placeholder="Лев Николаевич Толстой" style={inputStyle} />
             </div>
           </div>
 
-          {/* ===== 2. BASIC INFORMATION ===== */}
+          {/* ===== 2. DISPLAY NAME ===== */}
+          <div style={sectionStyle}>
+            <h3 style={sectionTitleStyle}>ОТОБРАЖАЕМОЕ ИМЯ</h3>
+            <p style={{ color: '#6B7A8D', fontSize: '12px', margin: '0 0 12px 0', lineHeight: 1.5 }}>
+              Определяет, какое имя показывается на платформе.
+            </p>
+            <div style={{ marginBottom: '12px' }}>
+              <label style={labelStyle}>Режим отображения</label>
+              <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                {DISPLAY_NAME_OPTIONS.map((opt) => (
+                  <button
+                    key={opt.value}
+                    type="button"
+                    onClick={() => setDisplayNameMode(opt.value)}
+                    style={{
+                      padding: '8px 16px',
+                      background: displayNameMode === opt.value ? '#5B86A1' : 'rgba(255,255,255,0.05)',
+                      border: displayNameMode === opt.value
+                        ? '1px solid #5B86A1'
+                        : '1px solid rgba(255,255,255,0.08)',
+                      borderRadius: '8px',
+                      color: displayNameMode === opt.value ? '#0A1118' : '#97A6BA',
+                      cursor: 'pointer', fontSize: '13px',
+                      fontFamily: 'Inter, sans-serif',
+                      fontWeight: displayNameMode === opt.value ? '500' : '400',
+                      transition: 'all 0.15s',
+                    }}
+                  >
+                    {opt.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+            {displayNameMode === 'custom' && (
+              <div style={{ marginBottom: '12px' }}>
+                <label style={labelStyle}>Отображаемое имя</label>
+                <input value={customDisplayName} onChange={(e) => setCustomDisplayName(e.target.value)}
+                  placeholder="Введите отображаемое имя" style={inputStyle} />
+              </div>
+            )}
+            {computedDisplayName && (
+              <div style={{
+                padding: '10px 14px', background: 'rgba(91,134,161,0.08)',
+                border: '1px solid rgba(91,134,161,0.15)', borderRadius: '8px',
+              }}>
+                <span style={{ color: '#5B86A1', fontSize: '12px' }}>Будет отображаться как: </span>
+                <span style={{ color: '#E6EDF3', fontSize: '14px', fontWeight: '500' }}>{computedDisplayName}</span>
+              </div>
+            )}
+          </div>
+
+          {/* ===== 3. PEN NAMES ===== */}
+          <div style={sectionStyle}>
+            <h3 style={sectionTitleStyle}>ПСЕВДОНИМЫ</h3>
+            <ChipInput tags={penNames} onChange={(v) => { setPenNames(v); v.forEach((t) => recordChip('pen_names', t)); }}
+              placeholder="Добавить псевдоним..." color={tagColors.pen_names} suggestions={chipDict.pen_names || []} />
+          </div>
+
+          {/* ===== 4. BASIC INFORMATION ===== */}
           <div style={sectionStyle}>
             <h3 style={sectionTitleStyle}>ОСНОВНАЯ ИНФОРМАЦИЯ</h3>
             <div style={{ marginBottom: '12px' }}>
-              <label style={labelStyle}>Псевдонимы</label>
-              <ChipInput tags={pseudonyms} onChange={(v) => { setPseudonyms(v); v.forEach((t) => recordChip('pseudonyms', t)); }}
-                placeholder="Добавить псевдоним..." color={tagColors.pseudonyms} />
+              <label style={labelStyle}>Sort name (для сортировки)</label>
+              <input value={sortName} onChange={(e) => setSortName(e.target.value)}
+                placeholder="Толстой, Лев Николаевич" style={inputStyle} />
             </div>
             <div style={grid2Style}>
               <div>
                 <label style={labelStyle}>Национальность</label>
                 <input value={nationality} onChange={(e) => setNationality(e.target.value)}
-                  placeholder="Американская" style={inputStyle} />
+                  placeholder="Русская" style={inputStyle} />
               </div>
               <div>
                 <label style={labelStyle}>Языки</label>
@@ -473,7 +552,7 @@ export default function AuthorModal({ isOpen, mode, author, onClose, onSave }: A
             </div>
           </div>
 
-          {/* ===== 3. BIOGRAPHY ===== */}
+          {/* ===== 5. BIOGRAPHY ===== */}
           <div style={sectionStyle}>
             <h3 style={sectionTitleStyle}>БИОГРАФИЯ</h3>
             <div style={{ marginBottom: '12px' }}>
@@ -507,7 +586,7 @@ export default function AuthorModal({ isOpen, mode, author, onClose, onSave }: A
             </div>
           </div>
 
-          {/* ===== 4. CAREER ===== */}
+          {/* ===== 6. CAREER ===== */}
           <div style={sectionStyle}>
             <h3 style={sectionTitleStyle}>КАРЬЕРА</h3>
             <div style={{ marginBottom: '12px' }}>
@@ -522,7 +601,7 @@ export default function AuthorModal({ isOpen, mode, author, onClose, onSave }: A
             </div>
           </div>
 
-          {/* ===== 5. AWARDS ===== */}
+          {/* ===== 7. AWARDS ===== */}
           <div style={sectionStyle}>
             <h3 style={sectionTitleStyle}>НАГРАДЫ</h3>
 
@@ -622,7 +701,7 @@ export default function AuthorModal({ isOpen, mode, author, onClose, onSave }: A
             )}
           </div>
 
-          {/* ===== 6. MEDIA ===== */}
+          {/* ===== 8. MEDIA ===== */}
           <div style={sectionStyle}>
             <h3 style={sectionTitleStyle}>МЕДИА</h3>
             <div style={grid2Style}>
@@ -634,7 +713,7 @@ export default function AuthorModal({ isOpen, mode, author, onClose, onSave }: A
               <div>
                 <label style={labelStyle}>Подпись к портрету</label>
                 <input value={portraitCaption} onChange={(e) => setPortraitCaption(e.target.value)}
-                  placeholder="Рэй Брэдбери, 1970" style={inputStyle} />
+                  placeholder="Лев Толстой, 1870" style={inputStyle} />
               </div>
             </div>
             <div style={{ marginBottom: '12px' }}>
@@ -671,7 +750,7 @@ export default function AuthorModal({ isOpen, mode, author, onClose, onSave }: A
             </div>
           </div>
 
-          {/* ===== 7. METADATA (read-only) ===== */}
+          {/* ===== 9. METADATA (read-only) ===== */}
           {mode === 'edit' && author && (
             <div style={{
               ...sectionStyle,

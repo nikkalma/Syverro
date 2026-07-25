@@ -36,7 +36,7 @@ presentation/bookdetail/BookDetailViewModel.kt
 presentation/settings/SettingsScreen.kt
 presentation/settings/SettingsUiState.kt
 presentation/settings/SettingsViewModel.kt
-docs/MOBILE_ANDROID_MILESTONE2_PLAN.md (pre-implementation report)
+docs/mobile/MOBILE_ANDROID_MILESTONE2_PLAN.md (pre-implementation report)
 ```
 
 ### Modified files

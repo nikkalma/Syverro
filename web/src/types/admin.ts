@@ -149,6 +149,36 @@ export interface AuthorAward {
   created_at: string;
 }
 
+export type DisplayNameMode = 'real_name' | 'birth_name' | 'pen_name' | 'custom';
+
+export const DISPLAY_NAME_MODE_LABELS: Record<DisplayNameMode, string> = {
+  real_name: 'Настоящее имя',
+  birth_name: 'Имя при рождении',
+  pen_name: 'Псевдоним',
+  custom: 'Другое',
+};
+
+export function computeDisplayName(
+  mode: DisplayNameMode,
+  firstName?: string | null,
+  lastName?: string | null,
+  middleName?: string | null,
+  birthName?: string | null,
+  penNames?: string[] | null,
+  customDisplayName?: string | null,
+): string {
+  switch (mode) {
+    case 'real_name':
+      return [firstName, middleName, lastName].filter(Boolean).join(' ') || '';
+    case 'birth_name':
+      return birthName || '';
+    case 'pen_name':
+      return (penNames && penNames.length > 0) ? penNames[0] : '';
+    case 'custom':
+      return customDisplayName || '';
+  }
+}
+
 export interface AdminAuthor {
   id: string;
   name: string;
@@ -158,6 +188,11 @@ export interface AdminAuthor {
   last_name?: string | null;
   native_name?: string | null;
   sort_name?: string | null;
+  // Identity
+  display_name_mode?: DisplayNameMode;
+  display_name?: string | null;
+  pen_names?: string[];
+  search_aliases?: string | null;
   // Basic information
   pseudonyms?: string[];
   nationality?: string | null;
@@ -195,6 +230,18 @@ export interface AdminAuthor {
 }
 
 export function getAuthorDisplayName(author: AdminAuthor): string {
+  if (author.display_name) return author.display_name;
+  if (author.display_name_mode && author.display_name_mode !== 'custom') {
+    const computed = computeDisplayName(
+      author.display_name_mode,
+      author.first_name,
+      author.last_name,
+      author.middle_name,
+      author.birth_name,
+      author.pen_names || author.pseudonyms,
+    );
+    if (computed) return computed;
+  }
   if (author.native_name) return author.native_name;
   if (author.first_name || author.last_name) {
     return [author.first_name, author.middle_name, author.last_name]
@@ -216,6 +263,10 @@ export interface AdminAuthorFilters {
 
 export interface AdminAuthorCreate {
   name: string;
+  display_name_mode?: DisplayNameMode;
+  display_name?: string | null;
+  pen_names?: string[];
+  search_aliases?: string | null;
   birth_name?: string | null;
   first_name?: string | null;
   middle_name?: string | null;
@@ -470,6 +521,10 @@ export function canModerateFull(role: AdminRole): boolean {
 
 export type ModerationStatus = 'draft' | 'pending' | 'approved' | 'published' | 'archived';
 
+export const MODERATION_PIPELINE: ModerationStatus[] = ['draft', 'pending', 'approved', 'published'];
+
+export const MODERATION_PIPELINE_ARCHIVED: ModerationStatus = 'archived';
+
 export const MODERATION_STATUS_LABELS: Record<ModerationStatus, string> = {
   draft: 'Черновик',
   pending: 'На модерации',
@@ -485,6 +540,33 @@ export const MODERATION_STATUS_COLORS: Record<ModerationStatus, string> = {
   published: '#5B86A1',
   archived: '#EF5350',
 };
+
+export function getNextModerationStatus(current: ModerationStatus): ModerationStatus | null {
+  if (current === 'archived') return null;
+  const idx = MODERATION_PIPELINE.indexOf(current);
+  if (idx === -1 || idx >= MODERATION_PIPELINE.length - 1) return null;
+  return MODERATION_PIPELINE[idx + 1];
+}
+
+export function getModerationActions(current: ModerationStatus): { label: string; nextStatus: ModerationStatus; color: string }[] {
+  const actions: { label: string; nextStatus: ModerationStatus; color: string }[] = [];
+  const next = getNextModerationStatus(current);
+  if (next) {
+    const labels: Record<string, string> = {
+      pending: '📨 Отправить на модерацию',
+      approved: '✅ Одобрить',
+      published: '📗 Опубликовать',
+    };
+    actions.push({ label: labels[next] || next, nextStatus: next, color: '#4CAF50' });
+  }
+  if (current !== 'archived' && current !== 'draft') {
+    actions.push({ label: '⏮ Вернуть в черновик', nextStatus: 'draft', color: '#FFA726' });
+  }
+  if (current === 'published') {
+    actions.push({ label: '📦 Архивировать', nextStatus: 'archived', color: '#EF5350' });
+  }
+  return actions;
+}
 
 export type PublicationType = 'official' | 'unofficial';
 
@@ -527,6 +609,55 @@ export const ENRICHMENT_FIELD_LABELS: Record<string, string> = {
   series_position: 'Номер в серии',
   themes: 'Темы',
   motifs: 'Мотивы',
+};
+
+// ============================================================
+// ТАКСОНОМИЯ
+// ============================================================
+
+export type TaxonomyNodeType = 'genre' | 'literary_direction' | 'theme' | 'motif' | 'concept';
+
+export const TAXONOMY_NODE_TYPES: TaxonomyNodeType[] = ['genre', 'literary_direction', 'theme', 'motif', 'concept'];
+
+export const TAXONOMY_NODE_TYPE_LABELS: Record<TaxonomyNodeType, string> = {
+  genre: 'Жанры',
+  literary_direction: 'Литературные направления',
+  theme: 'Темы',
+  motif: 'Мотивы',
+  concept: 'Концепты',
+};
+
+export const TAXONOMY_NODE_TYPE_ICONS: Record<TaxonomyNodeType, string> = {
+  genre: '🏷️',
+  literary_direction: '🧭',
+  theme: '🎯',
+  motif: '🔄',
+  concept: '💡',
+};
+
+export interface TaxonomyNode {
+  id: string;
+  name: string;
+  slug: string;
+  node_type: TaxonomyNodeType;
+  description: string | null;
+  parent_id: string | null;
+  is_active: boolean;
+  is_published: boolean;
+  aliases: string[];
+  sort_order: number;
+  book_count: number;
+  children: TaxonomyNode[];
+  created_at: string;
+  updated_at: string;
+}
+
+export const TAXONOMY_NODE_COLORS: Record<TaxonomyNodeType, string> = {
+  genre: '#5B86A1',
+  literary_direction: '#A855F7',
+  theme: '#FBBF24',
+  motif: '#EC4899',
+  concept: '#4CAF50',
 };
 
 export const CREATION_TYPE_LABELS: Record<string, string> = {

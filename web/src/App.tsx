@@ -25,6 +25,7 @@ import AdminUsers from "./pages/Admin/Users";
 import AdminBooks from "./pages/Admin/Books";
 import AdminAuthors from "./pages/Admin/Authors";
 import AdminGenres from "./pages/Admin/Genres";
+import AdminTaxonomy from "./pages/Admin/Taxonomy";
 import AdminLogs from "./pages/Admin/Logs";
 import AdminSettings from "./pages/Admin/Settings";
 import AdminModeration from "./pages/Admin/Moderation/ModerationPage";
@@ -58,6 +59,7 @@ export default function App() {
         <Route path="/admin/books" element={<AdminRoute><AdminBooks /></AdminRoute>} />
         <Route path="/admin/authors" element={<AdminRoute><AdminAuthors /></AdminRoute>} />
         <Route path="/admin/genres" element={<AdminRoute><AdminGenres /></AdminRoute>} />
+        <Route path="/admin/taxonomy" element={<AdminRoute><AdminTaxonomy /></AdminRoute>} />
         <Route path="/admin/logs" element={<AdminRoute><AdminLogs /></AdminRoute>} />
         <Route path="/admin/settings" element={<AdminRoute><AdminSettings /></AdminRoute>} />
         <Route path="/admin/moderation" element={<AdminRoute><AdminModeration /></AdminRoute>} />

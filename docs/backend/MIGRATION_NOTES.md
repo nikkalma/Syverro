@@ -15,23 +15,23 @@ The Expo application in `mobile/` is a completed research prototype. It is **not
 The following are extracted as documentation and will be rebuilt from scratch in Kotlin:
 
 ### Product Decisions
-- All entries in `docs/PRODUCT_DECISIONS.md` are binding for V1.
+- All entries in `docs/product/PRODUCT_DECISIONS.md` are binding for V1.
 - These describe *why* features work the way they do, not *how* they were implemented.
 
 ### UX Patterns
-- All screen descriptions in `docs/UX_PATTERNS.md` define the target behavior.
+- All screen descriptions in `docs/web/UX_PATTERNS.md` define the target behavior.
 - The Expo implementation is one interpretation; the Kotlin version may differ in implementation but must match the described user experience.
 
 ### Session Engine
-- `docs/SESSION_ENGINE.md` defines the complete lifecycle.
+- `docs/backend/SESSION_ENGINE.md` defines the complete lifecycle.
 - The timer, pause accumulation, and statistics derivation are rebuilt using Kotlin coroutines and `SystemClock.elapsedRealtime()`.
 
 ### Design System
-- `docs/DESIGN_SYSTEM.md` defines colors, spacing, typography, and motion.
+- `docs/web/DESIGN_SYSTEM.md` defines colors, spacing, typography, and motion.
 - The Jetpack Compose implementation will use `MaterialTheme` with these custom values rather than porting React Native StyleSheet objects.
 
 ### Database Schema
-- `docs/DATABASE_SCHEMA.md` defines the Room entities, relations, indexes, and constraints.
+- `docs/backend/DATABASE_SCHEMA.md` defines the Room entities, relations, indexes, and constraints.
 - This is the target schema. The Expo prototye's SQLite schema is incomplete and incompatible.
 
 ---

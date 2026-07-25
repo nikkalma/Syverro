@@ -786,7 +786,7 @@ that starts a new session.
 
 ## 8. Visual Atmosphere
 
-The prototype assumes the existing design system from `docs/DESIGN_SYSTEM.md`:
+The prototype assumes the existing design system from `docs/web/DESIGN_SYSTEM.md`:
 
 - **Dark theme:** Deep navy #0B1220, muted blue #5C7C9A, off-white text
 - **Light theme:** Warm beige #E0D4C3, muted slate #4A5A6A, warm dark text
@@ -814,4 +814,4 @@ The prototype assumes the existing design system from `docs/DESIGN_SYSTEM.md`:
 | 8 | Settings location | Inside Profile (⚙ icon) | Pending (related to #2) |
 
 **Next step:**
-Once you've reviewed the navigation options (A/B/C) and the visual prototypes, I'll update `docs/MOBILE_V1_UX_PROTOTYPE.md` with the final version, then proceed to architecture decisions and documentation updates.
+Once you've reviewed the navigation options (A/B/C) and the visual prototypes, I'll update `docs/mobile/MOBILE_V1_UX_PROTOTYPE.md` with the final version, then proceed to architecture decisions and documentation updates.

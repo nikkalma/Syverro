@@ -118,21 +118,23 @@ export const LANGUAGES = [
   'Persian',
 ];
 
-export const MOODS = taxonomy.mood;
-export const THEMES = taxonomy.themes;
-export const MOTIFS = taxonomy.motifs;
-export const VIBES = taxonomy.vibe;
+export const getMOODS = () => taxonomy.mood;
+export const getTHEMES = () => taxonomy.themes;
+export const getMOTIFS = () => taxonomy.motifs;
+export const getVIBES = () => taxonomy.vibe;
 
-const rawGenres = booksData.flatMap((book: any) => book.genres || []);
-const cleanGenres = rawGenres.filter((genre: string) => {
-  if (!genre || typeof genre !== 'string') return false;
-  if (genre.length < 2) return false;
-  if (/^\d+$/.test(genre)) return false;
-  if (/^[\d\.]+$/.test(genre)) return false;
-  if (/^[A-ZА-Я]$/.test(genre)) return false;
-  return true;
-});
-export const GENRES = Array.from(new Set(cleanGenres)).sort();
+export const getGENRES = () => {
+  const rawGenres = booksData.flatMap((book: any) => book.genres || []);
+  const cleanGenres = rawGenres.filter((genre: string) => {
+    if (!genre || typeof genre !== 'string') return false;
+    if (genre.length < 2) return false;
+    if (/^\d+$/.test(genre)) return false;
+    if (/^[\d\.]+$/.test(genre)) return false;
+    if (/^[A-ZА-Я]$/.test(genre)) return false;
+    return true;
+  });
+  return Array.from(new Set(cleanGenres)).sort();
+};
 
 export const ERAS = [
   { value: 'ancient', label: 'Древний мир (до V в.)' },

@@ -1,7 +1,7 @@
 // src/pages/Profile/ReaderIdentitySection/EditMode/index.tsx
 import { useState } from 'react';
 import { TagSelect } from './TagSelect';
-import { COUNTRIES, LANGUAGES, GENRES, THEMES, VIBES, MOTIFS, ERAS } from '../constants';
+import { COUNTRIES, LANGUAGES, getGENRES, getTHEMES, getVIBES, getMOTIFS, ERAS } from '../constants';
 import { readingGoalLabels } from '../../../../types/reader';
 import { LocaleData } from '../../../../locales';
 
@@ -50,22 +50,22 @@ export function EditMode({ profile, t, onSave, onCancel }: EditModeProps) {
     value: key,
   }));
 
-  const genreOptions = GENRES.map((g) => ({
+  const genreOptions = getGENRES().map((g) => ({
     label: g,
     value: g,
   }));
 
-  const themeOptions = THEMES.map((key) => ({
+  const themeOptions = getTHEMES().map((key) => ({
     label: t.taxonomy.theme[key] || key,
     value: key,
   }));
 
-  const vibeOptions = VIBES.map((key) => ({
+  const vibeOptions = getVIBES().map((key) => ({
     label: t.taxonomy.vibe[key] || key,
     value: key,
   }));
 
-  const motifOptions = MOTIFS.map((key) => ({
+  const motifOptions = getMOTIFS().map((key) => ({
     label: t.taxonomy.motif[key] || key,
     value: key,
   }));

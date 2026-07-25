@@ -1138,6 +1138,13 @@ def validate_author_slug(slug: Optional[str]) -> None:
             raise HTTPException(status_code=422, detail="Slug must be lowercase, URL-safe, and non-empty")
 
 
+def _make_slug(name: str) -> str:
+    import re as _re
+    slug = _re.sub(r'[^\w\s-]', '', name.lower())
+    slug = _re.sub(r'[-\s]+', '-', slug).strip('-')
+    return slug or 'unknown'
+
+
 def validate_author_dates(birth_date: Optional[str], death_date: Optional[str]) -> None:
     if birth_date:
         try:
@@ -1169,16 +1176,7 @@ async def create_author(
 ):
     await check_admin(current_user)
 
-    validate_author_slug(data.slug)
     validate_author_dates(data.birth_date, data.death_date)
-
-    # Slug uniqueness check
-    if data.slug:
-        existing_slug = await db.execute(
-            select(Author).where(Author.slug == data.slug.strip().lower())
-        )
-        if existing_slug.scalar_one_or_none():
-            raise HTTPException(status_code=400, detail="Slug already in use")
 
     # Name uniqueness check
     existing = await db.execute(
@@ -1186,6 +1184,28 @@ async def create_author(
     )
     if existing.scalar_one_or_none():
         raise HTTPException(status_code=400, detail="Author already exists")
+
+    # Slug: auto-generate if not provided
+    if not data.slug:
+        base_slug = _make_slug(data.name)
+        slug = base_slug
+        counter = 1
+        while True:
+            existing_slug = await db.execute(
+                select(Author).where(Author.slug == slug)
+            )
+            if not existing_slug.scalar_one_or_none():
+                break
+            slug = f"{base_slug}-{counter}"
+            counter += 1
+        data.slug = slug
+    else:
+        validate_author_slug(data.slug)
+        existing_slug = await db.execute(
+            select(Author).where(Author.slug == data.slug.strip().lower())
+        )
+        if existing_slug.scalar_one_or_none():
+            raise HTTPException(status_code=400, detail="Slug already in use")
 
     author = Author(**data.model_dump(exclude={"awards"}))
     db.add(author)

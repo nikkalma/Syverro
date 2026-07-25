@@ -75,6 +75,12 @@ async def ensure_user_profile_columns(conn):
         "ALTER TABLE genres ADD COLUMN IF NOT EXISTS parent_id UUID REFERENCES genres(id)",
         "ALTER TABLE genres ADD COLUMN IF NOT EXISTS type VARCHAR NOT NULL DEFAULT 'literary'",
         "ALTER TABLE authors ADD COLUMN IF NOT EXISTS creation_type VARCHAR NOT NULL DEFAULT 'individual_author'",
+        "ALTER TABLE authors ADD COLUMN IF NOT EXISTS slug VARCHAR UNIQUE",
+        "ALTER TABLE authors ADD COLUMN IF NOT EXISTS display_name VARCHAR",
+        "ALTER TABLE authors ADD COLUMN IF NOT EXISTS display_name_mode VARCHAR",
+        "ALTER TABLE authors ADD COLUMN IF NOT EXISTS pen_names VARCHAR[] DEFAULT '{}'",
+        "ALTER TABLE authors ADD COLUMN IF NOT EXISTS birth_name VARCHAR",
+        "ALTER TABLE authors ADD COLUMN IF NOT EXISTS search_aliases TEXT",
     ]
     for sql in statements:
         await conn.execute(text(sql))

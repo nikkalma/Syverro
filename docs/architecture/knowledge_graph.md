@@ -11,7 +11,7 @@ Neo4j is the long-term target, but the graph architecture is first implemented i
 - No additional infrastructure during early development
 - Existing async SQLAlchemy stack
 - Transactional integrity with existing entities (books, users, sessions)
-- Ability to migrate to a dedicated graph database later when scale demands it
+- Ability to migrate to a dedicated graph database later when scale demands it.
 
 ## Core Entities
 

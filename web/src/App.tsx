@@ -48,7 +48,7 @@ export default function App() {
         <Route path="/quotes" element={<Layout><QuotesPage /></Layout>} />
         <Route path="/collections" element={<Layout><CollectionsPage /></Layout>} />
         <Route path="/worldmap" element={<Layout><WorldMap /></Layout>} />
-        <Route path="/profile" element={<Layout><Profile /></Layout>} />
+        <Route path="/profile" element={<Layout hideSidebar><Profile /></Layout>} />
         <Route path="/settings" element={<Layout><Settings /></Layout>} />
         <Route path="/book/:id" element={<Layout><BookPage /></Layout>} />
         <Route path="/author/:slug" element={<Layout><AuthorPage /></Layout>} />

@@ -18,9 +18,10 @@ import Sidebar from './Sidebar';
 
 interface LayoutProps {
   children: ReactNode;
+  hideSidebar?: boolean;
 }
 
-export default function Layout({ children }: LayoutProps) {
+export default function Layout({ children, hideSidebar }: LayoutProps) {
   const navigate = useNavigate();
   const location = useLocation();
   const { user, logout } = useAuthStore();
@@ -301,7 +302,7 @@ export default function Layout({ children }: LayoutProps) {
         </div>
       </header>
       <div style={{ flex: 1, display: 'flex', overflow: 'hidden' }}>
-        <Sidebar />
+        {!hideSidebar && <Sidebar />}
         <main style={{ flex: 1, overflowY: 'auto', background: 'var(--bg)' }}>
           {children}
         </main>

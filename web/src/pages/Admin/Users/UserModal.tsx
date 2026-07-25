@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { AdminUser, ROLE_LABELS, ROLE_COLORS } from '../../../types/admin';
+import { apiClient } from '../../../shared/api/client';
 
 interface UserModalProps {
   isOpen: boolean;
@@ -10,7 +11,7 @@ interface UserModalProps {
   onUpdate: () => void;
 }
 
-const API_URL = import.meta.env.VITE_API_URL || 'https://api.syverro.com';
+
 
 export default function UserModal({ isOpen, user, onClose, onUpdate }: UserModalProps) {
   const [isEditing, setIsEditing] = useState(false);
@@ -22,8 +23,6 @@ export default function UserModal({ isOpen, user, onClose, onUpdate }: UserModal
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const token = localStorage.getItem('token');
-
   if (!isOpen) return null;
 
   // ===== СОХРАНЕНИЕ ИЗМЕНЕНИЙ =====
@@ -32,24 +31,11 @@ export default function UserModal({ isOpen, user, onClose, onUpdate }: UserModal
     setError(null);
 
     try {
-      const response = await fetch(`${API_URL}/admin/users/${user.id}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify(formData),
-      });
-
-      if (!response.ok) {
-        const data = await response.json();
-        throw new Error(data.detail || 'Ошибка обновления');
-      }
-
+      await apiClient.put(`/admin/users/${user.id}`, formData);
       setIsEditing(false);
       onUpdate();
     } catch (err: any) {
-      setError(err.message);
+      setError(err.response?.data?.detail || err.message || 'Ошибка обновления');
     } finally {
       setLoading(false);
     }

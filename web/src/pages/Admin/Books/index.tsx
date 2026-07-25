@@ -8,8 +8,7 @@ import BooksFilters from './BooksFilters';
 import BookModal from './BookModal';
 import { canManageBooks } from '../../../types/admin';
 import { getLocaleData, getBrowserLocale } from '../../../locales';
-
-const API_URL = import.meta.env.VITE_API_URL || 'https://api.syverro.com';
+import { apiClient } from '../../../shared/api/client';
 
 export default function AdminBooks() {
   const locale = getBrowserLocale();
@@ -24,7 +23,6 @@ export default function AdminBooks() {
   const [bookToDelete, setBookToDelete] = useState<AdminBook | null>(null);
   const [modalMode, setModalMode] = useState<'create' | 'edit'>('create');
 
-  const token = localStorage.getItem('token');
   const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
   const userRole = currentUser?.role || 'user';
   const canManage = canManageBooks(userRole);
@@ -35,27 +33,18 @@ export default function AdminBooks() {
     clearError();
 
     try {
-      const params = new URLSearchParams({
+      const params: Record<string, string> = {
         page: String(page),
         limit: String(limit),
         ...(searchQuery && { search: searchQuery }),
         ...filters,
-      });
+      };
 
-      const response = await fetch(`${API_URL}/admin/books?${params}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-
-      if (!response.ok) {
-        const data = await response.json();
-        throw new Error(data.detail || 'Ошибка загрузки книг');
-      }
-
-      const data = await response.json();
-      setBooks(data.data || []);
-      setTotal(data.total || 0);
+      const response = await apiClient.get('/admin/books', { params });
+      setBooks(response.data.data || []);
+      setTotal(response.data.total || 0);
     } catch (err: any) {
-      setError(err.message);
+      setError(err.response?.data?.detail || err.message || 'Ошибка загрузки книг');
     } finally {
       setLoading(false);
     }
@@ -68,42 +57,22 @@ export default function AdminBooks() {
   // ===== СОЗДАНИЕ КНИГИ =====
   const handleCreate = async (data: AdminBookCreate) => {
     try {
-      const response = await fetch(`${API_URL}/admin/books`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify(data),
-      });
-
-      if (!response.ok) throw new Error('Ошибка создания книги');
-
+      await apiClient.post('/admin/books', data);
       setIsModalOpen(false);
       await fetchBooks();
     } catch (err: any) {
-      setError(err.message);
+      setError(err.response?.data?.detail || err.message || 'Ошибка создания книги');
     }
   };
 
   // ===== ОБНОВЛЕНИЕ КНИГИ =====
   const handleUpdate = async (id: string, data: AdminBookUpdate) => {
     try {
-      const response = await fetch(`${API_URL}/admin/books/${id}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify(data),
-      });
-
-      if (!response.ok) throw new Error('Ошибка обновления книги');
-
+      await apiClient.put(`/admin/books/${id}`, data);
       setIsModalOpen(false);
       await fetchBooks();
     } catch (err: any) {
-      setError(err.message);
+      setError(err.response?.data?.detail || err.message || 'Ошибка обновления книги');
     }
   };
 
@@ -120,20 +89,10 @@ export default function AdminBooks() {
       else if (book.moderation_status === 'published') nextStatus = 'archived';
       else nextStatus = 'draft';
 
-      const response = await fetch(`${API_URL}/admin/books/${id}/publish`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ moderation_status: nextStatus }),
-      });
-
-      if (!response.ok) throw new Error('Ошибка изменения статуса');
-
+      await apiClient.put(`/admin/books/${id}/publish`, { moderation_status: nextStatus });
       await fetchBooks();
     } catch (err: any) {
-      setError(err.message);
+      setError(err.response?.data?.detail || err.message || 'Ошибка изменения статуса');
     }
   };
 
@@ -142,18 +101,12 @@ export default function AdminBooks() {
     if (!bookToDelete) return;
 
     try {
-      const response = await fetch(`${API_URL}/admin/books/${bookToDelete.id}`, {
-        method: 'DELETE',
-        headers: { Authorization: `Bearer ${token}` },
-      });
-
-      if (!response.ok) throw new Error('Ошибка удаления книги');
-
+      await apiClient.delete(`/admin/books/${bookToDelete.id}`);
       setIsDeleteModalOpen(false);
       setBookToDelete(null);
       await fetchBooks();
     } catch (err: any) {
-      setError(err.message);
+      setError(err.response?.data?.detail || err.message || 'Ошибка удаления книги');
     }
   };
 

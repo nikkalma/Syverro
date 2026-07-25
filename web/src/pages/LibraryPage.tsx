@@ -5,6 +5,7 @@ import { useLibrary } from '../hooks/useLibrary';
 import { useLibraryFilters } from '../hooks/useLibraryFilters';
 import BookGrid from '../widgets/BookGrid';
 import LibrarySidebar from '../components/LibrarySidebar';
+import { bookPath } from '../shared/utils/routes';
 import { Hero } from '../components/Hero';
 import { SuggestBook } from '../components/SuggestBook';
 
@@ -74,7 +75,7 @@ export default function LibraryPage() {
       if (books.length === 0) return;
       const randomIndex = Math.floor(Math.random() * books.length);
       const randomBook = books[randomIndex];
-      navigate(`/book/${randomBook.id}`);
+      navigate(bookPath(randomBook));
     },
   };
 
@@ -91,7 +92,7 @@ export default function LibraryPage() {
         <div style={{ flex: 1, minWidth: 0 }}>
           <Hero />
           <SuggestBook />
-          <BookGrid books={filteredBooks} onBookClick={(id) => navigate(`/book/${id}`)} />
+          <BookGrid books={filteredBooks} onBookClick={(id) => navigate(bookPath({ id }))} />
         </div>
       </div>
 

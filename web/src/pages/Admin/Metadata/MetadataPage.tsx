@@ -6,8 +6,7 @@ import { METADATA_STATUS_LABELS, METADATA_STATUS_COLORS, ENRICHMENT_FIELD_LABELS
 import { RefreshCw, BookOpen, ArrowRight, Filter, Search } from 'lucide-react';
 import { getLocaleData, getBrowserLocale } from '../../../locales';
 import type { LocaleData } from '../../../locales';
-
-const API_URL = import.meta.env.VITE_API_URL || 'https://api.syverro.com';
+import { apiClient } from '../../../shared/api/client';
 
 type TabFilter = 'all' | 'incomplete' | 'review_ready' | 'complete';
 
@@ -22,26 +21,19 @@ export default function MetadataPage() {
   const [activeTab, setActiveTab] = useState<TabFilter>('all');
   const [searchQuery, setSearchQuery] = useState('');
 
-  const token = localStorage.getItem('token');
-
   const fetchBooks = async () => {
     setLoading(true);
     try {
-      const params = new URLSearchParams({
+      const params: Record<string, string> = {
         page: String(page),
         limit: String(limit),
-      });
-      if (activeTab !== 'all') params.set('status', activeTab);
-      if (searchQuery) params.set('search', searchQuery);
+      };
+      if (activeTab !== 'all') params.status = activeTab;
+      if (searchQuery) params.search = searchQuery;
 
-      const response = await fetch(`${API_URL}/admin/metadata/books?${params}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-
-      if (!response.ok) throw new Error('Ошибка загрузки');
-      const data = await response.json();
-      setBooks(data.data || []);
-      setTotal(data.total || 0);
+      const response = await apiClient.get('/admin/metadata/books', { params });
+      setBooks(response.data.data || []);
+      setTotal(response.data.total || 0);
     } catch (err) {
       console.error(err);
     } finally {

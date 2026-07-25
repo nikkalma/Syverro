@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import type { TaxonomyNode, TaxonomyNodeType } from '../../../types/admin';
-
-const API_URL = import.meta.env.VITE_API_URL || 'https://api.syverro.com';
+import { apiClient } from '../../../shared/api/client';
 
 interface TaxonomyModalProps {
   isOpen: boolean;
@@ -53,12 +52,8 @@ export default function TaxonomyModal({ isOpen, mode, node, nodeType, onClose, o
   }, [mode, node, isOpen]);
 
   useEffect(() => {
-    const token = localStorage.getItem('token');
-    fetch(`${API_URL}/admin/taxonomy/tree?node_type=${nodeType}`, {
-      headers: { Authorization: `Bearer ${token}` },
-    })
-      .then((r) => r.json())
-      .then((data) => setTree(data || []))
+    apiClient.get(`/admin/taxonomy/tree?node_type=${nodeType}`)
+      .then((r) => setTree(r.data || []))
       .catch(() => {});
   }, [nodeType]);
 

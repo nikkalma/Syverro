@@ -5,8 +5,7 @@ import { useAdminStore } from '../../../store/adminStore';
 import { type AdminSettings } from '../../../types/admin';
 import { canManageSettings } from '../../../types/admin';
 import { getLocaleData, getBrowserLocale } from '../../../locales';
-
-const API_URL = import.meta.env.VITE_API_URL || 'https://api.syverro.com';
+import { apiClient } from '../../../shared/api/client';
 
 export default function AdminSettings() {
   const locale = getBrowserLocale();
@@ -16,7 +15,6 @@ export default function AdminSettings() {
   const [formData, setFormData] = useState<Partial<AdminSettings>>({});
   const [saveMessage, setSaveMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
-  const token = localStorage.getItem('token');
   const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
   const userRole = currentUser?.role || 'user';
   const canManage = canManageSettings(userRole);
@@ -27,20 +25,11 @@ export default function AdminSettings() {
     clearError();
 
     try {
-      const response = await fetch(`${API_URL}/admin/settings`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-
-      if (!response.ok) {
-        const data = await response.json();
-        throw new Error(data.detail || 'Ошибка загрузки настроек');
-      }
-
-      const data = await response.json();
-      setSettings(data);
-      setFormData(data);
+      const response = await apiClient.get('/admin/settings');
+      setSettings(response.data);
+      setFormData(response.data);
     } catch (err: any) {
-      setError(err.message);
+      setError(err.response?.data?.detail || err.message || 'Ошибка загрузки настроек');
     } finally {
       setLoading(false);
     }
@@ -56,26 +45,12 @@ export default function AdminSettings() {
     setLoading(true);
 
     try {
-      const response = await fetch(`${API_URL}/admin/settings`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify(formData),
-      });
-
-      if (!response.ok) {
-        const data = await response.json();
-        throw new Error(data.detail || 'Ошибка сохранения настроек');
-      }
-
-      const data = await response.json();
-      setSettings(data);
+      const response = await apiClient.put('/admin/settings', formData);
+      setSettings(response.data);
       setSaveMessage({ type: 'success', text: '✅ Настройки успешно сохранены' });
       setTimeout(() => setSaveMessage(null), 3000);
     } catch (err: any) {
-      setSaveMessage({ type: 'error', text: `❌ ${err.message}` });
+      setSaveMessage({ type: 'error', text: `❌ ${err.response?.data?.detail || err.message || 'Ошибка сохранения настроек'}` });
     } finally {
       setLoading(false);
     }

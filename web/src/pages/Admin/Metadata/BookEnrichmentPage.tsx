@@ -4,8 +4,7 @@ import { AdminBook } from '../../../types/admin';
 import { METADATA_STATUS_LABELS, METADATA_STATUS_COLORS, ENRICHMENT_FIELD_LABELS } from '../../../types/admin';
 import { Save, ArrowLeft, RefreshCw, AlertCircle, CheckCircle, X, Plus, UserPlus, Link2, Search } from 'lucide-react';
 import { getLocaleData, getBrowserLocale } from '../../../locales';
-
-const API_URL = import.meta.env.VITE_API_URL || 'https://api.syverro.com';
+import { apiClient } from '../../../shared/api/client';
 
 const inputStyle: React.CSSProperties = {
   width: '100%', padding: '10px 14px',
@@ -30,7 +29,6 @@ const sectionTitleStyle: React.CSSProperties = {
 export default function BookEnrichmentPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const token = localStorage.getItem('token');
   const locale = getBrowserLocale();
   const t = getLocaleData(locale);
 
@@ -85,12 +83,8 @@ export default function BookEnrichmentPage() {
     if (!id) return;
     setLoading(true);
     Promise.all([
-      fetch(`${API_URL}/admin/metadata/books/${id}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      }).then((r) => r.json()),
-      fetch(`${API_URL}/admin/books/${id}/taxonomy`, {
-        headers: { Authorization: `Bearer ${token}` },
-      }).then((r) => r.json().catch(() => [])),
+      apiClient.get(`/admin/metadata/books/${id}`).then((r) => r.data),
+      apiClient.get(`/admin/books/${id}/taxonomy`).then((r) => r.data).catch(() => []),
     ])
       .then(([bookData, taxonomyData]) => {
         setBook(bookData);
@@ -117,7 +111,7 @@ export default function BookEnrichmentPage() {
       })
       .catch((err) => console.error(err))
       .finally(() => setLoading(false));
-  }, [id, token]);
+  }, [id]);
 
   // Theme search (debounced)
   useEffect(() => {
@@ -126,9 +120,9 @@ export default function BookEnrichmentPage() {
       return;
     }
     const timer = setTimeout(() => {
-      fetch(`${API_URL}/taxonomy/nodes?node_type=theme&search=${encodeURIComponent(themeSearchQuery)}`)
-        .then((r) => r.json())
-        .then((results) => {
+      apiClient.get(`/taxonomy/nodes?node_type=theme&search=${encodeURIComponent(themeSearchQuery)}`)
+        .then((r) => {
+          const results = r.data;
           const filtered = (results || []).filter(
             (n: any) => !themeRelations.some((r) => r.node_id === n.id)
           );
@@ -146,9 +140,9 @@ export default function BookEnrichmentPage() {
       return;
     }
     const timer = setTimeout(() => {
-      fetch(`${API_URL}/taxonomy/nodes?node_type=motif&search=${encodeURIComponent(motifSearchQuery)}`)
-        .then((r) => r.json())
-        .then((results) => {
+      apiClient.get(`/taxonomy/nodes?node_type=motif&search=${encodeURIComponent(motifSearchQuery)}`)
+        .then((r) => {
+          const results = r.data;
           const filtered = (results || []).filter(
             (n: any) => !motifRelations.some((r) => r.node_id === n.id)
           );
@@ -166,12 +160,9 @@ export default function BookEnrichmentPage() {
       return;
     }
     const timer = setTimeout(() => {
-      fetch(`${API_URL}/admin/authors?search=${encodeURIComponent(authorSearchQuery)}&limit=10`, {
-        headers: { Authorization: `Bearer ${token}` },
-      })
-        .then((r) => r.json())
-        .then((data) => {
-          const results = (data.data || []).filter(
+      apiClient.get(`/admin/authors?search=${encodeURIComponent(authorSearchQuery)}&limit=10`)
+        .then((r) => {
+          const results = (r.data.data || []).filter(
             (a: any) => !linkedAuthors.some((la) => la.id === a.id)
           );
           setAuthorSearchResults(results);
@@ -179,7 +170,7 @@ export default function BookEnrichmentPage() {
         .catch(() => {});
     }, 300);
     return () => clearTimeout(timer);
-  }, [authorSearchQuery, token, linkedAuthors]);
+  }, [authorSearchQuery, linkedAuthors]);
 
   const handleAddToList = (value: string, list: string[], setList: (v: string[]) => void, setInput: (v: string) => void) => {
     if (value.trim() && !list.includes(value.trim())) {
@@ -196,13 +187,10 @@ export default function BookEnrichmentPage() {
 
   const handleAddTaxonomyRelation = async (nodeId: string, relationType: string) => {
     try {
-      const res = await fetch(`${API_URL}/admin/books/${id}/taxonomy`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ node_id: nodeId, relation_type: relationType, status: 'approved' }),
+      const res = await apiClient.post(`/admin/books/${id}/taxonomy`, {
+        node_id: nodeId, relation_type: relationType, status: 'approved',
       });
-      if (!res.ok) throw new Error('Failed to add taxonomy relation');
-      const relation = await res.json();
+      const relation = res.data;
       const entry = { id: relation.id, node_id: relation.node_id, name: relation.node_name, relation_type: relation.relation_type };
       if (relationType === 'theme') {
         setThemeRelations((prev) => [...prev, entry]);
@@ -222,11 +210,7 @@ export default function BookEnrichmentPage() {
 
   const handleRemoveTaxonomyRelation = async (relationId: string, relationType: string) => {
     try {
-      const res = await fetch(`${API_URL}/admin/books/${id}/taxonomy/${relationId}`, {
-        method: 'DELETE',
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      if (!res.ok) throw new Error('Failed to remove taxonomy relation');
+      await apiClient.delete(`/admin/books/${id}/taxonomy/${relationId}`);
       if (relationType === 'theme') {
         setThemeRelations((prev) => prev.filter((r) => r.id !== relationId));
       } else {
@@ -240,13 +224,8 @@ export default function BookEnrichmentPage() {
   const handleCreateTaxonomyNode = async (name: string, nodeType: string) => {
     try {
       const slug = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
-      const res = await fetch(`${API_URL}/admin/taxonomy/nodes`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ name, slug, node_type: nodeType }),
-      });
-      if (!res.ok) throw new Error('Failed to create taxonomy node');
-      const node = await res.json();
+      const res = await apiClient.post('/admin/taxonomy/nodes', { name, slug, node_type: nodeType });
+      const node = res.data;
       await handleAddTaxonomyRelation(node.id, nodeType);
     } catch (err: any) {
       setError(err.message);
@@ -267,15 +246,7 @@ export default function BookEnrichmentPage() {
         if (publicationType !== (book?.publication_type || 'official')) basicBody.publication_type = publicationType;
 
         if (Object.keys(basicBody).length > 0) {
-          const basicRes = await fetch(`${API_URL}/admin/books/${id}`, {
-            method: 'PUT',
-            headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-            body: JSON.stringify(basicBody),
-          });
-          if (!basicRes.ok) {
-            const err = await basicRes.json();
-            throw new Error(err.detail || 'Ошибка сохранения основных полей');
-          }
+          await apiClient.put(`/admin/books/${id}`, basicBody);
         }
       }
 
@@ -294,21 +265,8 @@ export default function BookEnrichmentPage() {
         // themes and motifs are now managed via /admin/books/{id}/taxonomy endpoints
       };
 
-      const response = await fetch(`${API_URL}/admin/metadata/books/${id}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify(body),
-      });
-
-      if (!response.ok) {
-        const err = await response.json();
-        throw new Error(err.detail || 'Ошибка сохранения');
-      }
-
-      const updated = await response.json();
+      const response = await apiClient.put(`/admin/metadata/books/${id}`, body);
+      const updated = response.data;
       setBook(updated);
       setSuccess(true);
       setTimeout(() => setSuccess(false), 3000);
@@ -516,9 +474,7 @@ export default function BookEnrichmentPage() {
               {canEdit && (
                 <button
                   onClick={async () => {
-                    await fetch(`${API_URL}/admin/books/${id}/authors/${a.id}`, {
-                      method: 'DELETE', headers: { Authorization: `Bearer ${token}` },
-                    });
+                    await apiClient.delete(`/admin/books/${id}/authors/${a.id}`);
                     setLinkedAuthors((prev) => prev.filter((x) => x.id !== a.id));
                   }}
                   style={{ background: 'none', border: 'none', color: '#EF5350', cursor: 'pointer', padding: 0, display: 'flex' }}
@@ -567,9 +523,7 @@ export default function BookEnrichmentPage() {
                       <div
                         key={a.id}
                         onClick={async () => {
-                          await fetch(`${API_URL}/admin/books/${id}/authors?author_id=${a.id}`, {
-                            method: 'POST', headers: { Authorization: `Bearer ${token}` },
-                          });
+                          await apiClient.post(`/admin/books/${id}/authors?author_id=${a.id}`);
                           setLinkedAuthors((prev) => [...prev, { id: a.id, name: a.name, country: a.country }]);
                           setAuthorSearchQuery('');
                           setAuthorSearchResults([]);
@@ -600,18 +554,12 @@ export default function BookEnrichmentPage() {
                 <button
                   onClick={async () => {
                     if (!createAuthorName.trim()) return;
-                    const res = await fetch(`${API_URL}/admin/authors`, {
-                      method: 'POST',
-                      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-                      body: JSON.stringify({ name: createAuthorName.trim() }),
-                    });
-                    if (res.ok) {
-                      const newAuthor = await res.json();
-                      await fetch(`${API_URL}/admin/books/${id}/authors?author_id=${newAuthor.id}`, {
-                        method: 'POST', headers: { Authorization: `Bearer ${token}` },
-                      });
+                    try {
+                      const res = await apiClient.post('/admin/authors', { name: createAuthorName.trim() });
+                      const newAuthor = res.data;
+                      await apiClient.post(`/admin/books/${id}/authors?author_id=${newAuthor.id}`);
                       setLinkedAuthors((prev) => [...prev, { id: newAuthor.id, name: newAuthor.name, country: newAuthor.country }]);
-                    }
+                    } catch (_) { /* ignore */ }
                     setCreateAuthorName('');
                     setShowCreateAuthor(false);
                   }}

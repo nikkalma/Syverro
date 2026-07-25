@@ -7,6 +7,7 @@ import GenresTree from './GenresTree';
 import GenresFilters from './GenresFilters';
 import GenreModal from './GenreModal';
 import { canManageGenres } from '../../../types/admin';
+import { apiClient } from '../../../shared/api/client';
 
 interface GenreTreeNode {
   id: string;
@@ -20,8 +21,6 @@ interface GenreTreeNode {
   created_at?: string;
 }
 
-const API_URL = import.meta.env.VITE_API_URL || 'https://api.syverro.com';
-
 export default function AdminGenres() {
   const { searchQuery, isLoading, setLoading, error, setError, clearError } = useAdminStore();
   
@@ -33,7 +32,6 @@ export default function AdminGenres() {
   const [modalMode, setModalMode] = useState<'create' | 'edit'>('create');
   const [defaultParentId, setDefaultParentId] = useState<string | null>(null);
 
-  const token = localStorage.getItem('token');
   const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
   const userRole = currentUser?.role || 'user';
   const canManage = canManageGenres(userRole);
@@ -51,21 +49,14 @@ export default function AdminGenres() {
     setLoading(true);
     clearError();
     try {
-      const res = await fetch(`${API_URL}/admin/genres/tree`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      if (!res.ok) {
-        const data = await res.json();
-        throw new Error(data.detail || 'Ошибка загрузки жанров');
-      }
-      const data = await res.json();
-      setTree(data || []);
+      const res = await apiClient.get('/admin/genres/tree');
+      setTree(res.data || []);
     } catch (err: any) {
-      setError(err.message);
+      setError(err.response?.data?.detail || err.message || 'Ошибка загрузки жанров');
     } finally {
       setLoading(false);
     }
-  }, [token, setLoading, setError, clearError]);
+  }, [setLoading, setError, clearError]);
 
   useEffect(() => {
     fetchTree();
@@ -73,52 +64,35 @@ export default function AdminGenres() {
 
   const handleCreate = async (data: AdminGenreCreate) => {
     try {
-      const res = await fetch(`${API_URL}/admin/genres`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-        body: JSON.stringify(data),
-      });
-      if (!res.ok) throw new Error('Ошибка создания жанра');
+      await apiClient.post('/admin/genres', data);
       setIsModalOpen(false);
       setDefaultParentId(null);
       await fetchTree();
     } catch (err: any) {
-      setError(err.message);
+      setError(err.response?.data?.detail || err.message || 'Ошибка создания жанра');
     }
   };
 
   const handleUpdate = async (id: string, data: AdminGenreCreate) => {
     try {
-      const res = await fetch(`${API_URL}/admin/genres/${id}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-        body: JSON.stringify(data),
-      });
-      if (!res.ok) throw new Error('Ошибка обновления жанра');
+      await apiClient.put(`/admin/genres/${id}`, data);
       setIsModalOpen(false);
       setDefaultParentId(null);
       await fetchTree();
     } catch (err: any) {
-      setError(err.message);
+      setError(err.response?.data?.detail || err.message || 'Ошибка обновления жанра');
     }
   };
 
   const handleDelete = async () => {
     if (!genreToDelete) return;
     try {
-      const res = await fetch(`${API_URL}/admin/genres/${genreToDelete.id}`, {
-        method: 'DELETE',
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      if (!res.ok) {
-        const data = await res.json();
-        throw new Error(data.detail || 'Ошибка удаления жанра');
-      }
+      await apiClient.delete(`/admin/genres/${genreToDelete.id}`);
       setIsDeleteModalOpen(false);
       setGenreToDelete(null);
       await fetchTree();
     } catch (err: any) {
-      setError(err.message);
+      setError(err.response?.data?.detail || err.message || 'Ошибка удаления жанра');
     }
   };
 

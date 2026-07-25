@@ -9,8 +9,7 @@ import TaxonomyTree from './TaxonomyTree';
 import TaxonomyModal from './TaxonomyModal';
 import { canManageGenres } from '../../../types/admin';
 import { getLocaleData, getBrowserLocale } from '../../../locales';
-
-const API_URL = import.meta.env.VITE_API_URL || 'https://api.syverro.com';
+import { apiClient } from '../../../shared/api/client';
 
 export default function AdminTaxonomy() {
   const locale = getBrowserLocale();
@@ -27,7 +26,6 @@ export default function AdminTaxonomy() {
   const [defaultParentId, setDefaultParentId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
 
-  const token = localStorage.getItem('token');
   const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
   const userRole = currentUser?.role || 'user';
   const canManage = canManageGenres(userRole);
@@ -42,18 +40,14 @@ export default function AdminTaxonomy() {
     setLoading(true);
     clearError();
     try {
-      const res = await fetch(`${API_URL}/admin/taxonomy/tree?node_type=${activeType}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      if (!res.ok) throw new Error('Ошибка загрузки таксономии');
-      const data = await res.json();
-      setTree(data || []);
+      const res = await apiClient.get(`/admin/taxonomy/tree?node_type=${activeType}`);
+      setTree(res.data || []);
     } catch (err: any) {
-      setError(err.message);
+      setError(err.response?.data?.detail || err.message || 'Ошибка загрузки таксономии');
     } finally {
       setLoading(false);
     }
-  }, [token, activeType, setLoading, setError, clearError]);
+  }, [activeType, setLoading, setError, clearError]);
 
   useEffect(() => { setPage(1); fetchTree(); }, [activeType]);
 
@@ -61,49 +55,35 @@ export default function AdminTaxonomy() {
 
   const handleCreate = async (data: any) => {
     try {
-      const res = await fetch(`${API_URL}/admin/taxonomy/nodes`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-        body: JSON.stringify(data),
-      });
-      if (!res.ok) throw new Error('Ошибка создания узла');
+      await apiClient.post('/admin/taxonomy/nodes', data);
       setIsModalOpen(false);
       setDefaultParentId(null);
       await fetchTree();
     } catch (err: any) {
-      setError(err.message);
+      setError(err.response?.data?.detail || err.message || 'Ошибка создания узла');
     }
   };
 
   const handleUpdate = async (id: string, data: any) => {
     try {
-      const res = await fetch(`${API_URL}/admin/taxonomy/nodes/${id}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-        body: JSON.stringify(data),
-      });
-      if (!res.ok) throw new Error('Ошибка обновления узла');
+      await apiClient.put(`/admin/taxonomy/nodes/${id}`, data);
       setIsModalOpen(false);
       setDefaultParentId(null);
       await fetchTree();
     } catch (err: any) {
-      setError(err.message);
+      setError(err.response?.data?.detail || err.message || 'Ошибка обновления узла');
     }
   };
 
   const handleDelete = async () => {
     if (!nodeToDelete) return;
     try {
-      const res = await fetch(`${API_URL}/admin/taxonomy/nodes/${nodeToDelete.id}`, {
-        method: 'DELETE',
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      if (!res.ok) throw new Error('Ошибка удаления узла');
+      await apiClient.delete(`/admin/taxonomy/nodes/${nodeToDelete.id}`);
       setIsDeleteModalOpen(false);
       setNodeToDelete(null);
       await fetchTree();
     } catch (err: any) {
-      setError(err.message);
+      setError(err.response?.data?.detail || err.message || 'Ошибка удаления узла');
     }
   };
 

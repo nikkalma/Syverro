@@ -301,7 +301,7 @@ export default function Layout({ children }: LayoutProps) {
         </div>
       </header>
       <div style={{ flex: 1, display: 'flex', overflow: 'hidden' }}>
-        <Sidebar />
+        {location.pathname !== '/' && <Sidebar />}
         <main style={{ flex: 1, overflowY: 'auto', background: 'var(--bg)' }}>
           {children}
         </main>

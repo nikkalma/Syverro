@@ -5,8 +5,7 @@ import { RefreshCw, CheckCircle, XCircle, Eye, Clock, User, BookOpen } from 'luc
 import { PUBLICATION_TYPE_LABELS, PUBLICATION_TYPE_COLORS, METADATA_STATUS_LABELS, METADATA_STATUS_COLORS } from '../../../types/admin';
 import { getLocaleData, getBrowserLocale } from '../../../locales';
 import type { LocaleData } from '../../../locales';
-
-const API_URL = import.meta.env.VITE_API_URL || 'https://api.syverro.com';
+import { apiClient } from '../../../shared/api/client';
 
 type TabFilter = 'pending' | 'approved' | 'draft' | 'published' | 'archived' | 'all';
 
@@ -87,22 +86,16 @@ export default function ModerationPage() {
   const [rejectReason, setRejectReason] = useState('');
   const [actionLoading, setActionLoading] = useState(false);
 
-  const token = localStorage.getItem('token');
-
   const fetchBooks = async () => {
     setLoading(true);
     try {
-      const params = new URLSearchParams({ page: String(page), limit: String(limit) });
-      if (activeTab !== 'all') params.set('status', activeTab);
-      if (searchQuery) params.set('search', searchQuery);
+      const params: Record<string, string> = { page: String(page), limit: String(limit) };
+      if (activeTab !== 'all') params.status = activeTab;
+      if (searchQuery) params.search = searchQuery;
 
-      const response = await fetch(`${API_URL}/admin/moderation/books?${params}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      if (!response.ok) throw new Error('Ошибка загрузки');
-      const data = await response.json();
-      setBooks(data.data || []);
-      setTotal(data.total || 0);
+      const response = await apiClient.get('/admin/moderation/books', { params });
+      setBooks(response.data.data || []);
+      setTotal(response.data.total || 0);
     } catch (err: any) {
       console.error(err);
     } finally {
@@ -116,14 +109,8 @@ export default function ModerationPage() {
   const handleAction = async (bookId: string, action: string) => {
     setActionLoading(true);
     try {
-      await fetch(`${API_URL}/admin/moderation/books/${bookId}/${action}`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-        body: action === 'reject' ? JSON.stringify({ reason: rejectReason || null }) : undefined,
-      });
+      const body = action === 'reject' ? { reason: rejectReason || null } : {};
+      await apiClient.post(`/admin/moderation/books/${bookId}/${action}`, body);
       setIsDetailOpen(false);
       setSelectedBook(null);
       setRejectReason('');
@@ -137,12 +124,8 @@ export default function ModerationPage() {
 
   const openDetail = async (bookId: string) => {
     try {
-      const response = await fetch(`${API_URL}/admin/moderation/books/${bookId}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      if (!response.ok) throw new Error('Ошибка загрузки');
-      const data = await response.json();
-      setSelectedBook(data);
+      const response = await apiClient.get(`/admin/moderation/books/${bookId}`);
+      setSelectedBook(response.data);
       setRejectReason('');
       setIsDetailOpen(true);
     } catch (err: any) {

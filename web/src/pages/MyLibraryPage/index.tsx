@@ -7,6 +7,7 @@ import {
 import {
   useNavigate,
 } from 'react-router-dom';
+import { bookPath } from '../../shared/utils/routes';
 
 import {
   useLibrary,
@@ -367,7 +368,7 @@ export default function MyLibraryPage() {
 
                     onClick={() =>
                       navigate(
-                        `/book/${book.id}`
+                        bookPath(book)
                       )
                     }
 

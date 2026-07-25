@@ -7,8 +7,7 @@ import { getLocaleData, getBrowserLocale } from '../../../locales';
 import StatCard from './StatCard';
 import RecentUsers from './RecentUsers';
 import RecentActivity from './RecentActivity';
-
-const API_URL = import.meta.env.VITE_API_URL || 'https://api.syverro.com';
+import { apiClient } from '../../../shared/api/client';
 
 export default function AdminDashboard() {
   const { isLoading, setLoading, error, setError } = useAdminStore();
@@ -27,33 +26,14 @@ export default function AdminDashboard() {
     setError(null);
 
     try {
-      const token = localStorage.getItem('token');
-      
-      // Статистика
-      const statsRes = await fetch(`${API_URL}/admin/stats`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      if (!statsRes.ok) throw new Error('Ошибка загрузки статистики');
-      const statsData = await statsRes.json();
-      setStats(statsData);
+      const statsRes = await apiClient.get('/admin/stats');
+      setStats(statsRes.data);
 
-      // Последние пользователи
-      const usersRes = await fetch(`${API_URL}/admin/users/recent`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      if (usersRes.ok) {
-        const usersData = await usersRes.json();
-        setRecentUsers(usersData);
-      }
+      const usersRes = await apiClient.get('/admin/users/recent');
+      setRecentUsers(usersRes.data || []);
 
-      // Последние логи
-      const logsRes = await fetch(`${API_URL}/admin/logs/recent`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      if (logsRes.ok) {
-        const logsData = await logsRes.json();
-        setRecentLogs(logsData);
-      }
+      const logsRes = await apiClient.get('/admin/logs/recent');
+      setRecentLogs(logsRes.data || []);
     } catch (err: any) {
       setError(err.message);
     } finally {

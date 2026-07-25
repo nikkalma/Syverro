@@ -11,7 +11,21 @@ import {
   StickyNote,
 } from 'lucide-react';
 
-const navItems = [
+const disabledStyle: React.CSSProperties = {
+  ...linkStyle,
+  opacity: 0.4,
+  cursor: 'not-allowed',
+  pointerEvents: 'none',
+};
+
+interface NavItem {
+  to: string;
+  label: string;
+  icon: React.ComponentType<{ size?: number }>;
+  disabled?: boolean;
+}
+
+const navItems: NavItem[] = [
   { to: '/', label: 'Библиотека', icon: BookOpen },
   { to: '/authors', label: 'Авторы', icon: Users },
   { to: '/genres-themes', label: 'Жанры и темы', icon: Tags },
@@ -20,7 +34,7 @@ const navItems = [
   { to: '/worldmap', label: 'Миры', icon: Globe },
   { to: '/quotes', label: 'Цитаты', icon: Quote },
   { to: '/collections', label: 'Коллекции', icon: Layers },
-  { to: '/my-library', label: 'Мои заметки', icon: StickyNote },
+  { to: '/my-library', label: 'Мои заметки', icon: StickyNote, disabled: true },
 ];
 
 const linkStyle: React.CSSProperties = {
@@ -54,17 +68,25 @@ export default function Sidebar() {
       gap: '4px',
       overflowY: 'auto',
     }}>
-      {navItems.map((item) => (
-        <NavLink
-          key={item.to}
-          to={item.to}
-          end={item.to === '/'}
-          style={({ isActive }) => isActive ? activeStyle : linkStyle}
-        >
-          <item.icon size={18} />
-          {item.label}
-        </NavLink>
-      ))}
+      {navItems.map((item) =>
+        item.disabled ? (
+          <div key={item.to} style={disabledStyle} title="Скоро">
+            <item.icon size={18} />
+            {item.label}
+            <span style={{ marginLeft: 'auto', fontSize: '10px', color: 'var(--text-muted)' }}>скоро</span>
+          </div>
+        ) : (
+          <NavLink
+            key={item.to}
+            to={item.to}
+            end={item.to === '/'}
+            style={({ isActive }) => isActive ? activeStyle : linkStyle}
+          >
+            <item.icon size={18} />
+            {item.label}
+          </NavLink>
+        )
+      )}
     </nav>
   );
 }

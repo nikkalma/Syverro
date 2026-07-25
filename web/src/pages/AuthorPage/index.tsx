@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { apiClient } from '../../shared/api/client';
 import { formatAuthorName } from '../../shared/utils/formatAuthorName';
+import { bookPath } from '../../shared/utils/routes';
 import { getLocaleData, getBrowserLocale } from '../../locales';
 
 interface AuthorBook {
@@ -313,7 +314,7 @@ export default function AuthorPage() {
               {author.books.map((book) => (
                 <div
                   key={book.id}
-                  onClick={() => navigate(`/book/${book.id}`)}
+                  onClick={() => navigate(bookPath(book))}
                   style={{
                     flex: '0 0 140px', cursor: 'pointer', borderRadius: '10px', overflow: 'hidden',
                     background: 'rgba(18, 28, 36, 0.6)', border: '1px solid rgba(255,255,255,0.06)',

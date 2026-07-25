@@ -5,8 +5,16 @@
   "installCommand": "npm install",
   "rewrites": [
     {
-      "source": "/(api|auth|books|sync|health|users|stats|logs|authors|genres|phone)(.*)",
+      "source": "/(api|auth)(.*)",
       "destination": "https://api.syverro.com/$1/$2"
+    },
+    {
+      "source": "/health",
+      "destination": "https://api.syverro.com/health"
+    },
+    {
+      "source": "/sync",
+      "destination": "https://api.syverro.com/sync"
     },
     {
       "source": "/(.*)",

@@ -6,8 +6,7 @@ import { AdminLog } from '../../../types/admin';
 import LogsTable from './LogsTable';
 import LogsFilters from './LogsFilters';
 import { getLocaleData, getBrowserLocale } from '../../../locales';
-
-const API_URL = import.meta.env.VITE_API_URL || 'https://api.syverro.com';
+import { apiClient } from '../../../shared/api/client';
 
 export default function AdminLogs() {
   const locale = getBrowserLocale();
@@ -17,35 +16,24 @@ export default function AdminLogs() {
   const [logs, setLogs] = useState<AdminLog[]>([]);
   const [total, setTotal] = useState(0);
 
-  const token = localStorage.getItem('token');
-
   // ===== ЗАГРУЗКА ЛОГОВ =====
   const fetchLogs = async () => {
     setLoading(true);
     clearError();
 
     try {
-      const params = new URLSearchParams({
+      const params = {
         page: String(page),
         limit: String(limit),
         ...(searchQuery && { search: searchQuery }),
         ...filters,
-      });
+      };
 
-      const response = await fetch(`${API_URL}/admin/logs?${params}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-
-      if (!response.ok) {
-        const data = await response.json();
-        throw new Error(data.detail || 'Ошибка загрузки логов');
-      }
-
-      const data = await response.json();
-      setLogs(data.data || []);
-      setTotal(data.total || 0);
+      const response = await apiClient.get('/admin/logs', { params });
+      setLogs(response.data.data || []);
+      setTotal(response.data.total || 0);
     } catch (err: any) {
-      setError(err.message);
+      setError(err.response?.data?.detail || err.message || 'Ошибка загрузки логов');
     } finally {
       setLoading(false);
     }

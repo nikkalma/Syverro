@@ -11,31 +11,12 @@ import {
   StickyNote,
 } from 'lucide-react';
 
-const disabledStyle: React.CSSProperties = {
-  ...linkStyle,
-  opacity: 0.4,
-  cursor: 'not-allowed',
-  pointerEvents: 'none',
-};
-
 interface NavItem {
   to: string;
   label: string;
   icon: React.ComponentType<{ size?: number }>;
   disabled?: boolean;
 }
-
-const navItems: NavItem[] = [
-  { to: '/', label: 'Библиотека', icon: BookOpen },
-  { to: '/authors', label: 'Авторы', icon: Users },
-  { to: '/genres-themes', label: 'Жанры и темы', icon: Tags },
-  { to: '/atmospheres', label: 'Атмосферы', icon: Wind },
-  { to: '/characters', label: 'Персонажи', icon: UserCircle },
-  { to: '/worldmap', label: 'Миры', icon: Globe },
-  { to: '/quotes', label: 'Цитаты', icon: Quote },
-  { to: '/collections', label: 'Коллекции', icon: Layers },
-  { to: '/my-library', label: 'Мои заметки', icon: StickyNote, disabled: true },
-];
 
 const linkStyle: React.CSSProperties = {
   display: 'flex',
@@ -50,11 +31,30 @@ const linkStyle: React.CSSProperties = {
   transition: 'background 0.2s, color 0.2s',
 };
 
+const disabledStyle: React.CSSProperties = {
+  ...linkStyle,
+  opacity: 0.4,
+  cursor: 'not-allowed',
+  pointerEvents: 'none',
+};
+
 const activeStyle: React.CSSProperties = {
   ...linkStyle,
   color: 'var(--text-primary)',
   background: 'rgba(91,134,161,0.1)',
 };
+
+const navItems: NavItem[] = [
+  { to: '/', label: 'Библиотека', icon: BookOpen },
+  { to: '/authors', label: 'Авторы', icon: Users },
+  { to: '/genres-themes', label: 'Жанры и темы', icon: Tags },
+  { to: '/atmospheres', label: 'Атмосферы', icon: Wind },
+  { to: '/characters', label: 'Персонажи', icon: UserCircle },
+  { to: '/worldmap', label: 'Миры', icon: Globe },
+  { to: '/quotes', label: 'Цитаты', icon: Quote },
+  { to: '/collections', label: 'Коллекции', icon: Layers },
+  { to: '/my-library', label: 'Мои заметки', icon: StickyNote, disabled: true },
+];
 
 export default function Sidebar() {
   return (

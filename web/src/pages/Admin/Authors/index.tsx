@@ -8,8 +8,7 @@ import AuthorsFilters from './AuthorsFilters';
 import AuthorModal from './AuthorModal';
 import { canManageAuthors } from '../../../types/admin';
 import { getLocaleData, getBrowserLocale } from '../../../locales';
-
-const API_URL = import.meta.env.VITE_API_URL || 'https://api.syverro.com';
+import { apiClient } from '../../../shared/api/client';
 
 export default function AdminAuthors() {
   const locale = getBrowserLocale();
@@ -24,7 +23,6 @@ export default function AdminAuthors() {
   const [authorToDelete, setAuthorToDelete] = useState<AdminAuthor | null>(null);
   const [modalMode, setModalMode] = useState<'create' | 'edit'>('create');
 
-  const token = localStorage.getItem('token');
   const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
   const userRole = currentUser?.role || 'user';
   const canManage = canManageAuthors(userRole);
@@ -35,27 +33,18 @@ export default function AdminAuthors() {
     clearError();
 
     try {
-      const params = new URLSearchParams({
-        page: String(page),
-        limit: String(limit),
-        ...(searchQuery && { search: searchQuery }),
-        ...filters,
+      const res = await apiClient.get('/admin/authors', {
+        params: {
+          page,
+          limit,
+          ...(searchQuery && { search: searchQuery }),
+          ...filters,
+        },
       });
-
-      const response = await fetch(`${API_URL}/admin/authors?${params}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-
-      if (!response.ok) {
-        const data = await response.json();
-        throw new Error(data.detail || 'Ошибка загрузки авторов');
-      }
-
-      const data = await response.json();
-      setAuthors(data.data || []);
-      setTotal(data.total || 0);
+      setAuthors(res.data.data || []);
+      setTotal(res.data.total || 0);
     } catch (err: any) {
-      setError(err.message);
+      setError(err.response?.data?.detail || err.message || 'Ошибка загрузки авторов');
     } finally {
       setLoading(false);
     }
@@ -67,40 +56,26 @@ export default function AdminAuthors() {
 
   // ===== СОЗДАНИЕ АВТОРА =====
   const handleCreate = async (data: AdminAuthorCreate): Promise<void> => {
-    const response = await fetch(`${API_URL}/admin/authors`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify(data),
-    });
-
-    if (!response.ok) {
-      const body = await response.json().catch(() => ({}));
-      throw new Error(body.detail || 'Ошибка создания автора');
+    let res;
+    try {
+      res = await apiClient.post('/admin/authors', data);
+    } catch (err: any) {
+      throw new Error(err.response?.data?.detail || 'Ошибка создания автора');
     }
-
-    await fetchAuthors();
+    if (res.data) console.debug('[author-create] response awards:', res.data.awards);
+    try { await fetchAuthors(); } catch { /* list refresh is non-critical */ }
   };
 
   // ===== ОБНОВЛЕНИЕ АВТОРА =====
   const handleUpdate = async (id: string, data: AdminAuthorCreate): Promise<void> => {
-    const response = await fetch(`${API_URL}/admin/authors/${id}`, {
-      method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify(data),
-    });
-
-    if (!response.ok) {
-      const body = await response.json().catch(() => ({}));
-      throw new Error(body.detail || 'Ошибка обновления автора');
+    let res;
+    try {
+      res = await apiClient.put(`/admin/authors/${id}`, data);
+    } catch (err: any) {
+      throw new Error(err.response?.data?.detail || 'Ошибка обновления автора');
     }
-
-    await fetchAuthors();
+    if (res.data) console.debug('[author-update] response awards:', res.data.awards, 'full keys:', Object.keys(res.data));
+    try { await fetchAuthors(); } catch { /* list refresh is non-critical */ }
   };
 
   // ===== УДАЛЕНИЕ =====
@@ -108,18 +83,12 @@ export default function AdminAuthors() {
     if (!authorToDelete) return;
 
     try {
-      const response = await fetch(`${API_URL}/admin/authors/${authorToDelete.id}`, {
-        method: 'DELETE',
-        headers: { Authorization: `Bearer ${token}` },
-      });
-
-      if (!response.ok) throw new Error('Ошибка удаления автора');
-
+      await apiClient.delete(`/admin/authors/${authorToDelete.id}`);
       setIsDeleteModalOpen(false);
       setAuthorToDelete(null);
       await fetchAuthors();
     } catch (err: any) {
-      setError(err.message);
+      setError(err.response?.data?.detail || err.message || 'Ошибка удаления автора');
     }
   };
 
@@ -130,8 +99,16 @@ export default function AdminAuthors() {
     setIsModalOpen(true);
   };
 
-  const handleOpenEdit = (author: AdminAuthor) => {
-    setSelectedAuthor(author);
+  const handleOpenEdit = async (author: AdminAuthor) => {
+    setLoading(true);
+    try {
+      const res = await apiClient.get(`/admin/authors/${author.id}`);
+      setSelectedAuthor(res.data);
+    } catch {
+      setSelectedAuthor(author);
+    } finally {
+      setLoading(false);
+    }
     setModalMode('edit');
     setIsModalOpen(true);
   };
@@ -220,7 +197,6 @@ export default function AdminAuthors() {
             justifyContent: 'center',
             zIndex: 1000,
           }}
-          onClick={() => setIsDeleteModalOpen(false)}
         >
           <div
             style={{
@@ -231,7 +207,6 @@ export default function AdminAuthors() {
               width: '100%',
               border: '1px solid rgba(255,255,255,0.08)',
             }}
-            onClick={(e) => e.stopPropagation()}
           >
             <div style={{ textAlign: 'center', marginBottom: '20px' }}>
               <div style={{ fontSize: '48px' }}>⚠️</div>

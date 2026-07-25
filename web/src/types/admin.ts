@@ -182,6 +182,7 @@ export function computeDisplayName(
 export interface AdminAuthor {
   id: string;
   name: string;
+  slug?: string | null;
   birth_name?: string | null;
   first_name?: string | null;
   middle_name?: string | null;
@@ -263,6 +264,7 @@ export interface AdminAuthorFilters {
 
 export interface AdminAuthorCreate {
   name: string;
+  slug?: string | null;
   display_name_mode?: DisplayNameMode;
   display_name?: string | null;
   pen_names?: string[];

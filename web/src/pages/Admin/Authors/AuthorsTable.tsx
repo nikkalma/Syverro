@@ -2,6 +2,7 @@
 
 import { AdminAuthor, getAuthorDisplayName } from '../../../types/admin';
 import { useAdminStore } from '../../../store/adminStore';
+import { authorUrl } from '../../../shared/utils/authorUrl';
 
 interface AuthorsTableProps {
   authors: AdminAuthor[];
@@ -157,7 +158,7 @@ export default function AuthorsTable({
                 </div>
               </td>
               <td style={{ padding: '12px 16px', color: '#E6EDF3', fontSize: '14px', fontWeight: '500' }}>
-                <a href={`https://syverro.com/author/${author.id}`} target="_blank" rel="noopener noreferrer"
+                <a href={authorUrl(author)} target="_blank" rel="noopener noreferrer"
                   style={{ color: '#5B86A1', textDecoration: 'none', cursor: 'pointer' }}
                   onMouseEnter={(e) => (e.currentTarget.style.textDecoration = 'underline')}
                   onMouseLeave={(e) => (e.currentTarget.style.textDecoration = 'none')}>
@@ -175,7 +176,7 @@ export default function AuthorsTable({
               </td>
               <td style={{ padding: '12px 16px' }}>
                 <div style={{ display: 'flex', gap: '6px' }}>
-                  <a href={`https://syverro.com/author/${author.id}`} target="_blank" rel="noopener noreferrer"
+                  <a href={authorUrl(author)} target="_blank" rel="noopener noreferrer"
                     style={{
                       padding: '4px 10px',
                       background: 'rgba(91,134,161,0.1)',

@@ -2,11 +2,15 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { apiClient } from '../shared/api/client';
 import { formatAuthorName } from '../shared/utils/formatAuthorName';
+import { authorPath } from '../shared/utils/authorUrl';
 import { Search } from 'lucide-react';
 
 interface AuthorBrief {
   id: string;
+  slug?: string | null;
   name: string;
+  display_name?: string | null;
+  display_name_mode?: string | null;
   first_name: string | null;
   last_name: string | null;
   native_name: string | null;
@@ -77,11 +81,11 @@ export default function AuthorsPage() {
           gap: '16px',
         }}>
           {filtered.map((author) => {
-            const displayName = formatAuthorName(author.name, author.first_name, author.last_name);
+            const displayName = author.display_name || formatAuthorName(author.name, author.first_name, author.last_name);
             return (
               <div
                 key={author.id}
-                onClick={() => navigate(`/authors/${author.id}`)}
+                onClick={() => navigate(authorPath(author))}
                 style={{
                   display: 'flex', gap: '16px', padding: '16px',
                   background: 'rgba(18,28,36,0.5)', borderRadius: '12px',

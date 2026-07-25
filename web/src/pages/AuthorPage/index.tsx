@@ -18,6 +18,7 @@ interface AuthorMetadata {
 
 interface AuthorResponse {
   id: string;
+  slug?: string | null;
   name: string;
   display_name?: string | null;
   display_name_mode?: string | null;
@@ -82,7 +83,7 @@ const tagPillStyle: React.CSSProperties = {
 };
 
 export default function AuthorPage() {
-  const { id } = useParams<{ id: string }>();
+  const { slug } = useParams<{ slug: string }>();
   const navigate = useNavigate();
 
   const [author, setAuthor] = useState<AuthorResponse | null>(null);
@@ -91,10 +92,10 @@ export default function AuthorPage() {
   const [bioExpanded, setBioExpanded] = useState(false);
 
   useEffect(() => {
-    if (!id) return;
+    if (!slug) return;
     setLoading(true);
     setError(null);
-    apiClient.get<AuthorResponse>(`/authors/${id}`)
+    apiClient.get<AuthorResponse>(`/authors/${slug}`)
       .then((res) => {
         setAuthor(res.data);
         setLoading(false);
@@ -103,7 +104,7 @@ export default function AuthorPage() {
         setError(err?.response?.data?.detail || err.message || 'Failed to load author');
         setLoading(false);
       });
-  }, [id]);
+  }, [slug]);
 
   const t = getLocaleData(getBrowserLocale());
 

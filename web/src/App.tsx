@@ -51,7 +51,7 @@ export default function App() {
         <Route path="/profile" element={<Layout><Profile /></Layout>} />
         <Route path="/settings" element={<Layout><Settings /></Layout>} />
         <Route path="/book/:id" element={<Layout><BookPage /></Layout>} />
-        <Route path="/authors/:id" element={<Layout><AuthorPage /></Layout>} />
+        <Route path="/author/:slug" element={<Layout><AuthorPage /></Layout>} />
         <Route path="/my-library" element={<Layout><MyLibraryPage /></Layout>} />
 
         <Route path="/admin" element={<AdminRoute><AdminDashboard /></AdminRoute>} />

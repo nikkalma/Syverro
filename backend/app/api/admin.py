@@ -1,7 +1,7 @@
 # backend/app/api/admin.py (ПОЛНАЯ ВЕРСИЯ)
 from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, func, or_, and_
+from sqlalchemy import select, func, or_, and_, delete
 from sqlalchemy.orm import selectinload
 from app.core.deps import get_current_user, get_db
 from app.core.metadata import calculate_missing_fields, get_metadata_status
@@ -29,6 +29,7 @@ from app.schemas.admin import (
 from app.schemas.author import AuthorAwardCreate, AuthorAwardResponse
 from app.schemas.user import UserResponse
 import logging
+import re
 from datetime import datetime, timedelta
 from typing import Optional, List
 from pydantic import BaseModel
@@ -1010,6 +1011,12 @@ async def get_authors(
             "last_name": author.last_name,
             "native_name": author.native_name,
             "sort_name": author.sort_name,
+            "display_name": author.display_name,
+            "display_name_mode": author.display_name_mode,
+            "pen_names": author.pen_names or [],
+            "birth_name": author.birth_name,
+            "slug": author.slug,
+            "search_aliases": author.search_aliases,
             "pseudonyms": author.pseudonyms or [],
             "nationality": author.nationality,
             "country": author.nationality,  # backward-compat: frontend expects "country"
@@ -1078,6 +1085,12 @@ async def get_author_detail(
         "last_name": author.last_name,
         "native_name": author.native_name,
         "sort_name": author.sort_name,
+        "display_name": author.display_name,
+        "display_name_mode": author.display_name_mode,
+        "pen_names": author.pen_names or [],
+        "birth_name": author.birth_name,
+        "slug": author.slug,
+        "search_aliases": author.search_aliases,
         "pseudonyms": author.pseudonyms or [],
         "nationality": author.nationality,
         "country": author.nationality,  # backward-compat
@@ -1118,6 +1131,36 @@ async def get_author_detail(
         "updated_at": author.updated_at,
     }
 
+def validate_author_slug(slug: Optional[str]) -> None:
+    if slug:
+        slug = slug.strip().lower()
+        if not re.match(r'^[a-z0-9][a-z0-9-]*[a-z0-9]$', slug) and not re.match(r'^[a-z0-9]$', slug):
+            raise HTTPException(status_code=422, detail="Slug must be lowercase, URL-safe, and non-empty")
+
+
+def validate_author_dates(birth_date: Optional[str], death_date: Optional[str]) -> None:
+    if birth_date:
+        try:
+            bd = datetime.strptime(birth_date[:10], "%Y-%m-%d")
+            if bd > datetime.utcnow():
+                raise HTTPException(status_code=422, detail="Birth date cannot be in the future")
+        except ValueError:
+            raise HTTPException(status_code=422, detail="Invalid birth_date format, expected YYYY-MM-DD")
+    if death_date:
+        try:
+            dd = datetime.strptime(death_date[:10], "%Y-%m-%d")
+        except ValueError:
+            raise HTTPException(status_code=422, detail="Invalid death_date format, expected YYYY-MM-DD")
+    if birth_date and death_date:
+        try:
+            bd = datetime.strptime(birth_date[:10], "%Y-%m-%d")
+            dd = datetime.strptime(death_date[:10], "%Y-%m-%d")
+            if dd < bd:
+                raise HTTPException(status_code=422, detail="Death date cannot be before birth date")
+        except ValueError:
+            pass
+
+
 @router.post("/authors")
 async def create_author(
     data: AuthorCreate,
@@ -1126,18 +1169,50 @@ async def create_author(
 ):
     await check_admin(current_user)
 
-    # Проверяем, существует ли уже такой автор
+    validate_author_slug(data.slug)
+    validate_author_dates(data.birth_date, data.death_date)
+
+    # Slug uniqueness check
+    if data.slug:
+        existing_slug = await db.execute(
+            select(Author).where(Author.slug == data.slug.strip().lower())
+        )
+        if existing_slug.scalar_one_or_none():
+            raise HTTPException(status_code=400, detail="Slug already in use")
+
+    # Name uniqueness check
     existing = await db.execute(
         select(Author).where(Author.name == data.name)
     )
     if existing.scalar_one_or_none():
         raise HTTPException(status_code=400, detail="Author already exists")
 
-    author = Author(**data.model_dump())
+    author = Author(**data.model_dump(exclude={"awards"}))
     db.add(author)
-    await db.commit()
-    await db.refresh(author)
-    return {"id": str(author.id), "message": "Author created"}
+    await db.flush()
+
+    # Handle awards from main payload
+    if data.awards:
+        for award_data in data.awards:
+            award = AuthorAward(author_id=author.id, **award_data.model_dump())
+            db.add(award)
+
+    # Reload awards relationship
+    await db.refresh(author, ["awards"])
+    return {
+        "id": str(author.id),
+        "message": "Author created",
+        "slug": author.slug,
+        "awards": [{
+            "id": str(a.id),
+            "author_id": str(a.author_id),
+            "name": a.name,
+            "year": a.year,
+            "organization": a.organization,
+            "work": a.work,
+            "created_at": a.created_at,
+        } for a in (author.awards or [])],
+    }
 
 @router.put("/authors/{author_id}")
 async def update_author(
@@ -1148,18 +1223,50 @@ async def update_author(
 ):
     await check_admin(current_user)
 
+    validate_author_slug(data.slug)
+    validate_author_dates(data.birth_date, data.death_date)
+
     result = await db.execute(select(Author).where(Author.id == author_id))
     author = result.scalar_one_or_none()
     if not author:
         raise HTTPException(status_code=404, detail="Author not found")
 
-    for key, value in data.model_dump(exclude_unset=True).items():
+    # Slug uniqueness check (exclude current author)
+    if data.slug:
+        slug = data.slug.strip().lower()
+        existing_slug = await db.execute(
+            select(Author).where(Author.slug == slug, Author.id != author.id)
+        )
+        if existing_slug.scalar_one_or_none():
+            raise HTTPException(status_code=400, detail="Slug already in use")
+
+    update_data = data.model_dump(exclude_unset=True, exclude={"awards"})
+    for key, value in update_data.items():
         if hasattr(author, key):
             setattr(author, key, value)
-    
+
+    # Handle awards from main payload
+    if "awards" in data.model_dump(exclude_unset=True):
+        await db.execute(delete(AuthorAward).where(AuthorAward.author_id == author.id))
+        if data.awards:
+            for award_data in data.awards:
+                award = AuthorAward(author_id=author.id, **award_data.model_dump())
+                db.add(award)
+
     await db.commit()
-    await db.refresh(author)
-    return {"message": "Author updated"}
+    await db.refresh(author, ["awards"])
+    return {
+        "message": "Author updated",
+        "awards": [{
+            "id": str(a.id),
+            "author_id": str(a.author_id),
+            "name": a.name,
+            "year": a.year,
+            "organization": a.organization,
+            "work": a.work,
+            "created_at": a.created_at,
+        } for a in (author.awards or [])],
+    }
 
 @router.delete("/authors/{author_id}")
 async def delete_author(

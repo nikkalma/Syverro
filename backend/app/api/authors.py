@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, func, text as sa_text
+from sqlalchemy import select, func, or_, text as sa_text
 from app.core.deps import get_db
 from app.models.book import Book
 from app.models.book_author import book_authors
@@ -8,6 +8,7 @@ from app.models.book_genre import book_genres
 from app.models.genre import Genre
 from app.models.book_knowledge_relation import BookKnowledgeRelation
 from app.models.knowledge_node import KnowledgeNode
+from app.models.author import Author
 from app.schemas.author import AuthorPublicResponse, AuthorBookBrief, AuthorMetadata, AuthorListBrief
 from uuid import UUID
 import logging
@@ -18,7 +19,8 @@ router = APIRouter(prefix="/authors", tags=["authors"])
 
 @router.get("", response_model=list[AuthorListBrief])
 async def list_authors(db: AsyncSession = Depends(get_db)):
-    cols = ["id", "name", "first_name", "last_name", "native_name",
+    cols = ["id", "slug", "name", "display_name", "display_name_mode",
+            "first_name", "last_name", "native_name",
             "bio", "photo", "country"]
     result = await db.execute(
         sa_text("SELECT " + ", ".join(cols) + " FROM authors ORDER BY name"),
@@ -30,7 +32,10 @@ async def list_authors(db: AsyncSession = Depends(get_db)):
         excerpt = bio[:200] + "..." if len(bio) > 200 else bio if bio else None
         out.append(AuthorListBrief(
             id=row["id"],
+            slug=row.get("slug"),
             name=row.get("name", ""),
+            display_name=row.get("display_name"),
+            display_name_mode=row.get("display_name_mode"),
             first_name=row.get("first_name"),
             last_name=row.get("last_name"),
             native_name=row.get("native_name"),
@@ -41,26 +46,23 @@ async def list_authors(db: AsyncSession = Depends(get_db)):
     return out
 
 
-@router.get("/{author_id}", response_model=AuthorPublicResponse)
+@router.get("/{slug_or_id}", response_model=AuthorPublicResponse)
 async def get_author(
-    author_id: UUID,
+    slug_or_id: str,
     db: AsyncSession = Depends(get_db),
 ):
-    cols = ["id", "name", "first_name", "last_name", "native_name",
-            "bio", "photo", "country", "birth_year", "death_year"]
-    result = await db.execute(
-        sa_text("SELECT " + ", ".join(cols) + " FROM authors WHERE id = :aid"),
-        {"aid": str(author_id)},
+    # Try slug first, then UUID
+    author = await db.scalar(
+        select(Author).where(or_(Author.slug == slug_or_id, Author.id == slug_or_id))
     )
-    row = result.mappings().one_or_none()
-    if not row:
+    if not author:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Author not found")
 
     book_rows = await db.execute(
         select(Book.id, Book.title, Book.cover)
         .select_from(book_authors)
         .join(Book, book_authors.c.book_id == Book.id)
-        .where(book_authors.c.author_id == author_id)
+        .where(book_authors.c.author_id == author.id)
         .where(Book.is_published == True)
         .order_by(Book.title)
     )
@@ -103,21 +105,20 @@ async def get_author(
         )
         motifs = [r[0] for r in motif_rows]
 
-    name = row.get("name", "")
-    raw_birth = row.get("birth_year")
-    raw_death = row.get("death_year")
-
     return AuthorPublicResponse(
-        id=author_id,
-        name=name,
-        first_name=row.get("first_name"),
-        last_name=row.get("last_name"),
-        native_name=row.get("native_name"),
-        nationality=row.get("country"),
-        birth_date=str(raw_birth) if raw_birth is not None else None,
-        death_date=str(raw_death) if raw_death is not None else None,
-        biography=row.get("bio"),
-        photo_url=row.get("photo"),
+        id=author.id,
+        slug=author.slug,
+        name=author.name or "",
+        display_name=author.display_name,
+        display_name_mode=author.display_name_mode,
+        first_name=author.first_name,
+        last_name=author.last_name,
+        native_name=author.native_name,
+        nationality=author.nationality or author.country,
+        birth_date=author.birth_date or (str(author.birth_year) if author.birth_year is not None else None),
+        death_date=author.death_date or (str(author.death_year) if author.death_year is not None else None),
+        biography=author.bio,
+        photo_url=author.photo,
         books=books,
         metadata=AuthorMetadata(genres=genres, themes=themes, motifs=motifs),
     )

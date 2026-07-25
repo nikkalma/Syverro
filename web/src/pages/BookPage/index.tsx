@@ -4,6 +4,7 @@ import { useLibrary } from '../../hooks/useLibrary';
 import { AddToLibraryModal } from './AddToLibraryModal';
 import type { PersonalBookStatus } from '../../types/personalBook';
 import { formatAuthorName } from '../../shared/utils/formatAuthorName';
+import { authorPath } from '../../shared/utils/authorUrl';
 import { useOffline } from '@/lib/offline';
 
 const labelStyle: React.CSSProperties = {
@@ -103,7 +104,7 @@ export default function BookPage() {
             )}
             <div style={{ fontSize: '16px', color: '#97A6BA' }}>
               {book.authorId ? (
-                <span onClick={() => navigate(`/authors/${book.authorId}`)}
+                <span onClick={() => navigate(authorPath({ id: book.authorId! }))}
                   style={{ color: '#5B86A1', cursor: 'pointer', textDecoration: 'none' }}
                   onMouseEnter={(e) => e.currentTarget.style.color = '#7BA5C1'}
                   onMouseLeave={(e) => e.currentTarget.style.color = '#5B86A1'}>

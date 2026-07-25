@@ -18,6 +18,14 @@ class Author(Base):
     native_name = Column(String, nullable=True)
     sort_name = Column(String, nullable=True)
 
+    # === IDENTITY ===
+    display_name = Column(String, nullable=True)
+    display_name_mode = Column(String, nullable=True)
+    pen_names = Column(ARRAY(String), nullable=True, server_default="{}")
+    birth_name = Column(String, nullable=True)
+    slug = Column(String, nullable=True, unique=True, index=True)
+    search_aliases = Column(Text, nullable=True)
+
     # === BASIC INFORMATION ===
     pseudonyms = Column(ARRAY(String), nullable=True, server_default="{}")
     nationality = Column(String, nullable=True)

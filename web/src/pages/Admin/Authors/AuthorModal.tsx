@@ -4,6 +4,37 @@ import type { DisplayNameMode } from '../../../types/admin';
 import ChipInput from '../../../components/ChipInput';
 import { computeSearchAliases } from '../../../shared/utils/normalizeSearch';
 
+function normalizeDate(d: string | null | undefined): string {
+  if (!d) return '';
+  const m = d.match(/^(\d{4}-\d{2}-\d{2})/);
+  if (m) return m[1];
+  const p = new Date(d);
+  if (!isNaN(p.getTime())) return p.toISOString().split('T')[0];
+  return '';
+}
+
+function toUTCDate(dateStr: string): Date {
+  const [y, m, d] = dateStr.split('-').map(Number);
+  return new Date(Date.UTC(y, m - 1, d));
+}
+
+const CYRILLIC_TO_LATIN: Record<string, string> = {
+  'а': 'a', 'б': 'b', 'в': 'v', 'г': 'g', 'д': 'd', 'е': 'e', 'ё': 'yo',
+  'ж': 'zh', 'з': 'z', 'и': 'i', 'й': 'y', 'к': 'k', 'л': 'l', 'м': 'm',
+  'н': 'n', 'о': 'o', 'п': 'p', 'р': 'r', 'с': 's', 'т': 't', 'у': 'u',
+  'ф': 'f', 'х': 'kh', 'ц': 'ts', 'ч': 'ch', 'ш': 'sh', 'щ': 'shch',
+  'ъ': '', 'ы': 'y', 'ь': '', 'э': 'e', 'ю': 'yu', 'я': 'ya',
+};
+
+function transliterate(text: string): string {
+  return text.toLowerCase().split('').map((ch) => CYRILLIC_TO_LATIN[ch] || ch).join('');
+}
+
+function slugify(text: string): string {
+  const translit = transliterate(text);
+  return translit.replace(/[^\w\s-]/g, '').replace(/[\s_]+/g, '-').replace(/^-+|-+$/g, '');
+}
+
 interface AuthorModalProps {
   isOpen: boolean;
   mode: 'create' | 'edit';
@@ -85,6 +116,7 @@ export default function AuthorModal({ isOpen, mode, author, onClose, onSave }: A
   // --- Display Name ---
   const [displayNameMode, setDisplayNameMode] = useState<DisplayNameMode>('real_name');
   const [customDisplayName, setCustomDisplayName] = useState('');
+  const [slug, setSlug] = useState('');
 
   // --- Pen Names ---
   const [penNames, setPenNames] = useState<string[]>([]);
@@ -127,6 +159,7 @@ export default function AuthorModal({ isOpen, mode, author, onClose, onSave }: A
   const [activeToYear, setActiveToYear] = useState<number | null>(null);
   const [notableWorks, setNotableWorks] = useState<string[]>([]);
   const [writingLanguages, setWritingLanguages] = useState<string[]>([]);
+  const [genres, setGenres] = useState<string[]>([]);
 
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'success' | 'error'>('idle');
   const [error, setError] = useState<string | null>(null);
@@ -144,6 +177,13 @@ export default function AuthorModal({ isOpen, mode, author, onClose, onSave }: A
     return computeDisplayName(displayNameMode, firstName, lastName, middleName, birthName, penNames);
   }, [displayNameMode, firstName, lastName, middleName, birthName, penNames, customDisplayName]);
 
+  const slugManuallyEdited = useRef(false);
+
+  useEffect(() => {
+    if (slugManuallyEdited.current || !computedDisplayName) return;
+    setSlug(slugify(computedDisplayName));
+  }, [computedDisplayName]);
+
   useEffect(() => {
     if (!isOpen) return;
     if (mode === 'edit' && author) {
@@ -156,6 +196,8 @@ export default function AuthorModal({ isOpen, mode, author, onClose, onSave }: A
       setCustomDisplayName(
         author.display_name_mode === 'custom' ? (author.display_name || '') : '',
       );
+      setSlug(author.slug || '');
+      if (author.slug) slugManuallyEdited.current = true;
       setPenNames(author.pen_names || author.pseudonyms || []);
       setSortName(author.sort_name || '');
       setNationality(author.nationality || '');
@@ -164,17 +206,19 @@ export default function AuthorModal({ isOpen, mode, author, onClose, onSave }: A
       setOfficialWebsite(author.official_website || '');
       setWikipediaUrl(author.wikipedia_url || '');
       setBio(author.bio || '');
-      setBirthDate(author.birth_date || '');
-      setDeathDate(author.death_date || '');
+      setBirthDate(normalizeDate(author.birth_date));
+      setDeathDate(normalizeDate(author.death_date));
       setBirthPlace(author.birth_place || '');
       setDeathPlace(author.death_place || '');
       setOccupations(author.occupations || []);
       setLiteraryMovements(author.literary_movements || []);
+      if (author.awards) console.debug('[author-load] awards count:', author.awards.length);
       setAwards(author.awards || []);
       setActiveFromYear(author.active_from_year ?? null);
       setActiveToYear(author.active_to_year ?? null);
       setNotableWorks(author.notable_works || []);
       setWritingLanguages(author.writing_languages || []);
+      setGenres(author.genres || []);
       setPhoto(author.photo || '');
       setGallery(author.gallery || []);
       setSignatureImage(author.signature_image || '');
@@ -187,6 +231,7 @@ export default function AuthorModal({ isOpen, mode, author, onClose, onSave }: A
       setNativeName('');
       setDisplayNameMode('real_name');
       setCustomDisplayName('');
+      setSlug('');
       setPenNames([]);
       setSortName('');
       setNationality('');
@@ -206,6 +251,7 @@ export default function AuthorModal({ isOpen, mode, author, onClose, onSave }: A
       setActiveToYear(null);
       setNotableWorks([]);
       setWritingLanguages([]);
+      setGenres([]);
       setPhoto('');
       setGallery([]);
       setSignatureImage('');
@@ -283,12 +329,22 @@ export default function AuthorModal({ isOpen, mode, author, onClose, onSave }: A
 
   // ===== Date validation =====
   const validateDates = (): string | null => {
-    const { birth_date, death_date } = { birth_date: birthDate, death_date: deathDate };
-    if (birth_date && death_date && new Date(death_date) < new Date(birth_date)) {
-      return 'Дата смерти не может быть раньше даты рождения';
+    if (!birthDate && !deathDate) return null;
+    if (birthDate) {
+      const bd = toUTCDate(birthDate);
+      if (isNaN(bd.getTime())) return 'Некорректная дата рождения';
+      const now = new Date();
+      const today = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
+      if (bd > today) return 'Дата рождения не может быть в будущем';
     }
-    if (birth_date && new Date(birth_date) > new Date()) {
-      return 'Дата рождения не может быть в будущем';
+    if (deathDate) {
+      const dd = toUTCDate(deathDate);
+      if (isNaN(dd.getTime())) return 'Некорректная дата смерти';
+    }
+    if (birthDate && deathDate) {
+      const bd = toUTCDate(birthDate);
+      const dd = toUTCDate(deathDate);
+      if (dd < bd) return 'Дата смерти не может быть раньше даты рождения';
     }
     return null;
   };
@@ -327,6 +383,7 @@ export default function AuthorModal({ isOpen, mode, author, onClose, onSave }: A
 
     const submitData: Record<string, any> = {
       name: displayName,
+      slug: slug.trim() || null,
       display_name_mode: displayNameMode,
       display_name: displayName,
       pen_names: penNames.length > 0 ? penNames : null,
@@ -354,6 +411,7 @@ export default function AuthorModal({ isOpen, mode, author, onClose, onSave }: A
       active_to_year: activeToYear,
       notable_works: notableWorks.length > 0 ? notableWorks : null,
       writing_languages: writingLanguages.length > 0 ? writingLanguages : null,
+      genres: genres.length > 0 ? genres : null,
       awards: awards.map(({ name, year, organization, work }) => ({ name, year, organization, work })),
       photo: photo.trim() || null,
       gallery: gallery.length > 0 ? gallery : null,
@@ -516,8 +574,21 @@ export default function AuthorModal({ isOpen, mode, author, onClose, onSave }: A
             <h3 style={sectionTitleStyle}>ОСНОВНАЯ ИНФОРМАЦИЯ</h3>
             <div style={{ marginBottom: '12px' }}>
               <label style={labelStyle}>Sort name (для сортировки)</label>
-              <input value={sortName} onChange={(e) => setSortName(e.target.value)}
-                placeholder="Толстой, Лев Николаевич" style={inputStyle} />
+                <input value={sortName} onChange={(e) => setSortName(e.target.value)}
+                  placeholder="Толстой, Лев Николаевич" style={inputStyle} />
+            </div>
+            <div style={{ marginBottom: '12px' }}>
+              <label style={labelStyle}>URL-идентификатор (slug)</label>
+              <div style={{ display: 'flex', gap: '6px' }}>
+                <input value={slug} onChange={(e) => { slugManuallyEdited.current = true; setSlug(e.target.value); }}
+                  placeholder="lev-tolstoj" style={{ ...inputStyle, flex: 1 }} />
+                <button type="button" onClick={() => { slugManuallyEdited.current = false; if (computedDisplayName) setSlug(slugify(computedDisplayName)); }}
+                  style={{ padding: '8px 12px', background: 'rgba(91,134,161,0.15)',
+                    border: '1px solid rgba(91,134,161,0.3)', borderRadius: '8px',
+                    color: '#5B86A1', cursor: 'pointer', fontSize: '12px', whiteSpace: 'nowrap' }}>
+                  ↻
+                </button>
+              </div>
             </div>
             <div style={grid2Style}>
               <div>
@@ -621,6 +692,11 @@ export default function AuthorModal({ isOpen, mode, author, onClose, onSave }: A
               <label style={labelStyle}>Языки письма</label>
               <ChipInput tags={writingLanguages} onChange={(v) => { setIsDirty(true); setWritingLanguages(v); v.forEach((t) => recordChip('writing_languages', t)); }}
                 placeholder="Добавить язык..." color={tagColors.writing_languages} suggestions={chipDict.writing_languages || []} />
+            </div>
+            <div style={{ marginBottom: '12px' }}>
+              <label style={labelStyle}>Жанры</label>
+              <ChipInput tags={genres} onChange={(v) => { setIsDirty(true); setGenres(v); v.forEach((t) => recordChip('genres', t)); }}
+                placeholder="Добавить жанр..." color={tagColors.genres} suggestions={chipDict.genres || []} />
             </div>
           </div>
 

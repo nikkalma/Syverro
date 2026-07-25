@@ -24,6 +24,13 @@ class AuthorAwardResponse(AuthorAwardBase):
         from_attributes = True
 
 
+class AuthorAwardPayload(BaseModel):
+    name: str
+    year: Optional[int] = None
+    organization: Optional[str] = None
+    work: Optional[str] = None
+
+
 class AuthorBase(BaseModel):
     name: str
     first_name: Optional[str] = None
@@ -31,6 +38,14 @@ class AuthorBase(BaseModel):
     last_name: Optional[str] = None
     native_name: Optional[str] = None
     sort_name: Optional[str] = None
+
+    # Identity
+    display_name: Optional[str] = None
+    display_name_mode: Optional[str] = None
+    pen_names: Optional[List[str]] = None
+    birth_name: Optional[str] = None
+    slug: Optional[str] = None
+    search_aliases: Optional[str] = None
 
     # Basic information
     pseudonyms: Optional[List[str]] = None
@@ -68,7 +83,7 @@ class AuthorBase(BaseModel):
 
 
 class AuthorCreate(AuthorBase):
-    pass
+    awards: Optional[List[AuthorAwardPayload]] = None
 
 
 class AuthorUpdate(BaseModel):
@@ -78,6 +93,17 @@ class AuthorUpdate(BaseModel):
     last_name: Optional[str] = None
     native_name: Optional[str] = None
     sort_name: Optional[str] = None
+
+    # Identity
+    display_name: Optional[str] = None
+    display_name_mode: Optional[str] = None
+    pen_names: Optional[List[str]] = None
+    birth_name: Optional[str] = None
+    slug: Optional[str] = None
+    search_aliases: Optional[str] = None
+
+    # Awards (sent in main payload, handled separately by endpoint)
+    awards: Optional[List[AuthorAwardPayload]] = None
 
     pseudonyms: Optional[List[str]] = None
     nationality: Optional[str] = None
@@ -151,7 +177,10 @@ class AuthorMetadata(BaseModel):
 
 class AuthorListBrief(BaseModel):
     id: UUID
+    slug: Optional[str] = None
     name: str
+    display_name: Optional[str] = None
+    display_name_mode: Optional[str] = None
     first_name: Optional[str] = None
     last_name: Optional[str] = None
     native_name: Optional[str] = None
@@ -162,7 +191,10 @@ class AuthorListBrief(BaseModel):
 
 class AuthorPublicResponse(BaseModel):
     id: UUID
+    slug: Optional[str] = None
     name: str
+    display_name: Optional[str] = None
+    display_name_mode: Optional[str] = None
     first_name: Optional[str] = None
     last_name: Optional[str] = None
     native_name: Optional[str] = None

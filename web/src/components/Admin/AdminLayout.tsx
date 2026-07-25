@@ -96,11 +96,8 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
     }}>
       <aside className={`admin-sidebar ${isMobileMenuOpen ? 'open' : ''}`} style={{
         width: '240px',
-        background: 'rgba(18, 28, 36, 0.85)',
-        backdropFilter: 'blur(16px)',
-        WebkitBackdropFilter: 'blur(16px)',
-        borderRight: '1px solid rgba(255,255,255,0.06)',
-        boxShadow: '4px 0 24px rgba(0,0,0,0.3)',
+        background: 'var(--surface)',
+        borderRight: '1px solid var(--border-soft)',
         display: 'flex',
         flexDirection: 'column',
         flexShrink: 0,
@@ -111,7 +108,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
       }}>
         <Link to="/" style={{
           padding: '20px 24px',
-          borderBottom: '1px solid rgba(255,255,255,0.06)',
+          borderBottom: '1px solid var(--border-soft)',
           fontSize: '20px',
           fontWeight: '600',
           color: 'var(--text-primary)',
@@ -137,8 +134,8 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
                 gap: '12px',
                 padding: '10px 16px',
                 borderRadius: '8px',
-                color: isActive(item.path) ? '#FFFFFF' : 'var(--text-secondary)',
-                background: isActive(item.path) ? 'rgba(91,134,161,0.3)' : 'transparent',
+                color: isActive(item.path) ? 'var(--text-primary)' : 'var(--text-secondary)',
+                background: isActive(item.path) ? 'var(--primary)' : 'transparent',
                 textDecoration: 'none',
                 fontSize: '14px',
                 fontFamily: 'Inter, sans-serif',
@@ -166,7 +163,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
 
         <div style={{
           padding: '16px 20px',
-          borderTop: '1px solid rgba(255,255,255,0.06)',
+          borderTop: '1px solid var(--border-soft)',
           display: 'flex',
           flexDirection: 'column',
           gap: '8px',
@@ -219,10 +216,8 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
           alignItems: 'center',
           justifyContent: 'space-between',
           padding: '12px 24px',
-          background: 'rgba(18, 28, 36, 0.85)',
-          backdropFilter: 'blur(12px)',
-          WebkitBackdropFilter: 'blur(12px)',
-          borderBottom: '1px solid rgba(255,255,255,0.06)',
+          background: 'var(--surface)',
+          borderBottom: '1px solid var(--border-soft)',
           position: 'sticky',
           top: 0,
           zIndex: 50,

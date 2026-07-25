@@ -1,17 +1,15 @@
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { AdminAuthor, AuthorAward, GENDER_OPTIONS, DISPLAY_NAME_MODE_LABELS, computeDisplayName } from '../../../types/admin';
 import type { DisplayNameMode } from '../../../types/admin';
 import ChipInput from '../../../components/ChipInput';
 import { computeSearchAliases } from '../../../shared/utils/normalizeSearch';
-
-const API_URL = import.meta.env.VITE_API_URL || 'https://api.syverro.com';
 
 interface AuthorModalProps {
   isOpen: boolean;
   mode: 'create' | 'edit';
   author: AdminAuthor | null;
   onClose: () => void;
-  onSave: (data: any) => void;
+  onSave: (data: any) => Promise<void>;
 }
 
 const inputStyle: React.CSSProperties = {
@@ -125,9 +123,15 @@ export default function AuthorModal({ isOpen, mode, author, onClose, onSave }: A
   const [galleryInput, setGalleryInput] = useState('');
   const [signatureImage, setSignatureImage] = useState('');
   const [portraitCaption, setPortraitCaption] = useState('');
+  const [activeFromYear, setActiveFromYear] = useState<number | null>(null);
+  const [activeToYear, setActiveToYear] = useState<number | null>(null);
+  const [notableWorks, setNotableWorks] = useState<string[]>([]);
+  const [writingLanguages, setWritingLanguages] = useState<string[]>([]);
 
-  const [loading, setLoading] = useState(false);
+  const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'success' | 'error'>('idle');
   const [error, setError] = useState<string | null>(null);
+  const [formReady, setFormReady] = useState(false);
+  const [isDirty, setIsDirty] = useState(false);
 
   const [chipDict] = useState(() => loadDict());
 
@@ -167,6 +171,10 @@ export default function AuthorModal({ isOpen, mode, author, onClose, onSave }: A
       setOccupations(author.occupations || []);
       setLiteraryMovements(author.literary_movements || []);
       setAwards(author.awards || []);
+      setActiveFromYear(author.active_from_year ?? null);
+      setActiveToYear(author.active_to_year ?? null);
+      setNotableWorks(author.notable_works || []);
+      setWritingLanguages(author.writing_languages || []);
       setPhoto(author.photo || '');
       setGallery(author.gallery || []);
       setSignatureImage(author.signature_image || '');
@@ -194,6 +202,10 @@ export default function AuthorModal({ isOpen, mode, author, onClose, onSave }: A
       setOccupations([]);
       setLiteraryMovements([]);
       setAwards([]);
+      setActiveFromYear(null);
+      setActiveToYear(null);
+      setNotableWorks([]);
+      setWritingLanguages([]);
       setPhoto('');
       setGallery([]);
       setSignatureImage('');
@@ -202,91 +214,53 @@ export default function AuthorModal({ isOpen, mode, author, onClose, onSave }: A
     setError(null);
     setShowAwardForm(false);
     setEditingAwardId(null);
+    setSaveStatus('idle');
+    setFormReady(true);
   }, [mode, author, isOpen]);
+
+  // ===== Beforeunload warning for unsaved changes =====
+  useEffect(() => {
+    if (!formReady || !isDirty) return;
+    const handler = (e: BeforeUnloadEvent) => {
+      e.preventDefault();
+      e.returnValue = '';
+    };
+    window.addEventListener('beforeunload', handler);
+    return () => window.removeEventListener('beforeunload', handler);
+  }, [formReady, isDirty]);
 
   if (!isOpen) return null;
 
-  // ===== Award helpers =====
-  const handleAddAward = async () => {
+  // ===== Award helpers (local state only — submitted in main payload) =====
+  const handleAddAward = () => {
     if (!awardName.trim()) return;
-    if (!author || mode === 'create') {
-      setAwards((prev) => [...prev, {
-        id: `temp-${Date.now()}`,
-        author_id: author?.id || '',
-        name: awardName.trim(),
-        year: awardYear ? parseInt(awardYear) : null,
-        organization: awardOrganization.trim() || null,
-        work: awardWork.trim() || null,
-        created_at: new Date().toISOString(),
-      }]);
-      resetAwardForm();
-      return;
-    }
-    try {
-      const token = localStorage.getItem('token');
-      const res = await fetch(`${API_URL}/admin/authors/${author.id}/awards`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-        body: JSON.stringify({
-          name: awardName.trim(),
-          year: awardYear ? parseInt(awardYear) : null,
-          organization: awardOrganization.trim() || null,
-          work: awardWork.trim() || null,
-        }),
-      });
-      if (!res.ok) throw new Error('Failed to save award');
-      const saved = await res.json();
-      setAwards((prev) => [...prev, saved]);
-      resetAwardForm();
-    } catch (err: any) {
-      setError(err.message);
-    }
+    setIsDirty(true);
+    setAwards((prev) => [...prev, {
+      id: `temp-${Date.now()}`,
+      author_id: author?.id || '',
+      name: awardName.trim(),
+      year: awardYear ? parseInt(awardYear) : null,
+      organization: awardOrganization.trim() || null,
+      work: awardWork.trim() || null,
+      created_at: new Date().toISOString(),
+    }]);
+    resetAwardForm();
   };
 
-  const handleUpdateAward = async () => {
-    if (!awardName.trim() || !editingAwardId || !author) return;
-    if (editingAwardId.startsWith('temp-')) {
-      setAwards((prev) => prev.map((a) => a.id === editingAwardId ? { ...a, name: awardName.trim(), year: awardYear ? parseInt(awardYear) : null, organization: awardOrganization.trim() || null, work: awardWork.trim() || null } : a));
-      resetAwardForm();
-      return;
-    }
-    try {
-      const token = localStorage.getItem('token');
-      const res = await fetch(`${API_URL}/admin/authors/${author.id}/awards/${editingAwardId}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-        body: JSON.stringify({
-          name: awardName.trim(),
-          year: awardYear ? parseInt(awardYear) : null,
-          organization: awardOrganization.trim() || null,
-          work: awardWork.trim() || null,
-        }),
-      });
-      if (!res.ok) throw new Error('Failed to update award');
-      const updated = await res.json();
-      setAwards((prev) => prev.map((a) => (a.id === editingAwardId ? updated : a)));
-      resetAwardForm();
-    } catch (err: any) {
-      setError(err.message);
-    }
+  const handleUpdateAward = () => {
+    if (!awardName.trim() || !editingAwardId) return;
+    setIsDirty(true);
+    setAwards((prev) => prev.map((a) =>
+      a.id === editingAwardId
+        ? { ...a, name: awardName.trim(), year: awardYear ? parseInt(awardYear) : null, organization: awardOrganization.trim() || null, work: awardWork.trim() || null }
+        : a
+    ));
+    resetAwardForm();
   };
 
-  const handleDeleteAward = async (awardId: string) => {
-    if (awardId.startsWith('temp-')) {
-      setAwards((prev) => prev.filter((a) => a.id !== awardId));
-      return;
-    }
-    if (!author) return;
-    try {
-      const token = localStorage.getItem('token');
-      await fetch(`${API_URL}/admin/authors/${author.id}/awards/${awardId}`, {
-        method: 'DELETE',
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      setAwards((prev) => prev.filter((a) => a.id !== awardId));
-    } catch (err: any) {
-      setError(err.message);
-    }
+  const handleDeleteAward = (awardId: string) => {
+    setIsDirty(true);
+    setAwards((prev) => prev.filter((a) => a.id !== awardId));
   };
 
   const resetAwardForm = () => {
@@ -307,68 +281,94 @@ export default function AuthorModal({ isOpen, mode, author, onClose, onSave }: A
     setAwardWork(award.work || '');
   };
 
+  // ===== Date validation =====
+  const validateDates = (): string | null => {
+    const { birth_date, death_date } = { birth_date: birthDate, death_date: deathDate };
+    if (birth_date && death_date && new Date(death_date) < new Date(birth_date)) {
+      return 'Дата смерти не может быть раньше даты рождения';
+    }
+    if (birth_date && new Date(birth_date) > new Date()) {
+      return 'Дата рождения не может быть в будущем';
+    }
+    return null;
+  };
+
+  // ===== Close guard =====
+  const handleClose = () => {
+    if (saveStatus === 'saving') return;
+    if (isDirty && saveStatus !== 'success' && !window.confirm('У вас есть несохранённые изменения. Отменить?')) return;
+    onClose();
+  };
+
   // ===== Submit =====
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
     setError(null);
 
+    const displayName = computedDisplayName || [firstName, lastName].filter(Boolean).join(' ') || birthName || penNames[0] || '';
+    if (!displayName) {
+      setError('Имя автора обязательно');
+      return;
+    }
+
+    const dateErr = validateDates();
+    if (dateErr) {
+      setError(dateErr);
+      return;
+    }
+
+    const searchAliases = computeSearchAliases(
+      displayName,
+      [firstName, middleName, lastName].filter(Boolean).join(' '),
+      birthName,
+      nativeName,
+      ...penNames,
+    );
+
+    const submitData: Record<string, any> = {
+      name: displayName,
+      display_name_mode: displayNameMode,
+      display_name: displayName,
+      pen_names: penNames.length > 0 ? penNames : null,
+      pseudonyms: penNames.length > 0 ? penNames : null,
+      search_aliases: searchAliases || null,
+      birth_name: birthName.trim() || null,
+      first_name: firstName.trim() || null,
+      middle_name: middleName.trim() || null,
+      last_name: lastName.trim() || null,
+      native_name: nativeName.trim() || null,
+      sort_name: sortName.trim() || null,
+      nationality: nationality.trim() || null,
+      languages: languages.length > 0 ? languages : null,
+      gender: gender || 'unknown',
+      official_website: officialWebsite.trim() || null,
+      wikipedia_url: wikipediaUrl.trim() || null,
+      bio: bio.trim() || null,
+      birth_date: birthDate || null,
+      death_date: deathDate || null,
+      birth_place: birthPlace.trim() || null,
+      death_place: deathPlace.trim() || null,
+      occupations: occupations.length > 0 ? occupations : null,
+      literary_movements: literaryMovements.length > 0 ? literaryMovements : null,
+      active_from_year: activeFromYear,
+      active_to_year: activeToYear,
+      notable_works: notableWorks.length > 0 ? notableWorks : null,
+      writing_languages: writingLanguages.length > 0 ? writingLanguages : null,
+      awards: awards.map(({ name, year, organization, work }) => ({ name, year, organization, work })),
+      photo: photo.trim() || null,
+      gallery: gallery.length > 0 ? gallery : null,
+      signature_image: signatureImage.trim() || null,
+      portrait_caption: portraitCaption.trim() || null,
+    };
+
+    setSaveStatus('saving');
     try {
-      const displayName = computedDisplayName || [firstName, lastName].filter(Boolean).join(' ') || birthName || penNames[0] || '';
-      if (!displayName) {
-        throw new Error('Имя автора обязательно');
-      }
-
-      const searchAliases = computeSearchAliases(
-        displayName,
-        [firstName, middleName, lastName].filter(Boolean).join(' '),
-        birthName,
-        nativeName,
-        ...penNames,
-      );
-
-      const submitData: Record<string, any> = {
-        name: displayName,
-        display_name_mode: displayNameMode,
-        display_name: displayName,
-        pen_names: penNames.length > 0 ? penNames : null,
-        pseudonyms: penNames.length > 0 ? penNames : null,
-        search_aliases: searchAliases || null,
-        birth_name: birthName.trim() || null,
-        first_name: firstName.trim() || null,
-        middle_name: middleName.trim() || null,
-        last_name: lastName.trim() || null,
-        native_name: nativeName.trim() || null,
-        sort_name: sortName.trim() || null,
-        nationality: nationality.trim() || null,
-        languages: languages.length > 0 ? languages : null,
-        gender: gender || 'unknown',
-        official_website: officialWebsite.trim() || null,
-        wikipedia_url: wikipediaUrl.trim() || null,
-        bio: bio.trim() || null,
-        birth_date: birthDate.trim() || null,
-        death_date: deathDate.trim() || null,
-        birth_place: birthPlace.trim() || null,
-        death_place: deathPlace.trim() || null,
-        occupations: occupations.length > 0 ? occupations : null,
-        literary_movements: literaryMovements.length > 0 ? literaryMovements : null,
-        awards: awards.map((a) => ({
-          name: a.name,
-          year: a.year,
-          organization: a.organization,
-          work: a.work,
-        })),
-        photo: photo.trim() || null,
-        gallery: gallery.length > 0 ? gallery : null,
-        signature_image: signatureImage.trim() || null,
-        portrait_caption: portraitCaption.trim() || null,
-      };
-
-      onSave(submitData);
-      setLoading(false);
+      await onSave(submitData);
+      setSaveStatus('success');
+      setTimeout(() => onClose(), 1200);
     } catch (err: any) {
-      setError(err.message);
-      setLoading(false);
+      setSaveStatus('error');
+      setError(err.message || 'Ошибка сохранения');
     }
   };
 
@@ -377,12 +377,14 @@ export default function AuthorModal({ isOpen, mode, author, onClose, onSave }: A
     const val = galleryInput.trim();
     if (val && !gallery.includes(val)) {
       setGallery([...gallery, val]);
+      setIsDirty(true);
     }
     setGalleryInput('');
   };
 
   const removeGalleryItem = (item: string) => {
     setGallery(gallery.filter((i) => i !== item));
+    setIsDirty(true);
   };
 
   const grid2Style: React.CSSProperties = {
@@ -396,7 +398,6 @@ export default function AuthorModal({ isOpen, mode, author, onClose, onSave }: A
         backdropFilter: 'blur(8px)', display: 'flex', alignItems: 'center',
         justifyContent: 'center', zIndex: 1000, padding: '20px',
       }}
-      onClick={onClose}
     >
       <div
         style={{
@@ -411,13 +412,13 @@ export default function AuthorModal({ isOpen, mode, author, onClose, onSave }: A
           <h2 style={{ color: '#E6EDF3', fontSize: '22px', fontWeight: '400', margin: 0 }}>
             {mode === 'create' ? '➕ Новый автор' : '✏️ Редактировать автора'}
           </h2>
-          <button onClick={onClose} style={{
+          <button onClick={handleClose} style={{
             background: 'none', border: 'none', color: '#97A6BA',
             fontSize: '24px', cursor: 'pointer', padding: '4px 8px',
           }}>✕</button>
         </div>
 
-        <form onSubmit={handleSubmit}>
+        <form onSubmit={handleSubmit} onChange={() => { if (formReady) setIsDirty(true); }}>
           {/* ===== 1. IDENTITY ===== */}
           <div style={sectionStyle}>
             <h3 style={sectionTitleStyle}>ИДЕНТИФИКАЦИЯ</h3>
@@ -465,7 +466,7 @@ export default function AuthorModal({ isOpen, mode, author, onClose, onSave }: A
                   <button
                     key={opt.value}
                     type="button"
-                    onClick={() => setDisplayNameMode(opt.value)}
+                    onClick={() => { setIsDirty(true); setDisplayNameMode(opt.value); }}
                     style={{
                       padding: '8px 16px',
                       background: displayNameMode === opt.value ? '#5B86A1' : 'rgba(255,255,255,0.05)',
@@ -506,7 +507,7 @@ export default function AuthorModal({ isOpen, mode, author, onClose, onSave }: A
           {/* ===== 3. PEN NAMES ===== */}
           <div style={sectionStyle}>
             <h3 style={sectionTitleStyle}>ПСЕВДОНИМЫ</h3>
-            <ChipInput tags={penNames} onChange={(v) => { setPenNames(v); v.forEach((t) => recordChip('pen_names', t)); }}
+            <ChipInput tags={penNames} onChange={(v) => { setIsDirty(true); setPenNames(v); v.forEach((t) => recordChip('pen_names', t)); }}
               placeholder="Добавить псевдоним..." color={tagColors.pen_names} suggestions={chipDict.pen_names || []} />
           </div>
 
@@ -526,7 +527,7 @@ export default function AuthorModal({ isOpen, mode, author, onClose, onSave }: A
               </div>
               <div>
                 <label style={labelStyle}>Языки</label>
-                <ChipInput tags={languages} onChange={(v) => { setLanguages(v); v.forEach((t) => recordChip('languages', t)); }}
+                <ChipInput tags={languages} onChange={(v) => { setIsDirty(true); setLanguages(v); v.forEach((t) => recordChip('languages', t)); }}
                   placeholder="Добавить язык..." color={tagColors.languages} suggestions={chipDict.languages || []} />
               </div>
             </div>
@@ -562,14 +563,14 @@ export default function AuthorModal({ isOpen, mode, author, onClose, onSave }: A
             </div>
             <div style={grid2Style}>
               <div>
-                <label style={labelStyle}>Дата рождения (ДД/ММ/ГГГГ)</label>
-                <input value={birthDate} onChange={(e) => setBirthDate(e.target.value)}
-                  placeholder="15.01.1900" style={inputStyle} />
+                <label style={labelStyle}>Дата рождения</label>
+                <input type="date" value={birthDate} onChange={(e) => setBirthDate(e.target.value)}
+                  style={inputStyle} />
               </div>
               <div>
-                <label style={labelStyle}>Дата смерти (ДД/ММ/ГГГГ)</label>
-                <input value={deathDate} onChange={(e) => setDeathDate(e.target.value)}
-                  placeholder="05.06.2000" style={inputStyle} />
+                <label style={labelStyle}>Дата смерти</label>
+                <input type="date" value={deathDate} onChange={(e) => setDeathDate(e.target.value)}
+                  style={inputStyle} />
               </div>
             </div>
             <div style={grid2Style}>
@@ -591,13 +592,35 @@ export default function AuthorModal({ isOpen, mode, author, onClose, onSave }: A
             <h3 style={sectionTitleStyle}>КАРЬЕРА</h3>
             <div style={{ marginBottom: '12px' }}>
               <label style={labelStyle}>Профессии / Роли</label>
-              <ChipInput tags={occupations} onChange={(v) => { setOccupations(v); v.forEach((t) => recordChip('occupations', t)); }}
+              <ChipInput tags={occupations} onChange={(v) => { setIsDirty(true); setOccupations(v); v.forEach((t) => recordChip('occupations', t)); }}
                 placeholder="Добавить профессию..." color={tagColors.occupations} suggestions={chipDict.occupations || []} />
             </div>
             <div style={{ marginBottom: '12px' }}>
               <label style={labelStyle}>Литературные направления</label>
-              <ChipInput tags={literaryMovements} onChange={(v) => { setLiteraryMovements(v); v.forEach((t) => recordChip('literary_movements', t)); }}
+              <ChipInput tags={literaryMovements} onChange={(v) => { setIsDirty(true); setLiteraryMovements(v); v.forEach((t) => recordChip('literary_movements', t)); }}
                 placeholder="Добавить направление..." color={tagColors.literary_movements} suggestions={chipDict.literary_movements || []} />
+            </div>
+            <div style={grid2Style}>
+              <div>
+                <label style={labelStyle}>Год начала активности</label>
+                <input type="number" value={activeFromYear ?? ''} onChange={(e) => setActiveFromYear(e.target.value ? parseInt(e.target.value) : null)}
+                  placeholder="1850" style={inputStyle} />
+              </div>
+              <div>
+                <label style={labelStyle}>Год окончания активности</label>
+                <input type="number" value={activeToYear ?? ''} onChange={(e) => setActiveToYear(e.target.value ? parseInt(e.target.value) : null)}
+                  placeholder="1910" style={inputStyle} />
+              </div>
+            </div>
+            <div style={{ marginBottom: '12px' }}>
+              <label style={labelStyle}>Известные произведения</label>
+              <ChipInput tags={notableWorks} onChange={(v) => { setIsDirty(true); setNotableWorks(v); v.forEach((t) => recordChip('notable_works', t)); }}
+                placeholder="Добавить произведение..." color={tagColors.notable_works} suggestions={chipDict.notable_works || []} />
+            </div>
+            <div style={{ marginBottom: '12px' }}>
+              <label style={labelStyle}>Языки письма</label>
+              <ChipInput tags={writingLanguages} onChange={(v) => { setIsDirty(true); setWritingLanguages(v); v.forEach((t) => recordChip('writing_languages', t)); }}
+                placeholder="Добавить язык..." color={tagColors.writing_languages} suggestions={chipDict.writing_languages || []} />
             </div>
           </div>
 
@@ -792,32 +815,44 @@ export default function AuthorModal({ isOpen, mode, author, onClose, onSave }: A
             </div>
           )}
 
-          {error && (
-            <div style={{ color: '#EF5350', fontSize: '13px', marginBottom: '16px' }}>
+          {error && saveStatus !== 'saving' && (
+            <div style={{ color: '#EF5350', fontSize: '13px', marginBottom: '16px', padding: '10px 14px', background: 'rgba(239,83,80,0.08)', borderRadius: '8px', border: '1px solid rgba(239,83,80,0.15)' }}>
               {error}
+            </div>
+          )}
+
+          {saveStatus === 'success' && (
+            <div style={{ color: '#4CAF50', fontSize: '13px', marginBottom: '16px', padding: '10px 14px', background: 'rgba(76,175,80,0.08)', borderRadius: '8px', border: '1px solid rgba(76,175,80,0.15)', textAlign: 'center' }}>
+              ✓ Сохранено
             </div>
           )}
 
           <div style={{ display: 'flex', gap: '12px' }}>
             <button
               type="submit"
-              disabled={loading}
+              disabled={saveStatus === 'saving' || saveStatus === 'success'}
               style={{
-                flex: 1, padding: '12px', background: '#5B86A1', border: 'none',
-                borderRadius: '8px', color: '#0A1118', fontSize: '14px',
-                fontWeight: '500', cursor: loading ? 'not-allowed' : 'pointer',
-                opacity: loading ? 0.6 : 1, fontFamily: 'Inter, sans-serif',
+                flex: 1, padding: '12px', background: saveStatus === 'success' ? '#4CAF50' : saveStatus === 'error' ? '#EF5350' : '#5B86A1',
+                border: 'none', borderRadius: '8px',
+                color: '#0A1118', fontSize: '14px',
+                fontWeight: '500',
+                cursor: saveStatus === 'saving' || saveStatus === 'success' ? 'not-allowed' : 'pointer',
+                opacity: saveStatus === 'saving' ? 0.6 : 1,
+                fontFamily: 'Inter, sans-serif', transition: 'background 0.2s',
               }}
             >
-              {loading ? 'Сохранение...' : mode === 'create' ? '➕ Создать' : '💾 Сохранить'}
+              {saveStatus === 'saving' ? '⏳ Сохранение...' : saveStatus === 'success' ? '✓ Сохранено' : mode === 'create' ? '➕ Создать' : '💾 Сохранить'}
             </button>
             <button
               type="button"
-              onClick={onClose}
+              onClick={handleClose}
+              disabled={saveStatus === 'saving'}
               style={{
                 padding: '12px 24px', background: 'rgba(255,255,255,0.05)',
                 border: '1px solid rgba(255,255,255,0.08)', borderRadius: '8px',
-                color: '#97A6BA', fontSize: '14px', cursor: 'pointer',
+                color: '#97A6BA', fontSize: '14px',
+                cursor: saveStatus === 'saving' ? 'not-allowed' : 'pointer',
+                opacity: saveStatus === 'saving' ? 0.5 : 1,
                 fontFamily: 'Inter, sans-serif',
               }}
             >

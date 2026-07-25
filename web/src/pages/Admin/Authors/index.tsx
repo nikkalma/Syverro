@@ -66,45 +66,41 @@ export default function AdminAuthors() {
   }, [page, limit, searchQuery, filters]);
 
   // ===== СОЗДАНИЕ АВТОРА =====
-  const handleCreate = async (data: AdminAuthorCreate) => {
-    try {
-      const response = await fetch(`${API_URL}/admin/authors`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify(data),
-      });
+  const handleCreate = async (data: AdminAuthorCreate): Promise<void> => {
+    const response = await fetch(`${API_URL}/admin/authors`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify(data),
+    });
 
-      if (!response.ok) throw new Error('Ошибка создания автора');
-
-      setIsModalOpen(false);
-      await fetchAuthors();
-    } catch (err: any) {
-      setError(err.message);
+    if (!response.ok) {
+      const body = await response.json().catch(() => ({}));
+      throw new Error(body.detail || 'Ошибка создания автора');
     }
+
+    await fetchAuthors();
   };
 
   // ===== ОБНОВЛЕНИЕ АВТОРА =====
-  const handleUpdate = async (id: string, data: AdminAuthorCreate) => {
-    try {
-      const response = await fetch(`${API_URL}/admin/authors/${id}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify(data),
-      });
+  const handleUpdate = async (id: string, data: AdminAuthorCreate): Promise<void> => {
+    const response = await fetch(`${API_URL}/admin/authors/${id}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify(data),
+    });
 
-      if (!response.ok) throw new Error('Ошибка обновления автора');
-
-      setIsModalOpen(false);
-      await fetchAuthors();
-    } catch (err: any) {
-      setError(err.message);
+    if (!response.ok) {
+      const body = await response.json().catch(() => ({}));
+      throw new Error(body.detail || 'Ошибка обновления автора');
     }
+
+    await fetchAuthors();
   };
 
   // ===== УДАЛЕНИЕ =====
@@ -203,10 +199,11 @@ export default function AdminAuthors() {
         }}
         onSave={(data) => {
           if (modalMode === 'create') {
-            handleCreate(data);
+            return handleCreate(data);
           } else if (selectedAuthor) {
-            handleUpdate(selectedAuthor.id, data);
+            return handleUpdate(selectedAuthor.id, data);
           }
+          return Promise.resolve();
         }}
       />
 

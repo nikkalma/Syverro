@@ -157,7 +157,12 @@ export default function AuthorsTable({
                 </div>
               </td>
               <td style={{ padding: '12px 16px', color: '#E6EDF3', fontSize: '14px', fontWeight: '500' }}>
-                {getAuthorDisplayName(author)}
+                <a href={`https://syverro.com/author/${author.id}`} target="_blank" rel="noopener noreferrer"
+                  style={{ color: '#5B86A1', textDecoration: 'none', cursor: 'pointer' }}
+                  onMouseEnter={(e) => (e.currentTarget.style.textDecoration = 'underline')}
+                  onMouseLeave={(e) => (e.currentTarget.style.textDecoration = 'none')}>
+                  {getAuthorDisplayName(author)}
+                </a>
               </td>
               <td style={{ padding: '12px 16px', color: '#97A6BA', fontSize: '13px' }}>
                 {author.country || '—'}
@@ -170,6 +175,20 @@ export default function AuthorsTable({
               </td>
               <td style={{ padding: '12px 16px' }}>
                 <div style={{ display: 'flex', gap: '6px' }}>
+                  <a href={`https://syverro.com/author/${author.id}`} target="_blank" rel="noopener noreferrer"
+                    style={{
+                      padding: '4px 10px',
+                      background: 'rgba(91,134,161,0.1)',
+                      border: '1px solid rgba(91,134,161,0.2)',
+                      borderRadius: '6px',
+                      color: '#5B86A1',
+                      fontSize: '11px',
+                      cursor: 'pointer',
+                      fontFamily: 'Inter, sans-serif',
+                      textDecoration: 'none',
+                    }}>
+                    Просмотр
+                  </a>
                   {canManage && (
                     <>
                       <button

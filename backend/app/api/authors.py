@@ -53,10 +53,18 @@ async def get_author(
 ):
     # Try slug first, then UUID
     author = await db.scalar(
-        select(Author).where(or_(Author.slug == slug_or_id, Author.id == slug_or_id))
+        select(Author).where(Author.slug == slug_or_id)
     )
     if not author:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Author not found")
+        try:
+            uuid_val = UUID(slug_or_id)
+        except ValueError:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Author not found")
+        author = await db.scalar(
+            select(Author).where(Author.id == uuid_val)
+        )
+        if not author:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Author not found")
 
     book_rows = await db.execute(
         select(Book.id, Book.title, Book.cover)

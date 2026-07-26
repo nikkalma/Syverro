@@ -14,7 +14,7 @@ export default function Seo() {
     <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
       <EditorSectionCard title={t.admin.authors.editor.seo.seoMetadata}>
         <DetailGrid columns={3}>
-          <Field label={t.admin.authors.editor.overview.slug} value={author.slug} />
+          <Field label={t.admin.authors.editor.seo.slug} value={author.slug} />
           <Field label={t.admin.authors.editor.identity.sortName} value={author.sort_name} />
           <Field label={t.admin.authors.editor.seo.searchAliases} value={author.search_aliases} />
         </DetailGrid>

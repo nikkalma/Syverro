@@ -6,6 +6,16 @@ import ActionBar from '../../../../../components/Studio/shared/ActionBar';
 import { getLocaleData, getBrowserLocale } from '../../../../../locales';
 import type { AdminAuthorUpdate } from '../../../../../types/admin';
 
+function slugify(text: string): string {
+  return text
+    .toLowerCase()
+    .replace(/[^\w\s-]/g, '')
+    .replace(/[\s_]+/g, '-')
+    .replace(/-+/g, '-')
+    .replace(/^-+|-+$/g, '')
+    .trim();
+}
+
 interface InputProps {
   label: string;
   value: string;
@@ -51,58 +61,85 @@ function FormField({ label, value, onChange, placeholder, type, multiline, disab
   );
 }
 
+function CheckboxField({ label, checked, onChange }: { label: string; checked: boolean; onChange: (v: boolean) => void }) {
+  return (
+    <label style={{
+      display: 'flex', alignItems: 'center', gap: '8px',
+      fontSize: '13px', color: 'var(--text-secondary)', cursor: 'pointer',
+      userSelect: 'none',
+    }}>
+      <input
+        type="checkbox"
+        checked={checked}
+        onChange={(e) => onChange(e.target.checked)}
+        style={{ accentColor: 'var(--primary)' }}
+      />
+      {label}
+    </label>
+  );
+}
+
 export default function Overview() {
   const t = getLocaleData(getBrowserLocale());
   const { author, loading, saving, saveError, updateAuthor } = useAuthorEditor();
 
   const [name, setName] = useState('');
   const [nativeName, setNativeName] = useState('');
-  const [displayName, setDisplayName] = useState('');
   const [slug, setSlug] = useState('');
+  const [slugLocked, setSlugLocked] = useState(false);
   const [photo, setPhoto] = useState('');
   const [heroBg, setHeroBg] = useState('');
-  const [introQuote, setIntroQuote] = useState('');
+  const [shortDescription, setShortDescription] = useState('');
 
   useEffect(() => {
     if (!author) return;
     setName(author.name || '');
     setNativeName(author.native_name || '');
-    setDisplayName(author.display_name || '');
     setSlug(author.slug || '');
+    setSlugLocked(author.slug_locked || false);
     setPhoto(author.photo || '');
     setHeroBg(author.hero_background_url || '');
-    setIntroQuote(author.author_intro_quote || '');
+    setShortDescription(author.author_intro_quote || '');
   }, [author]);
+
+  useEffect(() => {
+    if (!slugLocked && name) {
+      const generated = slugify(name);
+      if (generated !== slug) {
+        setSlug(generated);
+      }
+    }
+  }, [name, slugLocked]);
 
   const hasChanges =
     name !== (author?.name || '') ||
     nativeName !== (author?.native_name || '') ||
-    displayName !== (author?.display_name || '') ||
     slug !== (author?.slug || '') ||
+    slugLocked !== (author?.slug_locked || false) ||
     photo !== (author?.photo || '') ||
     heroBg !== (author?.hero_background_url || '') ||
-    introQuote !== (author?.author_intro_quote || '');
+    shortDescription !== (author?.author_intro_quote || '');
 
   const reset = () => {
     if (!author) return;
     setName(author.name || '');
     setNativeName(author.native_name || '');
-    setDisplayName(author.display_name || '');
     setSlug(author.slug || '');
+    setSlugLocked(author.slug_locked || false);
     setPhoto(author.photo || '');
     setHeroBg(author.hero_background_url || '');
-    setIntroQuote(author.author_intro_quote || '');
+    setShortDescription(author.author_intro_quote || '');
   };
 
   const handleSave = async () => {
     const data: AdminAuthorUpdate = {
       name,
       native_name: nativeName || null,
-      display_name: displayName || null,
       slug: slug || null,
+      slug_locked: slugLocked,
       photo: photo || null,
       hero_background_url: heroBg || null,
-      author_intro_quote: introQuote || null,
+      author_intro_quote: shortDescription || null,
     };
     await updateAuthor(data);
   };
@@ -131,9 +168,19 @@ export default function Overview() {
             <DetailGrid>
               <FormField label={t.admin.authors.editor.overview.name} value={name} onChange={setName} />
               <FormField label={t.admin.authors.editor.overview.nativeName} value={nativeName} onChange={setNativeName} />
-              <FormField label={t.admin.authors.editor.overview.displayName} value={displayName} onChange={setDisplayName} />
-              <FormField label={t.admin.authors.editor.overview.slug} value={slug} onChange={setSlug} />
             </DetailGrid>
+            <div style={{ marginTop: '16px', display: 'flex', gap: '12px', alignItems: 'center' }}>
+              <div style={{ flex: 1 }}>
+                <FormField label={t.admin.authors.editor.overview.slugAuto} value={slug} onChange={(v) => { setSlug(v); setSlugLocked(true); }} />
+              </div>
+              <div style={{ marginTop: '22px' }}>
+                <CheckboxField
+                  label={t.admin.authors.editor.overview.slugLocked}
+                  checked={slugLocked}
+                  onChange={setSlugLocked}
+                />
+              </div>
+            </div>
           </EditorSectionCard>
         </div>
       </div>
@@ -154,13 +201,13 @@ export default function Overview() {
         <FormField label="URL" value={heroBg} onChange={setHeroBg} type="url" placeholder="https://..." />
       </EditorSectionCard>
 
-      <EditorSectionCard title={t.admin.authors.editor.overview.introQuote}>
+      <EditorSectionCard title={t.admin.authors.editor.overview.shortDescription}>
         <FormField
-          label={t.admin.authors.editor.overview.introQuote}
-          value={introQuote}
-          onChange={setIntroQuote}
+          label={t.admin.authors.editor.overview.shortDescription}
+          value={shortDescription}
+          onChange={setShortDescription}
           multiline
-          placeholder={t.admin.authors.editor.bioPlaceholder}
+          placeholder={t.admin.authors.editor.noShortDescription}
         />
       </EditorSectionCard>
 

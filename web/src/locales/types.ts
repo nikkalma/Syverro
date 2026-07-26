@@ -252,7 +252,7 @@ export interface LocaleData {
         add: string;
         notSet: string;
         noHeroBg: string;
-        noIntroQuote: string;
+        noShortDescription: string;
         noBio: string;
         bioPlaceholder: string;
         noPortrait: string;
@@ -286,12 +286,12 @@ export interface LocaleData {
         overview: {
           coreInfo: string;
           heroBackground: string;
-          introQuote: string;
+          shortDescription: string;
           publicationState: string;
           name: string;
           nativeName: string;
-          displayName: string;
-          slug: string;
+          slugAuto: string;
+          slugLocked: string;
           creationType: string;
           booksCount: string;
           created: string;
@@ -372,6 +372,7 @@ export interface LocaleData {
           heroBackgroundAlt: string;
         };
         seo: {
+          slug: string;
           seoMetadata: string;
           searchAliases: string;
           externalReferences: string;

@@ -224,6 +224,8 @@ export interface AdminAuthor {
   portrait_caption?: string | null;
   hero_background_url?: string | null;
   author_intro_quote?: string | null;
+  short_description?: string | null; // frontend alias read from/written to author_intro_quote
+  slug_locked?: boolean;
   // System
   creation_type: string;
   book_count: number;
@@ -301,6 +303,8 @@ export interface AdminAuthorCreate {
   portrait_caption?: string | null;
   hero_background_url?: string | null;
   author_intro_quote?: string | null;
+  short_description?: string | null;
+  slug_locked?: boolean;
 }
 
 export interface AdminAuthorUpdate extends Partial<AdminAuthorCreate> {}

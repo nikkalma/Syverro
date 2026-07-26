@@ -2,13 +2,13 @@ import { useEffect } from 'react';
 import { Navigate, Outlet, useLocation } from 'react-router-dom';
 import { useAuthStore } from '../../store/authStore';
 import { getLocaleData, getBrowserLocale } from '../../locales';
-import AdminLayout from '../../components/Admin/AdminLayout';
+import StudioLayout from '../../components/Studio/StudioLayout';
 
 interface AdminRouteProps {
   requiredRole?: 'owner' | 'admin' | 'moderator';
 }
 
-export default function AdminRoute({ requiredRole = 'moderator' }: AdminRouteProps) {
+export default function StudioRoute({ requiredRole = 'moderator' }: AdminRouteProps) {
   const { user, isAuthenticated, checkAuth } = useAuthStore();
   const location = useLocation();
   const locale = getBrowserLocale();
@@ -94,9 +94,9 @@ export default function AdminRoute({ requiredRole = 'moderator' }: AdminRoutePro
     );
   }
 
-  return <AdminLayout><Outlet /></AdminLayout>;
+  return <StudioLayout><Outlet /></StudioLayout>;
 }
 
-export const AdminOwnerRoute = () => <AdminRoute requiredRole="owner" />;
-export const AdminAdminRoute = () => <AdminRoute requiredRole="admin" />;
-export const AdminModeratorRoute = () => <AdminRoute requiredRole="moderator" />;
+export const StudioOwnerRoute = () => <StudioRoute requiredRole="owner" />;
+export const StudioAdminRoute = () => <StudioRoute requiredRole="admin" />;
+export const StudioModeratorRoute = () => <StudioRoute requiredRole="moderator" />;

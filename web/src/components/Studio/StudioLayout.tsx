@@ -1,4 +1,4 @@
-// src/components/Admin/AdminLayout.tsx
+// src/components/Studio/StudioLayout.tsx
 
 import { ReactNode, useState, useEffect } from 'react';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
@@ -8,7 +8,7 @@ import { ADMIN_ROLES } from '../../types/admin';
 import { Sun, Moon, Menu, X } from 'lucide-react';
 import { getLocaleData, getBrowserLocale } from '../../locales';
 import type { LocaleData } from '../../locales';
-import './AdminLayout.css';
+import './StudioLayout.css';
 
 interface AdminLayoutProps {
   children: ReactNode;
@@ -30,16 +30,16 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
   const t = getLocaleData(locale);
 
   const getNavItems = (t: LocaleData): NavItem[] => [
-    { path: '/admin', label: t.admin.nav.dashboard, icon: '📊' },
-    { path: '/admin/users', label: t.admin.nav.users, icon: '👥' },
-    { path: '/admin/books', label: t.admin.nav.books, icon: '📚' },
-    { path: '/admin/authors', label: t.admin.nav.authors, icon: '✍️' },
-    { path: '/admin/genres', label: t.admin.nav.genres, icon: '🏷️' },
-    { path: '/admin/taxonomy', label: (t.admin.nav as any).taxonomy || 'Таксономия', icon: '🏛️' },
-    { path: '/admin/moderation', label: t.admin.nav.moderation, icon: '🛡️' },
-    { path: '/admin/metadata', label: t.admin.nav.metadata, icon: '📝' },
-    { path: '/admin/logs', label: t.admin.nav.logs, icon: '📋' },
-    { path: '/admin/settings', label: t.admin.nav.settings, icon: '⚙️' },
+    { path: '/studio', label: t.admin.nav.dashboard, icon: '📊' },
+    { path: '/studio/users', label: t.admin.nav.users, icon: '👥' },
+    { path: '/studio/books', label: t.admin.nav.books, icon: '📚' },
+    { path: '/studio/authors', label: t.admin.nav.authors, icon: '✍️' },
+    { path: '/studio/genres', label: t.admin.nav.genres, icon: '🏷️' },
+    { path: '/studio/taxonomy', label: (t.admin.nav as any).taxonomy || 'Таксономия', icon: '🏛️' },
+    { path: '/studio/moderation', label: t.admin.nav.moderation, icon: '🛡️' },
+    { path: '/studio/metadata', label: t.admin.nav.metadata, icon: '📝' },
+    { path: '/studio/logs', label: t.admin.nav.logs, icon: '📋' },
+    { path: '/studio/settings', label: t.admin.nav.settings, icon: '⚙️' },
   ];
 
   useEffect(() => {
@@ -82,8 +82,8 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
   };
 
   const isActive = (path: string) => {
-    if (path === '/admin' && location.pathname === '/admin') return true;
-    if (path !== '/admin' && location.pathname.startsWith(path)) return true;
+    if (path === '/studio' && location.pathname === '/studio') return true;
+    if (path !== '/studio' && location.pathname.startsWith(path)) return true;
     return false;
   };
 
@@ -94,7 +94,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
       display: 'flex', 
       color: 'var(--text-primary)',
     }}>
-      <aside className={`admin-sidebar ${isMobileMenuOpen ? 'open' : ''}`} style={{
+      <aside className={`studio-sidebar ${isMobileMenuOpen ? 'open' : ''}`} style={{
         width: '240px',
         background: 'var(--surface)',
         borderRight: '1px solid var(--border-soft)',
@@ -210,7 +210,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
         </div>
       </aside>
 
-      <div className="admin-content" style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+      <div className="studio-content" style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
         <header style={{
           display: 'flex',
           alignItems: 'center',
@@ -225,7 +225,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
         }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
             <button
-              className="admin-hamburger"
+              className="studio-hamburger"
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
               style={{
                 background: 'none',
@@ -267,7 +267,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
 
       {isMobileMenuOpen && (
         <div
-          className="admin-overlay"
+          className="studio-overlay"
           onClick={() => setIsMobileMenuOpen(false)}
           style={{
             position: 'fixed',

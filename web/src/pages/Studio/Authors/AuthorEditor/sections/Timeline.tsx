@@ -1,4 +1,4 @@
-import EmptyWorkspace from '../../../../../components/Admin/shared/EmptyWorkspace';
+import EmptyWorkspace from '../../../../../components/Studio/shared/EmptyWorkspace';
 
 export default function Timeline() {
   return (

@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 
 import Layout from './components/Layout';
 
@@ -19,12 +19,12 @@ import QuotesPage from './pages/QuotesPage';
 import CollectionsPage from './pages/CollectionsPage';
 import MyLibraryPage from './pages/MyLibraryPage';
 
-import AdminRoute from './pages/Admin/AdminRoute';
-import AdminDashboard from './pages/Admin/Dashboard';
-import AdminUsers from "./pages/Admin/Users";
-import AdminBooks from "./pages/Admin/Books";
-import AdminAuthorsLayout from "./pages/Admin/Authors";
-import AuthorList from "./pages/Admin/Authors/AuthorList";
+import StudioRoute from './pages/Studio/StudioRoute';
+import StudioHome from './pages/Studio/Dashboard';
+import StudioUsers from "./pages/Studio/Users";
+import StudioBooks from "./pages/Studio/Books";
+import StudioAuthorsLayout from "./pages/Studio/Authors";
+import AuthorList from "./pages/Studio/Authors/AuthorList";
 import {
   AuthorEditorLayout,
   Overview,
@@ -36,15 +36,21 @@ import {
   Graph,
   Media,
   Seo,
-} from "./pages/Admin/Authors/AuthorEditor";
-import AdminGenres from "./pages/Admin/Genres";
-import AdminTaxonomy from "./pages/Admin/Taxonomy";
-import AdminLogs from "./pages/Admin/Logs";
-import AdminSettings from "./pages/Admin/Settings";
-import AdminModeration from "./pages/Admin/Moderation/ModerationPage";
-import AdminMetadata from "./pages/Admin/Metadata/MetadataPage";
-import BookEnrichmentPage from "./pages/Admin/Metadata/BookEnrichmentPage";
+} from "./pages/Studio/Authors/AuthorEditor";
+import StudioGenres from "./pages/Studio/Genres";
+import StudioTaxonomy from "./pages/Studio/Taxonomy";
+import ActivityLog from "./pages/Studio/Logs";
+import StudioSettings from "./pages/Studio/Settings";
+import ModerationQueue from "./pages/Studio/Moderation/ModerationPage";
+import MetadataWorkspace from "./pages/Studio/Metadata/MetadataPage";
+import BookEnrichmentPage from "./pages/Studio/Metadata/BookEnrichmentPage";
 
+
+function AdminRedirect() {
+  const location = useLocation();
+  const studioPath = '/studio' + location.pathname.replace('/admin', '') + location.search + location.hash;
+  return <Navigate to={studioPath} replace />;
+}
 
 export default function App() {
   return (
@@ -67,22 +73,25 @@ export default function App() {
         <Route path="/author/:slug" element={<Layout><AuthorPage /></Layout>} />
         <Route path="/my-library" element={<Layout><MyLibraryPage /></Layout>} />
 
-        <Route path="/admin" element={<AdminRoute />}>
-          <Route index element={<AdminDashboard />} />
-          <Route path="users" element={<AdminUsers />} />
-          <Route path="books" element={<AdminBooks />} />
-          <Route path="genres" element={<AdminGenres />} />
-          <Route path="taxonomy" element={<AdminTaxonomy />} />
-          <Route path="moderation" element={<AdminModeration />} />
-          <Route path="metadata" element={<AdminMetadata />} />
-          <Route path="logs" element={<AdminLogs />} />
-          <Route path="settings" element={<AdminSettings />} />
+        <Route path="/admin" element={<Navigate to="/studio" replace />} />
+        <Route path="/admin/*" element={<AdminRedirect />} />
+
+        <Route path="/studio" element={<StudioRoute />}>
+          <Route index element={<StudioHome />} />
+          <Route path="users" element={<StudioUsers />} />
+          <Route path="books" element={<StudioBooks />} />
+          <Route path="genres" element={<StudioGenres />} />
+          <Route path="taxonomy" element={<StudioTaxonomy />} />
+          <Route path="moderation" element={<ModerationQueue />} />
+          <Route path="metadata" element={<MetadataWorkspace />} />
+          <Route path="logs" element={<ActivityLog />} />
+          <Route path="settings" element={<StudioSettings />} />
           <Route path="books/:id/enrichment" element={<BookEnrichmentPage />} />
 
-          <Route path="authors" element={<AdminAuthorsLayout />}>
+          <Route path="authors" element={<StudioAuthorsLayout />}>
             <Route index element={<Navigate to="list" replace />} />
             <Route path="list" element={<AuthorList />} />
-            <Route path="new" element={<Navigate to="/admin/authors/list" replace />} />
+            <Route path="new" element={<Navigate to="/studio/authors/list" replace />} />
 
             <Route path=":id/edit" element={<AuthorEditorLayout />}>
               <Route index element={<Navigate to="overview" replace />} />

@@ -27,10 +27,10 @@ export default function AdminAuthorsLayout() {
         gap: '4px',
         borderBottom: '1px solid var(--border-soft)',
       }}>
-        <NavLink to="/admin/authors/list" style={tabStyle} end>
+        <NavLink to="/studio/authors/list" style={tabStyle} end>
           {t.admin.authors.title}
         </NavLink>
-        <NavLink to="/admin/authors/new" style={tabStyle}>
+        <NavLink to="/studio/authors/new" style={tabStyle}>
           {t.admin.authors.newAuthor}
         </NavLink>
       </div>

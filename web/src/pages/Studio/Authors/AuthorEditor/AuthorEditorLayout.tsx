@@ -1,8 +1,8 @@
 import { Outlet } from 'react-router-dom';
 import { getLocaleData, getBrowserLocale } from '../../../../locales';
 import { AuthorEditorProvider, useAuthorEditor, SECTIONS } from './AuthorEditorContext';
-import EntityEditorHeader from '../../../../components/Admin/shared/EntityEditorHeader';
-import EditorSectionNav from '../../../../components/Admin/shared/EditorSectionNav';
+import EntityEditorHeader from '../../../../components/Studio/shared/EntityEditorHeader';
+import EditorSectionNav from '../../../../components/Studio/shared/EditorSectionNav';
 
 function EditorContent() {
   const { author, loading, error } = useAuthorEditor();
@@ -50,7 +50,7 @@ function EditorContent() {
       />
       <EditorSectionNav
         sections={[...SECTIONS]}
-        basePath={`/admin/authors/${author.id}/edit`}
+        basePath={`/studio/authors/${author.id}/edit`}
       />
       <div style={{ flex: 1, padding: '24px 28px' }}>
         <Outlet />

@@ -9,15 +9,15 @@ interface ModuleCard {
 }
 
 const modules = (t: LocaleData): ModuleCard[] => [
-  { path: '/admin/users', icon: '👥', label: t.admin.nav.users, description: t.admin.dashboard.modules.users.description },
-  { path: '/admin/books', icon: '📚', label: t.admin.nav.books, description: t.admin.dashboard.modules.books.description },
-  { path: '/admin/authors', icon: '✍️', label: t.admin.nav.authors, description: t.admin.dashboard.modules.authors.description },
-  { path: '/admin/genres', icon: '🏷️', label: t.admin.nav.genres, description: t.admin.dashboard.modules.genres.description },
-  { path: '/admin/taxonomy', icon: '🏛️', label: 'Taxonomy', description: t.admin.dashboard.modules.taxonomy.description },
-  { path: '/admin/moderation', icon: '🛡️', label: t.admin.nav.moderation, description: t.admin.dashboard.modules.moderation.description },
-  { path: '/admin/metadata', icon: '📝', label: t.admin.nav.metadata, description: t.admin.dashboard.modules.metadata.description },
-  { path: '/admin/logs', icon: '📋', label: t.admin.nav.logs, description: t.admin.dashboard.modules.logs.description },
-  { path: '/admin/settings', icon: '⚙️', label: t.admin.nav.settings, description: t.admin.dashboard.modules.settings.description },
+  { path: '/studio/users', icon: '👥', label: t.admin.nav.users, description: t.admin.dashboard.modules.users.description },
+  { path: '/studio/books', icon: '📚', label: t.admin.nav.books, description: t.admin.dashboard.modules.books.description },
+  { path: '/studio/authors', icon: '✍️', label: t.admin.nav.authors, description: t.admin.dashboard.modules.authors.description },
+  { path: '/studio/genres', icon: '🏷️', label: t.admin.nav.genres, description: t.admin.dashboard.modules.genres.description },
+  { path: '/studio/taxonomy', icon: '🏛️', label: 'Taxonomy', description: t.admin.dashboard.modules.taxonomy.description },
+  { path: '/studio/moderation', icon: '🛡️', label: t.admin.nav.moderation, description: t.admin.dashboard.modules.moderation.description },
+  { path: '/studio/metadata', icon: '📝', label: t.admin.nav.metadata, description: t.admin.dashboard.modules.metadata.description },
+  { path: '/studio/logs', icon: '📋', label: t.admin.nav.logs, description: t.admin.dashboard.modules.logs.description },
+  { path: '/studio/settings', icon: '⚙️', label: t.admin.nav.settings, description: t.admin.dashboard.modules.settings.description },
 ];
 
 interface Props {

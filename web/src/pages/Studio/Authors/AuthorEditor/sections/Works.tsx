@@ -1,5 +1,5 @@
 import { useAuthorEditor } from '../AuthorEditorContext';
-import EditorSectionCard from '../../../../../components/Admin/shared/EditorSectionCard';
+import EditorSectionCard from '../../../../../components/Studio/shared/EditorSectionCard';
 
 export default function Works() {
   const { author, loading } = useAuthorEditor();

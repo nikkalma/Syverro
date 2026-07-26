@@ -1,11 +1,11 @@
-/* src/components/Admin/AdminLayout.css */
+/* src/components/Studio/StudioLayout.css */
 
-.admin-sidebar {
+.studio-sidebar {
   transition: transform 0.3s ease;
 }
 
 @media (max-width: 768px) {
-  .admin-sidebar {
+  .studio-sidebar {
     position: fixed;
     top: 0;
     left: 0;
@@ -15,46 +15,46 @@
     width: 280px !important;
   }
 
-  .admin-sidebar.open {
+  .studio-sidebar.open {
     transform: translateX(0);
   }
 
-  .admin-hamburger {
+  .studio-hamburger {
     display: block !important;
   }
 
-  .admin-content {
+  .studio-content {
     width: 100%;
   }
 }
 
 @media (min-width: 769px) {
-  .admin-hamburger {
+  .studio-hamburger {
     display: none !important;
   }
 }
 
-/* Стили для скролла в админке */
-.admin-sidebar::-webkit-scrollbar {
+/* Scrollbar styles */
+.studio-sidebar::-webkit-scrollbar {
   width: 4px;
 }
 
-.admin-sidebar::-webkit-scrollbar-track {
+.studio-sidebar::-webkit-scrollbar-track {
   background: var(--surface-alt);
 }
 
-.admin-sidebar::-webkit-scrollbar-thumb {
+.studio-sidebar::-webkit-scrollbar-thumb {
   background: var(--primary);
   border-radius: 4px;
 }
 
-/* Стили для таблиц в админке */
-.admin-table {
+/* Table styles */
+.studio-table {
   width: 100%;
   border-collapse: collapse;
 }
 
-.admin-table th {
+.studio-table th {
   padding: 12px 16px;
   text-align: left;
   color: var(--text-secondary);
@@ -63,11 +63,11 @@
   border-bottom: 1px solid var(--border-soft);
 }
 
-.admin-table td {
+.studio-table td {
   padding: 12px 16px;
   border-bottom: 1px solid var(--border-soft);
 }
 
-.admin-table tr:hover {
+.studio-table tr:hover {
   background: var(--surface-hover);
 }

@@ -1217,7 +1217,7 @@ async def create_author(
             award = AuthorAward(author_id=author.id, **award_data.model_dump())
             db.add(award)
 
-    # Reload awards relationship
+    await db.commit()
     await db.refresh(author, ["awards"])
     return {
         "id": str(author.id),

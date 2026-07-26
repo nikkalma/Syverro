@@ -30,6 +30,7 @@ async def _book_to_response_dict(db: AsyncSession, book: Book) -> dict:
     author_country = primary.nationality if primary else None
     author_bio = primary.bio if primary else None
     author_id = primary.id if primary else None
+    author_slug = primary.slug if primary else None
 
     genre_rows = await get_book_genre_objects(db, book)
     genre_objects = [{"id": str(g[0]), "name": g[1], "slug": g[2]} for g in genre_rows]
@@ -46,6 +47,7 @@ async def _book_to_response_dict(db: AsyncSession, book: Book) -> dict:
         "author_name": author_name,
         "author_country": author_country,
         "author_bio": author_bio,
+        "author_slug": author_slug,
         "cover": book.cover,
         "genres": book.genres or [],
         "genre_ids": genre_ids,

@@ -104,7 +104,7 @@ export default function BookPage() {
             )}
             <div style={{ fontSize: '16px', color: '#97A6BA' }}>
               {book.authorId ? (
-                <span onClick={() => navigate(authorPath({ id: book.authorId! }))}
+                <span onClick={() => navigate(authorPath({ id: book.authorId!, slug: book.authorSlug }))}
                   style={{ color: '#5B86A1', cursor: 'pointer', textDecoration: 'none' }}
                   onMouseEnter={(e) => e.currentTarget.style.color = '#7BA5C1'}
                   onMouseLeave={(e) => e.currentTarget.style.color = '#5B86A1'}>

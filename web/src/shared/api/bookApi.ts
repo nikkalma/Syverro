@@ -25,6 +25,7 @@ interface BookResponse {
   author_name: string | null;
   author_country: string | null;
   author_bio: string | null;
+  author_slug: string | null;
   cover: string | null;
   genres: string[];
   genre_ids: string[];
@@ -77,6 +78,7 @@ function mapBookResponseToGlobalBook(data: BookResponse): GlobalBook {
     author: data.author,
     authorId: data.author_id ?? null,
     authorName: data.author_name ?? null,
+    authorSlug: data.author_slug ?? null,
     authorCountry: data.author_country ?? null,
     description: data.description ?? null,
     cover: data.cover,

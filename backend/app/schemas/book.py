@@ -35,6 +35,7 @@ class BookResponse(BookBase):
     author_name: Optional[str] = None
     author_country: Optional[str] = None
     author_bio: Optional[str] = None
+    author_slug: Optional[str] = None
     subtitle: Optional[str] = None
     original_title: Optional[str] = None
     original_language: Optional[str] = None

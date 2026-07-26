@@ -22,7 +22,7 @@ export default function Timeline() {
             }}>
               <div style={{
                 width: '12px', height: '12px', borderRadius: '50%',
-                background: ev.type === 'life' ? 'var(--primary)' : ev.type === 'career' ? '#FFA726' : '#4CAF50',
+                background: ev.type === 'life' ? 'var(--primary)' : ev.type === 'career' ? 'var(--warning)' : 'var(--success)',
                 flexShrink: 0,
               }} />
               {i < SAMPLE_EVENTS.length - 1 && (

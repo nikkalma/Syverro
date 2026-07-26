@@ -161,8 +161,8 @@ export default function AuthorPage() {
   const hasTags = hasGenres || hasThemes || hasMotifs;
 
   const heroBgImage = author.hero_background_url
-    ? `linear-gradient(160deg, rgba(11,18,32,0.88) 0%, rgba(11,18,32,0.78) 40%, rgba(7,14,22,0.88) 100%), radial-gradient(ellipse at 20% 30%, rgba(91,134,161,0.18) 0%, transparent 55%), radial-gradient(ellipse at 75% 60%, rgba(212,167,106,0.08) 0%, transparent 50%), url(${author.hero_background_url})`
-    : 'linear-gradient(160deg, var(--surface) 0%, var(--bg) 35%, #070E16 100%)';
+    ? `var(--hero-overlay), var(--hero-glow-1), var(--hero-glow-2), url(${author.hero_background_url})`
+    : 'linear-gradient(160deg, var(--surface) 0%, var(--bg) 35%, var(--bg) 100%)';
 
   const formattedBirth = author.birth_date ? formatDate(author.birth_date) : null;
   const formattedDeath = author.death_date ? formatDate(author.death_date) : null;
@@ -205,11 +205,6 @@ export default function AuthorPage() {
           <div style={{
             position: 'absolute', inset: 0,
             background: 'radial-gradient(ellipse at 75% 60%, rgba(212,167,106,0.05) 0%, transparent 50%)',
-          }} />
-          <div style={{
-            position: 'absolute', top: '28%', left: '5%', right: '55%', height: '1px',
-            background: 'linear-gradient(to right, var(--accent), transparent)',
-            opacity: 0.1,
           }} />
           <div style={{
             position: 'absolute', bottom: 0, left: 0, right: 0, height: '120px',

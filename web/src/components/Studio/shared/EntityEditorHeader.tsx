@@ -59,7 +59,7 @@ export default function EntityEditorHeader({ name, photoUrl, nativeName, complet
         {completionPercent !== undefined && (
           <div style={{ textAlign: 'right' }}>
             <div style={{ fontSize: '10px', textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--text-muted)', marginBottom: '2px' }}>Complete</div>
-            <div style={{ fontSize: '13px', color: completionPercent >= 80 ? '#4CAF50' : '#FFA726' }}>{completionPercent}%</div>
+            <div style={{ fontSize: '13px', color: completionPercent >= 80 ? 'var(--success)' : 'var(--warning)' }}>{completionPercent}%</div>
           </div>
         )}
         {lastUpdated && (

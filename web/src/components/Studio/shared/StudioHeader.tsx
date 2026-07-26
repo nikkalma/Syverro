@@ -55,21 +55,25 @@ export default function StudioHeader({ moduleName, theme, onToggleTheme }: Studi
               {t.admin.brand}
             </span>
           </Link>
-          <span style={{
-            fontSize: '16px',
-            color: 'var(--text-muted)',
-            fontWeight: '300',
-            marginLeft: '4px',
-          }}>
-            /
-          </span>
-          <span style={{
-            fontSize: '16px',
-            fontWeight: '400',
-            color: 'var(--text-secondary)',
-          }}>
-            {moduleName}
-          </span>
+          {moduleName && (
+            <>
+              <span style={{
+                fontSize: '16px',
+                color: 'var(--text-muted)',
+                fontWeight: '300',
+                marginLeft: '4px',
+              }}>
+                /
+              </span>
+              <span style={{
+                fontSize: '16px',
+                fontWeight: '400',
+                color: 'var(--text-secondary)',
+              }}>
+                {moduleName}
+              </span>
+            </>
+          )}
         </div>
       </div>
 

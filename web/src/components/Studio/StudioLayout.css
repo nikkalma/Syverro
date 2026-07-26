@@ -1,53 +1,5 @@
 /* src/components/Studio/StudioLayout.css */
 
-.studio-sidebar {
-  transition: transform 0.3s ease;
-}
-
-@media (max-width: 768px) {
-  .studio-sidebar {
-    position: fixed;
-    top: 0;
-    left: 0;
-    bottom: 0;
-    z-index: 50;
-    transform: translateX(-100%);
-    width: 280px !important;
-  }
-
-  .studio-sidebar.open {
-    transform: translateX(0);
-  }
-
-  .studio-hamburger {
-    display: block !important;
-  }
-
-  .studio-content {
-    width: 100%;
-  }
-}
-
-@media (min-width: 769px) {
-  .studio-hamburger {
-    display: none !important;
-  }
-}
-
-/* Scrollbar styles */
-.studio-sidebar::-webkit-scrollbar {
-  width: 4px;
-}
-
-.studio-sidebar::-webkit-scrollbar-track {
-  background: var(--surface-alt);
-}
-
-.studio-sidebar::-webkit-scrollbar-thumb {
-  background: var(--primary);
-  border-radius: 4px;
-}
-
 /* Table styles */
 .studio-table {
   width: 100%;

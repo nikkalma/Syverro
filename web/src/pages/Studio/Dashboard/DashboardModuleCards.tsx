@@ -52,7 +52,7 @@ export default function DashboardModuleCards({ t }: Props) {
           onMouseEnter={(e) => {
             e.currentTarget.style.borderColor = 'var(--primary)';
             e.currentTarget.style.transform = 'translateY(-2px)';
-            e.currentTarget.style.boxShadow = '0 8px 24px rgba(0,0,0,0.15)';
+            e.currentTarget.style.boxShadow = 'var(--glass-shadow)';
           }}
           onMouseLeave={(e) => {
             e.currentTarget.style.borderColor = 'var(--border-soft)';
@@ -91,7 +91,7 @@ export default function DashboardModuleCards({ t }: Props) {
             background: 'transparent',
             transition: 'background 0.2s',
           }}
-            onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--primary)'; e.currentTarget.style.color = '#0A1118'; }}
+            onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--primary)'; e.currentTarget.style.color = 'var(--text-primary)'; }}
             onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'var(--primary)'; }}
           >
             {t.admin.dashboard.modules.open} →

@@ -58,7 +58,7 @@ export default function StudioHome() {
 
   if (error) {
     return (
-      <div style={{ padding: '40px', textAlign: 'center', color: '#EF5350' }}>
+      <div style={{ padding: '40px', textAlign: 'center', color: 'var(--error)' }}>
         <div style={{ fontSize: '48px', marginBottom: '16px' }}>⚠️</div>
         <h2>{t.admin.dashboard.errorLoading}</h2>
         <p>{error}</p>
@@ -67,10 +67,10 @@ export default function StudioHome() {
           style={{
             marginTop: '16px',
             padding: '10px 24px',
-            background: '#5B86A1',
+            background: 'var(--primary)',
             border: 'none',
             borderRadius: '8px',
-            color: '#0A1118',
+            color: 'var(--text-primary)',
             cursor: 'pointer',
             fontFamily: 'Inter, sans-serif',
           }}
@@ -97,12 +97,12 @@ export default function StudioHome() {
         gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))',
         gap: '16px',
       }}>
-        <StatCard label={t.admin.dashboard.users} value={stats?.total_users ?? 0} icon="👥" color="#5B86A1" />
-        <StatCard label={t.admin.dashboard.books} value={stats?.total_books ?? 0} icon="📚" color="#4CAF50" />
-        <StatCard label={t.admin.dashboard.authors} value={stats?.total_authors ?? 0} icon="✍️" color="#FFA726" />
-        <StatCard label={t.admin.dashboard.genres} value={stats?.total_genres ?? 0} icon="🏷️" color="#AB47BC" />
-        <StatCard label={t.admin.dashboard.activeUsers} value={stats?.active_users ?? 0} icon="🟢" color="#4CAF50" />
-        <StatCard label={t.admin.dashboard.newUsers24h} value={stats?.new_users_24h ?? 0} icon="🆕" color="#EF5350" />
+        <StatCard label={t.admin.dashboard.users} value={stats?.total_users ?? 0} icon="👥" color="var(--primary)" />
+        <StatCard label={t.admin.dashboard.books} value={stats?.total_books ?? 0} icon="📚" color="var(--success)" />
+        <StatCard label={t.admin.dashboard.authors} value={stats?.total_authors ?? 0} icon="✍️" color="var(--warning)" />
+        <StatCard label={t.admin.dashboard.genres} value={stats?.total_genres ?? 0} icon="🏷️" color="var(--primary)" />
+        <StatCard label={t.admin.dashboard.activeUsers} value={stats?.active_users ?? 0} icon="🟢" color="var(--success)" />
+        <StatCard label={t.admin.dashboard.newUsers24h} value={stats?.new_users_24h ?? 0} icon="🆕" color="var(--error)" />
       </div>
 
       <div>

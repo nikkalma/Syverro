@@ -596,6 +596,18 @@ export const en: LocaleData = {
       showAll: 'Show all →',
       errorLoading: 'Loading error',
       noData: 'No data to display',
+      modules: {
+        users: { description: 'Manage user accounts, roles, and permissions' },
+        books: { description: 'Manage books, editions, metadata, and relationships' },
+        authors: { description: 'Manage author entities, biographies, timeline, and media' },
+        genres: { description: 'Manage genre taxonomy and classification hierarchy' },
+        taxonomy: { description: 'Manage themes, motifs, concepts, atmospheres, and relations' },
+        moderation: { description: 'Review and approve pending book submissions' },
+        metadata: { description: 'Enrich and review book metadata completeness' },
+        logs: { description: 'View system audit trail and activity history' },
+        settings: { description: 'Configure system parameters and global preferences' },
+        open: 'Open',
+      },
     },
     users: {
       title: '👥 Users',

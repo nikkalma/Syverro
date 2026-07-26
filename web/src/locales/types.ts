@@ -99,6 +99,18 @@ export interface LocaleData {
       showAll: string;
       errorLoading: string;
       noData: string;
+      modules: {
+        users: { description: string };
+        books: { description: string };
+        authors: { description: string };
+        genres: { description: string };
+        taxonomy: { description: string };
+        moderation: { description: string };
+        metadata: { description: string };
+        logs: { description: string };
+        settings: { description: string };
+        open: string;
+      };
     };
     users: {
       title: string;

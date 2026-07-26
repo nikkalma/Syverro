@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 
 import Layout from './components/Layout';
 
@@ -23,7 +23,9 @@ import AdminRoute from './pages/Admin/AdminRoute';
 import AdminDashboard from './pages/Admin/Dashboard';
 import AdminUsers from "./pages/Admin/Users";
 import AdminBooks from "./pages/Admin/Books";
-import AdminAuthors from "./pages/Admin/Authors";
+import AdminAuthorsLayout from "./pages/Admin/Authors";
+import AuthorList from "./pages/Admin/Authors/AuthorList";
+import AuthorEditor from "./pages/Admin/Authors/AuthorEditor";
 import AdminGenres from "./pages/Admin/Genres";
 import AdminTaxonomy from "./pages/Admin/Taxonomy";
 import AdminLogs from "./pages/Admin/Logs";
@@ -54,17 +56,25 @@ export default function App() {
         <Route path="/author/:slug" element={<Layout><AuthorPage /></Layout>} />
         <Route path="/my-library" element={<Layout><MyLibraryPage /></Layout>} />
 
-        <Route path="/admin" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
-        <Route path="/admin/users" element={<AdminRoute><AdminUsers /></AdminRoute>} />
-        <Route path="/admin/books" element={<AdminRoute><AdminBooks /></AdminRoute>} />
-        <Route path="/admin/authors" element={<AdminRoute><AdminAuthors /></AdminRoute>} />
-        <Route path="/admin/genres" element={<AdminRoute><AdminGenres /></AdminRoute>} />
-        <Route path="/admin/taxonomy" element={<AdminRoute><AdminTaxonomy /></AdminRoute>} />
-        <Route path="/admin/logs" element={<AdminRoute><AdminLogs /></AdminRoute>} />
-        <Route path="/admin/settings" element={<AdminRoute><AdminSettings /></AdminRoute>} />
-        <Route path="/admin/moderation" element={<AdminRoute><AdminModeration /></AdminRoute>} />
-        <Route path="/admin/metadata" element={<AdminRoute><AdminMetadata /></AdminRoute>} />
-        <Route path="/admin/books/:id/enrichment" element={<AdminRoute><BookEnrichmentPage /></AdminRoute>} />
+        <Route path="/admin" element={<AdminRoute />}>
+          <Route index element={<AdminDashboard />} />
+          <Route path="users" element={<AdminUsers />} />
+          <Route path="books" element={<AdminBooks />} />
+          <Route path="genres" element={<AdminGenres />} />
+          <Route path="taxonomy" element={<AdminTaxonomy />} />
+          <Route path="moderation" element={<AdminModeration />} />
+          <Route path="metadata" element={<AdminMetadata />} />
+          <Route path="logs" element={<AdminLogs />} />
+          <Route path="settings" element={<AdminSettings />} />
+          <Route path="books/:id/enrichment" element={<BookEnrichmentPage />} />
+
+          <Route path="authors" element={<AdminAuthorsLayout />}>
+            <Route index element={<Navigate to="list" replace />} />
+            <Route path="list" element={<AuthorList />} />
+            <Route path="new" element={<AuthorEditor />} />
+            <Route path=":id/edit" element={<AuthorEditor />} />
+          </Route>
+        </Route>
       </Routes>
     </BrowserRouter>
   );

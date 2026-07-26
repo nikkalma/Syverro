@@ -1,5 +1,3 @@
-// src/pages/Admin/Dashboard/index.tsx
-
 import { useEffect, useState } from 'react';
 import { useAdminStore } from '../../../store/adminStore';
 import { AdminDashboardStats } from '../../../types/admin';
@@ -7,6 +5,7 @@ import { getLocaleData, getBrowserLocale } from '../../../locales';
 import StatCard from './StatCard';
 import RecentUsers from './RecentUsers';
 import RecentActivity from './RecentActivity';
+import DashboardModuleCards from './DashboardModuleCards';
 import { apiClient } from '../../../shared/api/client';
 
 export default function AdminDashboard() {
@@ -90,12 +89,11 @@ export default function AdminDashboard() {
   }
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}>
       <h1 style={{ fontSize: '24px', fontWeight: '400', color: '#E6EDF3', margin: 0 }}>
         📊 {t.admin.dashboard.title}
       </h1>
 
-      {/* ===== СТАТИСТИКА ===== */}
       <div style={{
         display: 'grid',
         gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))',
@@ -109,10 +107,16 @@ export default function AdminDashboard() {
         <StatCard label={t.admin.dashboard.newUsers24h} value={stats.new_users_24h} icon="🆕" color="#EF5350" />
       </div>
 
-      {/* ===== ТАБЛИЦЫ ===== */}
-     <div className="dashboard-grid">
+      <div className="dashboard-grid">
         <RecentUsers users={recentUsers} />
         <RecentActivity logs={recentLogs} />
+      </div>
+
+      <div>
+        <h2 style={{ fontSize: '20px', fontWeight: '400', color: 'var(--text-primary)', margin: 0, marginBottom: '20px' }}>
+          Modules
+        </h2>
+        <DashboardModuleCards t={t} />
       </div>
     </div>
   );

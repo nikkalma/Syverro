@@ -1,17 +1,14 @@
-// src/pages/Admin/AdminRoute.tsx
-
-import { ReactNode, useEffect } from 'react';
-import { Navigate, useLocation } from 'react-router-dom';
+import { useEffect } from 'react';
+import { Navigate, Outlet, useLocation } from 'react-router-dom';
 import { useAuthStore } from '../../store/authStore';
 import { getLocaleData, getBrowserLocale } from '../../locales';
 import AdminLayout from '../../components/Admin/AdminLayout';
 
 interface AdminRouteProps {
-  children: ReactNode;
   requiredRole?: 'owner' | 'admin' | 'moderator';
 }
 
-export default function AdminRoute({ children, requiredRole = 'moderator' }: AdminRouteProps) {
+export default function AdminRoute({ requiredRole = 'moderator' }: AdminRouteProps) {
   const { user, isAuthenticated, checkAuth } = useAuthStore();
   const location = useLocation();
   const locale = getBrowserLocale();
@@ -21,12 +18,10 @@ export default function AdminRoute({ children, requiredRole = 'moderator' }: Adm
     checkAuth();
   }, []);
 
-  // Не авторизован — редирект на логин
   if (!isAuthenticated) {
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
-  // Загрузка (если пользователь ещё не загружен)
   if (!user) {
     return (
       <div style={{
@@ -45,7 +40,6 @@ export default function AdminRoute({ children, requiredRole = 'moderator' }: Adm
     );
   }
 
-  // Проверка роли
   const userRole = user.role || 'user';
   const roleHierarchy: Record<string, number> = {
     owner: 4,
@@ -100,21 +94,9 @@ export default function AdminRoute({ children, requiredRole = 'moderator' }: Adm
     );
   }
 
-  return <AdminLayout>{children}</AdminLayout>;
+  return <AdminLayout><Outlet /></AdminLayout>;
 }
 
-// ============================================================
-// ХЕЛПЕРЫ ДЛЯ КОНКРЕТНЫХ РОЛЕЙ
-// ============================================================
-
-export const AdminOwnerRoute = ({ children }: { children: ReactNode }) => (
-  <AdminRoute requiredRole="owner">{children}</AdminRoute>
-);
-
-export const AdminAdminRoute = ({ children }: { children: ReactNode }) => (
-  <AdminRoute requiredRole="admin">{children}</AdminRoute>
-);
-
-export const AdminModeratorRoute = ({ children }: { children: ReactNode }) => (
-  <AdminRoute requiredRole="moderator">{children}</AdminRoute>
-);
+export const AdminOwnerRoute = () => <AdminRoute requiredRole="owner" />;
+export const AdminAdminRoute = () => <AdminRoute requiredRole="admin" />;
+export const AdminModeratorRoute = () => <AdminRoute requiredRole="moderator" />;

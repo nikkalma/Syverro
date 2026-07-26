@@ -73,7 +73,13 @@ function EditorContent() {
         basePath={`/studio/authors/${author.id}/edit`}
       />
       <div style={{ flex: 1, display: 'flex', gap: '24px', padding: '24px 28px' }}>
-        <div style={{ flex: 1, minWidth: 0 }}>
+        <div style={{
+          flex: 1, minWidth: 0,
+          background: 'var(--surface)',
+          border: '1px solid var(--border-soft)',
+          borderRadius: '12px',
+          padding: '24px',
+        }}>
           <Outlet />
         </div>
         <aside style={{

@@ -548,6 +548,7 @@ export const ru: LocaleData = {
       settings: 'Настройки',
     },
     brand: 'Студия',
+    siteName: 'Сиверро',
     common: {
       retry: 'Повторить',
       cancel: 'Отмена',

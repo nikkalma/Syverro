@@ -17,7 +17,7 @@ const tabStyle = ({ isActive }: { isActive: boolean }): React.CSSProperties => (
   marginBottom: '-1px',
 });
 
-export default function AdminAuthorsLayout() {
+export default function StudioAuthorsLayout() {
   const t = getLocaleData(getBrowserLocale());
 
   return (

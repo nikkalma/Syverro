@@ -1,5 +1,7 @@
+import { Link } from 'react-router-dom';
 import { useState } from 'react';
 import { Search, Sun, Moon } from 'lucide-react';
+import { getLocaleData, getBrowserLocale } from '../../../locales';
 
 interface StudioHeaderProps {
   moduleName: string;
@@ -9,6 +11,7 @@ interface StudioHeaderProps {
 
 export default function StudioHeader({ moduleName, theme, onToggleTheme }: StudioHeaderProps) {
   const [searchQuery, setSearchQuery] = useState('');
+  const t = getLocaleData(getBrowserLocale());
 
   return (
     <header style={{
@@ -32,24 +35,26 @@ export default function StudioHeader({ moduleName, theme, onToggleTheme }: Studi
           whiteSpace: 'nowrap',
           flexShrink: 0,
         }}>
-          <span style={{
-            fontSize: '16px',
-            fontWeight: '600',
-            color: 'var(--text-primary)',
-            fontFamily: "'Playfair Display', serif",
-            letterSpacing: '2px',
-          }}>
-            Syverro
-          </span>
-          <span style={{
-            fontSize: '11px',
-            color: 'var(--primary)',
-            textTransform: 'uppercase',
-            letterSpacing: '0.08em',
-            fontWeight: '500',
-          }}>
-            Studio
-          </span>
+          <Link to="/studio" style={{ textDecoration: 'none', display: 'flex', alignItems: 'baseline', gap: '10px' }}>
+            <span style={{
+              fontSize: '16px',
+              fontWeight: '600',
+              color: 'var(--text-primary)',
+              fontFamily: "'Playfair Display', serif",
+              letterSpacing: '2px',
+            }}>
+              {t.admin.siteName}
+            </span>
+            <span style={{
+              fontSize: '11px',
+              color: 'var(--primary)',
+              textTransform: 'uppercase',
+              letterSpacing: '0.08em',
+              fontWeight: '500',
+            }}>
+              {t.admin.brand}
+            </span>
+          </Link>
           <span style={{
             fontSize: '16px',
             color: 'var(--text-muted)',

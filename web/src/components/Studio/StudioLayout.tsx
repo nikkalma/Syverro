@@ -77,6 +77,8 @@ export default function StudioLayout({ children }: AdminLayoutProps) {
     );
   }
 
+  const showSidebar = location.pathname !== '/studio';
+
   const handleLogout = () => {
     logout();
     navigate('/login');
@@ -95,7 +97,8 @@ export default function StudioLayout({ children }: AdminLayoutProps) {
       display: 'flex', 
       color: 'var(--text-primary)',
     }}>
-      <aside className={`studio-sidebar ${isMobileMenuOpen ? 'open' : ''}`} style={{
+      {showSidebar && (
+        <aside className={`studio-sidebar ${isMobileMenuOpen ? 'open' : ''}`} style={{
         width: '240px',
         background: 'var(--surface)',
         borderRight: '1px solid var(--border-soft)',
@@ -107,7 +110,7 @@ export default function StudioLayout({ children }: AdminLayoutProps) {
         height: '100vh',
         overflowY: 'auto',
       }}>
-        <Link to="/" style={{
+        <Link to="/studio" style={{
           padding: '20px 24px',
           borderBottom: '1px solid var(--border-soft)',
           fontSize: '20px',
@@ -118,7 +121,7 @@ export default function StudioLayout({ children }: AdminLayoutProps) {
           textDecoration: 'none',
           display: 'block',
         }}>
-          Syverro
+          {t.admin.siteName}
           <span style={{ fontSize: '12px', color: 'var(--primary)', marginLeft: '8px', letterSpacing: '0' }}>
             {t.admin.brand}
           </span>
@@ -209,10 +212,12 @@ export default function StudioLayout({ children }: AdminLayoutProps) {
             🚪 Выйти
           </button>
         </div>
-      </aside>
+        </aside>
+      )}
 
       <div className="studio-content" style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
         <div style={{ display: 'flex', alignItems: 'stretch' }}>
+          {showSidebar && (
           <button
             className="studio-hamburger"
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
@@ -229,6 +234,7 @@ export default function StudioLayout({ children }: AdminLayoutProps) {
           >
             {isMobileMenuOpen ? <X size={20} /> : <Menu size={20} />}
           </button>
+          )}
           <StudioHeader
             moduleName={navItems.find(item => isActive(item.path))?.label || t.admin.nav.dashboard}
             theme={theme}

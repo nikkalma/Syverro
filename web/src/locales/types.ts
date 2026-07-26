@@ -51,6 +51,7 @@ export interface LocaleData {
       settings: string;
     };
     brand: string;
+    siteName: string;
     common: {
       retry: string;
       cancel: string;

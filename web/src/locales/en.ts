@@ -548,6 +548,7 @@ export const en: LocaleData = {
       settings: 'Settings',
     },
     brand: 'Studio',
+    siteName: 'Syverro',
     common: {
       retry: 'Retry',
       cancel: 'Cancel',

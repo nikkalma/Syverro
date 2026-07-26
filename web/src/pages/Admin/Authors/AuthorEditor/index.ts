@@ -1,0 +1,10 @@
+export { default as AuthorEditorLayout } from './AuthorEditorLayout';
+export { default as Overview } from './sections/Overview';
+export { default as Identity } from './sections/Identity';
+export { default as Biography } from './sections/Biography';
+export { default as Timeline } from './sections/Timeline';
+export { default as Works } from './sections/Works';
+export { default as Quotes } from './sections/Quotes';
+export { default as Graph } from './sections/Graph';
+export { default as Media } from './sections/Media';
+export { default as Seo } from './sections/Seo';

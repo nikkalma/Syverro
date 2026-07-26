@@ -25,7 +25,18 @@ import AdminUsers from "./pages/Admin/Users";
 import AdminBooks from "./pages/Admin/Books";
 import AdminAuthorsLayout from "./pages/Admin/Authors";
 import AuthorList from "./pages/Admin/Authors/AuthorList";
-import AuthorEditor from "./pages/Admin/Authors/AuthorEditor";
+import {
+  AuthorEditorLayout,
+  Overview,
+  Identity,
+  Biography,
+  Timeline,
+  Works,
+  Quotes,
+  Graph,
+  Media,
+  Seo,
+} from "./pages/Admin/Authors/AuthorEditor";
 import AdminGenres from "./pages/Admin/Genres";
 import AdminTaxonomy from "./pages/Admin/Taxonomy";
 import AdminLogs from "./pages/Admin/Logs";
@@ -71,8 +82,20 @@ export default function App() {
           <Route path="authors" element={<AdminAuthorsLayout />}>
             <Route index element={<Navigate to="list" replace />} />
             <Route path="list" element={<AuthorList />} />
-            <Route path="new" element={<AuthorEditor />} />
-            <Route path=":id/edit" element={<AuthorEditor />} />
+            <Route path="new" element={<Navigate to="/admin/authors/list" replace />} />
+
+            <Route path=":id/edit" element={<AuthorEditorLayout />}>
+              <Route index element={<Navigate to="overview" replace />} />
+              <Route path="overview" element={<Overview />} />
+              <Route path="identity" element={<Identity />} />
+              <Route path="biography" element={<Biography />} />
+              <Route path="timeline" element={<Timeline />} />
+              <Route path="works" element={<Works />} />
+              <Route path="quotes" element={<Quotes />} />
+              <Route path="graph" element={<Graph />} />
+              <Route path="media" element={<Media />} />
+              <Route path="seo" element={<Seo />} />
+            </Route>
           </Route>
         </Route>
       </Routes>

@@ -1,22 +1,25 @@
 import EditorSectionCard from '../../../../../components/Studio/shared/EditorSectionCard';
 import EmptyWorkspace from '../../../../../components/Studio/shared/EmptyWorkspace';
-
-const RELATION_TYPES = [
-  { icon: '🏷️', label: 'Thematic Tags', desc: 'Themes associated with this author\'s body of work' },
-  { icon: '🔁', label: 'Motifs', desc: 'Recurring motifs and narrative patterns' },
-  { icon: '💡', label: 'Concepts', desc: 'Philosophical or intellectual concepts' },
-  { icon: '🌌', label: 'Atmospheres', desc: 'Mood and atmospheric qualities of their works' },
-  { icon: '🔗', label: 'Relations', desc: 'Connections to other authors, works, schools' },
-];
+import { getLocaleData, getBrowserLocale } from '../../../../../locales';
 
 export default function Graph() {
+  const t = getLocaleData(getBrowserLocale());
+
+  const RELATION_TYPES = [
+    { icon: '🏷️', label: t.admin.authors.editor.graph.thematicTags, desc: t.admin.authors.editor.graph.tagsDesc },
+    { icon: '🔁', label: t.admin.authors.editor.graph.motifs, desc: t.admin.authors.editor.graph.motifsDesc },
+    { icon: '💡', label: t.admin.authors.editor.graph.concepts, desc: t.admin.authors.editor.graph.conceptsDesc },
+    { icon: '🌌', label: t.admin.authors.editor.graph.atmospheres, desc: t.admin.authors.editor.graph.atmospheresDesc },
+    { icon: '🔗', label: t.admin.authors.editor.graph.relations, desc: t.admin.authors.editor.graph.relationsDesc },
+  ];
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-      <EditorSectionCard title="Knowledge Graph">
+      <EditorSectionCard title={t.admin.authors.editor.graph.knowledgeGraph}>
         <EmptyWorkspace
           icon="🔗"
-          title="Knowledge Graph Workspace"
-          description="Themes, motifs, concepts, atmospheres, and relations linked to this author will be managed here."
+          title={t.admin.authors.editor.graph.workspace}
+          description={t.admin.authors.editor.graph.workspaceDesc}
         />
       </EditorSectionCard>
 
@@ -42,7 +45,7 @@ export default function Graph() {
               fontSize: '12px', color: 'var(--primary)', border: '1px solid var(--primary)',
               display: 'inline-block',
             }}>
-              Manage →
+              {t.admin.authors.editor.graph.manage}
             </div>
           </div>
         ))}

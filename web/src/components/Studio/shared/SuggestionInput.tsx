@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
+import { getLocaleData, getBrowserLocale } from '../../../locales';
 
 interface SuggestionInputProps {
   label: string;
@@ -7,6 +8,8 @@ interface SuggestionInputProps {
   onChange: (values: string[]) => void;
   placeholder?: string;
 }
+
+const _t = getLocaleData(getBrowserLocale());
 
 export default function SuggestionInput({ label, values, suggestions, onChange, placeholder }: SuggestionInputProps) {
   const [inputValue, setInputValue] = useState('');
@@ -84,7 +87,7 @@ export default function SuggestionInput({ label, values, suggestions, onChange, 
                   color: 'var(--text-muted)', fontSize: '14px', padding: '0 2px',
                   lineHeight: 1,
                 }}
-                title={`Remove ${v}`}
+                title={`${_t.admin.authors.editor.remove} ${v}`}
               >
                 ×
               </button>
@@ -100,7 +103,7 @@ export default function SuggestionInput({ label, values, suggestions, onChange, 
           onChange={(e) => { setInputValue(e.target.value); setIsOpen(true); setActiveIndex(-1); }}
           onFocus={() => setIsOpen(true)}
           onKeyDown={handleKeyDown}
-          placeholder={placeholder || `Add ${label.toLowerCase()}...`}
+          placeholder={placeholder || `${_t.admin.authors.editor.add} ${label.toLowerCase()}...`}
           style={{
             width: '100%',
             padding: '8px 12px',

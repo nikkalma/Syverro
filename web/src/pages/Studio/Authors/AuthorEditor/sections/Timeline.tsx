@@ -1,13 +1,16 @@
 import EmptyWorkspace from '../../../../../components/Studio/shared/EmptyWorkspace';
-
-const SAMPLE_EVENTS = [
-  { date: '', label: 'Birth', type: 'life' },
-  { date: '', label: 'First Publication', type: 'career' },
-  { date: '', label: 'Major Work', type: 'publication' },
-  { date: '', label: 'Death', type: 'life' },
-];
+import { getLocaleData, getBrowserLocale } from '../../../../../locales';
 
 export default function Timeline() {
+  const t = getLocaleData(getBrowserLocale());
+
+  const SAMPLE_EVENTS = [
+    { date: '', label: t.admin.authors.editor.timeline.birth, type: 'life' },
+    { date: '', label: t.admin.authors.editor.timeline.firstPublication, type: 'career' },
+    { date: '', label: t.admin.authors.editor.timeline.majorWork, type: 'publication' },
+    { date: '', label: t.admin.authors.editor.timeline.death, type: 'life' },
+  ];
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
       <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
@@ -30,7 +33,7 @@ export default function Timeline() {
               )}
             </div>
             <div style={{ flex: 1, paddingBottom: i < SAMPLE_EVENTS.length - 1 ? '0' : '0' }}>
-              <div style={{ fontSize: '11px', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '2px' }}>{ev.date || 'Not set'}</div>
+              <div style={{ fontSize: '11px', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '2px' }}>{ev.date || t.admin.authors.editor.notSet}</div>
               <div style={{ fontSize: '14px', color: 'var(--text-primary)', fontWeight: '500' }}>{ev.label}</div>
             </div>
           </div>
@@ -43,13 +46,13 @@ export default function Timeline() {
         textAlign: 'center', fontSize: '13px', color: 'var(--text-muted)',
         cursor: 'pointer',
       }}>
-        + Add timeline event
+        {t.admin.authors.editor.timeline.addEvent}
       </div>
 
       <EmptyWorkspace
         icon="📅"
-        title="Timeline Workspace"
-        description="Chronological life events will be managed here — births, deaths, major publications, relocations, and other milestones. Select an event to edit or add new ones above."
+        title={t.admin.authors.editor.timeline.workspace}
+        description={t.admin.authors.editor.timeline.workspaceDesc}
       />
     </div>
   );

@@ -1,7 +1,11 @@
+import { getLocaleData, getBrowserLocale } from '../../../locales';
+
 interface FieldProps {
   label: string;
   value?: string | number | null;
 }
+
+const _t = getLocaleData(getBrowserLocale());
 
 export default function Field({ label, value }: FieldProps) {
   return (
@@ -10,7 +14,7 @@ export default function Field({ label, value }: FieldProps) {
         {label}
       </div>
       <div style={{ fontSize: '14px', color: value ? 'var(--text-primary)' : 'var(--text-muted)' }}>
-        {value ?? '—'}
+        {value ?? _t.admin.authors.editor.notSet}
       </div>
     </div>
   );

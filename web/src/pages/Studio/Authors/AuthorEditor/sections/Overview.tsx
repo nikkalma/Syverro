@@ -2,8 +2,10 @@ import { useAuthorEditor } from '../AuthorEditorContext';
 import EditorSectionCard from '../../../../../components/Studio/shared/EditorSectionCard';
 import Field from '../../../../../components/Studio/shared/Field';
 import DetailGrid from '../../../../../components/Studio/shared/DetailGrid';
+import { getLocaleData, getBrowserLocale } from '../../../../../locales';
 
 export default function Overview() {
+  const t = getLocaleData(getBrowserLocale());
   const { author, loading } = useAuthorEditor();
 
   if (loading || !author) return null;
@@ -26,31 +28,31 @@ export default function Overview() {
           )}
         </div>
         <div style={{ flex: 1 }}>
-          <EditorSectionCard title="Core Information">
+          <EditorSectionCard title={t.admin.authors.editor.overview.coreInfo}>
             <DetailGrid>
-              <Field label="Name" value={author.name} />
-              <Field label="Native Name" value={author.native_name} />
-              <Field label="Display Name" value={author.display_name} />
-              <Field label="Slug" value={author.slug} />
+              <Field label={t.admin.authors.editor.overview.name} value={author.name} />
+              <Field label={t.admin.authors.editor.overview.nativeName} value={author.native_name} />
+              <Field label={t.admin.authors.editor.overview.displayName} value={author.display_name} />
+              <Field label={t.admin.authors.editor.overview.slug} value={author.slug} />
             </DetailGrid>
           </EditorSectionCard>
         </div>
       </div>
 
-      <EditorSectionCard title="Hero Background">
+      <EditorSectionCard title={t.admin.authors.editor.overview.heroBackground}>
         {author.hero_background_url ? (
           <div style={{
             width: '100%', height: '160px', borderRadius: '8px', overflow: 'hidden',
             background: 'var(--surface-hover)',
           }}>
-            <img src={author.hero_background_url} alt="Hero" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+            <img src={author.hero_background_url} alt={t.admin.authors.editor.media.heroAlt} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
           </div>
         ) : (
-          <p style={{ fontSize: '13px', color: 'var(--text-muted)', fontStyle: 'italic', margin: 0 }}>No hero background set</p>
+          <p style={{ fontSize: '13px', color: 'var(--text-muted)', fontStyle: 'italic', margin: 0 }}>{t.admin.authors.editor.noHeroBg}</p>
         )}
       </EditorSectionCard>
 
-      <EditorSectionCard title="Intro Quote">
+      <EditorSectionCard title={t.admin.authors.editor.overview.introQuote}>
         {author.author_intro_quote ? (
           <blockquote style={{
             margin: 0, padding: '16px 20px',
@@ -62,16 +64,16 @@ export default function Overview() {
             {author.author_intro_quote}
           </blockquote>
         ) : (
-          <p style={{ fontSize: '13px', color: 'var(--text-muted)', fontStyle: 'italic', margin: 0 }}>No intro quote set</p>
+          <p style={{ fontSize: '13px', color: 'var(--text-muted)', fontStyle: 'italic', margin: 0 }}>{t.admin.authors.editor.noIntroQuote}</p>
         )}
       </EditorSectionCard>
 
-      <EditorSectionCard title="Publication State">
+      <EditorSectionCard title={t.admin.authors.editor.overview.publicationState}>
         <DetailGrid>
-          <Field label="Creation Type" value={author.creation_type} />
-          <Field label="Books Count" value={author.book_count} />
-          <Field label="Created" value={author.created_at ? new Date(author.created_at).toLocaleDateString() : '-'} />
-          <Field label="Updated" value={author.updated_at ? new Date(author.updated_at).toLocaleDateString() : '-'} />
+          <Field label={t.admin.authors.editor.overview.creationType} value={author.creation_type} />
+          <Field label={t.admin.authors.editor.overview.booksCount} value={author.book_count} />
+          <Field label={t.admin.authors.editor.overview.created} value={author.created_at ? new Date(author.created_at).toLocaleDateString() : '-'} />
+          <Field label={t.admin.authors.editor.overview.updated} value={author.updated_at ? new Date(author.updated_at).toLocaleDateString() : '-'} />
         </DetailGrid>
       </EditorSectionCard>
     </div>

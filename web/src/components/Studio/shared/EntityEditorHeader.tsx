@@ -1,3 +1,5 @@
+import { getLocaleData, getBrowserLocale } from '../../../locales';
+
 interface Props {
   name: string;
   photoUrl?: string | null;
@@ -9,6 +11,7 @@ interface Props {
 }
 
 export default function EntityEditorHeader({ name, photoUrl, nativeName, completionPercent, lastUpdated, statusLabel, identitySummary }: Props) {
+  const t = getLocaleData(getBrowserLocale());
   return (
     <div style={{
       display: 'flex',
@@ -52,19 +55,19 @@ export default function EntityEditorHeader({ name, photoUrl, nativeName, complet
       <div style={{ display: 'flex', gap: '20px', alignItems: 'center', flexShrink: 0 }}>
         {statusLabel && (
           <div style={{ textAlign: 'right' }}>
-            <div style={{ fontSize: '10px', textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--text-muted)', marginBottom: '2px' }}>Status</div>
+            <div style={{ fontSize: '10px', textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--text-muted)', marginBottom: '2px' }}>{t.admin.authors.editor.status}</div>
             <div style={{ fontSize: '13px', color: 'var(--text-primary)' }}>{statusLabel}</div>
           </div>
         )}
         {completionPercent !== undefined && (
           <div style={{ textAlign: 'right' }}>
-            <div style={{ fontSize: '10px', textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--text-muted)', marginBottom: '2px' }}>Complete</div>
+            <div style={{ fontSize: '10px', textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--text-muted)', marginBottom: '2px' }}>{t.admin.authors.editor.complete}</div>
             <div style={{ fontSize: '13px', color: completionPercent >= 80 ? 'var(--success)' : 'var(--warning)' }}>{completionPercent}%</div>
           </div>
         )}
         {lastUpdated && (
           <div style={{ textAlign: 'right' }}>
-            <div style={{ fontSize: '10px', textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--text-muted)', marginBottom: '2px' }}>Updated</div>
+            <div style={{ fontSize: '10px', textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--text-muted)', marginBottom: '2px' }}>{t.admin.authors.editor.updated}</div>
             <div style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>{lastUpdated}</div>
           </div>
         )}

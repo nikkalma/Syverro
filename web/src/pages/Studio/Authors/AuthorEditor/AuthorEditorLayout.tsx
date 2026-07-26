@@ -48,7 +48,7 @@ function EditorContent() {
     ? Math.floor((now.getTime() - new Date(author.updated_at).getTime()) / 86400000)
     : null;
   const lastUpdated = updatedAgo !== null
-    ? (updatedAgo === 0 ? 'Today' : `${updatedAgo}d ago`)
+    ? (updatedAgo === 0 ? t.admin.authors.editor.today : `${updatedAgo}${t.admin.authors.editor.daysAgo}`)
     : undefined;
 
   const identityParts: string[] = [];
@@ -65,7 +65,7 @@ function EditorContent() {
         nativeName={author.native_name}
         completionPercent={completionPercent}
         lastUpdated={lastUpdated}
-        statusLabel={author.creation_type === 'auto' ? 'Auto-imported' : 'Curated'}
+        statusLabel={author.creation_type === 'auto' ? t.admin.authors.editor.autoImported : t.admin.authors.editor.curated}
         identitySummary={identityParts.join(' · ')}
       />
       <EditorSectionNav
@@ -88,8 +88,8 @@ function EditorContent() {
         }}>
           <EmptyWorkspace
             icon="📋"
-            title="Activity"
-            description="Recent changes and events for this author will appear here."
+            title={t.admin.authors.editor.activityTitle}
+            description={t.admin.authors.editor.activityDesc}
           />
         </aside>
       </div>

@@ -1,14 +1,16 @@
 import EditorSectionCard from '../../../../../components/Studio/shared/EditorSectionCard';
 import EmptyWorkspace from '../../../../../components/Studio/shared/EmptyWorkspace';
+import { getLocaleData, getBrowserLocale } from '../../../../../locales';
 
 export default function Quotes() {
+  const t = getLocaleData(getBrowserLocale());
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-      <EditorSectionCard title="Quotes About the Author">
+      <EditorSectionCard title={t.admin.authors.editor.quotes.quotesAbout}>
         <EmptyWorkspace
           icon="💬"
-          title="No quotes about this author"
-          description="Quotes from critics, peers, and reviews about this author will appear here."
+          title={t.admin.authors.editor.noQuotes}
+          description={t.admin.authors.editor.quotes.quotesAboutDesc}
         />
         <div style={{
           marginTop: '12px', padding: '10px', background: 'var(--surface-hover)', borderRadius: '8px',
@@ -16,15 +18,15 @@ export default function Quotes() {
           textAlign: 'center', fontSize: '13px', color: 'var(--text-muted)',
           cursor: 'pointer',
         }}>
-          + Add quote
+          {t.admin.authors.editor.addQuote}
         </div>
       </EditorSectionCard>
 
-      <EditorSectionCard title="Author Statements">
+      <EditorSectionCard title={t.admin.authors.editor.quotes.authorStatements}>
         <EmptyWorkspace
           icon="✍️"
-          title="No author statements"
-          description="Notable statements, manifestos, or remarks by this author will appear here."
+          title={t.admin.authors.editor.noStatements}
+          description={t.admin.authors.editor.quotes.authorStatementsDesc}
         />
         <div style={{
           marginTop: '12px', padding: '10px', background: 'var(--surface-hover)', borderRadius: '8px',
@@ -32,7 +34,7 @@ export default function Quotes() {
           textAlign: 'center', fontSize: '13px', color: 'var(--text-muted)',
           cursor: 'pointer',
         }}>
-          + Add statement
+          {t.admin.authors.editor.addStatement}
         </div>
       </EditorSectionCard>
     </div>

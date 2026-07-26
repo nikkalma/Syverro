@@ -1,6 +1,7 @@
 // src/pages/Studio/Dashboard/RecentUsers.tsx
 
 import { useNavigate } from 'react-router-dom';
+import { getLocaleData, getBrowserLocale } from '../../../locales';
 
 interface User {
   id: string;
@@ -17,6 +18,7 @@ interface RecentUsersProps {
 
 export default function RecentUsers({ users }: RecentUsersProps) {
   const navigate = useNavigate();
+  const t = getLocaleData(getBrowserLocale());
 
   if (!users || users.length === 0) {
     return (
@@ -26,8 +28,8 @@ export default function RecentUsers({ users }: RecentUsersProps) {
         borderRadius: '12px',
         border: '1px solid var(--border-soft)',
       }}>
-        <h3 style={{ fontSize: '14px', color: 'var(--text-secondary)', marginBottom: '12px' }}>New Users</h3>
-        <p style={{ color: 'var(--text-muted)', fontSize: '13px' }}>No new users</p>
+        <h3 style={{ fontSize: '14px', color: 'var(--text-secondary)', marginBottom: '12px' }}>{t.admin.authors.editor.newUsers}</h3>
+        <p style={{ color: 'var(--text-muted)', fontSize: '13px' }}>{t.admin.authors.editor.noNewUsers}</p>
       </div>
     );
   }
@@ -39,7 +41,7 @@ export default function RecentUsers({ users }: RecentUsersProps) {
       borderRadius: '12px',
       border: '1px solid var(--border-soft)',
     }}>
-      <h3 style={{ fontSize: '14px', color: 'var(--text-secondary)', marginBottom: '12px' }}>New Users</h3>
+      <h3 style={{ fontSize: '14px', color: 'var(--text-secondary)', marginBottom: '12px' }}>{t.admin.authors.editor.newUsers}</h3>
       <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
         {users.slice(0, 5).map((user) => (
           <div
@@ -72,7 +74,7 @@ export default function RecentUsers({ users }: RecentUsersProps) {
                 background: 'rgba(91, 134, 161, 0.15)',
                 color: '#5B86A1',
               }}>
-                {user.role || 'user'}
+                {user.role || t.admin.settings.roleUser}
               </div>
               <div style={{ color: 'var(--text-muted)', fontSize: '11px', marginTop: '4px' }}>
                 {new Date(user.created_at).toLocaleDateString()}
@@ -96,7 +98,7 @@ export default function RecentUsers({ users }: RecentUsersProps) {
             textAlign: 'center',
           }}
         >
-          View all →
+          {t.admin.authors.editor.viewAll}
         </button>
       )}
     </div>

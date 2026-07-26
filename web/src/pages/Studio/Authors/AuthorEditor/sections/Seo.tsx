@@ -2,23 +2,25 @@ import { useAuthorEditor } from '../AuthorEditorContext';
 import EditorSectionCard from '../../../../../components/Studio/shared/EditorSectionCard';
 import Field from '../../../../../components/Studio/shared/Field';
 import DetailGrid from '../../../../../components/Studio/shared/DetailGrid';
+import { getLocaleData, getBrowserLocale } from '../../../../../locales';
 
 export default function Seo() {
+  const t = getLocaleData(getBrowserLocale());
   const { author, loading } = useAuthorEditor();
 
   if (loading || !author) return null;
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-      <EditorSectionCard title="SEO Metadata">
+      <EditorSectionCard title={t.admin.authors.editor.seo.seoMetadata}>
         <DetailGrid columns={3}>
-          <Field label="Slug" value={author.slug} />
-          <Field label="Sort Name" value={author.sort_name} />
-          <Field label="Search Aliases" value={author.search_aliases} />
+          <Field label={t.admin.authors.editor.overview.slug} value={author.slug} />
+          <Field label={t.admin.authors.editor.identity.sortName} value={author.sort_name} />
+          <Field label={t.admin.authors.editor.seo.searchAliases} value={author.search_aliases} />
         </DetailGrid>
       </EditorSectionCard>
 
-      <EditorSectionCard title="External References">
+      <EditorSectionCard title={t.admin.authors.editor.seo.externalReferences}>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
           <div style={{
             display: 'flex', alignItems: 'center', gap: '12px',
@@ -26,9 +28,9 @@ export default function Seo() {
           }}>
             <span style={{ fontSize: '18px' }}>🌐</span>
             <div style={{ flex: 1 }}>
-              <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>Official Website</div>
+              <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>{t.admin.authors.editor.seo.officialWebsite}</div>
               <div style={{ fontSize: '14px', color: author.official_website ? 'var(--primary)' : 'var(--text-muted)' }}>
-                {author.official_website || 'Not set'}
+                {author.official_website || t.admin.authors.editor.notSet}
               </div>
             </div>
           </div>
@@ -38,9 +40,9 @@ export default function Seo() {
           }}>
             <span style={{ fontSize: '18px' }}>📖</span>
             <div style={{ flex: 1 }}>
-              <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>Wikipedia</div>
+              <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>{t.admin.authors.editor.seo.wikipedia}</div>
               <div style={{ fontSize: '14px', color: author.wikipedia_url ? 'var(--primary)' : 'var(--text-muted)' }}>
-                {author.wikipedia_url || 'Not set'}
+                {author.wikipedia_url || t.admin.authors.editor.notSet}
               </div>
             </div>
           </div>

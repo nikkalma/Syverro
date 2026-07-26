@@ -2,56 +2,58 @@ import { useAuthorEditor } from '../AuthorEditorContext';
 import EditorSectionCard from '../../../../../components/Studio/shared/EditorSectionCard';
 import Field from '../../../../../components/Studio/shared/Field';
 import DetailGrid from '../../../../../components/Studio/shared/DetailGrid';
+import { getLocaleData, getBrowserLocale } from '../../../../../locales';
 
 export default function Identity() {
+  const t = getLocaleData(getBrowserLocale());
   const { author, loading } = useAuthorEditor();
 
   if (loading || !author) return null;
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-      <EditorSectionCard title="Nationality & Historical States">
+      <EditorSectionCard title={t.admin.authors.editor.identity.nationalityStates}>
         <DetailGrid>
-          <Field label="Nationality" value={author.nationality} />
-          <Field label="Country" value={author.country} />
+          <Field label={t.admin.authors.editor.identity.nationality} value={author.nationality} />
+          <Field label={t.admin.authors.editor.identity.country} value={author.country} />
         </DetailGrid>
       </EditorSectionCard>
 
-      <EditorSectionCard title="Languages">
+      <EditorSectionCard title={t.admin.authors.editor.identity.languages}>
         <DetailGrid>
-          <Field label="Writing Languages" value={author.writing_languages?.join(', ')} />
-          <Field label="Spoken Languages" value={author.languages?.join(', ')} />
+          <Field label={t.admin.authors.editor.identity.writingLanguages} value={author.writing_languages?.join(', ')} />
+          <Field label={t.admin.authors.editor.identity.spokenLanguages} value={author.languages?.join(', ')} />
         </DetailGrid>
       </EditorSectionCard>
 
-      <EditorSectionCard title="Occupations">
+      <EditorSectionCard title={t.admin.authors.editor.identity.occupations}>
         <DetailGrid>
-          <Field label="Occupations" value={author.occupations?.join(', ')} />
-          <Field label="Literary Movements" value={author.literary_movements?.join(', ')} />
+          <Field label={t.admin.authors.editor.identity.occupations} value={author.occupations?.join(', ')} />
+          <Field label={t.admin.authors.editor.identity.literaryMovements} value={author.literary_movements?.join(', ')} />
         </DetailGrid>
       </EditorSectionCard>
 
-      <EditorSectionCard title="Alternative Names">
+      <EditorSectionCard title={t.admin.authors.editor.identity.alternativeNames}>
         <DetailGrid>
-          <Field label="Birth Name" value={author.birth_name} />
-          <Field label="Pen Names" value={author.pen_names?.join(', ')} />
-          <Field label="Sort Name" value={author.sort_name} />
-          <Field label="Pseudonyms" value={author.pseudonyms?.join(', ')} />
+          <Field label={t.admin.authors.editor.identity.birthName} value={author.birth_name} />
+          <Field label={t.admin.authors.editor.identity.penNames} value={author.pen_names?.join(', ')} />
+          <Field label={t.admin.authors.editor.identity.sortName} value={author.sort_name} />
+          <Field label={t.admin.authors.editor.identity.pseudonyms} value={author.pseudonyms?.join(', ')} />
         </DetailGrid>
       </EditorSectionCard>
 
-      <EditorSectionCard title="Life Events">
+      <EditorSectionCard title={t.admin.authors.editor.identity.lifeEvents}>
         <DetailGrid>
           <div>
-            <Field label="Birth Date" value={author.birth_date} />
+            <Field label={t.admin.authors.editor.identity.birthDate} value={author.birth_date} />
             <div style={{ marginTop: '8px' }}>
-              <Field label="Birth Place" value={author.birth_place} />
+              <Field label={t.admin.authors.editor.identity.birthPlace} value={author.birth_place} />
             </div>
           </div>
           <div>
-            <Field label="Death Date" value={author.death_date} />
+            <Field label={t.admin.authors.editor.identity.deathDate} value={author.death_date} />
             <div style={{ marginTop: '8px' }}>
-              <Field label="Death Place" value={author.death_place} />
+              <Field label={t.admin.authors.editor.identity.deathPlace} value={author.death_place} />
             </div>
           </div>
         </DetailGrid>

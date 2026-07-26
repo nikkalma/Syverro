@@ -1,23 +1,25 @@
 import { useAuthorEditor } from '../AuthorEditorContext';
 import EditorSectionCard from '../../../../../components/Studio/shared/EditorSectionCard';
 import EmptyWorkspace from '../../../../../components/Studio/shared/EmptyWorkspace';
+import { getLocaleData, getBrowserLocale } from '../../../../../locales';
 
 export default function Works() {
+  const t = getLocaleData(getBrowserLocale());
   const { author, loading } = useAuthorEditor();
 
   if (loading || !author) return null;
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-      <EditorSectionCard title="Connected Books">
+      <EditorSectionCard title={t.admin.authors.editor.works.connectedBooks}>
         <EmptyWorkspace
           icon="📚"
-          title="No books connected"
-          description="Books linked to this author will appear here with cover previews, publication dates, and roles."
+          title={t.admin.authors.editor.noConnectedBooks}
+          description={t.admin.authors.editor.connectedBooksDesc}
         />
       </EditorSectionCard>
 
-      <EditorSectionCard title="Notable Works">
+      <EditorSectionCard title={t.admin.authors.editor.works.notableWorks}>
         {author.notable_works && author.notable_works.length > 0 ? (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
             {author.notable_works.map((w, i) => (
@@ -35,7 +37,7 @@ export default function Works() {
           </div>
         ) : (
           <p style={{ fontSize: '13px', color: 'var(--text-muted)', fontStyle: 'italic', margin: 0 }}>
-            No notable works listed
+            {t.admin.authors.editor.noNotableWorks}
           </p>
         )}
         <div style={{
@@ -44,11 +46,11 @@ export default function Works() {
           textAlign: 'center', fontSize: '13px', color: 'var(--text-muted)',
           cursor: 'pointer',
         }}>
-          + Add notable work
+          {t.admin.authors.editor.addNotableWork}
         </div>
       </EditorSectionCard>
 
-      <EditorSectionCard title="Genres">
+      <EditorSectionCard title={t.admin.authors.editor.works.genres}>
         {author.genres && author.genres.length > 0 ? (
           <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
             {author.genres.map((g, i) => (
@@ -63,7 +65,7 @@ export default function Works() {
           </div>
         ) : (
           <p style={{ fontSize: '13px', color: 'var(--text-muted)', fontStyle: 'italic', margin: 0 }}>
-            No genres assigned
+            {t.admin.authors.editor.noGenres}
           </p>
         )}
       </EditorSectionCard>

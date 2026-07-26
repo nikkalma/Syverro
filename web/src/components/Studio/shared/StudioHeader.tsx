@@ -98,7 +98,7 @@ export default function StudioHeader({ moduleName, theme, onToggleTheme }: Studi
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search Studio..."
+            placeholder={t.admin.authors.editor.searchStudio}
             style={{
               padding: '6px 10px 6px 30px',
               fontSize: '13px',

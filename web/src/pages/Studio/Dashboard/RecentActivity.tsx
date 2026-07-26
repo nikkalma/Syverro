@@ -1,5 +1,6 @@
 // src/pages/Studio/Dashboard/RecentActivity.tsx
 
+import { getLocaleData, getBrowserLocale } from '../../../locales';
 import { LOG_TYPE_LABELS } from '../../../types/admin';
 
 interface Log {
@@ -15,6 +16,7 @@ interface RecentActivityProps {
 }
 
 export default function RecentActivity({ logs }: RecentActivityProps) {
+  const t = getLocaleData(getBrowserLocale());
   if (!logs || logs.length === 0) {
     return (
       <div style={{
@@ -23,8 +25,8 @@ export default function RecentActivity({ logs }: RecentActivityProps) {
         borderRadius: '12px',
         border: '1px solid var(--border-soft)',
       }}>
-        <h3 style={{ fontSize: '14px', color: 'var(--text-secondary)', marginBottom: '12px' }}>Recent Activity</h3>
-        <p style={{ color: 'var(--text-muted)', fontSize: '13px' }}>No recent activity</p>
+        <h3 style={{ fontSize: '14px', color: 'var(--text-secondary)', marginBottom: '12px' }}>{t.admin.authors.editor.recentActivity}</h3>
+        <p style={{ color: 'var(--text-muted)', fontSize: '13px' }}>{t.admin.authors.editor.noRecentActivity}</p>
       </div>
     );
   }
@@ -36,7 +38,7 @@ export default function RecentActivity({ logs }: RecentActivityProps) {
       borderRadius: '12px',
       border: '1px solid var(--border-soft)',
     }}>
-      <h3 style={{ fontSize: '14px', color: 'var(--text-secondary)', marginBottom: '12px' }}>Recent Activity</h3>
+      <h3 style={{ fontSize: '14px', color: 'var(--text-secondary)', marginBottom: '12px' }}>{t.admin.authors.editor.recentActivity}</h3>
       <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
         {logs.slice(0, 10).map((log) => (
           <div

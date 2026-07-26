@@ -88,7 +88,7 @@ export default function StudioHome() {
           {t.admin.dashboard.title}
         </h1>
         <p style={{ fontSize: '13px', color: 'var(--text-muted)', margin: 0 }}>
-          Overview of your workspace activity
+          {t.admin.authors.editor.workspaceOverview}
         </p>
       </div>
 
@@ -107,7 +107,7 @@ export default function StudioHome() {
 
       <div>
         <h2 style={{ fontSize: '18px', fontWeight: '500', color: 'var(--text-primary)', margin: 0, marginBottom: '16px' }}>
-          Workspaces
+          {t.admin.authors.editor.workspaces}
         </h2>
         <DashboardModuleCards t={t} />
       </div>
@@ -115,29 +115,29 @@ export default function StudioHome() {
       <div className="dashboard-grid">
         <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
           <h3 style={{ fontSize: '14px', fontWeight: '500', color: 'var(--text-secondary)', margin: 0 }}>
-            Recently Edited
+            {t.admin.authors.editor.recentlyEdited}
           </h3>
           <EmptyWorkspace
             icon="✏️"
-            title="No recent edits"
-            description="Entities you edit in Studio will appear here for quick access."
+            title={t.admin.authors.editor.noRecentEdits}
+            description={t.admin.authors.editor.recentEditsDesc}
           />
         </div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
           <h3 style={{ fontSize: '14px', fontWeight: '500', color: 'var(--text-secondary)', margin: 0 }}>
-            Needs Attention
+            {t.admin.authors.editor.needsAttention}
           </h3>
           <EmptyWorkspace
             icon="🔍"
-            title="All complete"
-            description="Entities with missing fields or incomplete data will appear here."
+            title={t.admin.authors.editor.allComplete}
+            description={t.admin.authors.editor.needsAttentionDesc}
           />
         </div>
       </div>
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
         <h2 style={{ fontSize: '18px', fontWeight: '500', color: 'var(--text-primary)', margin: 0 }}>
-          Activity
+          {t.admin.authors.editor.activity}
         </h2>
         <div className="dashboard-grid">
           <RecentActivity logs={recentLogs} />

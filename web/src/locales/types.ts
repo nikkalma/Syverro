@@ -588,5 +588,14 @@ export interface LocaleData {
     recommendationsComingSoon: string;
     loading: string;
     authorNotFound: string;
+    // Hero metadata panel
+    metaOrigin: string;
+    metaBorn: string;
+    metaDied: string;
+    metaProfessions: string;
+    metaWorks: string;
+    // Quote block (hero-area)
+    quotesAboutTitle: string;
+    noQuotesAbout: string;
   };
 }

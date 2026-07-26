@@ -510,6 +510,13 @@ export const uk: LocaleData = {
     recommendationsComingSoon: 'Рекомендації — незабаром',
     loading: 'Завантаження...',
     authorNotFound: 'Автора не знайдено',
+    metaOrigin: 'Походження',
+    metaBorn: 'Народився',
+    metaDied: 'Помер',
+    metaProfessions: 'Професії',
+    metaWorks: 'Твори',
+    quotesAboutTitle: 'Про нього говорять',
+    noQuotesAbout: 'Цитат про автора поки що немає',
   },
 
   // ===== NAVIGATION =====

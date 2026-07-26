@@ -510,6 +510,13 @@ export const ru: LocaleData = {
     recommendationsComingSoon: 'Рекомендации — скоро',
     loading: 'Загрузка...',
     authorNotFound: 'Автор не найден',
+    metaOrigin: 'Происхождение',
+    metaBorn: 'Родился',
+    metaDied: 'Умер',
+    metaProfessions: 'Профессии',
+    metaWorks: 'Произведения',
+    quotesAboutTitle: 'О нём говорят',
+    noQuotesAbout: 'Цитаты об авторе пока не добавлены',
   },
 
   // ===== НАВИГАЦИЯ =====

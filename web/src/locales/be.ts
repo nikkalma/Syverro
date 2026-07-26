@@ -510,6 +510,13 @@ export const be: LocaleData = {
     recommendationsComingSoon: 'Рэкамендацыі — хутка',
     loading: 'Загрузка...',
     authorNotFound: 'Аўтар не знойдзены',
+    metaOrigin: 'Паходжанне',
+    metaBorn: 'Нарадзіўся',
+    metaDied: 'Памёр',
+    metaProfessions: 'Прафесіі',
+    metaWorks: 'Творы',
+    quotesAboutTitle: 'Пра яго кажуць',
+    noQuotesAbout: 'Цытат пра аўтара пакуль няма',
   },
 
   // ===== НАВИГАЦИЯ =====

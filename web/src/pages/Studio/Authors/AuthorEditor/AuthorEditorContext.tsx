@@ -50,7 +50,8 @@ export function AuthorEditorProvider({ children }: { children: ReactNode }) {
     setSaving(true);
     setSaveError(null);
     try {
-      const res = await apiClient.put(`/admin/authors/${id}`, data);
+      await apiClient.put(`/admin/authors/${id}`, data);
+      const res = await apiClient.get(`/admin/authors/${id}`);
       setAuthor(res.data);
     } catch (err: any) {
       const msg = err?.response?.data?.detail || err.message || 'Failed to save';

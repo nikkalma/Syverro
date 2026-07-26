@@ -510,6 +510,13 @@ export const sr: LocaleData = {
     recommendationsComingSoon: 'Preporuke — uskoro',
     loading: 'Učitavanje...',
     authorNotFound: 'Autor nije pronađen',
+    metaOrigin: 'Poreklo',
+    metaBorn: 'Rođen',
+    metaDied: 'Umro',
+    metaProfessions: 'Profesije',
+    metaWorks: 'Dela',
+    quotesAboutTitle: 'O njemu govore',
+    noQuotesAbout: 'Citati o autoru još nisu dodati',
   },
 
   // ===== NAVIGATION =====

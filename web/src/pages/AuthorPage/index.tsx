@@ -171,17 +171,17 @@ export default function AuthorPage() {
     : null;
 
   const metadataRows = [
-    author.nationality && { label: 'Origin', value: author.nationality },
+    author.nationality && { label: t.author.metaOrigin, value: author.nationality },
     (author.birth_place || formattedBirth) && {
-      label: 'Born',
+      label: t.author.metaBorn,
       value: [formattedBirth, author.birth_place].filter(Boolean).join('\n'),
     },
     (author.death_place || formattedDeath) && {
-      label: 'Died',
+      label: t.author.metaDied,
       value: [formattedDeath, author.death_place].filter(Boolean).join('\n'),
     },
-    professions && { label: 'Professions', value: professions },
-    { label: 'Works', value: String(author.books.length) },
+    professions && { label: t.author.metaProfessions, value: professions },
+    { label: t.author.metaWorks, value: String(author.books.length) },
   ].filter(Boolean) as { label: string; value: string }[];
 
   return (
@@ -190,9 +190,9 @@ export default function AuthorPage() {
       {/* ======================================================================= */}
       {/* HERO                                                                    */}
       {/* ======================================================================= */}
-      <div style={{ position: 'relative' }}>
+      <div style={{ position: 'relative', paddingTop: '60px' }}>
         <div style={{
-          width: '100%', height: '320px', borderRadius: '0 0 24px 24px',
+          width: '100%', height: '380px', borderRadius: '0 0 24px 24px',
           position: 'relative', overflow: 'hidden',
           backgroundImage: heroBgImage,
           backgroundSize: 'cover',
@@ -213,7 +213,7 @@ export default function AuthorPage() {
 
           {/* Hero name */}
           <div style={{
-            position: 'absolute', bottom: '40px', left: '200px', right: '200px', zIndex: 2,
+            position: 'absolute', bottom: '60px', left: '200px', right: '200px', zIndex: 2,
           }}>
             <h1 style={{
               fontFamily: 'Cormorant Garamond, serif',
@@ -236,7 +236,7 @@ export default function AuthorPage() {
 
           {/* Expanded metadata panel — entity passport */}
           <div style={{
-            position: 'absolute', bottom: '28px', right: '24px', zIndex: 2,
+            position: 'absolute', bottom: '60px', right: '24px', zIndex: 2,
             padding: '20px 28px', minWidth: '340px',
             background: 'var(--glass-bg)',
             backdropFilter: 'blur(16px)',
@@ -290,21 +290,34 @@ export default function AuthorPage() {
         </div>
       </div>
 
-      {/* ──────── INTRO QUOTE + DESCRIPTION + TAGS ──────── */}
+      {/* ──────── QUOTES ABOUT AUTHOR + TAGS ──────── */}
       <div style={{ paddingLeft: '204px', paddingRight: '28px', marginTop: '20px' }}>
-        {author.author_intro_quote && (
-          <p style={{
+        <div style={{
+          marginBottom: '12px', maxWidth: '580px',
+          padding: '20px 24px', borderRadius: '12px',
+          background: 'var(--surface)', border: '1px solid var(--border)',
+        }}>
+          <div style={{
             fontFamily: 'Cormorant Garamond, serif',
-            fontSize: '17px', color: 'var(--text-secondary)', lineHeight: 1.6,
-            margin: 0, marginBottom: '12px',
-            maxWidth: '580px',
-            fontStyle: 'italic', fontWeight: 400,
-            borderLeft: '2px solid var(--accent)',
-            paddingLeft: '16px',
+            fontSize: '13px', fontWeight: 500,
+            color: 'var(--accent)', letterSpacing: '0.06em',
+            textTransform: 'uppercase', marginBottom: '10px',
           }}>
-            {author.author_intro_quote}
-          </p>
-        )}
+            {t.author.quotesAboutTitle}
+          </div>
+          <div style={{
+            fontFamily: 'Cormorant Garamond, serif',
+            fontSize: '36px', color: 'var(--primary)', opacity: 0.2,
+            lineHeight: 0.5, marginBottom: '4px',
+          }}>❝</div>
+          <div style={{
+            fontFamily: 'Cormorant Garamond, serif',
+            fontSize: '15px', color: 'var(--text-muted)', fontStyle: 'italic',
+            lineHeight: 1.6,
+          }}>
+            {t.author.noQuotesAbout}
+          </div>
+        </div>
 
         {hasTags && (
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>

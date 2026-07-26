@@ -510,6 +510,13 @@ export const en: LocaleData = {
     recommendationsComingSoon: 'Recommendations — coming soon',
     loading: 'Loading...',
     authorNotFound: 'Author not found',
+    metaOrigin: 'Origin',
+    metaBorn: 'Born',
+    metaDied: 'Died',
+    metaProfessions: 'Professions',
+    metaWorks: 'Works',
+    quotesAboutTitle: 'About Them',
+    noQuotesAbout: 'No quotes about this author yet',
   },
 
   // ===== NAVIGATION =====

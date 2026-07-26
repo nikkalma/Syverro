@@ -510,6 +510,13 @@ export const kk: LocaleData = {
     recommendationsComingSoon: 'Ұсыныстар — жақын арада',
     loading: 'Жүктелуде...',
     authorNotFound: 'Автор табылмады',
+    metaOrigin: 'Шығу тегі',
+    metaBorn: 'Туған',
+    metaDied: 'Қайтыс болған',
+    metaProfessions: 'Мамандықтары',
+    metaWorks: 'Шығармалары',
+    quotesAboutTitle: 'Ол туралы айтады',
+    noQuotesAbout: 'Автор туралы дәйексөздер әлі жоқ',
   },
 
   // ===== NAVIGATION =====

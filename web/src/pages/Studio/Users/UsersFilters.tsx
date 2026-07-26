@@ -1,4 +1,4 @@
- // src/pages/Admin/Users/UsersFilters.tsx
+ // src/pages/Studio/Users/UsersFilters.tsx
 
 import { useState, useEffect } from 'react';
 import { useAdminStore } from '../../../store/adminStore';

@@ -1,4 +1,4 @@
-// src/pages/Admin/Users/UserModal.tsx
+// src/pages/Studio/Users/UserModal.tsx
 
 import { useState } from 'react';
 import { AdminUser, ROLE_LABELS, ROLE_COLORS } from '../../../types/admin';

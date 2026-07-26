@@ -1,4 +1,4 @@
-// src/pages/Admin/Dashboard/RecentUsers.tsx
+// src/pages/Studio/Dashboard/RecentUsers.tsx
 
 import { useNavigate } from 'react-router-dom';
 
@@ -22,12 +22,12 @@ export default function RecentUsers({ users }: RecentUsersProps) {
     return (
       <div style={{
         padding: '20px',
-        background: 'rgba(18, 28, 36, 0.6)',
+        background: 'var(--surface)',
         borderRadius: '12px',
-        border: '1px solid rgba(255,255,255,0.06)',
+        border: '1px solid var(--border-soft)',
       }}>
-        <h3 style={{ fontSize: '14px', color: '#97A6BA', marginBottom: '12px' }}>📋 Последние регистрации</h3>
-        <p style={{ color: '#5B86A1', fontSize: '13px' }}>Нет новых пользователей</p>
+        <h3 style={{ fontSize: '14px', color: 'var(--text-secondary)', marginBottom: '12px' }}>New Users</h3>
+        <p style={{ color: 'var(--text-muted)', fontSize: '13px' }}>No new users</p>
       </div>
     );
   }
@@ -35,34 +35,34 @@ export default function RecentUsers({ users }: RecentUsersProps) {
   return (
     <div style={{
       padding: '20px',
-      background: 'rgba(18, 28, 36, 0.6)',
+      background: 'var(--surface)',
       borderRadius: '12px',
-      border: '1px solid rgba(255,255,255,0.06)',
+      border: '1px solid var(--border-soft)',
     }}>
-      <h3 style={{ fontSize: '14px', color: '#97A6BA', marginBottom: '12px' }}>📋 Последние регистрации</h3>
+      <h3 style={{ fontSize: '14px', color: 'var(--text-secondary)', marginBottom: '12px' }}>New Users</h3>
       <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
         {users.slice(0, 5).map((user) => (
           <div
             key={user.id}
-            onClick={() => navigate('/admin/users')}
+            onClick={() => navigate('/studio/users')}
             style={{
               display: 'flex',
               justifyContent: 'space-between',
               alignItems: 'center',
               padding: '10px 12px',
-              background: 'rgba(255,255,255,0.03)',
+              background: 'var(--surface-hover)',
               borderRadius: '8px',
               cursor: 'pointer',
               transition: 'background 0.2s',
             }}
-            onMouseEnter={(e) => (e.currentTarget.style.background = 'rgba(255,255,255,0.06)')}
-            onMouseLeave={(e) => (e.currentTarget.style.background = 'rgba(255,255,255,0.03)')}
+            onMouseEnter={(e) => (e.currentTarget.style.background = 'var(--border-soft)')}
+            onMouseLeave={(e) => (e.currentTarget.style.background = 'var(--surface-hover)')}
           >
             <div>
-              <div style={{ color: '#E6EDF3', fontSize: '14px' }}>
+              <div style={{ color: 'var(--text-primary)', fontSize: '14px' }}>
                 {user.first_name || user.email}
               </div>
-              <div style={{ color: '#97A6BA', fontSize: '12px' }}>{user.email}</div>
+              <div style={{ color: 'var(--text-muted)', fontSize: '12px' }}>{user.email}</div>
             </div>
             <div style={{ textAlign: 'right' }}>
               <div style={{
@@ -74,8 +74,8 @@ export default function RecentUsers({ users }: RecentUsersProps) {
               }}>
                 {user.role || 'user'}
               </div>
-              <div style={{ color: '#5B86A1', fontSize: '11px', marginTop: '4px' }}>
-                {new Date(user.created_at).toLocaleDateString('ru-RU')}
+              <div style={{ color: 'var(--text-muted)', fontSize: '11px', marginTop: '4px' }}>
+                {new Date(user.created_at).toLocaleDateString()}
               </div>
             </div>
           </div>
@@ -83,12 +83,12 @@ export default function RecentUsers({ users }: RecentUsersProps) {
       </div>
       {users.length > 5 && (
         <button
-          onClick={() => navigate('/admin/users')}
+          onClick={() => navigate('/studio/users')}
           style={{
             marginTop: '12px',
             background: 'none',
             border: 'none',
-            color: '#5B86A1',
+            color: 'var(--primary)',
             cursor: 'pointer',
             fontSize: '13px',
             fontFamily: 'Inter, sans-serif',
@@ -96,7 +96,7 @@ export default function RecentUsers({ users }: RecentUsersProps) {
             textAlign: 'center',
           }}
         >
-          Показать всех →
+          View all →
         </button>
       )}
     </div>

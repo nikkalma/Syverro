@@ -5,9 +5,10 @@ import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { useAuthStore } from '../../store/authStore';
 import { useAdminTheme } from '../../store/adminStore';
 import { ADMIN_ROLES } from '../../types/admin';
-import { Sun, Moon, Menu, X } from 'lucide-react';
+import { Menu, X } from 'lucide-react';
 import { getLocaleData, getBrowserLocale } from '../../locales';
 import type { LocaleData } from '../../locales';
+import StudioHeader from './shared/StudioHeader';
 import './StudioLayout.css';
 
 interface AdminLayoutProps {
@@ -20,7 +21,7 @@ interface NavItem {
   icon: string;
 }
 
-export default function AdminLayout({ children }: AdminLayoutProps) {
+export default function StudioLayout({ children }: AdminLayoutProps) {
   const navigate = useNavigate();
   const location = useLocation();
   const { user, logout } = useAuthStore();
@@ -211,49 +212,29 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
       </aside>
 
       <div className="studio-content" style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
-        <header style={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          padding: '12px 24px',
-          background: 'var(--surface)',
-          borderBottom: '1px solid var(--border-soft)',
-          position: 'sticky',
-          top: 0,
-          zIndex: 50,
-          flexShrink: 0,
-        }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-            <button
-              className="studio-hamburger"
-              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-              style={{
-                background: 'none',
-                border: 'none',
-                color: 'var(--text-secondary)',
-                fontSize: '24px',
-                cursor: 'pointer',
-                padding: '4px',
-                display: 'none',
-              }}
-            >
-              {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
-            </button>
-            <span style={{ fontSize: '18px', fontWeight: '300', color: 'var(--text-secondary)' }}>
-              {navItems.find(item => isActive(item.path))?.label || t.admin.nav.dashboard}
-            </span>
-          </div>
-
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-            <button
-              onClick={toggleTheme}
-              className="glass-button"
-              style={{ padding: '8px 12px' }}
-            >
-              {theme === 'dark' ? <Sun size={20} /> : <Moon size={20} />}
-            </button>
-          </div>
-        </header>
+        <div style={{ display: 'flex', alignItems: 'stretch' }}>
+          <button
+            className="studio-hamburger"
+            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+            style={{
+              background: 'var(--surface)',
+              border: 'none',
+              borderBottom: '1px solid var(--border-soft)',
+              color: 'var(--text-secondary)',
+              fontSize: '24px',
+              cursor: 'pointer',
+              padding: '12px 16px',
+              display: 'none',
+            }}
+          >
+            {isMobileMenuOpen ? <X size={20} /> : <Menu size={20} />}
+          </button>
+          <StudioHeader
+            moduleName={navItems.find(item => isActive(item.path))?.label || t.admin.nav.dashboard}
+            theme={theme}
+            onToggleTheme={toggleTheme}
+          />
+        </div>
 
         <main style={{
           flex: 1,

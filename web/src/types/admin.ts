@@ -396,8 +396,8 @@ export const LOG_TYPE_LABELS: Record<AdminLogType, string> = {
   genre_update: 'Обновление жанра',
   genre_delete: 'Удаление жанра',
   settings_update: 'Обновление настроек',
-  admin_login: 'Вход в админку',
-  admin_logout: 'Выход из админки',
+  admin_login: 'Вход в Студию',
+  admin_logout: 'Выход из Студии',
 };
 
 export interface AdminLog {

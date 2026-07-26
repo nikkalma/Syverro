@@ -1,4 +1,4 @@
-// src/pages/Admin/Users/UsersTable.tsx
+// src/pages/Studio/Users/UsersTable.tsx
 
 import { AdminUser, AdminRole, ROLE_LABELS, ROLE_COLORS } from '../../../types/admin';
 import { useAdminStore } from '../../../store/adminStore';

@@ -1,4 +1,4 @@
-// src/pages/Admin/Dashboard/RecentActivity.tsx
+// src/pages/Studio/Dashboard/RecentActivity.tsx
 
 import { LOG_TYPE_LABELS } from '../../../types/admin';
 
@@ -19,12 +19,12 @@ export default function RecentActivity({ logs }: RecentActivityProps) {
     return (
       <div style={{
         padding: '20px',
-        background: 'rgba(18, 28, 36, 0.6)',
+        background: 'var(--surface)',
         borderRadius: '12px',
-        border: '1px solid rgba(255,255,255,0.06)',
+        border: '1px solid var(--border-soft)',
       }}>
-        <h3 style={{ fontSize: '14px', color: '#97A6BA', marginBottom: '12px' }}>🔄 Последние действия</h3>
-        <p style={{ color: '#5B86A1', fontSize: '13px' }}>Нет действий</p>
+        <h3 style={{ fontSize: '14px', color: 'var(--text-secondary)', marginBottom: '12px' }}>Recent Activity</h3>
+        <p style={{ color: 'var(--text-muted)', fontSize: '13px' }}>No recent activity</p>
       </div>
     );
   }
@@ -32,11 +32,11 @@ export default function RecentActivity({ logs }: RecentActivityProps) {
   return (
     <div style={{
       padding: '20px',
-      background: 'rgba(18, 28, 36, 0.6)',
+      background: 'var(--surface)',
       borderRadius: '12px',
-      border: '1px solid rgba(255,255,255,0.06)',
+      border: '1px solid var(--border-soft)',
     }}>
-      <h3 style={{ fontSize: '14px', color: '#97A6BA', marginBottom: '12px' }}>🔄 Последние действия</h3>
+      <h3 style={{ fontSize: '14px', color: 'var(--text-secondary)', marginBottom: '12px' }}>Recent Activity</h3>
       <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
         {logs.slice(0, 10).map((log) => (
           <div
@@ -46,21 +46,21 @@ export default function RecentActivity({ logs }: RecentActivityProps) {
               justifyContent: 'space-between',
               alignItems: 'center',
               padding: '8px 12px',
-              background: 'rgba(255,255,255,0.03)',
+              background: 'var(--surface-hover)',
               borderRadius: '6px',
               fontSize: '13px',
             }}
           >
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flex: 1, minWidth: 0 }}>
-              <span style={{ color: '#97A6BA', whiteSpace: 'nowrap' }}>
+              <span style={{ color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>
                 {LOG_TYPE_LABELS[log.type as keyof typeof LOG_TYPE_LABELS] || log.type}
               </span>
               {log.user_email && (
-                <span style={{ color: '#5B86A1', fontSize: '12px' }}>— {log.user_email}</span>
+                <span style={{ color: 'var(--primary)', fontSize: '12px' }}>— {log.user_email}</span>
               )}
             </div>
-            <span style={{ color: '#5B86A1', fontSize: '11px', whiteSpace: 'nowrap' }}>
-              {new Date(log.created_at).toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' })}
+            <span style={{ color: 'var(--text-muted)', fontSize: '11px', whiteSpace: 'nowrap' }}>
+              {new Date(log.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
             </span>
           </div>
         ))}

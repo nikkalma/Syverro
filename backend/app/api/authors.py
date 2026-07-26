@@ -127,6 +127,7 @@ async def get_author(
         death_date=author.death_date or (str(author.death_year) if author.death_year is not None else None),
         biography=author.bio,
         photo_url=author.photo,
+        hero_background_url=author.hero_background_url,
         books=books,
         metadata=AuthorMetadata(genres=genres, themes=themes, motifs=motifs),
     )

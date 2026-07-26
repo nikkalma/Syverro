@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { apiClient } from '../../shared/api/client';
 import { formatAuthorName } from '../../shared/utils/formatAuthorName';
-import { bookPath } from '../../shared/utils/routes';
+import { bookPath, formatDate } from '../../shared/utils/routes';
 import { getLocaleData, getBrowserLocale } from '../../locales';
 
 interface AuthorBook {
@@ -31,6 +31,7 @@ interface AuthorResponse {
   death_date: string | null;
   biography: string | null;
   photo_url: string | null;
+  hero_background_url?: string | null;
   books: AuthorBook[];
   metadata: AuthorMetadata;
 }
@@ -51,10 +52,10 @@ const tabStyle = (active: boolean): React.CSSProperties => ({
 });
 
 const sectionTitleStyle: React.CSSProperties = {
-  fontFamily: 'Playfair Display, serif',
+  fontFamily: 'Cormorant Garamond, serif',
   fontSize: '22px',
   fontStyle: 'italic',
-  fontWeight: 400,
+  fontWeight: 500,
   letterSpacing: '0.02em',
   color: '#D4C7B4',
   marginBottom: '20px',
@@ -147,51 +148,119 @@ export default function AuthorPage() {
   const hasMotifs = author.metadata.motifs.length > 0;
   const hasTags = hasGenres || hasThemes || hasMotifs;
 
+  const heroBgImage = author.hero_background_url
+    ? `linear-gradient(160deg, rgba(20,31,44,0.88) 0%, rgba(11,18,28,0.78) 40%, rgba(7,14,22,0.88) 100%), radial-gradient(ellipse at 20% 30%, rgba(91,134,161,0.18) 0%, transparent 55%), radial-gradient(ellipse at 75% 60%, rgba(212,167,106,0.08) 0%, transparent 50%), url(${author.hero_background_url})`
+    : `linear-gradient(160deg, #141F2C 0%, #0B121C 35%, #070E16 100%)`;
+
+  const lifetime = [
+    author.birth_date && formatDate(author.birth_date),
+    author.death_date && formatDate(author.death_date),
+  ].filter(Boolean).join(' — ');
+
   return (
     <div style={{ maxWidth: '1040px', margin: '0 auto', padding: '0 24px 80px' }}>
 
       {/* ======================================================================= */}
-      {/* HERO — single layered cinematic composition                             */}
-      {/* Layer 1: base gradient   Layer 2: atmospheric glow                      */}
-      {/* Layer 3: decorative line   Layer 4: content (portrait, name, metadata)  */}
+      {/* HERO — archive-style literary profile                                  */}
+      {/* Height ≈ 2× portrait height. Portrait bridges hero and content.          */}
       {/* ======================================================================= */}
       <div style={{
-        width: '100%', height: '480px', borderRadius: '0 0 24px 24px',
-        position: 'relative', overflow: 'hidden',
+        position: 'relative',
       }}>
-        {/* Layer 1 — deep base gradient */}
         <div style={{
-          position: 'absolute', inset: 0,
-          background: 'linear-gradient(160deg, #141F2C 0%, #0B121C 35%, #070E16 100%)',
-        }} />
+          width: '100%', height: '320px', borderRadius: '0 0 24px 24px',
+          position: 'relative', overflow: 'hidden',
+          backgroundImage: heroBgImage,
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+        }}>
+          {/* Warm glow overlay */}
+          <div style={{
+            position: 'absolute', inset: 0,
+            background: 'radial-gradient(ellipse at 20% 30%, rgba(91,134,161,0.12) 0%, transparent 55%)',
+          }} />
+          <div style={{
+            position: 'absolute', inset: 0,
+            background: 'radial-gradient(ellipse at 75% 60%, rgba(212,167,106,0.05) 0%, transparent 50%)',
+          }} />
+          {/* Decorative accent */}
+          <div style={{
+            position: 'absolute', top: '28%', left: '5%', right: '55%', height: '1px',
+            background: 'linear-gradient(to right, rgba(212,199,180,0.1), transparent)',
+          }} />
+          {/* Bottom fade */}
+          <div style={{
+            position: 'absolute', bottom: 0, left: 0, right: 0, height: '120px',
+            background: 'linear-gradient(to top, rgba(11,18,32,0.92) 0%, transparent 100%)',
+          }} />
 
-        {/* Layer 2a — cool atmospheric glow */}
-        <div style={{
-          position: 'absolute', inset: 0,
-          background: 'radial-gradient(ellipse at 20% 30%, rgba(91,134,161,0.15) 0%, transparent 55%)',
-        }} />
+          {/* Hero name — inside the hero block, bottom area */}
+          <div style={{
+            position: 'absolute', bottom: '40px', left: '200px', right: '200px', zIndex: 2,
+          }}>
+            <h1 style={{
+              fontFamily: 'Cormorant Garamond, serif',
+              fontSize: '48px', fontWeight: 500, color: '#E6EDF3',
+              margin: 0, lineHeight: 1.1, letterSpacing: '0.015em',
+              textShadow: '0 2px 20px rgba(0,0,0,0.5)',
+            }}>
+              {displayName}
+            </h1>
+            {showNative && (
+              <div style={{
+                fontFamily: 'Cormorant Garamond, serif',
+                fontSize: '20px', fontStyle: 'italic', fontWeight: 400,
+                color: '#8A9BAE', marginTop: '6px', letterSpacing: '0.03em',
+              }}>
+                {author.native_name}
+              </div>
+            )}
+          </div>
 
-        {/* Layer 2b — warm atmospheric glow */}
-        <div style={{
-          position: 'absolute', inset: 0,
-          background: 'radial-gradient(ellipse at 75% 60%, rgba(212,167,106,0.07) 0%, transparent 50%)',
-        }} />
+          {/* Right metadata panel — floating glass inside hero */}
+          {(author.nationality || author.birth_date) && (
+            <div style={{
+              position: 'absolute', bottom: '28px', right: '24px', zIndex: 2,
+              padding: '16px 20px', minWidth: '150px',
+              background: 'rgba(14, 26, 38, 0.5)',
+              backdropFilter: 'blur(16px)',
+              WebkitBackdropFilter: 'blur(16px)',
+              borderRadius: '12px',
+              border: '1px solid rgba(140, 170, 200, 0.06)',
+              boxShadow: '0 8px 32px rgba(0,0,0,0.25)',
+            }}>
+              {author.nationality && (
+                <div style={{
+                  fontSize: '12px', color: '#97A6BA', letterSpacing: '0.03em',
+                  padding: '3px 0',
+                  borderBottom: author.birth_date ? '1px solid rgba(140,170,200,0.05)' : 'none',
+                }}>
+                  <span style={{
+                    color: '#6E7C90', fontSize: '9px', textTransform: 'uppercase',
+                    letterSpacing: '0.08em', display: 'block', marginBottom: '1px',
+                  }}>Origin</span>
+                  {author.nationality}
+                </div>
+              )}
+              {author.birth_date && (
+                <div style={{
+                  fontSize: '12px', color: '#97A6BA', letterSpacing: '0.03em',
+                  padding: '3px 0',
+                }}>
+                  <span style={{
+                    color: '#6E7C90', fontSize: '9px', textTransform: 'uppercase',
+                    letterSpacing: '0.08em', display: 'block', marginBottom: '1px',
+                  }}>Lifespan</span>
+                  {lifetime}
+                </div>
+              )}
+            </div>
+          )}
+        </div>
 
-        {/* Layer 3 — decorative atmospheric line */}
+        {/* Portrait — bridges hero and content, 2/3 inside, 1/3 below */}
         <div style={{
-          position: 'absolute', top: '30%', left: '5%', right: '60%', height: '1px',
-          background: 'linear-gradient(to right, rgba(212,199,180,0.12), transparent)',
-        }} />
-
-        {/* Bottom fade — blends hero into page background */}
-        <div style={{
-          position: 'absolute', bottom: 0, left: 0, right: 0, height: '160px',
-          background: 'linear-gradient(to top, rgba(11,18,32,0.92) 0%, transparent 100%)',
-        }} />
-
-        {/* Layer 4 — Portrait (floating, overlaps bottom boundary) */}
-        <div style={{
-          position: 'absolute', bottom: '-48px', left: '36px', zIndex: 3,
+          position: 'absolute', bottom: '-52px', left: '28px', zIndex: 3,
           width: '156px', height: '156px', borderRadius: '50%',
           background: 'linear-gradient(135deg, #2A4B60, #182A38)',
           border: '3px solid rgba(255,255,255,0.07)',
@@ -209,82 +278,19 @@ export default function AuthorPage() {
             displayName.charAt(0).toUpperCase()
           )}
         </div>
-
-        {/* Layer 4 — Name + Native Name (inside hero, bottom area) */}
-        <div style={{
-          position: 'absolute', bottom: '56px', left: '212px', zIndex: 3,
-          maxWidth: '520px',
-        }}>
-          <h1 style={{
-            fontFamily: 'Playfair Display, serif',
-            fontSize: '48px', fontWeight: 400, color: '#E6EDF3',
-            margin: 0, lineHeight: 1.1, letterSpacing: '0.015em',
-            textShadow: '0 2px 20px rgba(0,0,0,0.4)',
-          }}>
-            {displayName}
-          </h1>
-          {showNative && (
-            <div style={{
-              fontFamily: 'Playfair Display, serif',
-              fontSize: '20px', fontStyle: 'italic', color: '#7A8D9E',
-              marginTop: '6px', letterSpacing: '0.03em',
-            }}>
-              {author.native_name}
-            </div>
-          )}
-        </div>
-
-        {/* Layer 4 — Right metadata glass panel (inside hero) */}
-        <div style={{
-          position: 'absolute', bottom: '36px', right: '32px', zIndex: 3,
-          padding: '18px 22px', minWidth: '160px',
-          background: 'rgba(14, 26, 38, 0.55)',
-          backdropFilter: 'blur(16px)',
-          WebkitBackdropFilter: 'blur(16px)',
-          borderRadius: '14px',
-          border: '1px solid rgba(140, 170, 200, 0.07)',
-          boxShadow: '0 8px 32px rgba(0,0,0,0.3)',
-        }}>
-          {author.nationality && (
-            <div style={{
-              fontSize: '12px', color: '#97A6BA', letterSpacing: '0.03em',
-              padding: '4px 0', borderBottom: '1px solid rgba(140,170,200,0.06)',
-            }}>
-              <span style={{ color: '#6E7C90', fontSize: '10px', textTransform: 'uppercase', letterSpacing: '0.06em', display: 'block', marginBottom: '2px' }}>Origin</span>
-              {author.nationality}
-            </div>
-          )}
-          {author.birth_date && (
-            <div style={{
-              fontSize: '12px', color: '#97A6BA', letterSpacing: '0.03em',
-              padding: '4px 0', borderBottom: '1px solid rgba(140,170,200,0.06)',
-            }}>
-              <span style={{ color: '#6E7C90', fontSize: '10px', textTransform: 'uppercase', letterSpacing: '0.06em', display: 'block', marginBottom: '2px' }}>Lifespan</span>
-              {author.birth_date}{author.death_date ? ` — ${author.death_date}` : ''}
-            </div>
-          )}
-          <div style={{
-            fontSize: '12px', color: '#97A6BA', letterSpacing: '0.03em',
-            padding: '4px 0',
-          }}>
-            <span style={{ color: '#6E7C90', fontSize: '10px', textTransform: 'uppercase', letterSpacing: '0.06em', display: 'block', marginBottom: '2px' }}>Works</span>
-            {author.books.length} {author.books.length === 1 ? 'book' : 'books'}
-          </div>
-        </div>
       </div>
 
       {/* ──────── DESCRIPTION + TAGS ──────── */}
       <div style={{
-        paddingLeft: '28px', paddingRight: '28px',
-        marginTop: '72px',
+        paddingLeft: '204px', paddingRight: '28px', marginTop: '20px',
       }}>
         {shortDescription && (
           <p style={{
-            fontFamily: 'Playfair Display, serif',
-            fontSize: '15px', color: '#97A6BA', lineHeight: 1.75,
-            margin: 0, marginBottom: '16px',
-            maxWidth: '620px',
-            fontStyle: 'italic', opacity: 0.8,
+            fontFamily: 'Cormorant Garamond, serif',
+            fontSize: '15px', color: '#97A6BA', lineHeight: 1.7,
+            margin: 0, marginBottom: '14px',
+            maxWidth: '580px',
+            fontStyle: 'italic', fontWeight: 400, opacity: 0.8,
           }}>
             {shortDescription}
           </p>
@@ -328,10 +334,10 @@ export default function AuthorPage() {
       </div>
 
       {/* ======================================================================= */}
-      {/* CONTENT GRID — each section has its own visual rhythm                   */}
+      {/* CONTENT GRID                                                           */}
       {/* ======================================================================= */}
 
-      {/* Row 1: About | Timeline | Atmosphere — different visual treatments */}
+      {/* Row 1: About | Timeline | Atmosphere */}
       <div style={{
         display: 'grid',
         gridTemplateColumns: '1.3fr 1fr 1fr',
@@ -339,7 +345,7 @@ export default function AuthorPage() {
         marginTop: '40px',
         paddingLeft: '28px', paddingRight: '28px',
       }}>
-        {/* About — editorial text block, minimal card feel */}
+        {/* About */}
         <div>
           <div style={sectionTitleStyle}>{t.author.aboutAuthor}</div>
           <div style={{
@@ -382,7 +388,7 @@ export default function AuthorPage() {
           </div>
         </div>
 
-        {/* Timeline — vertical narrative placeholder */}
+        {/* Timeline */}
         <div>
           <div style={sectionTitleStyle}>{t.author.timeline}</div>
           <div style={{
@@ -396,7 +402,7 @@ export default function AuthorPage() {
           </div>
         </div>
 
-        {/* Atmosphere — immersive visual tags */}
+        {/* Atmosphere */}
         <div>
           <div style={sectionTitleStyle}>{t.author.atmosphere}</div>
           <div style={{
@@ -429,7 +435,7 @@ export default function AuthorPage() {
         </div>
       </div>
 
-      {/* Row 2: Books (collectible shelf) | Quote (decorative) */}
+      {/* Row 2: Books | Quote */}
       <div style={{
         display: 'grid',
         gridTemplateColumns: '2fr 1fr',
@@ -437,7 +443,7 @@ export default function AuthorPage() {
         marginTop: '56px',
         paddingLeft: '28px', paddingRight: '28px',
       }}>
-        {/* Books — premium horizontal shelf */}
+        {/* Books */}
         <div>
           <div style={sectionTitleStyle}>{t.author.authorBooks}</div>
           {author.books.length > 0 ? (
@@ -501,7 +507,7 @@ export default function AuthorPage() {
           )}
         </div>
 
-        {/* Quote — decorative, spacious */}
+        {/* Quote */}
         <div>
           <div style={sectionTitleStyle}>{t.author.quote}</div>
           <div style={{
@@ -512,7 +518,7 @@ export default function AuthorPage() {
             border: '1px solid rgba(140, 170, 200, 0.06)',
           }}>
             <span style={{
-              fontFamily: 'Playfair Display, serif',
+              fontFamily: 'Cormorant Garamond, serif',
               fontSize: '48px', color: '#5B86A1', opacity: 0.2,
               lineHeight: 0.5,
             }}>❝</span>
@@ -521,7 +527,7 @@ export default function AuthorPage() {
         </div>
       </div>
 
-      {/* Row 3: Connections (centerpiece) | Collections */}
+      {/* Row 3: Connections | Collections */}
       <div style={{
         display: 'grid',
         gridTemplateColumns: '1.6fr 1fr',
@@ -529,7 +535,7 @@ export default function AuthorPage() {
         marginTop: '56px',
         paddingLeft: '28px', paddingRight: '28px',
       }}>
-        {/* Connections — wider, centered, glass */}
+        {/* Connections */}
         <div>
           <div style={sectionTitleStyle}>{t.author.connections}</div>
           <div style={{

@@ -155,6 +155,7 @@ export default function AuthorModal({ isOpen, mode, author, onClose, onSave }: A
   const [galleryInput, setGalleryInput] = useState('');
   const [signatureImage, setSignatureImage] = useState('');
   const [portraitCaption, setPortraitCaption] = useState('');
+  const [heroBackgroundUrl, setHeroBackgroundUrl] = useState('');
   const [activeFromYear, setActiveFromYear] = useState<number | null>(null);
   const [activeToYear, setActiveToYear] = useState<number | null>(null);
   const [notableWorks, setNotableWorks] = useState<string[]>([]);
@@ -223,6 +224,7 @@ export default function AuthorModal({ isOpen, mode, author, onClose, onSave }: A
       setGallery(author.gallery || []);
       setSignatureImage(author.signature_image || '');
       setPortraitCaption(author.portrait_caption || '');
+      setHeroBackgroundUrl(author.hero_background_url || '');
     } else {
       setFirstName('');
       setLastName('');
@@ -256,6 +258,7 @@ export default function AuthorModal({ isOpen, mode, author, onClose, onSave }: A
       setGallery([]);
       setSignatureImage('');
       setPortraitCaption('');
+      setHeroBackgroundUrl('');
     }
     setError(null);
     setShowAwardForm(false);
@@ -417,6 +420,7 @@ export default function AuthorModal({ isOpen, mode, author, onClose, onSave }: A
       gallery: gallery.length > 0 ? gallery : null,
       signature_image: signatureImage.trim() || null,
       portrait_caption: portraitCaption.trim() || null,
+      hero_background_url: heroBackgroundUrl.trim() || null,
     };
 
     setSaveStatus('saving');
@@ -819,6 +823,14 @@ export default function AuthorModal({ isOpen, mode, author, onClose, onSave }: A
               <label style={labelStyle}>Изображение подписи</label>
               <input value={signatureImage} onChange={(e) => setSignatureImage(e.target.value)}
                 placeholder="https://example.com/signature.png" style={inputStyle} />
+            </div>
+            <div style={{ marginBottom: '12px' }}>
+              <label style={labelStyle}>Фон страницы автора</label>
+              <input value={heroBackgroundUrl} onChange={(e) => setHeroBackgroundUrl(e.target.value)}
+                placeholder="https://example.com/hero-bg.jpg" style={inputStyle} />
+              <div style={{ fontSize: '11px', color: '#6E7C90', marginTop: '4px', fontStyle: 'italic' }}>
+                Рекомендуемый размер: 1920×600px, соотношение 16:5
+              </div>
             </div>
             <div>
               <label style={labelStyle}>Галерея (URL изображений)</label>

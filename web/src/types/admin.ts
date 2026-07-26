@@ -222,6 +222,7 @@ export interface AdminAuthor {
   gallery?: string[];
   signature_image?: string | null;
   portrait_caption?: string | null;
+  hero_background_url?: string | null;
   // System
   creation_type: string;
   book_count: number;

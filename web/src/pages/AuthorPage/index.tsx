@@ -40,34 +40,24 @@ const tabStyle = (active: boolean): React.CSSProperties => ({
   border: 'none',
   padding: '6px 20px',
   fontFamily: 'Inter, sans-serif',
-  fontSize: '13px',
+  fontSize: '12px',
   fontWeight: active ? '500' : '400',
-  letterSpacing: '0.5px',
+  letterSpacing: '0.8px',
   cursor: 'default',
   color: active ? '#E6EDF3' : '#6E7C90',
-  borderBottom: active ? '1.5px solid rgba(91,134,161,0.6)' : '1.5px solid transparent',
-  transition: 'color 0.2s, border-color 0.2s',
+  borderBottom: active ? '1.5px solid rgba(212, 199, 180, 0.5)' : '1.5px solid transparent',
+  transition: 'color 0.25s, border-color 0.25s',
+  textTransform: 'uppercase' as const,
 });
 
 const sectionTitleStyle: React.CSSProperties = {
   fontFamily: 'Playfair Display, serif',
-  fontSize: '20px',
+  fontSize: '22px',
   fontStyle: 'italic',
   fontWeight: 400,
   letterSpacing: '0.02em',
   color: '#D4C7B4',
-  marginBottom: '16px',
-};
-
-const glassCardStyle: React.CSSProperties = {
-  background: 'rgba(14, 26, 38, 0.6)',
-  backdropFilter: 'blur(12px)',
-  WebkitBackdropFilter: 'blur(12px)',
-  borderRadius: '16px',
-  border: '1px solid rgba(140, 170, 200, 0.08)',
-  padding: '24px',
-  height: '100%',
-  boxShadow: '0 8px 32px rgba(0, 0, 0, 0.25)',
+  marginBottom: '20px',
 };
 
 const placeholderStyle: React.CSSProperties = {
@@ -75,22 +65,24 @@ const placeholderStyle: React.CSSProperties = {
   flexDirection: 'column',
   alignItems: 'center',
   justifyContent: 'center',
-  gap: '8px',
-  height: '140px',
+  gap: '10px',
+  minHeight: '160px',
   borderRadius: '16px',
-  background: 'rgba(14, 26, 38, 0.4)',
-  border: '1px dashed rgba(140, 170, 200, 0.1)',
-  color: '#5B86A1',
+  background: 'rgba(14, 26, 38, 0.35)',
+  border: '1px dashed rgba(140, 170, 200, 0.08)',
+  color: '#6E7C90',
   fontSize: '13px',
   fontStyle: 'italic',
+  padding: '32px 24px',
 };
 
 const tagPillStyle: React.CSSProperties = {
-  padding: '4px 12px',
-  borderRadius: '14px',
+  padding: '5px 14px',
+  borderRadius: '16px',
   fontSize: '12px',
   display: 'inline-block',
   fontWeight: 400,
+  letterSpacing: '0.02em',
 };
 
 export default function AuthorPage() {
@@ -158,40 +150,57 @@ export default function AuthorPage() {
   return (
     <div style={{ maxWidth: '1040px', margin: '0 auto', padding: '0 24px 80px' }}>
 
-      {/* ──────── CINEMATIC HERO ──────── */}
+      {/* ======================================================================= */}
+      {/* HERO — single layered cinematic composition                             */}
+      {/* Layer 1: base gradient   Layer 2: atmospheric glow                      */}
+      {/* Layer 3: decorative line   Layer 4: content (portrait, name, metadata)  */}
+      {/* ======================================================================= */}
       <div style={{
-        width: '100%', height: '380px', borderRadius: '0 0 24px 24px', marginTop: 0,
-        background: 'linear-gradient(145deg, #1A2832 0%, #0F1A22 40%, #0A1218 100%)',
+        width: '100%', height: '480px', borderRadius: '0 0 24px 24px',
         position: 'relative', overflow: 'hidden',
       }}>
+        {/* Layer 1 — deep base gradient */}
         <div style={{
           position: 'absolute', inset: 0,
-          background: 'radial-gradient(ellipse at 25% 35%, rgba(91,134,161,0.18) 0%, transparent 55%)',
+          background: 'linear-gradient(160deg, #141F2C 0%, #0B121C 35%, #070E16 100%)',
         }} />
-        <div style={{
-          position: 'absolute', inset: 0,
-          background: 'radial-gradient(ellipse at 75% 65%, rgba(212,167,106,0.06) 0%, transparent 50%)',
-        }} />
-        <div style={{
-          position: 'absolute', bottom: 0, left: 0, right: 0, height: '120px',
-          background: 'linear-gradient(to top, rgba(11,18,32,0.85) 0%, transparent 100%)',
-        }} />
-      </div>
 
-      {/* ──────── HERO OVERLAY CONTENT ──────── */}
-      <div style={{
-        display: 'flex', alignItems: 'flex-end', gap: '28px',
-        marginTop: '-108px', paddingLeft: '28px', position: 'relative', zIndex: 2,
-      }}>
+        {/* Layer 2a — cool atmospheric glow */}
         <div style={{
-          width: '140px', height: '140px', borderRadius: '50%',
-          background: 'linear-gradient(135deg, #2A4B60, #1A2832)',
-          border: '3px solid rgba(255,255,255,0.08)',
+          position: 'absolute', inset: 0,
+          background: 'radial-gradient(ellipse at 20% 30%, rgba(91,134,161,0.15) 0%, transparent 55%)',
+        }} />
+
+        {/* Layer 2b — warm atmospheric glow */}
+        <div style={{
+          position: 'absolute', inset: 0,
+          background: 'radial-gradient(ellipse at 75% 60%, rgba(212,167,106,0.07) 0%, transparent 50%)',
+        }} />
+
+        {/* Layer 3 — decorative atmospheric line */}
+        <div style={{
+          position: 'absolute', top: '30%', left: '5%', right: '60%', height: '1px',
+          background: 'linear-gradient(to right, rgba(212,199,180,0.12), transparent)',
+        }} />
+
+        {/* Bottom fade — blends hero into page background */}
+        <div style={{
+          position: 'absolute', bottom: 0, left: 0, right: 0, height: '160px',
+          background: 'linear-gradient(to top, rgba(11,18,32,0.92) 0%, transparent 100%)',
+        }} />
+
+        {/* Layer 4 — Portrait (floating, overlaps bottom boundary) */}
+        <div style={{
+          position: 'absolute', bottom: '-48px', left: '36px', zIndex: 3,
+          width: '156px', height: '156px', borderRadius: '50%',
+          background: 'linear-gradient(135deg, #2A4B60, #182A38)',
+          border: '3px solid rgba(255,255,255,0.07)',
           display: 'flex', alignItems: 'center', justifyContent: 'center',
-          fontSize: '52px', color: '#5B86A1',
-          flexShrink: 0, overflow: 'hidden',
-          backdropFilter: 'blur(4px)',
-          boxShadow: '0 8px 40px rgba(0,0,0,0.4)',
+          fontSize: '56px', color: '#5B86A1',
+          overflow: 'hidden',
+          backdropFilter: 'blur(6px)',
+          WebkitBackdropFilter: 'blur(6px)',
+          boxShadow: '0 12px 48px rgba(0,0,0,0.5)',
         }}>
           {author.photo_url ? (
             <img src={author.photo_url} alt={displayName}
@@ -200,53 +209,81 @@ export default function AuthorPage() {
             displayName.charAt(0).toUpperCase()
           )}
         </div>
-        <div style={{ paddingBottom: '8px', flex: 1 }}>
+
+        {/* Layer 4 — Name + Native Name (inside hero, bottom area) */}
+        <div style={{
+          position: 'absolute', bottom: '56px', left: '212px', zIndex: 3,
+          maxWidth: '520px',
+        }}>
           <h1 style={{
             fontFamily: 'Playfair Display, serif',
-            fontSize: '42px', fontWeight: 400, color: '#E6EDF3',
-            margin: 0, lineHeight: 1.15, letterSpacing: '0.01em',
+            fontSize: '48px', fontWeight: 400, color: '#E6EDF3',
+            margin: 0, lineHeight: 1.1, letterSpacing: '0.015em',
+            textShadow: '0 2px 20px rgba(0,0,0,0.4)',
           }}>
             {displayName}
           </h1>
           {showNative && (
             <div style={{
               fontFamily: 'Playfair Display, serif',
-              fontSize: '18px', fontStyle: 'italic', color: '#6E7C90',
-              marginTop: '4px', letterSpacing: '0.02em',
+              fontSize: '20px', fontStyle: 'italic', color: '#7A8D9E',
+              marginTop: '6px', letterSpacing: '0.03em',
             }}>
               {author.native_name}
             </div>
           )}
+        </div>
+
+        {/* Layer 4 — Right metadata glass panel (inside hero) */}
+        <div style={{
+          position: 'absolute', bottom: '36px', right: '32px', zIndex: 3,
+          padding: '18px 22px', minWidth: '160px',
+          background: 'rgba(14, 26, 38, 0.55)',
+          backdropFilter: 'blur(16px)',
+          WebkitBackdropFilter: 'blur(16px)',
+          borderRadius: '14px',
+          border: '1px solid rgba(140, 170, 200, 0.07)',
+          boxShadow: '0 8px 32px rgba(0,0,0,0.3)',
+        }}>
+          {author.nationality && (
+            <div style={{
+              fontSize: '12px', color: '#97A6BA', letterSpacing: '0.03em',
+              padding: '4px 0', borderBottom: '1px solid rgba(140,170,200,0.06)',
+            }}>
+              <span style={{ color: '#6E7C90', fontSize: '10px', textTransform: 'uppercase', letterSpacing: '0.06em', display: 'block', marginBottom: '2px' }}>Origin</span>
+              {author.nationality}
+            </div>
+          )}
+          {author.birth_date && (
+            <div style={{
+              fontSize: '12px', color: '#97A6BA', letterSpacing: '0.03em',
+              padding: '4px 0', borderBottom: '1px solid rgba(140,170,200,0.06)',
+            }}>
+              <span style={{ color: '#6E7C90', fontSize: '10px', textTransform: 'uppercase', letterSpacing: '0.06em', display: 'block', marginBottom: '2px' }}>Lifespan</span>
+              {author.birth_date}{author.death_date ? ` — ${author.death_date}` : ''}
+            </div>
+          )}
           <div style={{
-            display: 'flex', flexWrap: 'wrap', gap: '8px',
-            fontSize: '13px', color: '#97A6BA', marginTop: '8px', opacity: 0.75,
+            fontSize: '12px', color: '#97A6BA', letterSpacing: '0.03em',
+            padding: '4px 0',
           }}>
-            {author.nationality && (
-              <span style={{
-                padding: '2px 10px', borderRadius: '10px',
-                background: 'rgba(91,134,161,0.1)',
-                border: '1px solid rgba(91,134,161,0.15)',
-              }}>{author.nationality}</span>
-            )}
-            {author.birth_date && (
-              <span style={{
-                padding: '2px 10px', borderRadius: '10px',
-                background: 'rgba(91,134,161,0.1)',
-                border: '1px solid rgba(91,134,161,0.15)',
-              }}>
-                {author.birth_date}{author.death_date ? ` — ${author.death_date}` : ''}
-              </span>
-            )}
+            <span style={{ color: '#6E7C90', fontSize: '10px', textTransform: 'uppercase', letterSpacing: '0.06em', display: 'block', marginBottom: '2px' }}>Works</span>
+            {author.books.length} {author.books.length === 1 ? 'book' : 'books'}
           </div>
         </div>
       </div>
 
-      {/* ──────── TAGS + SHORT DESCRIPTION ──────── */}
-      <div style={{ paddingLeft: '28px', paddingRight: '28px', marginTop: '24px' }}>
+      {/* ──────── DESCRIPTION + TAGS ──────── */}
+      <div style={{
+        paddingLeft: '28px', paddingRight: '28px',
+        marginTop: '72px',
+      }}>
         {shortDescription && (
           <p style={{
-            fontSize: '14px', color: '#97A6BA', lineHeight: 1.7,
-            margin: 0, marginBottom: '12px', maxWidth: '680px',
+            fontFamily: 'Playfair Display, serif',
+            fontSize: '15px', color: '#97A6BA', lineHeight: 1.75,
+            margin: 0, marginBottom: '16px',
+            maxWidth: '620px',
             fontStyle: 'italic', opacity: 0.8,
           }}>
             {shortDescription}
@@ -257,20 +294,20 @@ export default function AuthorPage() {
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
             {hasGenres && author.metadata.genres.map((g) => (
               <span key={g} style={{
-                ...tagPillStyle, background: 'rgba(91,134,161,0.1)',
-                color: '#7A9ABA', border: '1px solid rgba(91,134,161,0.15)',
+                ...tagPillStyle, background: 'rgba(91,134,161,0.08)',
+                color: '#7A9ABA', border: '1px solid rgba(91,134,161,0.12)',
               }}>{g}</span>
             ))}
             {hasThemes && author.metadata.themes.map((t) => (
               <span key={t} style={{
-                ...tagPillStyle, background: 'rgba(212,167,106,0.08)',
-                color: '#D4A76A', border: '1px solid rgba(212,167,106,0.15)',
+                ...tagPillStyle, background: 'rgba(212,167,106,0.07)',
+                color: '#D4A76A', border: '1px solid rgba(212,167,106,0.12)',
               }}>{t}</span>
             ))}
             {hasMotifs && author.metadata.motifs.map((m) => (
               <span key={m} style={{
-                ...tagPillStyle, background: 'rgba(196,122,122,0.08)',
-                color: '#C47A7A', border: '1px solid rgba(196,122,122,0.15)',
+                ...tagPillStyle, background: 'rgba(196,122,122,0.07)',
+                color: '#C47A7A', border: '1px solid rgba(196,122,122,0.12)',
               }}>{m}</span>
             ))}
           </div>
@@ -279,9 +316,9 @@ export default function AuthorPage() {
 
       {/* ──────── AUTHOR NAVIGATION TABS ──────── */}
       <div style={{
-        display: 'flex', gap: '4px', marginTop: '40px',
+        display: 'flex', gap: '2px', marginTop: '40px',
         paddingLeft: '28px', paddingRight: '28px',
-        borderBottom: '1px solid rgba(140, 170, 200, 0.06)',
+        borderBottom: '1px solid rgba(140, 170, 200, 0.05)',
       }}>
         <button style={tabStyle(true)}>{t.author.tabAbout}</button>
         <button style={tabStyle(false)}>{t.author.tabBooks}</button>
@@ -290,23 +327,35 @@ export default function AuthorPage() {
         <button style={tabStyle(false)}>{t.author.tabQuotes}</button>
       </div>
 
-      {/* ──────── CONTENT GRID ──────── */}
-      {/* Row 1: About Author | Timeline | Atmosphere */}
+      {/* ======================================================================= */}
+      {/* CONTENT GRID — each section has its own visual rhythm                   */}
+      {/* ======================================================================= */}
+
+      {/* Row 1: About | Timeline | Atmosphere — different visual treatments */}
       <div style={{
         display: 'grid',
-        gridTemplateColumns: '1.2fr 1fr 1fr',
+        gridTemplateColumns: '1.3fr 1fr 1fr',
         gap: '24px',
-        marginTop: '32px',
+        marginTop: '40px',
         paddingLeft: '28px', paddingRight: '28px',
       }}>
-        {/* About Author */}
+        {/* About — editorial text block, minimal card feel */}
         <div>
           <div style={sectionTitleStyle}>{t.author.aboutAuthor}</div>
-          <div style={glassCardStyle}>
+          <div style={{
+            background: 'rgba(14, 26, 38, 0.45)',
+            backdropFilter: 'blur(10px)',
+            WebkitBackdropFilter: 'blur(10px)',
+            borderRadius: '16px',
+            border: '1px solid rgba(140, 170, 200, 0.06)',
+            padding: '28px',
+            height: '100%',
+            boxShadow: '0 4px 24px rgba(0, 0, 0, 0.15)',
+          }}>
             {hasBio ? (
               <div>
                 <p style={{
-                  fontSize: '13px', color: '#97A6BA', lineHeight: 1.8,
+                  fontSize: '14px', color: '#A8B8C8', lineHeight: 1.85,
                   margin: 0, whiteSpace: 'pre-wrap',
                 }}>
                   {bioExpanded || !bioIsLong
@@ -318,8 +367,9 @@ export default function AuthorPage() {
                     onClick={() => setBioExpanded(!bioExpanded)}
                     style={{
                       background: 'none', border: 'none', color: '#7A9ABA',
-                      cursor: 'pointer', fontSize: '12px', marginTop: '10px', padding: 0,
+                      cursor: 'pointer', fontSize: '12px', marginTop: '12px', padding: 0,
                       fontFamily: 'Inter, sans-serif', fontStyle: 'italic',
+                      letterSpacing: '0.03em',
                     }}
                   >
                     {bioExpanded ? t.author.showLess : t.author.readMore}
@@ -332,25 +382,43 @@ export default function AuthorPage() {
           </div>
         </div>
 
-        {/* Timeline */}
+        {/* Timeline — vertical narrative placeholder */}
         <div>
           <div style={sectionTitleStyle}>{t.author.timeline}</div>
-          <div style={placeholderStyle}>
-            <span style={{ fontSize: '24px', opacity: 0.4 }}>📜</span>
-            {t.author.timelineComingSoon}
+          <div style={{
+            ...placeholderStyle,
+            minHeight: '180px',
+            background: 'rgba(14, 26, 38, 0.3)',
+            border: '1px solid rgba(140, 170, 200, 0.06)',
+          }}>
+            <span style={{ fontSize: '22px', opacity: 0.3 }}>📜</span>
+            <span>{t.author.timelineComingSoon}</span>
           </div>
         </div>
 
-        {/* Atmosphere */}
+        {/* Atmosphere — immersive visual tags */}
         <div>
           <div style={sectionTitleStyle}>{t.author.atmosphere}</div>
-          <div style={glassCardStyle}>
+          <div style={{
+            background: 'rgba(14, 26, 38, 0.45)',
+            backdropFilter: 'blur(10px)',
+            WebkitBackdropFilter: 'blur(10px)',
+            borderRadius: '16px',
+            border: '1px solid rgba(140, 170, 200, 0.06)',
+            padding: '28px',
+            minHeight: '180px',
+            boxShadow: '0 4px 24px rgba(0, 0, 0, 0.15)',
+          }}>
             {hasThemes ? (
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', alignItems: 'flex-start' }}>
                 {author.metadata.themes.map((t) => (
                   <span key={t} style={{
-                    ...tagPillStyle, background: 'rgba(212,167,106,0.08)',
-                    color: '#D4A76A', border: '1px solid rgba(212,167,106,0.12)',
+                    ...tagPillStyle,
+                    padding: '6px 16px',
+                    background: 'rgba(212,167,106,0.07)',
+                    color: '#D4A76A',
+                    border: '1px solid rgba(212,167,106,0.12)',
+                    fontSize: '13px',
                   }}>{t}</span>
                 ))}
               </div>
@@ -361,20 +429,20 @@ export default function AuthorPage() {
         </div>
       </div>
 
-      {/* Row 2: Author Books | Quote */}
+      {/* Row 2: Books (collectible shelf) | Quote (decorative) */}
       <div style={{
         display: 'grid',
         gridTemplateColumns: '2fr 1fr',
-        gap: '24px',
-        marginTop: '48px',
+        gap: '28px',
+        marginTop: '56px',
         paddingLeft: '28px', paddingRight: '28px',
       }}>
-        {/* Author Books */}
+        {/* Books — premium horizontal shelf */}
         <div>
           <div style={sectionTitleStyle}>{t.author.authorBooks}</div>
           {author.books.length > 0 ? (
             <div style={{
-              display: 'flex', gap: '16px', overflowX: 'auto', paddingBottom: '12px',
+              display: 'flex', gap: '20px', overflowX: 'auto', paddingBottom: '16px',
               scrollSnapType: 'x mandatory',
             }}>
               {author.books.map((book) => (
@@ -382,19 +450,22 @@ export default function AuthorPage() {
                   key={book.id}
                   onClick={() => navigate(bookPath(book))}
                   style={{
-                    flex: '0 0 160px', cursor: 'pointer', borderRadius: '12px', overflow: 'hidden',
-                    background: 'rgba(14, 26, 38, 0.5)',
-                    border: '1px solid rgba(140, 170, 200, 0.06)',
-                    transition: 'border-color 0.2s, transform 0.2s',
+                    flex: '0 0 170px', cursor: 'pointer', borderRadius: '12px', overflow: 'hidden',
+                    background: 'rgba(14, 26, 38, 0.4)',
+                    border: '1px solid rgba(140, 170, 200, 0.05)',
+                    transition: 'border-color 0.25s, transform 0.25s, box-shadow 0.25s',
                     scrollSnapAlign: 'start',
+                    boxShadow: '0 2px 16px rgba(0,0,0,0.15)',
                   }}
                   onMouseEnter={(e) => {
-                    e.currentTarget.style.borderColor = 'rgba(91,134,161,0.2)';
-                    e.currentTarget.style.transform = 'translateY(-2px)';
+                    e.currentTarget.style.borderColor = 'rgba(212,199,180,0.15)';
+                    e.currentTarget.style.transform = 'translateY(-4px)';
+                    e.currentTarget.style.boxShadow = '0 8px 32px rgba(0,0,0,0.3)';
                   }}
                   onMouseLeave={(e) => {
-                    e.currentTarget.style.borderColor = 'rgba(140, 170, 200, 0.06)';
+                    e.currentTarget.style.borderColor = 'rgba(140, 170, 200, 0.05)';
                     e.currentTarget.style.transform = 'translateY(0)';
+                    e.currentTarget.style.boxShadow = '0 2px 16px rgba(0,0,0,0.15)';
                   }}
                 >
                   <div style={{
@@ -410,11 +481,11 @@ export default function AuthorPage() {
                       <span style={{ opacity: 0.2 }}>📖</span>
                     )}
                   </div>
-                  <div style={{ padding: '10px 12px 12px' }}>
+                  <div style={{ padding: '10px 14px 14px' }}>
                     <div style={{
-                      fontSize: '12px', color: '#D4C7B4', fontWeight: 400,
+                      fontSize: '12px', color: '#C8BAA6',
                       overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
-                      lineHeight: 1.4,
+                      lineHeight: 1.4, letterSpacing: '0.02em',
                     }}>
                       {book.title}
                     </div>
@@ -424,45 +495,53 @@ export default function AuthorPage() {
             </div>
           ) : (
             <div style={placeholderStyle}>
-              <span style={{ fontSize: '24px', opacity: 0.4 }}>📚</span>
+              <span style={{ fontSize: '24px', opacity: 0.3 }}>📚</span>
               {t.author.noBooks}
             </div>
           )}
         </div>
 
-        {/* Quote */}
+        {/* Quote — decorative, spacious */}
         <div>
           <div style={sectionTitleStyle}>{t.author.quote}</div>
           <div style={{
             ...placeholderStyle,
-            height: 'auto', minHeight: '160px', padding: '32px 24px',
+            minHeight: '200px', padding: '36px 28px',
             justifyContent: 'center',
+            background: 'rgba(14, 26, 38, 0.3)',
+            border: '1px solid rgba(140, 170, 200, 0.06)',
           }}>
-            <span style={{ fontSize: '28px', opacity: 0.3 }}>❝</span>
-            <span style={{ fontStyle: 'italic' }}>{t.author.quoteComingSoon}</span>
+            <span style={{
+              fontFamily: 'Playfair Display, serif',
+              fontSize: '48px', color: '#5B86A1', opacity: 0.2,
+              lineHeight: 0.5,
+            }}>❝</span>
+            <span style={{ fontStyle: 'italic', color: '#7A8D9E', marginTop: '-4px' }}>{t.author.quoteComingSoon}</span>
           </div>
         </div>
       </div>
 
-      {/* Row 3: Connections | Collections */}
+      {/* Row 3: Connections (centerpiece) | Collections */}
       <div style={{
         display: 'grid',
-        gridTemplateColumns: '1.5fr 1fr',
-        gap: '24px',
-        marginTop: '48px',
+        gridTemplateColumns: '1.6fr 1fr',
+        gap: '28px',
+        marginTop: '56px',
         paddingLeft: '28px', paddingRight: '28px',
       }}>
-        {/* Connections */}
+        {/* Connections — wider, centered, glass */}
         <div>
           <div style={sectionTitleStyle}>{t.author.connections}</div>
           <div style={{
-            padding: '48px 32px', borderRadius: '16px', textAlign: 'center',
-            background: 'rgba(14, 26, 38, 0.5)',
-            border: '1px solid rgba(140, 170, 200, 0.06)',
-            color: '#5B86A1', fontSize: '13px', fontStyle: 'italic',
-            backdropFilter: 'blur(8px)',
+            padding: '56px 40px', borderRadius: '16px', textAlign: 'center',
+            background: 'rgba(14, 26, 38, 0.4)',
+            border: '1px solid rgba(140, 170, 200, 0.05)',
+            color: '#6E7C90', fontSize: '13px', fontStyle: 'italic',
+            backdropFilter: 'blur(10px)',
+            WebkitBackdropFilter: 'blur(10px)',
+            boxShadow: '0 4px 24px rgba(0,0,0,0.12)',
           }}>
-            <div style={{ fontSize: '32px', marginBottom: '12px', opacity: 0.35 }}>🔮</div>
+            <div style={{ fontSize: '36px', marginBottom: '14px', opacity: 0.3 }}>🔮</div>
             {t.author.graphComingSoon}
           </div>
         </div>
@@ -470,8 +549,11 @@ export default function AuthorPage() {
         {/* Collections */}
         <div>
           <div style={sectionTitleStyle}>{t.author.collections}</div>
-          <div style={placeholderStyle}>
-            <span style={{ fontSize: '24px', opacity: 0.4 }}>📦</span>
+          <div style={{
+            ...placeholderStyle,
+            minHeight: '180px',
+          }}>
+            <span style={{ fontSize: '24px', opacity: 0.3 }}>📦</span>
             {t.author.collectionsComingSoon}
           </div>
         </div>
@@ -479,15 +561,17 @@ export default function AuthorPage() {
 
       {/* ──────── BOTTOM: YOU MAY ALSO LIKE ──────── */}
       <div style={{
-        marginTop: '48px',
+        marginTop: '56px',
         paddingLeft: '28px', paddingRight: '28px',
       }}>
         <div style={sectionTitleStyle}>{t.author.youMayAlsoLike}</div>
         <div style={{
           ...placeholderStyle,
-          height: '180px',
+          minHeight: '200px',
+          background: 'rgba(14, 26, 38, 0.3)',
+          border: '1px solid rgba(140, 170, 200, 0.06)',
         }}>
-          <span style={{ fontSize: '28px', opacity: 0.3 }}>✨</span>
+          <span style={{ fontSize: '28px', opacity: 0.25 }}>✨</span>
           <span style={{ fontStyle: 'italic' }}>{t.author.recommendationsComingSoon}</span>
         </div>
       </div>

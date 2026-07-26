@@ -1,8 +1,20 @@
 import { Outlet } from 'react-router-dom';
 import { getLocaleData, getBrowserLocale } from '../../../../locales';
 import { AuthorEditorProvider, useAuthorEditor, SECTIONS } from './AuthorEditorContext';
+import type { AdminAuthor } from '../../../../types/admin';
 import EntityEditorHeader from '../../../../components/Studio/shared/EntityEditorHeader';
 import EditorSectionNav from '../../../../components/Studio/shared/EditorSectionNav';
+import EmptyWorkspace from '../../../../components/Studio/shared/EmptyWorkspace';
+
+function computeCompletion(author: AdminAuthor): number {
+  const fields = [
+    author.name, author.slug, author.display_name, author.nationality,
+    author.bio, author.birth_date, author.photo,
+    author.occupations?.length, author.languages?.length,
+  ];
+  const filled = fields.filter((f) => f !== null && f !== undefined && f !== '' && f !== 0);
+  return Math.round((filled.length / fields.length) * 100);
+}
 
 function EditorContent() {
   const { author, loading, error } = useAuthorEditor();
@@ -29,7 +41,7 @@ function EditorContent() {
   }
 
   const displayName = author.display_name || author.name;
-  const completionPercent = 85;
+  const completionPercent = computeCompletion(author);
 
   const now = new Date();
   const updatedAgo = author.updated_at
@@ -39,6 +51,12 @@ function EditorContent() {
     ? (updatedAgo === 0 ? 'Today' : `${updatedAgo}d ago`)
     : undefined;
 
+  const identityParts: string[] = [];
+  if (author.nationality) identityParts.push(author.nationality);
+  if (author.occupations?.length) identityParts.push(author.occupations.slice(0, 2).join(', '));
+  if (author.birth_date) identityParts.push(`b. ${author.birth_date}`);
+  if (author.death_date) identityParts.push(`d. ${author.death_date}`);
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100%' }}>
       <EntityEditorHeader
@@ -47,13 +65,27 @@ function EditorContent() {
         nativeName={author.native_name}
         completionPercent={completionPercent}
         lastUpdated={lastUpdated}
+        statusLabel={author.creation_type === 'auto' ? 'Auto-imported' : 'Curated'}
+        identitySummary={identityParts.join(' · ')}
       />
       <EditorSectionNav
         sections={[...SECTIONS]}
         basePath={`/studio/authors/${author.id}/edit`}
       />
-      <div style={{ flex: 1, padding: '24px 28px' }}>
-        <Outlet />
+      <div style={{ flex: 1, display: 'flex', gap: '24px', padding: '24px 28px' }}>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <Outlet />
+        </div>
+        <aside style={{
+          width: '220px', flexShrink: 0,
+          display: 'flex', flexDirection: 'column', gap: '16px',
+        }}>
+          <EmptyWorkspace
+            icon="📋"
+            title="Activity"
+            description="Recent changes and events for this author will appear here."
+          />
+        </aside>
       </div>
     </div>
   );

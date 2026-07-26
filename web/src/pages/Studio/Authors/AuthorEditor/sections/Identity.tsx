@@ -1,5 +1,7 @@
 import { useAuthorEditor } from '../AuthorEditorContext';
 import EditorSectionCard from '../../../../../components/Studio/shared/EditorSectionCard';
+import Field from '../../../../../components/Studio/shared/Field';
+import DetailGrid from '../../../../../components/Studio/shared/DetailGrid';
 
 export default function Identity() {
   const { author, loading } = useAuthorEditor();
@@ -8,51 +10,52 @@ export default function Identity() {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-      <EditorSectionCard title="Nationalities & States">
-        <FieldValue label="Nationality" value={author.nationality} />
+      <EditorSectionCard title="Nationality & Historical States">
+        <DetailGrid>
+          <Field label="Nationality" value={author.nationality} />
+          <Field label="Country" value={author.country} />
+        </DetailGrid>
       </EditorSectionCard>
 
       <EditorSectionCard title="Languages">
-        <FieldValue label="Writing Languages" value={author.writing_languages?.join(', ')} />
-        <FieldValue label="Languages" value={author.languages?.join(', ')} />
+        <DetailGrid>
+          <Field label="Writing Languages" value={author.writing_languages?.join(', ')} />
+          <Field label="Spoken Languages" value={author.languages?.join(', ')} />
+        </DetailGrid>
       </EditorSectionCard>
 
       <EditorSectionCard title="Occupations">
-        <FieldValue label="Occupations" value={author.occupations?.join(', ')} />
-        <FieldValue label="Literary Movements" value={author.literary_movements?.join(', ')} />
+        <DetailGrid>
+          <Field label="Occupations" value={author.occupations?.join(', ')} />
+          <Field label="Literary Movements" value={author.literary_movements?.join(', ')} />
+        </DetailGrid>
       </EditorSectionCard>
 
       <EditorSectionCard title="Alternative Names">
-        <FieldValue label="Birth Name" value={author.birth_name} />
-        <FieldValue label="Pen Names" value={author.pen_names?.join(', ')} />
-        <FieldValue label="Sort Name" value={author.sort_name} />
+        <DetailGrid>
+          <Field label="Birth Name" value={author.birth_name} />
+          <Field label="Pen Names" value={author.pen_names?.join(', ')} />
+          <Field label="Sort Name" value={author.sort_name} />
+          <Field label="Pseudonyms" value={author.pseudonyms?.join(', ')} />
+        </DetailGrid>
       </EditorSectionCard>
 
       <EditorSectionCard title="Life Events">
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+        <DetailGrid>
           <div>
-            <FieldValue label="Birth Date" value={author.birth_date} />
-            <FieldValue label="Birth Place" value={author.birth_place} />
+            <Field label="Birth Date" value={author.birth_date} />
+            <div style={{ marginTop: '8px' }}>
+              <Field label="Birth Place" value={author.birth_place} />
+            </div>
           </div>
           <div>
-            <FieldValue label="Death Date" value={author.death_date} />
-            <FieldValue label="Death Place" value={author.death_place} />
+            <Field label="Death Date" value={author.death_date} />
+            <div style={{ marginTop: '8px' }}>
+              <Field label="Death Place" value={author.death_place} />
+            </div>
           </div>
-        </div>
+        </DetailGrid>
       </EditorSectionCard>
-    </div>
-  );
-}
-
-function FieldValue({ label, value }: { label: string; value?: string | null }) {
-  return (
-    <div style={{ marginBottom: '12px' }}>
-      <div style={{ fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--text-muted)', marginBottom: '4px' }}>
-        {label}
-      </div>
-      <div style={{ fontSize: '14px', color: value ? 'var(--text-primary)' : 'var(--text-muted)' }}>
-        {value || '—'}
-      </div>
     </div>
   );
 }

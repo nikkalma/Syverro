@@ -5,9 +5,10 @@ interface Props {
   completionPercent?: number;
   lastUpdated?: string;
   statusLabel?: string;
+  identitySummary?: string;
 }
 
-export default function EntityEditorHeader({ name, photoUrl, nativeName, completionPercent, lastUpdated, statusLabel }: Props) {
+export default function EntityEditorHeader({ name, photoUrl, nativeName, completionPercent, lastUpdated, statusLabel, identitySummary }: Props) {
   return (
     <div style={{
       display: 'flex',
@@ -39,6 +40,11 @@ export default function EntityEditorHeader({ name, photoUrl, nativeName, complet
         {nativeName && (
           <div style={{ fontSize: '13px', color: 'var(--text-muted)', fontStyle: 'italic' }}>
             {nativeName}
+          </div>
+        )}
+        {identitySummary && (
+          <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '4px' }}>
+            {identitySummary}
           </div>
         )}
       </div>

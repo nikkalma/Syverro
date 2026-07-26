@@ -10,7 +10,6 @@ import { apiClient } from '../../../shared/api/client';
 import EmptyWorkspace from '../../../components/Studio/shared/EmptyWorkspace';
 
 export default function StudioHome() {
-  const navigate = useNavigate();
   const { isLoading, setLoading, error, setError } = useAdminStore();
   const [stats, setStats] = useState<AdminDashboardStats | null>(null);
   const [recentUsers, setRecentUsers] = useState([]);

@@ -1,5 +1,6 @@
 import { useAuthorEditor } from '../AuthorEditorContext';
 import EditorSectionCard from '../../../../../components/Studio/shared/EditorSectionCard';
+import Field from '../../../../../components/Studio/shared/Field';
 
 export default function Media() {
   const { author, loading } = useAuthorEditor();
@@ -8,52 +9,71 @@ export default function Media() {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-      <EditorSectionCard title="Portrait">
-        {author.photo ? (
-          <div>
-            <img src={author.photo} alt={author.name}
-              style={{ width: '120px', height: '120px', borderRadius: '50%', objectFit: 'cover', border: '2px solid var(--border-soft)' }} />
-            <div style={{ marginTop: '8px', fontSize: '13px', color: 'var(--text-secondary)' }}>{author.photo}</div>
+      <div style={{ display: 'flex', gap: '24px' }}>
+        <EditorSectionCard title="Portrait">
+          {author.photo ? (
+            <div style={{ textAlign: 'center' }}>
+              <img src={author.photo} alt={author.name}
+                style={{ width: '140px', height: '140px', borderRadius: '50%', objectFit: 'cover', border: '2px solid var(--border-soft)' }} />
+              <div style={{ marginTop: '8px', fontSize: '12px', color: 'var(--text-muted)', wordBreak: 'break-all' }}>{author.photo}</div>
+            </div>
+          ) : (
+            <p style={{ fontSize: '13px', color: 'var(--text-muted)', fontStyle: 'italic', margin: 0 }}>No portrait set</p>
+          )}
+        </EditorSectionCard>
+
+        <EditorSectionCard title="Signature">
+          {author.signature_image ? (
+            <div>
+              <img src={author.signature_image} alt="Signature"
+                style={{ maxWidth: '200px', maxHeight: '60px', objectFit: 'contain' }} />
+              <div style={{ marginTop: '4px', fontSize: '12px', color: 'var(--text-muted)', wordBreak: 'break-all' }}>{author.signature_image}</div>
+            </div>
+          ) : (
+            <p style={{ fontSize: '13px', color: 'var(--text-muted)', fontStyle: 'italic', margin: 0 }}>No signature</p>
+          )}
+        </EditorSectionCard>
+      </div>
+
+      <EditorSectionCard title="Hero Background">
+        {author.hero_background_url ? (
+          <div style={{
+            width: '100%', height: '200px', borderRadius: '8px', overflow: 'hidden',
+            background: 'var(--surface-hover)',
+          }}>
+            <img src={author.hero_background_url} alt="Hero background"
+              style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
           </div>
         ) : (
-          <p style={{ fontSize: '13px', color: 'var(--text-muted)', fontStyle: 'italic', margin: 0 }}>No portrait set</p>
+          <p style={{ fontSize: '13px', color: 'var(--text-muted)', fontStyle: 'italic', margin: 0 }}>No hero background set</p>
+        )}
+        {author.hero_background_url && (
+          <div style={{ marginTop: '8px', fontSize: '12px', color: 'var(--text-muted)', wordBreak: 'break-all' }}>{author.hero_background_url}</div>
         )}
       </EditorSectionCard>
 
-      <EditorSectionCard title="Hero Background">
-        <FieldValue label="URL" value={author.hero_background_url} />
+      <EditorSectionCard title="Portrait Caption">
+        <Field label="Caption" value={author.portrait_caption} />
       </EditorSectionCard>
 
       <EditorSectionCard title="Gallery">
         {author.gallery && author.gallery.length > 0 ? (
-          <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(120px, 1fr))', gap: '12px' }}>
             {author.gallery.map((url, i) => (
-              <img key={i} src={url} alt={`Gallery ${i + 1}`}
-                style={{ width: '100px', height: '100px', objectFit: 'cover', borderRadius: '8px', border: '1px solid var(--border-soft)' }} />
+              <div key={i} style={{
+                borderRadius: '8px', overflow: 'hidden',
+                border: '1px solid var(--border-soft)',
+                aspectRatio: '1',
+              }}>
+                <img src={url} alt={`Gallery ${i + 1}`}
+                  style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+              </div>
             ))}
           </div>
         ) : (
           <p style={{ fontSize: '13px', color: 'var(--text-muted)', fontStyle: 'italic', margin: 0 }}>No gallery images</p>
         )}
       </EditorSectionCard>
-
-      <EditorSectionCard title="Signature">
-        <FieldValue label="Signature Image" value={author.signature_image} />
-        <FieldValue label="Portrait Caption" value={author.portrait_caption} />
-      </EditorSectionCard>
-    </div>
-  );
-}
-
-function FieldValue({ label, value }: { label: string; value?: string | null }) {
-  return (
-    <div style={{ marginBottom: '8px' }}>
-      <div style={{ fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--text-muted)', marginBottom: '4px' }}>
-        {label}
-      </div>
-      <div style={{ fontSize: '14px', color: value ? 'var(--text-primary)' : 'var(--text-muted)' }}>
-        {value || '—'}
-      </div>
     </div>
   );
 }

@@ -61,6 +61,7 @@ class Author(Base):
     signature_image = Column(String, nullable=True)
     portrait_caption = Column(String, nullable=True)
     hero_background_url = Column(String, nullable=True)
+    author_intro_quote = Column(String, nullable=True)
 
     # === SYSTEM ===
     creation_type = Column(String, default="individual_author", nullable=False)

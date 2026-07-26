@@ -156,6 +156,7 @@ export default function AuthorModal({ isOpen, mode, author, onClose, onSave }: A
   const [signatureImage, setSignatureImage] = useState('');
   const [portraitCaption, setPortraitCaption] = useState('');
   const [heroBackgroundUrl, setHeroBackgroundUrl] = useState('');
+  const [authorIntroQuote, setAuthorIntroQuote] = useState('');
   const [activeFromYear, setActiveFromYear] = useState<number | null>(null);
   const [activeToYear, setActiveToYear] = useState<number | null>(null);
   const [notableWorks, setNotableWorks] = useState<string[]>([]);
@@ -225,6 +226,7 @@ export default function AuthorModal({ isOpen, mode, author, onClose, onSave }: A
       setSignatureImage(author.signature_image || '');
       setPortraitCaption(author.portrait_caption || '');
       setHeroBackgroundUrl(author.hero_background_url || '');
+      setAuthorIntroQuote(author.author_intro_quote || '');
     } else {
       setFirstName('');
       setLastName('');
@@ -259,6 +261,7 @@ export default function AuthorModal({ isOpen, mode, author, onClose, onSave }: A
       setSignatureImage('');
       setPortraitCaption('');
       setHeroBackgroundUrl('');
+      setAuthorIntroQuote('');
     }
     setError(null);
     setShowAwardForm(false);
@@ -421,6 +424,7 @@ export default function AuthorModal({ isOpen, mode, author, onClose, onSave }: A
       signature_image: signatureImage.trim() || null,
       portrait_caption: portraitCaption.trim() || null,
       hero_background_url: heroBackgroundUrl.trim() || null,
+      author_intro_quote: authorIntroQuote.trim() || null,
     };
 
     setSaveStatus('saving');
@@ -830,6 +834,15 @@ export default function AuthorModal({ isOpen, mode, author, onClose, onSave }: A
                 placeholder="https://example.com/hero-bg.jpg" style={inputStyle} />
               <div style={{ fontSize: '11px', color: '#6E7C90', marginTop: '4px', fontStyle: 'italic' }}>
                 Рекомендуемый размер: 1920×600px, соотношение 16:5
+              </div>
+            </div>
+            <div style={{ marginBottom: '12px' }}>
+              <label style={labelStyle}>Вступительная цитата об авторе</label>
+              <textarea value={authorIntroQuote} onChange={(e) => setAuthorIntroQuote(e.target.value)}
+                placeholder="One of the most influential voices of Russian literature..."
+                style={{ ...inputStyle, minHeight: '60px', resize: 'vertical', fontStyle: 'italic' }} />
+              <div style={{ fontSize: '11px', color: '#6E7C90', marginTop: '4px', fontStyle: 'italic' }}>
+                Короткая цитата или описание автора, отображаемая в шапке страницы
               </div>
             </div>
             <div>

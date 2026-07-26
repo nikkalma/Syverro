@@ -128,6 +128,10 @@ async def get_author(
         biography=author.bio,
         photo_url=author.photo,
         hero_background_url=author.hero_background_url,
+        author_intro_quote=author.author_intro_quote,
+        birth_place=author.birth_place,
+        death_place=author.death_place,
+        occupations=author.occupations,
         books=books,
         metadata=AuthorMetadata(genres=genres, themes=themes, motifs=motifs),
     )

@@ -81,6 +81,7 @@ class AuthorBase(BaseModel):
     signature_image: Optional[str] = None
     portrait_caption: Optional[str] = None
     hero_background_url: Optional[str] = None
+    author_intro_quote: Optional[str] = None
 
 
 class AuthorCreate(AuthorBase):
@@ -135,6 +136,7 @@ class AuthorUpdate(BaseModel):
     signature_image: Optional[str] = None
     portrait_caption: Optional[str] = None
     hero_background_url: Optional[str] = None
+    author_intro_quote: Optional[str] = None
 
 
 class AuthorResponse(AuthorBase):
@@ -206,6 +208,10 @@ class AuthorPublicResponse(BaseModel):
     biography: Optional[str] = None
     photo_url: Optional[str] = None
     hero_background_url: Optional[str] = None
+    author_intro_quote: Optional[str] = None
+    birth_place: Optional[str] = None
+    death_place: Optional[str] = None
+    occupations: Optional[List[str]] = None
     books: List[AuthorBookBrief] = []
     metadata: AuthorMetadata = AuthorMetadata()
 

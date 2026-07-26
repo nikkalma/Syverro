@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAdminStore } from '../../../store/adminStore';
 import { AdminAuthor, AdminAuthorCreate, getAuthorDisplayName } from '../../../types/admin';
 import AuthorsTable from './AuthorsTable';
@@ -9,6 +10,7 @@ import { getLocaleData, getBrowserLocale } from '../../../locales';
 import { apiClient } from '../../../shared/api/client';
 
 export default function AuthorList() {
+  const navigate = useNavigate();
   const locale = getBrowserLocale();
   const t = getLocaleData(locale);
   const { searchQuery, filters, page, limit, setLoading, isLoading, error, setError, clearError } = useAdminStore();
@@ -87,18 +89,8 @@ export default function AuthorList() {
     setIsModalOpen(true);
   };
 
-  const handleOpenEdit = async (author: AdminAuthor) => {
-    setLoading(true);
-    try {
-      const res = await apiClient.get(`/admin/authors/${author.id}`);
-      setSelectedAuthor(res.data);
-    } catch {
-      setSelectedAuthor(author);
-    } finally {
-      setLoading(false);
-    }
-    setModalMode('edit');
-    setIsModalOpen(true);
+  const handleOpenEdit = (author: AdminAuthor) => {
+    navigate(`/studio/authors/${author.id}/edit`);
   };
 
   const handleOpenDelete = (author: AdminAuthor) => {

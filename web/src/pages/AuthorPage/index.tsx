@@ -114,7 +114,7 @@ export default function AuthorPage() {
 
   if (loading) {
     return (
-      <div style={{ maxWidth: '960px', margin: '0 auto', padding: '40px 24px' }}>
+      <div style={{ width: '100%', padding: '40px 24px' }}>
         <div style={{ color: '#97A6BA', fontSize: '14px' }}>{t.author.loading}</div>
       </div>
     );
@@ -122,7 +122,7 @@ export default function AuthorPage() {
 
   if (error || !author) {
     return (
-      <div style={{ maxWidth: '960px', margin: '0 auto', padding: '40px 24px' }}>
+      <div style={{ width: '100%', padding: '40px 24px' }}>
         <div style={{
           padding: '40px', textAlign: 'center', color: '#EF5350',
           background: 'rgba(18, 28, 36, 0.6)', borderRadius: '12px',
@@ -158,7 +158,7 @@ export default function AuthorPage() {
   ].filter(Boolean).join(' — ');
 
   return (
-    <div style={{ maxWidth: '1040px', margin: '0 auto', padding: '0 24px 80px' }}>
+    <div style={{ width: '100%', padding: '0 24px 80px' }}>
 
       {/* ======================================================================= */}
       {/* HERO — archive-style literary profile                                  */}

@@ -1,27 +1,35 @@
 import { createContext, useContext, useState, useEffect, useCallback, type ReactNode } from 'react';
 import { useParams } from 'react-router-dom';
-import type { AdminAuthor } from '../../../../types/admin';
+import type { AdminAuthor, AdminAuthorUpdate } from '../../../../types/admin';
 import { apiClient } from '../../../../shared/api/client';
 
 interface AuthorEditorContextType {
   author: AdminAuthor | null;
   loading: boolean;
+  saving: boolean;
   error: string | null;
+  saveError: string | null;
   refresh: () => void;
+  updateAuthor: (data: AdminAuthorUpdate) => Promise<void>;
 }
 
 const AuthorEditorContext = createContext<AuthorEditorContextType>({
   author: null,
   loading: true,
+  saving: false,
   error: null,
+  saveError: null,
   refresh: () => {},
+  updateAuthor: async () => {},
 });
 
 export function AuthorEditorProvider({ children }: { children: ReactNode }) {
   const { id } = useParams<{ id: string }>();
   const [author, setAuthor] = useState<AdminAuthor | null>(null);
   const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [saveError, setSaveError] = useState<string | null>(null);
 
   const fetchAuthor = useCallback(async () => {
     if (!id) return;
@@ -37,12 +45,28 @@ export function AuthorEditorProvider({ children }: { children: ReactNode }) {
     }
   }, [id]);
 
+  const updateAuthor = useCallback(async (data: AdminAuthorUpdate) => {
+    if (!id) return;
+    setSaving(true);
+    setSaveError(null);
+    try {
+      const res = await apiClient.put(`/admin/authors/${id}`, data);
+      setAuthor(res.data);
+    } catch (err: any) {
+      const msg = err?.response?.data?.detail || err.message || 'Failed to save';
+      setSaveError(msg);
+      throw new Error(msg);
+    } finally {
+      setSaving(false);
+    }
+  }, [id]);
+
   useEffect(() => {
     fetchAuthor();
   }, [fetchAuthor]);
 
   return (
-    <AuthorEditorContext.Provider value={{ author, loading, error, refresh: fetchAuthor }}>
+    <AuthorEditorContext.Provider value={{ author, loading, saving, error, saveError, refresh: fetchAuthor, updateAuthor }}>
       {children}
     </AuthorEditorContext.Provider>
   );
@@ -52,14 +76,7 @@ export function useAuthorEditor() {
   return useContext(AuthorEditorContext);
 }
 
-export const SECTIONS = [
-  { path: 'overview', label: 'Overview' },
-  { path: 'identity', label: 'Identity' },
-  { path: 'biography', label: 'Biography' },
-  { path: 'timeline', label: 'Timeline' },
-  { path: 'works', label: 'Works' },
-  { path: 'quotes', label: 'Quotes' },
-  { path: 'graph', label: 'Knowledge Graph' },
-  { path: 'media', label: 'Media' },
-  { path: 'seo', label: 'SEO' },
+export const SECTION_PATHS = [
+  'overview', 'identity', 'biography', 'timeline', 'works',
+  'quotes', 'graph', 'media', 'seo',
 ] as const;

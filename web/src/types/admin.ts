@@ -299,6 +299,8 @@ export interface AdminAuthorCreate {
   gallery?: string[];
   signature_image?: string | null;
   portrait_caption?: string | null;
+  hero_background_url?: string | null;
+  author_intro_quote?: string | null;
 }
 
 export interface AdminAuthorUpdate extends Partial<AdminAuthorCreate> {}

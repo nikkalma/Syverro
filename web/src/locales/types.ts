@@ -229,6 +229,17 @@ export interface LocaleData {
       errorUpdate: string;
       errorDelete: string;
       editor: {
+        sections: {
+          overview: string;
+          identity: string;
+          biography: string;
+          timeline: string;
+          works: string;
+          quotes: string;
+          graph: string;
+          media: string;
+          seo: string;
+        };
         status: string;
         complete: string;
         updated: string;

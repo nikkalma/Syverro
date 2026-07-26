@@ -1,6 +1,6 @@
 import { Outlet } from 'react-router-dom';
 import { getLocaleData, getBrowserLocale } from '../../../../locales';
-import { AuthorEditorProvider, useAuthorEditor, SECTIONS } from './AuthorEditorContext';
+import { AuthorEditorProvider, useAuthorEditor, SECTION_PATHS } from './AuthorEditorContext';
 import type { AdminAuthor } from '../../../../types/admin';
 import EntityEditorHeader from '../../../../components/Studio/shared/EntityEditorHeader';
 import EditorSectionNav from '../../../../components/Studio/shared/EditorSectionNav';
@@ -69,7 +69,10 @@ function EditorContent() {
         identitySummary={identityParts.join(' · ')}
       />
       <EditorSectionNav
-        sections={[...SECTIONS]}
+        sections={SECTION_PATHS.map((p) => ({
+          path: p,
+          label: (t.admin.authors.editor.sections as Record<string, string>)[p],
+        }))}
         basePath={`/studio/authors/${author.id}/edit`}
       />
       <div style={{ flex: 1, display: 'flex', gap: '24px', padding: '24px 28px' }}>

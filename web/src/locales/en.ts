@@ -726,6 +726,17 @@ export const en: LocaleData = {
       errorUpdate: 'Error updating author',
       errorDelete: 'Error deleting author',
       editor: {
+        sections: {
+          overview: 'Overview',
+          identity: 'Identity',
+          biography: 'Biography',
+          timeline: 'Timeline',
+          works: 'Works',
+          quotes: 'Quotes',
+          graph: 'Knowledge Graph',
+          media: 'Media',
+          seo: 'SEO',
+        },
         status: 'Status',
         complete: 'Complete',
         updated: 'Updated',

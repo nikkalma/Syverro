@@ -726,6 +726,17 @@ export const ru: LocaleData = {
       errorUpdate: 'Ошибка обновления автора',
       errorDelete: 'Ошибка удаления автора',
       editor: {
+        sections: {
+          overview: 'Обзор',
+          identity: 'Персона',
+          biography: 'Биография',
+          timeline: 'Хронология',
+          works: 'Произведения',
+          quotes: 'Цитаты',
+          graph: 'Граф знаний',
+          media: 'Медиа',
+          seo: 'Публикация',
+        },
         status: 'Статус',
         complete: 'Заполнено',
         updated: 'Обновлено',

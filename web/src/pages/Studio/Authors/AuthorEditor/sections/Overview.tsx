@@ -1,12 +1,111 @@
+import { useState, useEffect } from 'react';
 import { useAuthorEditor } from '../AuthorEditorContext';
 import EditorSectionCard from '../../../../../components/Studio/shared/EditorSectionCard';
-import Field from '../../../../../components/Studio/shared/Field';
 import DetailGrid from '../../../../../components/Studio/shared/DetailGrid';
+import ActionBar from '../../../../../components/Studio/shared/ActionBar';
 import { getLocaleData, getBrowserLocale } from '../../../../../locales';
+import type { AdminAuthorUpdate } from '../../../../../types/admin';
+
+interface InputProps {
+  label: string;
+  value: string;
+  onChange: (v: string) => void;
+  placeholder?: string;
+  type?: 'text' | 'url';
+  multiline?: boolean;
+  disabled?: boolean;
+}
+
+function FormField({ label, value, onChange, placeholder, type, multiline, disabled }: InputProps) {
+  const inputStyle: React.CSSProperties = {
+    width: '100%', padding: '8px 12px', fontSize: '14px',
+    background: 'var(--input-bg)', border: '1px solid var(--border-soft)',
+    borderRadius: '8px', color: 'var(--text-primary)', outline: 'none',
+    fontFamily: 'Inter, sans-serif', boxSizing: 'border-box',
+  };
+  return (
+    <div>
+      <div style={{ fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--text-muted)', marginBottom: '4px' }}>
+        {label}
+      </div>
+      {multiline ? (
+        <textarea
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          placeholder={placeholder}
+          disabled={disabled}
+          rows={3}
+          style={{ ...inputStyle, resize: 'vertical', lineHeight: 1.5, opacity: disabled ? 0.6 : 1 }}
+        />
+      ) : (
+        <input
+          type={type || 'text'}
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          placeholder={placeholder}
+          disabled={disabled}
+          style={{ ...inputStyle, opacity: disabled ? 0.6 : 1 }}
+        />
+      )}
+    </div>
+  );
+}
 
 export default function Overview() {
   const t = getLocaleData(getBrowserLocale());
-  const { author, loading } = useAuthorEditor();
+  const { author, loading, saving, saveError, updateAuthor } = useAuthorEditor();
+
+  const [name, setName] = useState('');
+  const [nativeName, setNativeName] = useState('');
+  const [displayName, setDisplayName] = useState('');
+  const [slug, setSlug] = useState('');
+  const [photo, setPhoto] = useState('');
+  const [heroBg, setHeroBg] = useState('');
+  const [introQuote, setIntroQuote] = useState('');
+
+  useEffect(() => {
+    if (!author) return;
+    setName(author.name || '');
+    setNativeName(author.native_name || '');
+    setDisplayName(author.display_name || '');
+    setSlug(author.slug || '');
+    setPhoto(author.photo || '');
+    setHeroBg(author.hero_background_url || '');
+    setIntroQuote(author.author_intro_quote || '');
+  }, [author]);
+
+  const hasChanges =
+    name !== (author?.name || '') ||
+    nativeName !== (author?.native_name || '') ||
+    displayName !== (author?.display_name || '') ||
+    slug !== (author?.slug || '') ||
+    photo !== (author?.photo || '') ||
+    heroBg !== (author?.hero_background_url || '') ||
+    introQuote !== (author?.author_intro_quote || '');
+
+  const reset = () => {
+    if (!author) return;
+    setName(author.name || '');
+    setNativeName(author.native_name || '');
+    setDisplayName(author.display_name || '');
+    setSlug(author.slug || '');
+    setPhoto(author.photo || '');
+    setHeroBg(author.hero_background_url || '');
+    setIntroQuote(author.author_intro_quote || '');
+  };
+
+  const handleSave = async () => {
+    const data: AdminAuthorUpdate = {
+      name,
+      native_name: nativeName || null,
+      display_name: displayName || null,
+      slug: slug || null,
+      photo: photo || null,
+      hero_background_url: heroBg || null,
+      author_intro_quote: introQuote || null,
+    };
+    await updateAuthor(data);
+  };
 
   if (loading || !author) return null;
 
@@ -21,8 +120,8 @@ export default function Overview() {
           fontSize: '36px', color: 'var(--primary)',
           overflow: 'hidden', flexShrink: 0,
         }}>
-          {author.photo ? (
-            <img src={author.photo} alt={author.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+          {photo ? (
+            <img src={photo} alt={author.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
           ) : (
             author.name.charAt(0).toUpperCase()
           )}
@@ -30,52 +129,69 @@ export default function Overview() {
         <div style={{ flex: 1 }}>
           <EditorSectionCard title={t.admin.authors.editor.overview.coreInfo}>
             <DetailGrid>
-              <Field label={t.admin.authors.editor.overview.name} value={author.name} />
-              <Field label={t.admin.authors.editor.overview.nativeName} value={author.native_name} />
-              <Field label={t.admin.authors.editor.overview.displayName} value={author.display_name} />
-              <Field label={t.admin.authors.editor.overview.slug} value={author.slug} />
+              <FormField label={t.admin.authors.editor.overview.name} value={name} onChange={setName} />
+              <FormField label={t.admin.authors.editor.overview.nativeName} value={nativeName} onChange={setNativeName} />
+              <FormField label={t.admin.authors.editor.overview.displayName} value={displayName} onChange={setDisplayName} />
+              <FormField label={t.admin.authors.editor.overview.slug} value={slug} onChange={setSlug} />
             </DetailGrid>
           </EditorSectionCard>
         </div>
       </div>
 
       <EditorSectionCard title={t.admin.authors.editor.overview.heroBackground}>
-        {author.hero_background_url ? (
-          <div style={{
-            width: '100%', height: '160px', borderRadius: '8px', overflow: 'hidden',
-            background: 'var(--surface-hover)',
-          }}>
-            <img src={author.hero_background_url} alt={t.admin.authors.editor.media.heroAlt} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+        {heroBg ? (
+          <div style={{ marginBottom: '12px' }}>
+            <div style={{
+              width: '100%', height: '120px', borderRadius: '8px', overflow: 'hidden',
+              background: 'var(--surface-hover)', marginBottom: '8px',
+            }}>
+              <img src={heroBg} alt={t.admin.authors.editor.media.heroAlt} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+            </div>
           </div>
         ) : (
-          <p style={{ fontSize: '13px', color: 'var(--text-muted)', fontStyle: 'italic', margin: 0 }}>{t.admin.authors.editor.noHeroBg}</p>
+          <p style={{ fontSize: '13px', color: 'var(--text-muted)', fontStyle: 'italic', margin: '0 0 12px 0' }}>{t.admin.authors.editor.noHeroBg}</p>
         )}
+        <FormField label="URL" value={heroBg} onChange={setHeroBg} type="url" placeholder="https://..." />
       </EditorSectionCard>
 
       <EditorSectionCard title={t.admin.authors.editor.overview.introQuote}>
-        {author.author_intro_quote ? (
-          <blockquote style={{
-            margin: 0, padding: '16px 20px',
-            borderLeft: '3px solid var(--primary)',
-            background: 'var(--surface-hover)',
-            borderRadius: '0 8px 8px 0',
-            fontSize: '14px', color: 'var(--text-secondary)', fontStyle: 'italic', lineHeight: 1.6,
-          }}>
-            {author.author_intro_quote}
-          </blockquote>
-        ) : (
-          <p style={{ fontSize: '13px', color: 'var(--text-muted)', fontStyle: 'italic', margin: 0 }}>{t.admin.authors.editor.noIntroQuote}</p>
-        )}
+        <FormField
+          label={t.admin.authors.editor.overview.introQuote}
+          value={introQuote}
+          onChange={setIntroQuote}
+          multiline
+          placeholder={t.admin.authors.editor.bioPlaceholder}
+        />
       </EditorSectionCard>
 
       <EditorSectionCard title={t.admin.authors.editor.overview.publicationState}>
         <DetailGrid>
-          <Field label={t.admin.authors.editor.overview.creationType} value={author.creation_type} />
-          <Field label={t.admin.authors.editor.overview.booksCount} value={author.book_count} />
-          <Field label={t.admin.authors.editor.overview.created} value={author.created_at ? new Date(author.created_at).toLocaleDateString() : '-'} />
-          <Field label={t.admin.authors.editor.overview.updated} value={author.updated_at ? new Date(author.updated_at).toLocaleDateString() : '-'} />
+          <FormField label={t.admin.authors.editor.overview.creationType} value={author.creation_type} onChange={() => {}} disabled />
+          <FormField label={t.admin.authors.editor.overview.booksCount} value={String(author.book_count)} onChange={() => {}} disabled />
+          <FormField label={t.admin.authors.editor.overview.created} value={author.created_at ? new Date(author.created_at).toLocaleDateString() : '-'} onChange={() => {}} disabled />
+          <FormField label={t.admin.authors.editor.overview.updated} value={author.updated_at ? new Date(author.updated_at).toLocaleDateString() : '-'} onChange={() => {}} disabled />
         </DetailGrid>
       </EditorSectionCard>
+
+      {saveError && (
+        <div style={{
+          padding: '12px 16px', background: 'rgba(220,38,38,0.1)',
+          border: '1px solid rgba(220,38,38,0.3)', borderRadius: '8px',
+          color: 'var(--error)', fontSize: '13px',
+        }}>
+          {saveError}
+        </div>
+      )}
+
+      <ActionBar
+        onSave={handleSave}
+        onCancel={reset}
+        saving={saving}
+        dirty={hasChanges}
+        saveLabel={t.admin.common.save}
+        savingLabel={t.admin.common.saving}
+        cancelLabel={t.admin.common.cancel}
+      />
     </div>
   );
 }

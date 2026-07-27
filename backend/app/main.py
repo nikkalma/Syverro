@@ -132,12 +132,12 @@ async def run_alembic_migrations(conn):
     row = result.fetchone()
     current = row[0] if row else None
 
-    if current == "0007_author_date_precision_place_fk":
+    if current == "0007_author_date_precision_fk":
         return
 
     if current == "0006_author_identity_fields":
         await conn.execute(
-            _text("UPDATE alembic_version SET version_num = '0007_author_date_precision_place_fk'")
+            _text("UPDATE alembic_version SET version_num = '0007_author_date_precision_fk'")
         )
         logger.info("✅ Alembic version bumped to 0007 (columns added by runtime ALTER TABLE)")
     else:

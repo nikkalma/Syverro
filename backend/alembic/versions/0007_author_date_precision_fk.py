@@ -8,7 +8,7 @@ from typing import Sequence, Union
 from alembic import op
 import sqlalchemy as sa
 
-revision: str = "0007_author_date_precision_place_fk"
+revision: str = "0007_author_date_precision_fk"
 down_revision: Union[str, None] = "0006_author_identity_fields"
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None

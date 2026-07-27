@@ -136,7 +136,7 @@ export default function Overview() {
   }, [author]);
 
   useEffect(() => {
-    if (!slugLocked && (name || nativeName) && author) {
+    if (!slugLocked && !slug && (name || nativeName) && author) {
       const generated = generateSlugFrom(name, nativeName);
       setSlug(generated);
       setSlugError('');

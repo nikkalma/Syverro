@@ -4,15 +4,15 @@ import EditorSectionCard from '../../../../../components/Studio/shared/EditorSec
 import DetailGrid from '../../../../../components/Studio/shared/DetailGrid';
 import ActionBar from '../../../../../components/Studio/shared/ActionBar';
 import SuggestionInput from '../../../../../components/Studio/shared/SuggestionInput';
+import DatePickerField from '../../../../../components/Studio/shared/DatePickerField';
 import { getLocaleData, getBrowserLocale } from '../../../../../locales';
 import type { AdminAuthorUpdate } from '../../../../../types/admin';
 
-function FormField({ label, value, onChange, placeholder, type, disabled }: {
+function FormField({ label, value, onChange, placeholder, disabled }: {
   label: string;
   value: string;
   onChange: (v: string) => void;
   placeholder?: string;
-  type?: 'text' | 'url';
   disabled?: boolean;
 }) {
   const inputStyle: React.CSSProperties = {
@@ -27,7 +27,7 @@ function FormField({ label, value, onChange, placeholder, type, disabled }: {
         {label}
       </div>
       <input
-        type={type || 'text'}
+        type="text"
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
@@ -42,6 +42,14 @@ function stringOrNull(v: string): string | null {
   return v.trim() || null;
 }
 
+function arraysEqual(a: string[], b: string[]): boolean {
+  if (a.length !== b.length) return false;
+  for (let i = 0; i < a.length; i++) {
+    if (a[i] !== b[i]) return false;
+  }
+  return true;
+}
+
 export default function Identity() {
   const t = getLocaleData(getBrowserLocale());
   const { author, loading, saving, saveError, updateAuthor } = useAuthorEditor();
@@ -50,7 +58,6 @@ export default function Identity() {
   const [birthName, setBirthName] = useState('');
   const [sortName, setSortName] = useState('');
   const [penNames, setPenNames] = useState<string[]>([]);
-  const [pseudonyms, setPseudonyms] = useState<string[]>([]);
 
   const [birthDate, setBirthDate] = useState('');
   const [birthPlace, setBirthPlace] = useState('');
@@ -67,7 +74,6 @@ export default function Identity() {
     setBirthName(author.birth_name || '');
     setSortName(author.sort_name || '');
     setPenNames(author.pen_names || []);
-    setPseudonyms(author.pseudonyms || []);
     setBirthDate(author.birth_date || '');
     setBirthPlace(author.birth_place || '');
     setDeathDate(author.death_date || '');
@@ -81,15 +87,14 @@ export default function Identity() {
     nativeName !== (author?.native_name || '') ||
     birthName !== (author?.birth_name || '') ||
     sortName !== (author?.sort_name || '') ||
-    JSON.stringify(penNames) !== JSON.stringify(author?.pen_names || []) ||
-    JSON.stringify(pseudonyms) !== JSON.stringify(author?.pseudonyms || []) ||
+    !arraysEqual(penNames, author?.pen_names || []) ||
     birthDate !== (author?.birth_date || '') ||
     birthPlace !== (author?.birth_place || '') ||
     deathDate !== (author?.death_date || '') ||
     deathPlace !== (author?.death_place || '') ||
     nationality !== (author?.nationality || '') ||
-    JSON.stringify(occupations) !== JSON.stringify(author?.occupations || []) ||
-    JSON.stringify(literaryMovements) !== JSON.stringify(author?.literary_movements || []);
+    !arraysEqual(occupations, author?.occupations || []) ||
+    !arraysEqual(literaryMovements, author?.literary_movements || []);
 
   const reset = () => {
     if (!author) return;
@@ -97,7 +102,6 @@ export default function Identity() {
     setBirthName(author.birth_name || '');
     setSortName(author.sort_name || '');
     setPenNames(author.pen_names || []);
-    setPseudonyms(author.pseudonyms || []);
     setBirthDate(author.birth_date || '');
     setBirthPlace(author.birth_place || '');
     setDeathDate(author.death_date || '');
@@ -113,7 +117,6 @@ export default function Identity() {
       birth_name: stringOrNull(birthName),
       sort_name: stringOrNull(sortName),
       pen_names: penNames,
-      pseudonyms,
       birth_date: stringOrNull(birthDate),
       birth_place: stringOrNull(birthPlace),
       death_date: stringOrNull(deathDate),
@@ -135,18 +138,12 @@ export default function Identity() {
           <FormField label={t.admin.authors.editor.identity.birthName} value={birthName} onChange={setBirthName} />
           <FormField label={t.admin.authors.editor.identity.sortName} value={sortName} onChange={setSortName} />
         </DetailGrid>
-        <div style={{ marginTop: '16px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+        <div style={{ marginTop: '16px' }}>
           <SuggestionInput
             label={t.admin.authors.editor.identity.penNames}
             values={penNames}
             suggestions={[]}
             onChange={setPenNames}
-          />
-          <SuggestionInput
-            label={t.admin.authors.editor.identity.pseudonyms}
-            values={pseudonyms}
-            suggestions={[]}
-            onChange={setPseudonyms}
           />
         </div>
       </EditorSectionCard>
@@ -154,28 +151,23 @@ export default function Identity() {
       <EditorSectionCard title={t.admin.authors.editor.identity.lifeEvents}>
         <DetailGrid>
           <div>
-            <FormField label={t.admin.authors.editor.identity.birthDate} value={birthDate} onChange={setBirthDate} type="text" placeholder="YYYY-MM-DD" />
+            <DatePickerField label={t.admin.authors.editor.identity.birthDate} value={birthDate} onChange={setBirthDate} />
             <div style={{ marginTop: '8px' }}>
-              <FormField label={t.admin.authors.editor.identity.birthPlace} value={birthPlace} onChange={setBirthPlace} />
+              <FormField label={t.admin.authors.editor.identity.birthPlace} value={birthPlace} onChange={setBirthPlace} placeholder="Город, страна" />
             </div>
           </div>
           <div>
-            <FormField label={t.admin.authors.editor.identity.deathDate} value={deathDate} onChange={setDeathDate} type="text" placeholder="YYYY-MM-DD" />
+            <DatePickerField label={t.admin.authors.editor.identity.deathDate} value={deathDate} onChange={setDeathDate} />
             <div style={{ marginTop: '8px' }}>
-              <FormField label={t.admin.authors.editor.identity.deathPlace} value={deathPlace} onChange={setDeathPlace} />
+              <FormField label={t.admin.authors.editor.identity.deathPlace} value={deathPlace} onChange={setDeathPlace} placeholder="Город, страна" />
             </div>
           </div>
         </DetailGrid>
       </EditorSectionCard>
 
-      <EditorSectionCard title={t.admin.authors.editor.identity.nationalityStates}>
-        <DetailGrid>
-          <FormField label={t.admin.authors.editor.identity.nationality} value={nationality} onChange={setNationality} />
-        </DetailGrid>
-      </EditorSectionCard>
-
-      <EditorSectionCard title={t.admin.authors.editor.identity.occupations}>
+      <EditorSectionCard title={t.admin.authors.editor.identity.nationality}>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+          <FormField label={t.admin.authors.editor.identity.nationality} value={nationality} onChange={setNationality} />
           <SuggestionInput
             label={t.admin.authors.editor.identity.occupations}
             values={occupations}

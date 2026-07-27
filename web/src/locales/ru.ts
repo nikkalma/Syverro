@@ -819,7 +819,7 @@ export const ru: LocaleData = {
           birthName: 'Имя при рождении',
           penNames: 'Псевдонимы',
           sortName: 'Сортировочное имя',
-          pseudonyms: 'Литературные маски',
+          pseudonyms: 'Псевдонимы',
           lifeEvents: 'События жизни',
           birthDate: 'Дата рождения',
           birthPlace: 'Место рождения',

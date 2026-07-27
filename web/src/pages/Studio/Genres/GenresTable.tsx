@@ -43,7 +43,7 @@ export default function GenresTable({
   const t = getLocaleData(getBrowserLocale());
   const totalPages = Math.ceil(total / limit);
 
-  const getParentName = (parentId: string | null) => {
+  const getParentName = (parentId: string | null | undefined) => {
     if (!parentId) return '—';
     const parent = allGenres.find((g) => g.id === parentId);
     return parent?.name || '—';

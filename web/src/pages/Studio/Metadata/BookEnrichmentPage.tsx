@@ -1,8 +1,8 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { AdminBook } from '../../../types/admin';
 import { METADATA_STATUS_LABELS, METADATA_STATUS_COLORS, ENRICHMENT_FIELD_LABELS } from '../../../types/admin';
-import { Save, ArrowLeft, RefreshCw, AlertCircle, CheckCircle, X, Plus, UserPlus, Link2, Search } from 'lucide-react';
+import { Save, ArrowLeft, RefreshCw, AlertCircle, CheckCircle, X, Plus, UserPlus, Link2 } from 'lucide-react';
 import { getLocaleData, getBrowserLocale } from '../../../locales';
 import { apiClient } from '../../../shared/api/client';
 
@@ -66,7 +66,6 @@ export default function BookEnrichmentPage() {
   const [motifSearchResults, setMotifSearchResults] = useState<any[]>([]);
   const [showThemeSearch, setShowThemeSearch] = useState(false);
   const [showMotifSearch, setShowMotifSearch] = useState(false);
-  const [taxonomyLoading, setTaxonomyLoading] = useState(false);
   const [totalPages, setTotalPages] = useState('');
   const [publicationType, setPublicationType] = useState('official');
 

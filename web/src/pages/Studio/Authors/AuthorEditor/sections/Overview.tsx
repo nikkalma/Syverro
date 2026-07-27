@@ -9,7 +9,7 @@ import type { AdminAuthorUpdate } from '../../../../../types/admin';
 function slugify(text: string): string {
   return text
     .toLowerCase()
-    .replace(/[^\w\s-]/g, '')
+    .replace(/[^\p{L}\p{N}\s-]/gu, '')
     .replace(/[\s_]+/g, '-')
     .replace(/-+/g, '-')
     .replace(/^-+|-+$/g, '')
@@ -91,25 +91,42 @@ export default function Overview() {
   const [heroBg, setHeroBg] = useState('');
   const [shortDescription, setShortDescription] = useState('');
 
+  // Sync all form state from author data.
+  // Generate slug from name when slug is empty and not locked.
   useEffect(() => {
     if (!author) return;
-    setName(author.name || '');
-    setNativeName(author.native_name || '');
-    setSlug(author.slug || '');
-    setSlugLocked(author.slug_locked || false);
-    setPhoto(author.photo || '');
-    setHeroBg(author.hero_background_url || '');
-    setShortDescription(author.author_intro_quote || '');
+    const nextName = author.name || '';
+    const nextNativeName = author.native_name || '';
+    const nextSlug = author.slug || '';
+    const nextSlugLocked = Boolean(author.slug_locked);
+    const nextPhoto = author.photo || '';
+    const nextHeroBg = author.hero_background_url || '';
+    const nextShortDesc = author.author_intro_quote || '';
+
+    setName(nextName);
+    setNativeName(nextNativeName);
+    setSlugLocked(nextSlugLocked);
+
+    if (!nextSlugLocked && !nextSlug && nextName) {
+      setSlug(slugify(nextName));
+    } else {
+      setSlug(nextSlug);
+    }
+
+    setPhoto(nextPhoto);
+    setHeroBg(nextHeroBg);
+    setShortDescription(nextShortDesc);
   }, [author]);
 
+  // When user edits name, auto-update slug if not locked.
   useEffect(() => {
-    if (!slugLocked && name) {
+    if (!slugLocked && name && author) {
       const generated = slugify(name);
       if (generated !== slug) {
         setSlug(generated);
       }
     }
-  }, [name, slugLocked]);
+  }, [name]);
 
   const hasChanges =
     name !== (author?.name || '') ||

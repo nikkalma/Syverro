@@ -11,7 +11,7 @@ interface QuoteOfTheDayProps {
 
 const DEFAULT_QUOTE = '«Книги — это корабли мысли, странствующие по волнам времени» — Фрэнсис Бэкон';
 
-export function QuoteOfTheDay({ profile, t }: QuoteOfTheDayProps) {
+export function QuoteOfTheDay({ profile }: QuoteOfTheDayProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [quote, setQuote] = useState(profile.quoteOfTheDay || DEFAULT_QUOTE);
   const [tempQuote, setTempQuote] = useState(quote);

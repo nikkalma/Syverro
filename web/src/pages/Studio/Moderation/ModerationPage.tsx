@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react';
-import { AdminBook, MODERATION_PIPELINE, MODERATION_STATUS_LABELS, MODERATION_STATUS_COLORS, getNextModerationStatus } from '../../../types/admin';
+import { AdminBook, MODERATION_PIPELINE, MODERATION_STATUS_LABELS, MODERATION_STATUS_COLORS } from '../../../types/admin';
 import { useAdminStore } from '../../../store/adminStore';
-import { RefreshCw, CheckCircle, XCircle, Eye, Clock, User, BookOpen } from 'lucide-react';
-import { PUBLICATION_TYPE_LABELS, PUBLICATION_TYPE_COLORS, METADATA_STATUS_LABELS, METADATA_STATUS_COLORS } from '../../../types/admin';
+import { RefreshCw, CheckCircle, XCircle, Eye, Clock, BookOpen } from 'lucide-react';
+import { PUBLICATION_TYPE_COLORS, METADATA_STATUS_LABELS, METADATA_STATUS_COLORS } from '../../../types/admin';
 import { getLocaleData, getBrowserLocale } from '../../../locales';
 import type { LocaleData } from '../../../locales';
 import { apiClient } from '../../../shared/api/client';
@@ -10,11 +10,11 @@ import { apiClient } from '../../../shared/api/client';
 type TabFilter = 'pending' | 'approved' | 'draft' | 'published' | 'archived' | 'all';
 
 const getStatusLabels = (t: LocaleData) => ({
-  draft: t.admin.moderation.draft || 'Черновик',
+  draft: t.admin.moderation.draft,
   pending: t.admin.moderation.pending,
   approved: t.admin.moderation.approved,
-  published: t.admin.moderation.published || 'Опубликована',
-  archived: t.admin.moderation.archived || 'Архивирована',
+  published: t.admin.moderation.published,
+  archived: t.admin.moderation.archived,
 });
 
 const STATUS_COLORS: Record<string, { bg: string; color: string; border: string }> = {

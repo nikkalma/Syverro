@@ -9,7 +9,7 @@ import { apiClient } from '../shared/api/client';
 type SuggestionType = 'book' | 'fanfiction';
 
 export function SuggestBook() {
-  const { user, isAuthenticated } = useAuthStore();
+  const { isAuthenticated } = useAuthStore();
   const navigate = useNavigate();
   const [title, setTitle] = useState('');
   const [author, setAuthor] = useState('');

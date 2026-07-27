@@ -2,10 +2,9 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AdminBook } from '../../../types/admin';
 import { useAdminStore } from '../../../store/adminStore';
-import { METADATA_STATUS_LABELS, METADATA_STATUS_COLORS, ENRICHMENT_FIELD_LABELS } from '../../../types/admin';
-import { RefreshCw, BookOpen, ArrowRight, Filter, Search } from 'lucide-react';
+import { METADATA_STATUS_LABELS, METADATA_STATUS_COLORS } from '../../../types/admin';
+import { RefreshCw, BookOpen, ArrowRight, Search } from 'lucide-react';
 import { getLocaleData, getBrowserLocale } from '../../../locales';
-import type { LocaleData } from '../../../locales';
 import { apiClient } from '../../../shared/api/client';
 
 type TabFilter = 'all' | 'incomplete' | 'review_ready' | 'complete';

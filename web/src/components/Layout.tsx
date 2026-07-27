@@ -12,7 +12,6 @@ import {
   Bell,
   UserCircle,
   Crown,
-  Shield
 } from 'lucide-react';
 import Sidebar from './Sidebar';
 

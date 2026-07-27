@@ -23,7 +23,7 @@ interface AuthState {
 
 const API_URL = import.meta.env.VITE_API_URL || 'https://api.syverro.com';
 
-export const useAuthStore = create<AuthState>((set, get) => ({
+export const useAuthStore = create<AuthState>((set) => ({
   user: JSON.parse(localStorage.getItem('user') || 'null'),
   token: localStorage.getItem('token') || null,
   isAuthenticated: !!localStorage.getItem('token'),

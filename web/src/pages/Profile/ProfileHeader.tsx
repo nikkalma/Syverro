@@ -3,10 +3,6 @@ import { useState, useRef } from 'react';
 import { storageService } from '../../services/storageService';
 import { readingGoalLabels, ReadingGoal } from '../../types/reader';
 
-interface ProfileHeaderProps {
-  books: any[];
-}
-
 export default function ProfileHeader() {
   const profile = storageService.getReaderProfile();
   const [displayName, setDisplayName] = useState(profile.displayName || 'Читатель');

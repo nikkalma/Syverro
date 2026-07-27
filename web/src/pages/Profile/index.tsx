@@ -17,7 +17,7 @@ export default function Profile() {
 
   return (
     <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '32px 24px' }}>
-      <ProfileHeader books={books} />
+      <ProfileHeader />
       <ReaderIdentitySection />
       <LibrarySection books={books} />
     </div>

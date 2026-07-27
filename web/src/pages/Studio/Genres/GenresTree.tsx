@@ -82,8 +82,6 @@ function TreeNode({
 
   if (searchQuery && !matchesSearch && !childMatch) return null;
 
-  const typeColor = GENRE_TYPE_COLORS[node.type] || '#97A6BA';
-
   return (
     <div>
       <div

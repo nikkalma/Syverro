@@ -60,7 +60,7 @@ export default function ReaderIdentitySection() {
             gap: '16px',
           }}
         >
-          <Genres profile={profile} t={t} />
+          <Genres profile={profile} />
           <Vibes profile={profile} t={t} />
           <Themes profile={profile} t={t} />
           <Motifs profile={profile} t={t} />

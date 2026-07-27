@@ -77,7 +77,7 @@ export default function AdminBooks() {
   };
 
   // ===== ПУБЛИКАЦИЯ / СМЕНА СТАТУСА =====
-  const handleTogglePublish = async (id: string, isPublished: boolean) => {
+  const handleTogglePublish = async (id: string) => {
     try {
       const book = books.find((b) => b.id === id);
       if (!book) return;

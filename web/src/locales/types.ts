@@ -422,6 +422,9 @@ export interface LocaleData {
       pending: string;
       approved: string;
       rejected: string;
+      draft: string;
+      published: string;
+      archived: string;
       submittedBy: string;
       view: string;
       approve: string;

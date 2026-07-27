@@ -1,5 +1,4 @@
 // src/pages/Profile/ReaderIdentitySection/Genres.tsx
-import { LocaleData } from '../../../locales';
 
 interface GenresProps {
   profile: any;

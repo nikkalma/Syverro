@@ -7,7 +7,7 @@ import {
 interface NavItem {
   to: string;
   label: string;
-  icon: React.ComponentType<{ size?: number }>;
+  icon: React.ElementType;
 }
 
 const linkStyle: React.CSSProperties = {

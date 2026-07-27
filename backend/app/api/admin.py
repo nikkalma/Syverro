@@ -135,6 +135,36 @@ async def check_owner(user: User) -> User:
         raise HTTPException(status_code=403, detail="Owner access required")
     return user
 
+def get_visible_role(target_role: str, viewer_role: str) -> str:
+    if viewer_role == "owner":
+        return target_role
+    if target_role == "owner":
+        return "moderator"
+    return target_role
+
+def _user_dict(user: User, viewer_role: str) -> dict:
+    role = user.role or "user"
+    visible_role = get_visible_role(role, viewer_role)
+    d = {
+        "id": str(user.id),
+        "first_name": user.first_name,
+        "last_name": user.last_name,
+        "username": user.username,
+        "visible_role": visible_role,
+        "is_active": user.is_active,
+        "created_at": user.created_at,
+        "last_active": user.last_active,
+        "phone": user.phone,
+        "telegram_id": user.telegram_id,
+    }
+    if viewer_role == "owner":
+        d["role"] = role
+        d["email"] = user.email
+    else:
+        if role != "owner":
+            d["email"] = user.email
+    return d
+
 # ============================================================
 # 1. DASHBOARD — СТАТИСТИКА
 # ============================================================
@@ -179,7 +209,10 @@ async def get_stats(
     roles_result = await db.execute(
         select(User.role, func.count()).group_by(User.role)
     )
-    users_by_role = {role: count for role, count in roles_result.all()}
+    users_by_role_raw = {role: count for role, count in roles_result.all()}
+    if current_user.role != "owner" and "owner" in users_by_role_raw:
+        del users_by_role_raw["owner"]
+    users_by_role = users_by_role_raw
 
     return AdminStatsResponse(
         total_users=total_users,
@@ -237,19 +270,7 @@ async def get_users(
     users = result.scalars().all()
 
     return {
-        "data": [{
-            "id": str(u.id),
-            "email": u.email,
-            "first_name": u.first_name,
-            "last_name": u.last_name,
-            "username": u.username,
-            "role": u.role or "user",
-            "is_active": u.is_active,
-            "created_at": u.created_at,
-            "last_active": u.last_active,
-            "phone": u.phone,
-            "telegram_id": u.telegram_id,
-        } for u in users],
+        "data": [_user_dict(u, current_user.role) for u in users],
         "total": total,
         "page": page,
         "limit": limit,
@@ -271,16 +292,7 @@ async def get_recent_users(
     )
     users = result.scalars().all()
     
-    return [{
-        "id": str(u.id),
-        "email": u.email,
-        "first_name": u.first_name,
-        "last_name": u.last_name,
-        "username": u.username,
-        "telegram_id": u.telegram_id,
-        "created_at": u.created_at,
-        "role": u.role or "user",
-    } for u in users]
+    return [_user_dict(u, current_user.role) for u in users]
 
 @router.get("/users/{user_id}")
 async def get_user_detail(
@@ -295,19 +307,7 @@ async def get_user_detail(
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
     
-    return {
-        "id": str(user.id),
-        "email": user.email,
-        "first_name": user.first_name,
-        "last_name": user.last_name,
-        "username": user.username,
-        "role": user.role or "user",
-        "is_active": user.is_active,
-        "created_at": user.created_at,
-        "last_active": user.last_active,
-        "phone": user.phone,
-        "telegram_id": user.telegram_id,
-    }
+    return _user_dict(user, current_user.role)
 
 @router.put("/users/{user_id}")
 async def update_user(
@@ -1140,10 +1140,11 @@ def validate_author_slug(slug: Optional[str]) -> None:
             raise HTTPException(status_code=422, detail="Slug must be lowercase, URL-safe, and non-empty")
 
 
-def _make_slug(name: str) -> str:
+def _make_slug(name: str, native_name: Optional[str] = None) -> str:
     import re as _re
     from unidecode import unidecode
-    latin = unidecode(name)
+    source = (native_name or name)
+    latin = unidecode(source)
     slug = _re.sub(r'[^\w\s-]', '', latin.lower())
     slug = _re.sub(r'[-\s]+', '-', slug).strip('-')
     return slug or 'unknown'
@@ -1191,7 +1192,7 @@ async def create_author(
 
     # Slug: auto-generate if not provided
     if not data.slug:
-        base_slug = _make_slug(data.name)
+        base_slug = _make_slug(data.name, data.native_name)
         slug = base_slug
         counter = 1
         while True:

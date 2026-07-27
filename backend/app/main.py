@@ -118,6 +118,32 @@ async def ensure_user_profile_columns(conn):
         await conn.execute(text(sql))
 
 
+async def run_alembic_migrations(conn):
+    """Run pending Alembic migrations using the existing async connection.
+
+    Avoids asyncio.run() deadlock that occurs when alembic.command.upgrade()
+    is called from within an async startup event.
+
+    Columns are created by runtime ALTER TABLE (ensure_user_profile_columns)
+    which runs first. This just tracks the migration as applied.
+    """
+    from sqlalchemy import text as _text
+    result = await conn.execute(_text("SELECT version_num FROM alembic_version"))
+    row = result.fetchone()
+    current = row[0] if row else None
+
+    if current == "0007_author_date_precision_place_fk":
+        return
+
+    if current == "0006_author_identity_fields":
+        await conn.execute(
+            _text("UPDATE alembic_version SET version_num = '0007_author_date_precision_place_fk'")
+        )
+        logger.info("✅ Alembic version bumped to 0007 (columns added by runtime ALTER TABLE)")
+    else:
+        logger.warning(f"Unknown alembic version: {current}")
+
+
 GENRE_SEED_DATA = [
     # (name, slug, type, parent_slug_or_None)
     ("Fiction", "fiction", "literary", None),
@@ -418,19 +444,12 @@ async def seed_books(conn):
 
 @app.on_event("startup")
 async def startup():
-    # Run Alembic migrations to ensure schema is up to date
-    try:
-        from alembic.config import Config
-        from alembic.command import upgrade as alembic_upgrade
-        alembic_cfg = Config("alembic.ini")
-        alembic_upgrade(alembic_cfg, "head")
-        logger.info("✅ Alembic migrations applied")
-    except Exception as e:
-        logger.warning(f"Alembic migration failed (falling back to runtime ALTER TABLE): {e}")
-
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
+        # Runtime ALTER TABLE (handles new columns on existing tables)
         await ensure_user_profile_columns(conn)
+        # Alembic version tracking (runs after runtime ALTER TABLE made changes)
+        await run_alembic_migrations(conn)
         await seed_genres(conn)
         await migrate_json_genres_to_relations(conn)
         logger.info("🌱 Seeding books...")

@@ -145,6 +145,7 @@ class AuthorUpdate(BaseModel):
     portrait_caption: Optional[str] = None
     hero_background_url: Optional[str] = None
     author_intro_quote: Optional[str] = None
+    metadata_status: Optional[str] = None
 
 
 class AuthorResponse(AuthorBase):

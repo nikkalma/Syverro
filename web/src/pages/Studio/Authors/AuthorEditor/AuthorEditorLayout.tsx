@@ -5,6 +5,7 @@ import type { AdminAuthor } from '../../../../types/admin';
 import EntityEditorHeader from '../../../../components/Studio/shared/EntityEditorHeader';
 import EditorSectionNav from '../../../../components/Studio/shared/EditorSectionNav';
 import EmptyWorkspace from '../../../../components/Studio/shared/EmptyWorkspace';
+import MetadataStatusControl from './MetadataStatusControl';
 
 function computeCompletion(author: AdminAuthor): number {
   const fields = [
@@ -90,6 +91,7 @@ function EditorContent() {
           width: '220px', flexShrink: 0,
           display: 'flex', flexDirection: 'column', gap: '16px',
         }}>
+          <MetadataStatusControl />
           <EmptyWorkspace
             icon="📋"
             title={t.admin.authors.editor.activityTitle}

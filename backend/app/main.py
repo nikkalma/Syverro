@@ -108,6 +108,7 @@ async def ensure_user_profile_columns(conn):
         "ALTER TABLE authors ADD COLUMN IF NOT EXISTS portrait_caption VARCHAR",
         "ALTER TABLE authors ADD COLUMN IF NOT EXISTS hero_background_url VARCHAR",
         "ALTER TABLE authors ADD COLUMN IF NOT EXISTS author_intro_quote VARCHAR",
+        "ALTER TABLE authors ADD COLUMN IF NOT EXISTS metadata_status VARCHAR NOT NULL DEFAULT 'draft'",
     ]
     for sql in statements:
         await conn.execute(text(sql))

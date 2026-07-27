@@ -1,4 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
+import { getBrowserLocale } from '../../../locales';
+import type { Locale } from '../../../locales';
 
 export type DatePrecision = 'full' | 'month_year' | 'year' | 'approximate';
 
@@ -7,6 +9,7 @@ interface HistoricalDateFieldProps {
   value: string;
   precision: DatePrecision;
   onChange: (value: string, precision: DatePrecision) => void;
+  locale?: Locale;
 }
 
 const MONTH_NAMES: Record<string, string> = {
@@ -22,12 +25,25 @@ const MONTH_NAMES: Record<string, string> = {
   october: '10', oct: '10', octo: '10',
   november: '11', nov: '11',
   december: '12', dec: '12', déc: '12',
+
+  января: '01', янв: '01',
+  февраля: '02', фев: '02', февр: '02',
+  марта: '03', мар: '03',
+  апреля: '04', апр: '04',
+  мая: '05',
+  июня: '06', июн: '06',
+  июля: '07', июл: '07',
+  августа: '08', авг: '08',
+  сентября: '09', сен: '09', сент: '09',
+  октября: '10', окт: '10',
+  ноября: '11', ноя: '11', нояб: '11',
+  декабря: '12', дек: '12',
 };
 
 function parseMonthName(text: string): string | null {
-  const lower = text.toLowerCase().replace(/[^a-zéèêëàâùûüôöîïç]/g, '');
+  const lower = text.toLowerCase().replace(/[^a-zа-яéèêëàâùûüôöîïç]/g, '');
   for (const [name, num] of Object.entries(MONTH_NAMES)) {
-    if (lower === name || lower.startsWith(name.slice(0, 3))) return num;
+    if (lower === name || (name.length >= 3 && lower.startsWith(name.slice(0, 3)))) return num;
   }
   return null;
 }
@@ -42,40 +58,59 @@ function naturalParse(input: string): { day: string; month: string; year: string
     text = text.replace(/^(~|≈|ca\.?|circa)\s*/i, '');
   }
 
-  if (/\b(BCE|BC|B\.C\.E?|B\.C\.)\s*$/i.test(text)) {
+  if (/\b(BCE|BC|B\.C\.E?|B\.C\.|до\s*н\.?\s*э\.?)\s*$/i.test(text)) {
     bce = true;
-    text = text.replace(/\s*(BCE|BC|B\.C\.E?|B\.C\.)\s*$/i, '');
+    text = text.replace(/\s*(BCE|BC|B\.C\.E?|B\.C\.|до\s*н\.?\s*э\.?)\s*$/i, '');
   }
 
   text = text.trim();
 
-  const dayMatch = text.match(/^(\d{1,2})\s*/);
-  const day = dayMatch ? dayMatch[1].padStart(2, '0') : '';
+  if (/^\d{1,2}\.\s*\d{1,2}\./.test(text)) {
+    const parts = text.split(/[.\s]+/).filter(Boolean);
+    const d = parts[0]?.padStart(2, '0') || '';
+    const m = parts[1]?.padStart(2, '0') || '';
+    let y = parts[2] || '';
+    if (bce && y) y = '-' + y.padStart(4, '0');
+    return { day: d, month: m, year: y, bce, approx };
+  }
 
-  let remaining = dayMatch ? text.slice(dayMatch[0].length).trim() : text;
+  if (/^\d{1,2}\s+[а-яa-z]/.test(text)) {
+    const dayMatch = text.match(/^(\d{1,2})\s*/);
+    const day = dayMatch ? dayMatch[1].padStart(2, '0') : '';
+    let remaining = dayMatch ? text.slice(dayMatch[0].length).trim() : text;
+    const monthText = remaining.match(/^([а-яa-zA-Zéèêëàâùûüôöîïç]+)/);
+    let month = '';
+    if (monthText) {
+      const parsed = parseMonthName(monthText[1]);
+      if (parsed) {
+        month = parsed;
+        remaining = remaining.slice(monthText[0].length).trim();
+        remaining = remaining.replace(/^[,.\s]+/, '');
+      }
+    }
+    const yearMatch = remaining.match(/^(-?\d{1,4})/);
+    let year = yearMatch ? yearMatch[1] : '';
+    if (bce && year && !year.startsWith('-')) year = '-' + year.padStart(4, '0');
+    return { day, month, year, bce, approx };
+  }
 
-  const monthText = remaining.match(/^([a-zA-Zéèêëàâùûüôöîïç]+)/);
+  const monthText = text.match(/^([а-яa-zA-Zéèêëàâùûüôöîïç]+)/);
+  let remaining = text;
   let month = '';
   if (monthText) {
     const parsed = parseMonthName(monthText[1]);
     if (parsed) {
       month = parsed;
-      remaining = remaining.slice(monthText[0].length).trim();
+      remaining = text.slice(monthText[0].length).trim();
       remaining = remaining.replace(/^[,.\s]+/, '');
     }
   }
 
   const yearMatch = remaining.match(/^(-?\d{1,4})/);
-  let year = '';
-  if (yearMatch) {
-    year = yearMatch[1];
-  }
+  let year = yearMatch ? yearMatch[1] : '';
+  if (bce && year && !year.startsWith('-')) year = '-' + year.padStart(4, '0');
 
-  if (bce && year && !year.startsWith('-')) {
-    year = '-' + year.padStart(4, '0');
-  }
-
-  return { day, month, year, bce, approx };
+  return { day: '', month, year, bce, approx };
 }
 
 function composeCanonical(day: string, month: string, year: string, bce: boolean, approx: boolean, precision: DatePrecision): string {
@@ -96,12 +131,22 @@ function composeCanonical(day: string, month: string, year: string, bce: boolean
   return base;
 }
 
-function formatReadable(value: string, precision: DatePrecision): string {
+const MONTH_NAMES_EN = ['', 'January', 'February', 'March', 'April', 'May', 'June',
+  'July', 'August', 'September', 'October', 'November', 'December'];
+
+const MONTH_NAMES_RU = ['', 'января', 'февраля', 'марта', 'апреля', 'мая', 'июня',
+  'июля', 'августа', 'сентября', 'октября', 'ноября', 'декабря'];
+
+function formatLocale(locale: Locale): 'ru' | 'en' {
+  return locale === 'ru' ? 'ru' : 'en';
+}
+
+function formatReadable(value: string, precision: DatePrecision, locale: 'ru' | 'en' = 'en'): string {
   if (!value) return '';
   let text = value;
   let prefix = '';
   if (text.startsWith('~')) {
-    prefix = '≈ ';
+    prefix = locale === 'ru' ? '≈ ' : '≈ ';
     text = text.slice(1);
   }
   let bce = false;
@@ -114,13 +159,16 @@ function formatReadable(value: string, precision: DatePrecision): string {
   const m = parts[1] || '';
   const d = parts[2] || '';
 
-  const monthNames = ['', 'January', 'February', 'March', 'April', 'May', 'June',
-    'July', 'August', 'September', 'October', 'November', 'December'];
+  const monthNames = locale === 'ru' ? MONTH_NAMES_RU : MONTH_NAMES_EN;
 
   let display = '';
   if (precision === 'full' && d && m) {
     const mn = monthNames[parseInt(m, 10)] || m;
-    display = `${parseInt(d, 10)} ${mn} ${y}`;
+    if (locale === 'ru') {
+      display = `${parseInt(d, 10)} ${mn} ${y}`;
+    } else {
+      display = `${parseInt(d, 10)} ${mn} ${y}`;
+    }
   } else if (precision === 'month_year' && m) {
     const mn = monthNames[parseInt(m, 10)] || m;
     display = `${mn} ${y}`;
@@ -129,7 +177,7 @@ function formatReadable(value: string, precision: DatePrecision): string {
   } else if (precision === 'approximate') {
     display = y;
   }
-  if (bce) display += ' BCE';
+  if (bce) display += locale === 'ru' ? ' до н.э.' : ' BCE';
   return prefix + display;
 }
 
@@ -152,21 +200,22 @@ const labelStyle: React.CSSProperties = {
   color: 'var(--text-muted)', marginBottom: '4px',
 };
 
-export default function HistoricalDateField({ label, value, precision, onChange }: HistoricalDateFieldProps) {
+export default function HistoricalDateField({ label, value, precision, onChange, locale }: HistoricalDateFieldProps) {
   const [textInput, setTextInput] = useState('');
   const [activePrecision, setActivePrecision] = useState<DatePrecision>(precision);
   const [parsed, setParsed] = useState({ day: '', month: '', year: '', bce: false, approx: false });
   const initialized = useRef(false);
+  const activeLocale: 'ru' | 'en' = formatLocale(locale || getBrowserLocale());
 
   useEffect(() => {
     if (!initialized.current) {
       const p = naturalParse(value);
       setParsed(p);
       setActivePrecision(precision);
-      setTextInput(formatReadable(value, precision));
+      setTextInput(formatReadable(value, precision, activeLocale));
       initialized.current = true;
     }
-  }, [value, precision]);
+  }, [value, precision, activeLocale]);
 
   const emitChange = (d: string, m: string, y: string, b: boolean, a: boolean, p: DatePrecision) => {
     const composed = composeCanonical(d, m, y, b, a, p);
@@ -204,7 +253,7 @@ export default function HistoricalDateField({ label, value, precision, onChange 
         type="text"
         value={textInput}
         onChange={(e) => handleTextChange(e.target.value)}
-        placeholder="e.g. 1816, April 1816, 15 April 1816, ~550 BCE"
+        placeholder={activeLocale === 'ru' ? 'например 1816, апрель 1816, 15 апреля 1816, ~550 до н.э.' : 'e.g. 1816, April 1816, 15 April 1816, ~550 BCE'}
         style={inputStyle}
       />
       <div style={{ display: 'flex', gap: '6px', marginTop: '6px', flexWrap: 'wrap', alignItems: 'center' }}>
@@ -226,12 +275,12 @@ export default function HistoricalDateField({ label, value, precision, onChange 
         ))}
         <label style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '12px', color: 'var(--text-muted)', cursor: 'pointer', marginLeft: '8px' }}>
           <input type="checkbox" checked={parsed.bce} onChange={handleBceToggle} />
-          BCE
+          {activeLocale === 'ru' ? 'до н.э.' : 'BCE'}
         </label>
       </div>
       {value && (
         <div style={{ fontSize: '13px', color: 'var(--text-secondary)', marginTop: '4px', fontStyle: 'italic' }}>
-          {formatReadable(value, precision)}
+          {formatReadable(value, precision, activeLocale)}
         </div>
       )}
     </div>

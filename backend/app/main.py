@@ -108,6 +108,10 @@ async def ensure_user_profile_columns(conn):
         "ALTER TABLE authors ADD COLUMN IF NOT EXISTS portrait_caption VARCHAR",
         "ALTER TABLE authors ADD COLUMN IF NOT EXISTS hero_background_url VARCHAR",
         "ALTER TABLE authors ADD COLUMN IF NOT EXISTS author_intro_quote VARCHAR",
+        "ALTER TABLE authors ADD COLUMN IF NOT EXISTS birth_date_precision VARCHAR DEFAULT 'full'",
+        "ALTER TABLE authors ADD COLUMN IF NOT EXISTS death_date_precision VARCHAR DEFAULT 'full'",
+        "ALTER TABLE authors ADD COLUMN IF NOT EXISTS birth_place_id UUID REFERENCES places(id) ON DELETE SET NULL",
+        "ALTER TABLE authors ADD COLUMN IF NOT EXISTS death_place_id UUID REFERENCES places(id) ON DELETE SET NULL",
         "ALTER TABLE authors ADD COLUMN IF NOT EXISTS metadata_status VARCHAR NOT NULL DEFAULT 'draft'",
     ]
     for sql in statements:
@@ -414,6 +418,16 @@ async def seed_books(conn):
 
 @app.on_event("startup")
 async def startup():
+    # Run Alembic migrations to ensure schema is up to date
+    try:
+        from alembic.config import Config
+        from alembic.command import upgrade as alembic_upgrade
+        alembic_cfg = Config("alembic.ini")
+        alembic_upgrade(alembic_cfg, "head")
+        logger.info("✅ Alembic migrations applied")
+    except Exception as e:
+        logger.warning(f"Alembic migration failed (falling back to runtime ALTER TABLE): {e}")
+
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
         await ensure_user_profile_columns(conn)

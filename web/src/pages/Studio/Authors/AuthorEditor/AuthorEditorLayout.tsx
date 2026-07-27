@@ -67,6 +67,7 @@ function EditorContent() {
         lastUpdated={lastUpdated}
         statusLabel={author.creation_type === 'auto' ? t.admin.authors.editor.autoImported : t.admin.authors.editor.curated}
         identitySummary={identityParts.join(' · ')}
+        metadataStatus={author.metadata_status}
       />
       <EditorSectionNav
         sections={SECTION_PATHS.map((p) => ({

@@ -229,17 +229,18 @@ export interface LocaleData {
       errorUpdate: string;
       errorDelete: string;
       editor: {
-        sections: {
-          overview: string;
-          identity: string;
-          biography: string;
-          timeline: string;
-          works: string;
-          quotes: string;
-          graph: string;
-          media: string;
-          seo: string;
-        };
+          sections: {
+            overview: string;
+            identity: string;
+            biography: string;
+            timeline: string;
+            works: string;
+            quotes: string;
+            graph: string;
+            media: string;
+            seo: string;
+            sources: string;
+          };
         status: string;
         complete: string;
         updated: string;
@@ -332,10 +333,25 @@ export interface LocaleData {
         };
         timeline: {
           birth: string;
-          firstPublication: string;
-          majorWork: string;
           death: string;
+          publication: string;
+          award: string;
+          milestone: string;
+          eventType: string;
+          datePrecision: string;
+          fullDate: string;
+          monthYear: string;
+          yearOnly: string;
+          approximate: string;
+          label: string;
+          description: string;
+          eventPlace: string;
+          eventSource: string;
           addEvent: string;
+          editEvent: string;
+          deleteEvent: string;
+          noEvents: string;
+          confirmedDelete: string;
           workspace: string;
           workspaceDesc: string;
         };
@@ -384,6 +400,18 @@ export interface LocaleData {
           externalReferences: string;
           officialWebsite: string;
           wikipedia: string;
+        };
+        sources: {
+          title: string;
+          sourceType: string;
+          url: string;
+          citation: string;
+          notes: string;
+          addSource: string;
+          editSource: string;
+          deleteSource: string;
+          noSources: string;
+          confirmedDelete: string;
         };
       };
     };

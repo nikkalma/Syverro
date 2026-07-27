@@ -1102,9 +1102,13 @@ async def get_author_detail(
         "birth_year": author.birth_year,
         "death_year": author.death_year,
         "birth_date": author.birth_date,
+        "birth_date_precision": author.birth_date_precision or "full",
         "death_date": author.death_date,
+        "death_date_precision": author.death_date_precision or "full",
         "birth_place": author.birth_place,
+        "birth_place_id": str(author.birth_place_id) if author.birth_place_id else None,
         "death_place": author.death_place,
+        "death_place_id": str(author.death_place_id) if author.death_place_id else None,
         "occupations": author.occupations or [],
         "literary_movements": author.literary_movements or [],
         "active_from_year": author.active_from_year,
@@ -1119,6 +1123,7 @@ async def get_author_detail(
         "hero_background_url": author.hero_background_url,
         "author_intro_quote": author.author_intro_quote,
         "creation_type": author.creation_type or "individual_author",
+        "metadata_status": author.metadata_status or "draft",
         "book_count": book_count,
         "awards": [{
             "id": str(a.id),
@@ -1150,27 +1155,30 @@ def _make_slug(name: str, native_name: Optional[str] = None) -> str:
     return slug or 'unknown'
 
 
-def validate_author_dates(birth_date: Optional[str], death_date: Optional[str]) -> None:
-    if birth_date:
+def validate_author_dates(
+    birth_date: Optional[str],
+    death_date: Optional[str],
+    birth_precision: Optional[str] = None,
+    death_precision: Optional[str] = None,
+) -> None:
+    def _parse_year(date_str: str) -> Optional[int]:
+        cleaned = date_str.strip().lstrip("~")
+        if not cleaned:
+            return None
         try:
-            bd = datetime.strptime(birth_date[:10], "%Y-%m-%d")
-            if bd > datetime.utcnow():
-                raise HTTPException(status_code=422, detail="Birth date cannot be in the future")
+            return int(cleaned[:4])
         except ValueError:
-            raise HTTPException(status_code=422, detail="Invalid birth_date format, expected YYYY-MM-DD")
-    if death_date:
-        try:
-            dd = datetime.strptime(death_date[:10], "%Y-%m-%d")
-        except ValueError:
-            raise HTTPException(status_code=422, detail="Invalid death_date format, expected YYYY-MM-DD")
-    if birth_date and death_date:
-        try:
-            bd = datetime.strptime(birth_date[:10], "%Y-%m-%d")
-            dd = datetime.strptime(death_date[:10], "%Y-%m-%d")
-            if dd < bd:
-                raise HTTPException(status_code=422, detail="Death date cannot be before birth date")
-        except ValueError:
-            pass
+            return None
+
+    if birth_date and birth_precision != "approximate":
+        year = _parse_year(birth_date)
+        if year is not None and year > 0 and year > datetime.utcnow().year:
+            raise HTTPException(status_code=422, detail="Birth date cannot be in the future")
+    if birth_date and death_date and birth_precision != "approximate" and death_precision != "approximate":
+        by = _parse_year(birth_date)
+        dy = _parse_year(death_date)
+        if by is not None and dy is not None and dy < by:
+            raise HTTPException(status_code=422, detail="Death date cannot be before birth date")
 
 
 @router.post("/authors")
@@ -1181,7 +1189,7 @@ async def create_author(
 ):
     await check_admin(current_user)
 
-    validate_author_dates(data.birth_date, data.death_date)
+    validate_author_dates(data.birth_date, data.death_date, data.birth_date_precision, data.death_date_precision)
 
     # Name uniqueness check
     existing = await db.execute(
@@ -1249,7 +1257,7 @@ async def update_author(
     await check_admin(current_user)
 
     validate_author_slug(data.slug)
-    validate_author_dates(data.birth_date, data.death_date)
+    validate_author_dates(data.birth_date, data.death_date, data.birth_date_precision, data.death_date_precision)
 
     result = await db.execute(select(Author).where(Author.id == author_id))
     author = result.scalar_one_or_none()

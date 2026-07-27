@@ -14,6 +14,10 @@ from app.models.knowledge_relation import KnowledgeRelation
 from app.models.book_knowledge_relation import BookKnowledgeRelation
 from app.models.user_book_experience import UserBookExperience
 from app.models.author_award import AuthorAward
+from app.models.source import Source
+from app.models.place import Place
+from app.models.author_knowledge_relation import AuthorKnowledgeRelation
+from app.models.timeline_event import TimelineEvent
 
 __all__ = [
     "User",
@@ -30,4 +34,8 @@ __all__ = [
     "BookKnowledgeRelation",
     "UserBookExperience",
     "AuthorAward",
+    "Source",
+    "Place",
+    "AuthorKnowledgeRelation",
+    "TimelineEvent",
 ]

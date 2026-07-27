@@ -9,6 +9,10 @@ from .authors import router as authors_router
 from .graph import router as graph_router
 from .graph_queries import router as graph_queries_router
 from .user_book_experience import router as user_book_experience_router
+from .admin_timeline import router as admin_timeline_router
+from .admin_sources import router as admin_sources_router
+from .admin_places import router as admin_places_router
+from .admin_author_knowledge import router as admin_author_knowledge_router
 
 routers = [
     auth_router,
@@ -22,4 +26,8 @@ routers = [
     graph_router,
     graph_queries_router,
     user_book_experience_router,
+    admin_timeline_router,
+    admin_sources_router,
+    admin_places_router,
+    admin_author_knowledge_router,
 ]

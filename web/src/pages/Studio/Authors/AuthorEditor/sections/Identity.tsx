@@ -3,11 +3,11 @@ import { useAuthorEditor } from '../AuthorEditorContext';
 import EditorSectionCard from '../../../../../components/Studio/shared/EditorSectionCard';
 import DetailGrid from '../../../../../components/Studio/shared/DetailGrid';
 import ActionBar from '../../../../../components/Studio/shared/ActionBar';
-
-import SuggestionInput from '../../../../../components/Studio/shared/SuggestionInput';
-import DatePickerField from '../../../../../components/Studio/shared/DatePickerField';
+import HistoricalDateField from '../../../../../components/Studio/shared/HistoricalDateField';
+import PlaceSelector from '../../../../../components/Studio/shared/PlaceSelector';
+import TaxonomyPicker from '../../../../../components/Studio/shared/TaxonomyPicker';
 import { getLocaleData, getBrowserLocale } from '../../../../../locales';
-import type { AdminAuthorUpdate } from '../../../../../types/admin';
+import type { AdminAuthorUpdate, DatePrecision } from '../../../../../types/admin';
 
 function FormField({ label, value, onChange, placeholder, disabled }: {
   label: string;
@@ -55,15 +55,18 @@ export default function Identity() {
   const t = getLocaleData(getBrowserLocale());
   const { author, loading, saving, saveError, updateAuthor } = useAuthorEditor();
 
-  const [nativeName, setNativeName] = useState('');
   const [birthName, setBirthName] = useState('');
   const [sortName, setSortName] = useState('');
   const [penNames, setPenNames] = useState<string[]>([]);
 
   const [birthDate, setBirthDate] = useState('');
-  const [birthPlace, setBirthPlace] = useState('');
+  const [birthDatePrecision, setBirthDatePrecision] = useState<DatePrecision>('full');
+  const [birthPlaceId, setBirthPlaceId] = useState<string | null>(null);
+  const [birthPlaceName, setBirthPlaceName] = useState<string | null>(null);
   const [deathDate, setDeathDate] = useState('');
-  const [deathPlace, setDeathPlace] = useState('');
+  const [deathDatePrecision, setDeathDatePrecision] = useState<DatePrecision>('full');
+  const [deathPlaceId, setDeathPlaceId] = useState<string | null>(null);
+  const [deathPlaceName, setDeathPlaceName] = useState<string | null>(null);
 
   const [nationality, setNationality] = useState('');
   const [occupations, setOccupations] = useState<string[]>([]);
@@ -71,42 +74,49 @@ export default function Identity() {
 
   useEffect(() => {
     if (!author) return;
-    setNativeName(author.native_name || '');
     setBirthName(author.birth_name || '');
     setSortName(author.sort_name || '');
     setPenNames(author.pen_names || []);
     setBirthDate(author.birth_date || '');
-    setBirthPlace(author.birth_place || '');
+    setBirthDatePrecision((author.birth_date_precision as DatePrecision) || 'full');
+    setBirthPlaceId(author.birth_place_id || null);
+    setBirthPlaceName(author.birth_place || null);
     setDeathDate(author.death_date || '');
-    setDeathPlace(author.death_place || '');
+    setDeathDatePrecision((author.death_date_precision as DatePrecision) || 'full');
+    setDeathPlaceId(author.death_place_id || null);
+    setDeathPlaceName(author.death_place || null);
     setNationality(author.nationality || '');
     setOccupations(author.occupations || []);
     setLiteraryMovements(author.literary_movements || []);
   }, [author]);
 
   const hasChanges =
-    nativeName !== (author?.native_name || '') ||
     birthName !== (author?.birth_name || '') ||
     sortName !== (author?.sort_name || '') ||
     !arraysEqual(penNames, author?.pen_names || []) ||
     birthDate !== (author?.birth_date || '') ||
-    birthPlace !== (author?.birth_place || '') ||
+    birthDatePrecision !== ((author?.birth_date_precision as DatePrecision) || 'full') ||
+    birthPlaceId !== (author?.birth_place_id || null) ||
     deathDate !== (author?.death_date || '') ||
-    deathPlace !== (author?.death_place || '') ||
+    deathDatePrecision !== ((author?.death_date_precision as DatePrecision) || 'full') ||
+    deathPlaceId !== (author?.death_place_id || null) ||
     nationality !== (author?.nationality || '') ||
     !arraysEqual(occupations, author?.occupations || []) ||
     !arraysEqual(literaryMovements, author?.literary_movements || []);
 
   const reset = () => {
     if (!author) return;
-    setNativeName(author.native_name || '');
     setBirthName(author.birth_name || '');
     setSortName(author.sort_name || '');
     setPenNames(author.pen_names || []);
     setBirthDate(author.birth_date || '');
-    setBirthPlace(author.birth_place || '');
+    setBirthDatePrecision((author.birth_date_precision as DatePrecision) || 'full');
+    setBirthPlaceId(author.birth_place_id || null);
+    setBirthPlaceName(author.birth_place || null);
     setDeathDate(author.death_date || '');
-    setDeathPlace(author.death_place || '');
+    setDeathDatePrecision((author.death_date_precision as DatePrecision) || 'full');
+    setDeathPlaceId(author.death_place_id || null);
+    setDeathPlaceName(author.death_place || null);
     setNationality(author.nationality || '');
     setOccupations(author.occupations || []);
     setLiteraryMovements(author.literary_movements || []);
@@ -114,14 +124,17 @@ export default function Identity() {
 
   const handleSave = async () => {
     const data: AdminAuthorUpdate = {
-      native_name: stringOrNull(nativeName),
       birth_name: stringOrNull(birthName),
       sort_name: stringOrNull(sortName),
       pen_names: penNames,
       birth_date: stringOrNull(birthDate),
-      birth_place: stringOrNull(birthPlace),
+      birth_date_precision: birthDatePrecision,
+      birth_place_id: birthPlaceId,
+      birth_place: birthPlaceName,
       death_date: stringOrNull(deathDate),
-      death_place: stringOrNull(deathPlace),
+      death_date_precision: deathDatePrecision,
+      death_place_id: deathPlaceId,
+      death_place: deathPlaceName,
       nationality: stringOrNull(nationality),
       occupations,
       literary_movements: literaryMovements,
@@ -135,15 +148,14 @@ export default function Identity() {
     <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
       <EditorSectionCard title={t.admin.authors.editor.identity.alternativeNames}>
         <DetailGrid>
-          <FormField label={t.admin.authors.editor.identity.nativeName} value={nativeName} onChange={setNativeName} />
           <FormField label={t.admin.authors.editor.identity.birthName} value={birthName} onChange={setBirthName} />
           <FormField label={t.admin.authors.editor.identity.sortName} value={sortName} onChange={setSortName} />
         </DetailGrid>
         <div style={{ marginTop: '16px' }}>
-          <SuggestionInput
+          <TaxonomyPicker
             label={t.admin.authors.editor.identity.penNames}
+            nodeType="pen_name"
             values={penNames}
-            suggestions={[]}
             onChange={setPenNames}
           />
         </div>
@@ -152,15 +164,35 @@ export default function Identity() {
       <EditorSectionCard title={t.admin.authors.editor.identity.lifeEvents}>
         <DetailGrid>
           <div>
-            <DatePickerField label={t.admin.authors.editor.identity.birthDate} value={birthDate} onChange={setBirthDate} />
+            <HistoricalDateField
+              label={t.admin.authors.editor.identity.birthDate}
+              value={birthDate}
+              precision={birthDatePrecision}
+              onChange={(v, p) => { setBirthDate(v); setBirthDatePrecision(p); }}
+            />
             <div style={{ marginTop: '8px' }}>
-              <FormField label={t.admin.authors.editor.identity.birthPlace} value={birthPlace} onChange={setBirthPlace} placeholder="Город, страна" />
+              <PlaceSelector
+                label={t.admin.authors.editor.identity.birthPlace}
+                placeId={birthPlaceId}
+                placeName={birthPlaceName}
+                onChange={(id, name) => { setBirthPlaceId(id); setBirthPlaceName(name); }}
+              />
             </div>
           </div>
           <div>
-            <DatePickerField label={t.admin.authors.editor.identity.deathDate} value={deathDate} onChange={setDeathDate} />
+            <HistoricalDateField
+              label={t.admin.authors.editor.identity.deathDate}
+              value={deathDate}
+              precision={deathDatePrecision}
+              onChange={(v, p) => { setDeathDate(v); setDeathDatePrecision(p); }}
+            />
             <div style={{ marginTop: '8px' }}>
-              <FormField label={t.admin.authors.editor.identity.deathPlace} value={deathPlace} onChange={setDeathPlace} placeholder="Город, страна" />
+              <PlaceSelector
+                label={t.admin.authors.editor.identity.deathPlace}
+                placeId={deathPlaceId}
+                placeName={deathPlaceName}
+                onChange={(id, name) => { setDeathPlaceId(id); setDeathPlaceName(name); }}
+              />
             </div>
           </div>
         </DetailGrid>
@@ -177,10 +209,10 @@ export default function Identity() {
         title={t.admin.authors.editor.identity.occupations}
         description={t.admin.authors.editor.identity.occupationsDesc}
       >
-        <SuggestionInput
+        <TaxonomyPicker
           label={t.admin.authors.editor.identity.occupations}
+          nodeType="occupation"
           values={occupations}
-          suggestions={[]}
           onChange={setOccupations}
         />
       </EditorSectionCard>
@@ -189,10 +221,10 @@ export default function Identity() {
         title={t.admin.authors.editor.identity.literaryMovements}
         description={t.admin.authors.editor.identity.literaryMovementsDesc}
       >
-        <SuggestionInput
+        <TaxonomyPicker
           label={t.admin.authors.editor.identity.literaryMovements}
+          nodeType="literary_direction"
           values={literaryMovements}
-          suggestions={[]}
           onChange={setLiteraryMovements}
         />
       </EditorSectionCard>

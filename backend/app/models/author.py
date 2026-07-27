@@ -1,4 +1,4 @@
-from sqlalchemy import Column, String, Text, Integer, DateTime
+from sqlalchemy import Column, String, Text, Integer, Float, DateTime, ForeignKey
 from sqlalchemy.orm import relationship
 from sqlalchemy.dialects.postgresql import UUID, ARRAY
 from datetime import datetime
@@ -40,9 +40,13 @@ class Author(Base):
     birth_year = Column(Integer, nullable=True)
     death_year = Column(Integer, nullable=True)
     birth_date = Column(String, nullable=True)
+    birth_date_precision = Column(String, server_default="full", nullable=True)
     death_date = Column(String, nullable=True)
+    death_date_precision = Column(String, server_default="full", nullable=True)
     birth_place = Column(String, nullable=True)
+    birth_place_id = Column(UUID(as_uuid=True), ForeignKey("places.id", ondelete="SET NULL"), nullable=True)
     death_place = Column(String, nullable=True)
+    death_place_id = Column(UUID(as_uuid=True), ForeignKey("places.id", ondelete="SET NULL"), nullable=True)
 
     # === CAREER ===
     occupations = Column(ARRAY(String), nullable=True, server_default="{}")
@@ -65,20 +69,26 @@ class Author(Base):
 
     # === SYSTEM ===
     creation_type = Column(String, default="individual_author", nullable=False)
-    # individual_author | multiple_authors | anonymous_traditional |
-    # religious_canon | oral_tradition | collective_creation
+    metadata_status = Column(String, default="draft", nullable=False)
+    # draft | identity_complete | editorial_complete | knowledge_complete | review_ready | golden
 
     books = relationship(
         "Book",
         back_populates="author_ref"
-    )  # legacy one-to-many via Book.author_id
+    )
     book_refs = relationship(
         "Book",
         secondary="book_authors",
         back_populates="authors"
-    )  # many-to-many via book_authors
+    )
 
     awards = relationship("AuthorAward", back_populates="author", cascade="all, delete-orphan")
+    timeline_events = relationship(
+        "TimelineEvent",
+        back_populates="author",
+        cascade="all, delete-orphan",
+        order_by="TimelineEvent.sort_order"
+    )
 
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)

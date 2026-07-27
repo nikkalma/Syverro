@@ -36,6 +36,7 @@ import {
   Graph,
   Media,
   Seo,
+  Sources,
 } from "./pages/Studio/Authors/AuthorEditor";
 import StudioGenres from "./pages/Studio/Genres";
 import StudioTaxonomy from "./pages/Studio/Taxonomy";
@@ -104,6 +105,7 @@ export default function App() {
               <Route path="graph" element={<Graph />} />
               <Route path="media" element={<Media />} />
               <Route path="seo" element={<Seo />} />
+              <Route path="sources" element={<Sources />} />
             </Route>
           </Route>
         </Route>

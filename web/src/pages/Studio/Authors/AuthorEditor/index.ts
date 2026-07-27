@@ -8,3 +8,4 @@ export { default as Quotes } from './sections/Quotes';
 export { default as Graph } from './sections/Graph';
 export { default as Media } from './sections/Media';
 export { default as Seo } from './sections/Seo';
+export { default as Sources } from './sections/Sources';

@@ -60,9 +60,13 @@ class AuthorBase(BaseModel):
     birth_year: Optional[int] = None
     death_year: Optional[int] = None
     birth_date: Optional[str] = None
+    birth_date_precision: Optional[str] = "full"
     death_date: Optional[str] = None
+    death_date_precision: Optional[str] = "full"
     birth_place: Optional[str] = None
     death_place: Optional[str] = None
+    birth_place_id: Optional[UUID] = None
+    death_place_id: Optional[UUID] = None
 
     # Career
     occupations: Optional[List[str]] = None
@@ -118,9 +122,13 @@ class AuthorUpdate(BaseModel):
     birth_year: Optional[int] = None
     death_year: Optional[int] = None
     birth_date: Optional[str] = None
+    birth_date_precision: Optional[str] = None
     death_date: Optional[str] = None
+    death_date_precision: Optional[str] = None
     birth_place: Optional[str] = None
     death_place: Optional[str] = None
+    birth_place_id: Optional[UUID] = None
+    death_place_id: Optional[UUID] = None
 
     occupations: Optional[List[str]] = None
     literary_movements: Optional[List[str]] = None
@@ -142,6 +150,9 @@ class AuthorUpdate(BaseModel):
 class AuthorResponse(AuthorBase):
     id: UUID
     creation_type: str = "individual_author"
+    metadata_status: str = "draft"
+    birth_date_precision: str = "full"
+    death_date_precision: str = "full"
     awards: List[AuthorAwardResponse] = []
     created_at: datetime
     updated_at: datetime

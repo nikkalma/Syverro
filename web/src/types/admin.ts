@@ -206,9 +206,13 @@ export interface AdminAuthor {
   // Biography
   bio?: string | null;
   birth_date?: string | null;
+  birth_date_precision?: string;
   death_date?: string | null;
+  death_date_precision?: string;
   birth_place?: string | null;
+  birth_place_id?: string | null;
   death_place?: string | null;
+  death_place_id?: string | null;
   // Career
   occupations?: string[];
   literary_movements?: string[];
@@ -229,6 +233,7 @@ export interface AdminAuthor {
   slug_locked?: boolean;
   // System
   creation_type: string;
+  metadata_status: string;
   book_count: number;
   awards?: AuthorAward[];
   created_at: string;
@@ -288,9 +293,13 @@ export interface AdminAuthorCreate {
   wikipedia_url?: string | null;
   bio?: string | null;
   birth_date?: string | null;
+  birth_date_precision?: string;
   death_date?: string | null;
+  death_date_precision?: string;
   birth_place?: string | null;
+  birth_place_id?: string | null;
   death_place?: string | null;
+  death_place_id?: string | null;
   occupations?: string[];
   literary_movements?: string[];
   active_from_year?: number | null;
@@ -306,6 +315,7 @@ export interface AdminAuthorCreate {
   author_intro_quote?: string | null;
   short_description?: string | null;
   slug_locked?: boolean;
+  metadata_status?: string;
 }
 
 export interface AdminAuthorUpdate extends Partial<AdminAuthorCreate> {}
@@ -317,6 +327,135 @@ export const GENDER_OPTIONS = [
   { value: 'nonbinary', label: 'Небинарный' },
   { value: 'organization', label: 'Организация' },
 ];
+
+// ============================================================
+// DATE PRECISION
+// ============================================================
+
+export type DatePrecision = 'full' | 'month_year' | 'year' | 'approximate';
+
+// ============================================================
+// TIMELINE EVENTS
+// ============================================================
+
+export interface TimelineEvent {
+  id: string;
+  author_id: string;
+  event_type: string;
+  date_value: string;
+  date_precision: DatePrecision;
+  label: string;
+  description?: string | null;
+  place_id?: string | null;
+  source_id?: string | null;
+  confidence: number;
+  status: string;
+  sort_order: number;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface TimelineEventCreate {
+  event_type: string;
+  date_value: string;
+  date_precision: DatePrecision;
+  label: string;
+  description?: string | null;
+  place_id?: string | null;
+  source_id?: string | null;
+  confidence?: number;
+  status?: string;
+  sort_order?: number;
+}
+
+export interface TimelineEventUpdate extends Partial<TimelineEventCreate> {}
+
+// ============================================================
+// SOURCES
+// ============================================================
+
+export interface Source {
+  id: string;
+  title: string;
+  source_type: string;
+  url?: string | null;
+  citation?: string | null;
+  notes?: string | null;
+  created_at: string;
+}
+
+export interface SourceCreate {
+  title: string;
+  source_type: string;
+  url?: string | null;
+  citation?: string | null;
+  notes?: string | null;
+}
+
+export interface SourceUpdate extends Partial<SourceCreate> {}
+
+// ============================================================
+// PLACES
+// ============================================================
+
+export interface Place {
+  id: string;
+  name: string;
+  name_native?: string | null;
+  latitude?: number | null;
+  longitude?: number | null;
+  country?: string | null;
+  region?: string | null;
+  place_type?: string | null;
+  wikidata_id?: string | null;
+  created_at: string;
+}
+
+export interface PlaceCreate {
+  name: string;
+  name_native?: string | null;
+  latitude?: number | null;
+  longitude?: number | null;
+  country?: string | null;
+  region?: string | null;
+  place_type?: string | null;
+  wikidata_id?: string | null;
+}
+
+export interface PlaceUpdate extends Partial<PlaceCreate> {}
+
+// ============================================================
+// AUTHOR KNOWLEDGE RELATIONS
+// ============================================================
+
+export interface AuthorKnowledgeRelation {
+  id: string;
+  author_id: string;
+  node_id: string;
+  relation_type: string;
+  source: string;
+  status: string;
+  confidence: number;
+  source_id?: string | null;
+  created_at: string;
+  node_name?: string | null;
+  node_type?: string | null;
+}
+
+export interface AuthorKnowledgeRelationCreate {
+  node_id: string;
+  relation_type: string;
+  source?: string;
+  status?: string;
+  confidence?: number;
+  source_id?: string | null;
+}
+
+export interface AuthorKnowledgeRelationUpdate {
+  status?: string;
+  confidence?: number;
+  source_id?: string | null;
+}
 
 // ============================================================
 // ЖАНРЫ

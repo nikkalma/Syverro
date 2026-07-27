@@ -25,6 +25,19 @@ from app.schemas.taxonomy import (
     UserBookExperienceBase, UserBookExperienceCreate, UserBookExperienceResponse,
     KnowledgeGraphResponse, BookKnowledgeResponse,
 )
+from app.schemas.timeline_event import (
+    TimelineEventBase, TimelineEventCreate, TimelineEventUpdate, TimelineEventResponse,
+)
+from app.schemas.source import (
+    SourceBase, SourceCreate, SourceUpdate, SourceResponse,
+)
+from app.schemas.place import (
+    PlaceBase, PlaceCreate, PlaceUpdate, PlaceResponse, PlaceBrief,
+)
+from app.schemas.author_knowledge_relation import (
+    AuthorKnowledgeRelationBase, AuthorKnowledgeRelationCreate,
+    AuthorKnowledgeRelationUpdate, AuthorKnowledgeRelationResponse,
+)
 
 __all__ = [
     # User
@@ -51,4 +64,13 @@ __all__ = [
     "BookKnowledgeRelationBase", "BookKnowledgeRelationCreate", "BookKnowledgeRelationUpdate", "BookKnowledgeRelationResponse",
     "UserBookExperienceBase", "UserBookExperienceCreate", "UserBookExperienceResponse",
     "KnowledgeGraphResponse", "BookKnowledgeResponse",
+    # Timeline
+    "TimelineEventBase", "TimelineEventCreate", "TimelineEventUpdate", "TimelineEventResponse",
+    # Source
+    "SourceBase", "SourceCreate", "SourceUpdate", "SourceResponse",
+    # Place
+    "PlaceBase", "PlaceCreate", "PlaceUpdate", "PlaceResponse", "PlaceBrief",
+    # Author Knowledge
+    "AuthorKnowledgeRelationBase", "AuthorKnowledgeRelationCreate",
+    "AuthorKnowledgeRelationUpdate", "AuthorKnowledgeRelationResponse",
 ]

@@ -10,6 +10,7 @@ import { slugify } from 'transliteration';
 const SLUG_PATTERN = /^[a-z0-9][a-z0-9-]*[a-z0-9]$|^[a-z0-9]$/;
 
 function makeSlug(text: string): string {
+  if (!text) return '';
   return slugify(text, { lowercase: true, separator: '-' });
 }
 
@@ -93,8 +94,17 @@ export default function Overview() {
   const [heroBg, setHeroBg] = useState('');
   const [shortDescription, setShortDescription] = useState('');
 
+  function generateSlugFrom(nameVal: string, nativeNameVal: string): string {
+    const source = nativeNameVal || nameVal;
+    return source ? makeSlug(source) : '';
+  }
+
   const syncFromAuthor = (a: typeof author) => {
     if (!a) return;
+    console.log('[DEBUG] Overview syncFromAuthor author:', a);
+    console.log('[DEBUG] hero_background_url:', a.hero_background_url);
+    console.log('[DEBUG] author_intro_quote:', a.author_intro_quote);
+    console.log('[DEBUG] name:', a.name);
     const nextName = a.name || '';
     const nextNativeName = a.native_name || '';
     const nextSlug = a.slug || '';
@@ -111,10 +121,8 @@ export default function Overview() {
       setSlug(nextSlug);
     } else if (nextSlug) {
       setSlug(nextSlug);
-    } else if (nextName) {
-      setSlug(makeSlug(nextName));
     } else {
-      setSlug('');
+      setSlug(generateSlugFrom(nextName, nextNativeName));
     }
 
     setPhoto(nextPhoto);
@@ -128,12 +136,12 @@ export default function Overview() {
   }, [author]);
 
   useEffect(() => {
-    if (!slugLocked && name && author) {
-      const generated = makeSlug(name);
+    if (!slugLocked && (name || nativeName) && author) {
+      const generated = generateSlugFrom(name, nativeName);
       setSlug(generated);
       setSlugError('');
     }
-  }, [name, slugLocked]);
+  }, [name, nativeName, slugLocked]);
 
   useEffect(() => {
     if (slug) {

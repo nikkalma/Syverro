@@ -1,7 +1,7 @@
 // src/pages/Studio/Users/UserModal.tsx
 
 import { useState } from 'react';
-import { AdminUser, ROLE_LABELS, ROLE_COLORS } from '../../../types/admin';
+import { AdminUser, ROLE_LABELS, ROLE_COLORS, getDisplayRole } from '../../../types/admin';
 import { apiClient } from '../../../shared/api/client';
 
 interface UserModalProps {
@@ -95,13 +95,13 @@ export default function UserModal({ isOpen, user, onClose, onUpdate }: UserModal
               fontSize: '20px',
               fontWeight: '600',
             }}>
-              {user.email?.charAt(0).toUpperCase() || 'U'}
+              {(user.first_name?.charAt(0) || user.email?.charAt(0) || 'U').toUpperCase()}
             </div>
             <div>
               <div style={{ color: '#E6EDF3', fontSize: '18px', fontWeight: '500' }}>
                 {user.first_name || user.last_name ? `${user.first_name || ''} ${user.last_name || ''}`.trim() : 'Без имени'}
               </div>
-              <div style={{ color: '#97A6BA', fontSize: '14px' }}>{user.email}</div>
+              <div style={{ color: '#97A6BA', fontSize: '14px' }}>{user.email || '—'}</div>
             </div>
           </div>
           <button
@@ -130,12 +130,12 @@ export default function UserModal({ isOpen, user, onClose, onUpdate }: UserModal
               padding: '4px 14px',
               borderRadius: '12px',
               fontSize: '14px',
-              color: ROLE_COLORS[user.role] || '#97A6BA',
+              color: ROLE_COLORS[getDisplayRole(user)] || '#97A6BA',
               background: 'rgba(255,255,255,0.05)',
-              border: `1px solid ${ROLE_COLORS[user.role] || '#2A4B60'}40`,
+              border: `1px solid ${ROLE_COLORS[getDisplayRole(user)] || '#2A4B60'}40`,
               marginTop: '4px',
             }}>
-              {ROLE_LABELS[user.role] || user.role}
+              {ROLE_LABELS[getDisplayRole(user)] || getDisplayRole(user)}
             </div>
           </div>
           <div>

@@ -346,6 +346,7 @@ export default function AdminUsers() {
 
       <UsersFilters
         onFilterChange={fetchUsers}
+        viewerRole={userRole}
       />
 
 
@@ -485,7 +486,7 @@ export default function AdminUsers() {
                     color: '#E6EDF3',
                   }}
                 >
-                  {userToDelete.email}
+                  {userToDelete.email || userToDelete.username || userToDelete.id}
                 </strong>
 
                 ?

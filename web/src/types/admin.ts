@@ -29,12 +29,13 @@ export const ROLE_COLORS: Record<AdminRole, string> = {
 
 export interface AdminUser {
   id: string;
-  email: string;
+  email?: string;
   first_name?: string | null;
   last_name?: string | null;
   username?: string | null;
   avatar?: string | null;
-  role: AdminRole;
+  role?: AdminRole;
+  visible_role: AdminRole;
   is_active: boolean;
   created_at: string;
   last_active?: string | null;
@@ -484,6 +485,10 @@ export interface AdminApiError {
 // ============================================================
 // ПРОВЕРКА ПРАВ
 // ============================================================
+
+export function getDisplayRole(user: AdminUser): AdminRole {
+  return user.visible_role ?? user.role ?? 'user';
+}
 
 export function isAdmin(role: AdminRole): boolean {
   return role === 'owner' || role === 'admin';

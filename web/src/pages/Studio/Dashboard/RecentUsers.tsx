@@ -5,11 +5,12 @@ import { getLocaleData, getBrowserLocale } from '../../../locales';
 
 interface User {
   id: string;
-  email: string;
+  email?: string;
   first_name?: string;
   last_name?: string;
   created_at: string;
-  role: string;
+  role?: string;
+  visible_role?: string;
 }
 
 interface RecentUsersProps {
@@ -62,9 +63,9 @@ export default function RecentUsers({ users }: RecentUsersProps) {
           >
             <div>
               <div style={{ color: 'var(--text-primary)', fontSize: '14px' }}>
-                {user.first_name || user.email}
+                {user.first_name || user.email || '—'}
               </div>
-              <div style={{ color: 'var(--text-muted)', fontSize: '12px' }}>{user.email}</div>
+              <div style={{ color: 'var(--text-muted)', fontSize: '12px' }}>{user.email || '—'}</div>
             </div>
             <div style={{ textAlign: 'right' }}>
               <div style={{
@@ -74,7 +75,7 @@ export default function RecentUsers({ users }: RecentUsersProps) {
                 background: 'rgba(91, 134, 161, 0.15)',
                 color: '#5B86A1',
               }}>
-                {user.role || t.admin.settings.roleUser}
+                {user.visible_role || user.role || t.admin.settings.roleUser}
               </div>
               <div style={{ color: 'var(--text-muted)', fontSize: '11px', marginTop: '4px' }}>
                 {new Date(user.created_at).toLocaleDateString()}

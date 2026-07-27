@@ -2,15 +2,16 @@
 
 import { useState, useEffect } from 'react';
 import { useAdminStore } from '../../../store/adminStore';
-import { ALL_ROLES, ROLE_LABELS } from '../../../types/admin';
+import { AdminRole, ALL_ROLES, ROLE_LABELS } from '../../../types/admin';
 
 
 interface UsersFiltersProps {
   onFilterChange: () => void;
+  viewerRole?: AdminRole;
 }
 
 
-export default function UsersFilters({ onFilterChange }: UsersFiltersProps) {
+export default function UsersFilters({ onFilterChange, viewerRole }: UsersFiltersProps) {
   const {
     searchQuery,
     setSearchQuery,
@@ -138,7 +139,7 @@ export default function UsersFilters({ onFilterChange }: UsersFiltersProps) {
         >
           <option value="all">Все роли</option>
 
-          {ALL_ROLES.map((role) => (
+          {ALL_ROLES.filter((role) => viewerRole === 'owner' || role !== 'owner').map((role) => (
             <option key={role} value={role}>
               {ROLE_LABELS[role]}
             </option>

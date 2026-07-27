@@ -1,6 +1,6 @@
 // src/pages/Studio/Users/UsersTable.tsx
 
-import { AdminUser, AdminRole, ROLE_LABELS, ROLE_COLORS } from '../../../types/admin';
+import { AdminUser, AdminRole, ROLE_LABELS, ROLE_COLORS, getDisplayRole } from '../../../types/admin';
 import { useAdminStore } from '../../../store/adminStore';
 
 interface UsersTableProps {
@@ -160,7 +160,7 @@ export default function UsersTable({
                     fontWeight: '600',
                     flexShrink: 0,
                   }}>
-                    {user.email?.charAt(0).toUpperCase() || 'U'}
+                    {(user.first_name?.charAt(0) || user.email?.charAt(0) || 'U').toUpperCase()}
                   </div>
                   <div>
                     <div style={{ color: '#E6EDF3', fontSize: '14px' }}>
@@ -170,9 +170,9 @@ export default function UsersTable({
                   </div>
                 </div>
               </td>
-              <td style={{ padding: '12px 16px', color: '#97A6BA', fontSize: '13px' }}>{user.email}</td>
+              <td style={{ padding: '12px 16px', color: '#97A6BA', fontSize: '13px' }}>{user.email || '—'}</td>
               <td style={{ padding: '12px 16px' }}>
-                {canManage ? (
+                {(canManage && user.role) ? (
                   <select
                     value={user.role}
                     onChange={(e) => {
@@ -182,9 +182,9 @@ export default function UsersTable({
                     style={{
                       padding: '4px 8px',
                       background: 'rgba(18, 28, 36, 0.6)',
-                      border: `1px solid ${ROLE_COLORS[user.role] || '#2A4B60'}`,
+                      border: `1px solid ${ROLE_COLORS[getDisplayRole(user)] || '#2A4B60'}`,
                       borderRadius: '6px',
-                      color: ROLE_COLORS[user.role] || '#E6EDF3',
+                      color: ROLE_COLORS[getDisplayRole(user)] || '#E6EDF3',
                       fontSize: '12px',
                       cursor: 'pointer',
                       fontFamily: 'Inter, sans-serif',
@@ -203,10 +203,10 @@ export default function UsersTable({
                     padding: '4px 12px',
                     borderRadius: '12px',
                     fontSize: '12px',
-                    color: ROLE_COLORS[user.role] || '#97A6BA',
+                    color: ROLE_COLORS[getDisplayRole(user)] || '#97A6BA',
                     background: 'rgba(255,255,255,0.05)',
                   }}>
-                    {ROLE_LABELS[user.role] || user.role}
+                    {ROLE_LABELS[getDisplayRole(user)] || getDisplayRole(user)}
                   </span>
                 )}
               </td>

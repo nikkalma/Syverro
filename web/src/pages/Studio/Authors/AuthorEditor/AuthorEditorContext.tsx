@@ -37,6 +37,9 @@ export function AuthorEditorProvider({ children }: { children: ReactNode }) {
     setError(null);
     try {
       const res = await apiClient.get(`/admin/authors/${id}`);
+      console.log('[DEBUG] fetchAuthor response:', res.data);
+      console.log('[DEBUG] hero_background_url:', res.data.hero_background_url);
+      console.log('[DEBUG] author_intro_quote:', res.data.author_intro_quote);
       setAuthor(res.data);
     } catch (err: any) {
       setError(err?.response?.data?.detail || err.message || 'Failed to load author');
@@ -50,8 +53,12 @@ export function AuthorEditorProvider({ children }: { children: ReactNode }) {
     setSaving(true);
     setSaveError(null);
     try {
+      console.log('[DEBUG] updateAuthor PUT payload:', data);
       await apiClient.put(`/admin/authors/${id}`, data);
       const res = await apiClient.get(`/admin/authors/${id}`);
+      console.log('[DEBUG] updateAuthor GET response:', res.data);
+      console.log('[DEBUG] hero_background_url after save:', res.data.hero_background_url);
+      console.log('[DEBUG] author_intro_quote after save:', res.data.author_intro_quote);
       setAuthor(res.data);
     } catch (err: any) {
       const msg = err?.response?.data?.detail || err.message || 'Failed to save';

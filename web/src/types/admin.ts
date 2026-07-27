@@ -229,7 +229,11 @@ export interface AdminAuthor {
   portrait_caption?: string | null;
   hero_background_url?: string | null;
   author_intro_quote?: string | null;
-  short_description?: string | null; // frontend alias read from/written to author_intro_quote
+  hero_quote?: string | null;
+  about_summary?: string | null;
+  ethnic_origin?: string | null;
+  cultural_identity?: string | null;
+  short_description?: string | null;
   slug_locked?: boolean;
   // System
   creation_type: string;
@@ -313,12 +317,125 @@ export interface AdminAuthorCreate {
   portrait_caption?: string | null;
   hero_background_url?: string | null;
   author_intro_quote?: string | null;
+  hero_quote?: string | null;
+  about_summary?: string | null;
+  ethnic_origin?: string | null;
+  cultural_identity?: string | null;
   short_description?: string | null;
   slug_locked?: boolean;
   metadata_status?: string;
 }
 
 export interface AdminAuthorUpdate extends Partial<AdminAuthorCreate> {}
+
+// ============================================================
+// AUTHOR QUOTES
+// ============================================================
+
+export interface AuthorQuote {
+  id: string;
+  author_id: string;
+  text: string;
+  speaker?: string | null;
+  source_id?: string | null;
+  date_value?: string | null;
+  confidence: number;
+  status: string;
+  sort_order: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface AuthorQuoteCreate {
+  text: string;
+  speaker?: string | null;
+  source_id?: string | null;
+  date_value?: string | null;
+  confidence?: number;
+  status?: string;
+  sort_order?: string;
+}
+
+export interface AuthorQuoteUpdate extends Partial<AuthorQuoteCreate> {}
+
+// ============================================================
+// AUTHOR CITIZENSHIPS
+// ============================================================
+
+export interface AuthorCitizenship {
+  id: string;
+  author_id: string;
+  state_name: string;
+  from_date?: string | null;
+  to_date?: string | null;
+  source_id?: string | null;
+  confidence: number;
+  status: string;
+  created_at: string;
+}
+
+export interface AuthorCitizenshipCreate {
+  state_name: string;
+  from_date?: string | null;
+  to_date?: string | null;
+  source_id?: string | null;
+  confidence?: number;
+  status?: string;
+}
+
+// ============================================================
+// AUTHOR RESIDENCES
+// ============================================================
+
+export interface AuthorResidence {
+  id: string;
+  author_id: string;
+  place_id: string;
+  from_date?: string | null;
+  to_date?: string | null;
+  source_id?: string | null;
+  confidence: number;
+  status: string;
+  created_at: string;
+}
+
+export interface AuthorResidenceCreate {
+  place_id: string;
+  from_date?: string | null;
+  to_date?: string | null;
+  source_id?: string | null;
+  confidence?: number;
+  status?: string;
+}
+
+// ============================================================
+// AI PROPOSALS
+// ============================================================
+
+export interface AIProposal {
+  id: string;
+  entity_type: string;
+  entity_id?: string | null;
+  field_name: string;
+  current_value?: string | null;
+  suggested_value: string;
+  source_type: string;
+  confidence: number;
+  status: string;
+  created_at: string;
+  reviewed_at?: string | null;
+  reviewed_by?: string | null;
+}
+
+export interface AIProposalCreate {
+  entity_type: string;
+  entity_id?: string | null;
+  field_name: string;
+  current_value?: string | null;
+  suggested_value: string;
+  source_type?: string;
+  confidence?: number;
+}
 
 export const GENDER_OPTIONS = [
   { value: 'unknown', label: 'Не указан' },
@@ -348,6 +465,7 @@ export interface TimelineEvent {
   description?: string | null;
   place_id?: string | null;
   source_id?: string | null;
+  extraction_source?: string;
   confidence: number;
   status: string;
   sort_order: number;
@@ -381,6 +499,9 @@ export interface Source {
   url?: string | null;
   citation?: string | null;
   notes?: string | null;
+  language?: string | null;
+  reliability_score: string;
+  source_origin: string;
   created_at: string;
 }
 
@@ -390,6 +511,9 @@ export interface SourceCreate {
   url?: string | null;
   citation?: string | null;
   notes?: string | null;
+  language?: string | null;
+  reliability_score?: string;
+  source_origin?: string;
 }
 
 export interface SourceUpdate extends Partial<SourceCreate> {}

@@ -113,6 +113,14 @@ async def ensure_user_profile_columns(conn):
         "ALTER TABLE authors ADD COLUMN IF NOT EXISTS birth_place_id UUID REFERENCES places(id) ON DELETE SET NULL",
         "ALTER TABLE authors ADD COLUMN IF NOT EXISTS death_place_id UUID REFERENCES places(id) ON DELETE SET NULL",
         "ALTER TABLE authors ADD COLUMN IF NOT EXISTS metadata_status VARCHAR NOT NULL DEFAULT 'draft'",
+        "ALTER TABLE authors ADD COLUMN IF NOT EXISTS hero_quote VARCHAR",
+        "ALTER TABLE authors ADD COLUMN IF NOT EXISTS about_summary VARCHAR",
+        "ALTER TABLE authors ADD COLUMN IF NOT EXISTS ethnic_origin VARCHAR",
+        "ALTER TABLE authors ADD COLUMN IF NOT EXISTS cultural_identity VARCHAR",
+        "ALTER TABLE timeline_events ADD COLUMN IF NOT EXISTS extraction_source VARCHAR NOT NULL DEFAULT 'manual'",
+        "ALTER TABLE sources ADD COLUMN IF NOT EXISTS language VARCHAR",
+        "ALTER TABLE sources ADD COLUMN IF NOT EXISTS reliability_score VARCHAR NOT NULL DEFAULT '3'",
+        "ALTER TABLE sources ADD COLUMN IF NOT EXISTS source_origin VARCHAR NOT NULL DEFAULT 'manual'",
     ]
     for sql in statements:
         await conn.execute(text(sql))

@@ -45,12 +45,27 @@ async def create_node(
 ):
     await check_admin(current_user)
 
-    # Verify slug uniqueness
+    import re as _re
+    # Normalize: trim, lowercase
+    normalized_name = data.name.strip()
+    if data.slug:
+        normalized_slug = data.slug.strip().lower()
+    else:
+        normalized_slug = _re.sub(r'[^\w\s-]', '', normalized_name.lower())
+        normalized_slug = _re.sub(r'[-\s]+', '-', normalized_slug).strip('-')
+        if not normalized_slug:
+            normalized_slug = 'unknown'
+
+    # Duplicate check by normalized slug
     existing = await db.execute(
-        select(KnowledgeNode).where(KnowledgeNode.slug == data.slug)
+        select(KnowledgeNode).where(KnowledgeNode.slug == normalized_slug)
     )
     if existing.scalar_one_or_none():
-        raise HTTPException(status_code=400, detail="Node with this slug already exists")
+        # Return existing node instead of error
+        node = existing.scalar_one()
+        return node
+
+    data.slug = normalized_slug
 
     # Verify parent exists if provided
     if data.parent_id:

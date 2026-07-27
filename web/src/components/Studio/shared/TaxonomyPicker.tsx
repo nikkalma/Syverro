@@ -1,12 +1,11 @@
 import { useState, useRef, useEffect } from 'react';
 import { apiClient } from '../../../shared/api/client';
-import { getLocaleData, getBrowserLocale } from '../../../locales';
 
 interface TaxonomyPickerProps {
-  label: string;
   nodeType: string;
-  values: string[];
+  value: string[];
   onChange: (values: string[]) => void;
+  placeholder?: string;
 }
 
 const inputStyle: React.CSSProperties = {
@@ -16,12 +15,12 @@ const inputStyle: React.CSSProperties = {
   fontFamily: 'Inter, sans-serif', boxSizing: 'border-box',
 };
 
-export default function TaxonomyPicker({ label, nodeType, values, onChange }: TaxonomyPickerProps) {
-  const _t = getLocaleData(getBrowserLocale());
+export default function TaxonomyPicker({ nodeType, value, onChange, placeholder }: TaxonomyPickerProps) {
   const [query, setQuery] = useState('');
-  const [suggestions, setSuggestions] = useState<{ id: string; name: string; isNew?: boolean }[]>([]);
+  const [suggestions, setSuggestions] = useState<{ id: string; name: string; existing?: boolean; authorCount?: number }[]>([]);
   const [isOpen, setIsOpen] = useState(false);
   const [activeIndex, setActiveIndex] = useState(-1);
+  const [showConfirm, setShowConfirm] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
   const debounceRef = useRef<ReturnType<typeof setTimeout>>();
 
@@ -29,6 +28,7 @@ export default function TaxonomyPicker({ label, nodeType, values, onChange }: Ta
     const handleClick = (e: MouseEvent) => {
       if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
         setIsOpen(false);
+        setShowConfirm(false);
       }
     };
     document.addEventListener('mousedown', handleClick);
@@ -46,13 +46,28 @@ export default function TaxonomyPicker({ label, nodeType, values, onChange }: Ta
         params: { node_type: nodeType, search: q },
       });
       const nodes: { id: string; name: string }[] = res.data || [];
-      const filtered: ({ id: string; name: string; isNew?: boolean })[] = nodes.filter((n) => !values.includes(n.name));
-      filtered.push({ id: '__new__', name: `+ Create "${q}"`, isNew: true });
-      setSuggestions(filtered);
+      const normalizedQuery = q.trim().toLowerCase();
+
+      // Filter out already selected values
+      const filtered = nodes.filter((n) => !value.includes(n.name));
+
+      // Check if an exact match already exists (case-insensitive)
+      const exactMatch = filtered.some((n) => n.name.toLowerCase() === normalizedQuery);
+
+      const result: { id: string; name: string; existing?: boolean; authorCount?: number }[] = filtered.map((n) => ({
+        ...n,
+        existing: true,
+      }));
+
+      if (!exactMatch) {
+        result.push({ id: '__new__', name: `+ Create "${q.trim()}"` });
+      }
+
+      setSuggestions(result);
       setIsOpen(true);
       setActiveIndex(-1);
     } catch {
-      setSuggestions([{ id: '__new__', name: `+ Create "${q}"`, isNew: true }]);
+      setSuggestions([{ id: '__new__', name: `+ Create "${q.trim()}"` }]);
       setIsOpen(true);
     }
   };
@@ -61,11 +76,11 @@ export default function TaxonomyPicker({ label, nodeType, values, onChange }: Ta
     if (debounceRef.current) clearTimeout(debounceRef.current);
     debounceRef.current = setTimeout(() => search(query), 300);
     return () => { if (debounceRef.current) clearTimeout(debounceRef.current); };
-  }, [query, values]);
+  }, [query, value]);
 
-  const addValue = (v: string) => {
-    if (v && !values.includes(v)) {
-      onChange([...values, v]);
+  const addValue = (name: string) => {
+    if (name && !value.includes(name)) {
+      onChange([...value, name]);
     }
     setQuery('');
     setIsOpen(false);
@@ -73,7 +88,7 @@ export default function TaxonomyPicker({ label, nodeType, values, onChange }: Ta
   };
 
   const removeValue = (v: string) => {
-    onChange(values.filter((item) => item !== v));
+    onChange(value.filter((item) => item !== v));
   };
 
   const createAndAdd = async () => {
@@ -88,13 +103,14 @@ export default function TaxonomyPicker({ label, nodeType, values, onChange }: Ta
       });
     } catch {}
     addValue(name);
+    setShowConfirm(false);
   };
 
-  const handleSelect = (s: { id: string; name: string; isNew?: boolean }) => {
-    if (s.isNew) {
-      createAndAdd();
+  const handleSelect = (s: { id: string; name: string; existing?: boolean }) => {
+    if (s.id === '__new__') {
+      setShowConfirm(true);
     } else {
-      addValue(s.name);
+      addValue(s.name.replace('✓ ', ''));
     }
   };
 
@@ -104,7 +120,7 @@ export default function TaxonomyPicker({ label, nodeType, values, onChange }: Ta
       if (activeIndex >= 0 && suggestions[activeIndex]) {
         handleSelect(suggestions[activeIndex]);
       } else if (query.trim()) {
-        createAndAdd();
+        setShowConfirm(true);
       }
     } else if (e.key === 'ArrowDown') {
       e.preventDefault();
@@ -114,17 +130,15 @@ export default function TaxonomyPicker({ label, nodeType, values, onChange }: Ta
       setActiveIndex((i) => Math.max(i - 1, 0));
     } else if (e.key === 'Escape') {
       setIsOpen(false);
+      setShowConfirm(false);
     }
   };
 
   return (
     <div>
-      <div style={{ fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--text-muted)', marginBottom: '6px' }}>
-        {label}
-      </div>
-      {values.length > 0 && (
+      {value.length > 0 && (
         <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', marginBottom: '8px' }}>
-          {values.map((v) => (
+          {value.map((v) => (
             <span key={v} style={{
               display: 'inline-flex', alignItems: 'center', gap: '4px',
               padding: '4px 10px', borderRadius: '6px', fontSize: '13px',
@@ -153,7 +167,7 @@ export default function TaxonomyPicker({ label, nodeType, values, onChange }: Ta
           onChange={(e) => { setQuery(e.target.value); setIsOpen(true); setActiveIndex(-1); }}
           onFocus={() => { if (suggestions.length > 0) setIsOpen(true); }}
           onKeyDown={handleKeyDown}
-          placeholder={`${_t.admin.authors.editor.add}...`}
+          placeholder={placeholder || 'Search...'}
           style={inputStyle}
         />
         {isOpen && suggestions.length > 0 && (
@@ -170,17 +184,50 @@ export default function TaxonomyPicker({ label, nodeType, values, onChange }: Ta
                 onMouseEnter={() => setActiveIndex(i)}
                 style={{
                   padding: '8px 12px', cursor: 'pointer', fontSize: '13px',
-                  color: i === activeIndex ? 'var(--text-primary)' : s.isNew ? 'var(--accent)' : 'var(--text-secondary)',
+                  color: i === activeIndex ? 'var(--text-primary)' : s.id === '__new__' ? 'var(--accent)' : 'var(--text-secondary)',
                   background: i === activeIndex ? 'var(--surface-hover)' : 'transparent',
                   borderBottom: i < suggestions.length - 1 ? '1px solid var(--border-soft)' : 'none',
+                  display: 'flex', alignItems: 'center', gap: '6px',
                 }}
               >
-                {s.name}
+                {s.existing && <span style={{ color: '#4CAF50', fontSize: '12px' }}>✓</span>}
+                <span style={{ flex: 1 }}>{s.name}</span>
+                {s.existing && <span style={{ fontSize: '10px', color: 'var(--text-muted)' }}>exists</span>}
               </div>
             ))}
           </div>
         )}
       </div>
+
+      {showConfirm && (
+        <div style={{
+          marginTop: '8px', padding: '12px', borderRadius: '8px',
+          border: '1px solid var(--border-soft)', background: 'var(--surface-hover)',
+        }}>
+          <p style={{ margin: '0 0 8px 0', fontSize: '13px', color: 'var(--text-primary)' }}>
+            Create new taxonomy entity?
+          </p>
+          <p style={{ margin: '0 0 4px 0', fontSize: '12px', color: 'var(--text-muted)' }}>
+            Name: <strong>{query.trim()}</strong>
+          </p>
+          <p style={{ margin: '0 0 12px 0', fontSize: '12px', color: 'var(--text-muted)' }}>
+            Type: <strong>{nodeType}</strong>
+          </p>
+          <p style={{ fontSize: '11px', color: 'var(--text-muted)', marginBottom: '8px' }}>
+            This entity will become available globally.
+          </p>
+          <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
+            <button type="button" onClick={() => setShowConfirm(false)}
+              style={{ padding: '6px 12px', background: 'transparent', border: '1px solid var(--border-soft)', borderRadius: '6px', color: 'var(--text-primary)', cursor: 'pointer', fontSize: '12px' }}>
+              Cancel
+            </button>
+            <button type="button" onClick={createAndAdd}
+              style={{ padding: '6px 12px', background: 'var(--accent)', border: 'none', borderRadius: '6px', color: '#fff', cursor: 'pointer', fontSize: '12px' }}>
+              Create
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

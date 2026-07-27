@@ -13,6 +13,7 @@ from .admin_timeline import router as admin_timeline_router
 from .admin_sources import router as admin_sources_router
 from .admin_places import router as admin_places_router
 from .admin_author_knowledge import router as admin_author_knowledge_router
+from .admin_authors_ext import router as admin_authors_ext_router
 
 routers = [
     auth_router,
@@ -30,4 +31,5 @@ routers = [
     admin_sources_router,
     admin_places_router,
     admin_author_knowledge_router,
+    admin_authors_ext_router,
 ]

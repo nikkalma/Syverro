@@ -79,6 +79,14 @@ class AuthorBase(BaseModel):
     genres: Optional[List[str]] = None
     writing_languages: Optional[List[str]] = None
 
+    # About
+    hero_quote: Optional[str] = None
+    about_summary: Optional[str] = None
+
+    # Identity Extended
+    ethnic_origin: Optional[str] = None
+    cultural_identity: Optional[str] = None
+
     # Media
     photo: Optional[str] = None
     gallery: Optional[List[str]] = None
@@ -139,6 +147,10 @@ class AuthorUpdate(BaseModel):
     genres: Optional[List[str]] = None
     writing_languages: Optional[List[str]] = None
 
+    hero_quote: Optional[str] = None
+    about_summary: Optional[str] = None
+    ethnic_origin: Optional[str] = None
+    cultural_identity: Optional[str] = None
     photo: Optional[str] = None
     gallery: Optional[List[str]] = None
     signature_image: Optional[str] = None

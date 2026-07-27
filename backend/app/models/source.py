@@ -14,4 +14,7 @@ class Source(Base):
     url = Column(String, nullable=True)
     citation = Column(Text, nullable=True)
     notes = Column(Text, nullable=True)
+    language = Column(String, nullable=True)
+    reliability_score = Column(String, server_default="3", nullable=False)
+    source_origin = Column(String, server_default="manual", nullable=False)
     created_at = Column(DateTime, server_default=func.now(), nullable=False)

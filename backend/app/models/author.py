@@ -59,6 +59,14 @@ class Author(Base):
     genres = Column(ARRAY(String), nullable=True, server_default="{}")
     writing_languages = Column(ARRAY(String), nullable=True, server_default="{}")
 
+    # === ABOUT ===
+    hero_quote = Column(String, nullable=True)
+    about_summary = Column(String, nullable=True)
+
+    # === IDENTITY EXTENDED ===
+    ethnic_origin = Column(String, nullable=True)
+    cultural_identity = Column(String, nullable=True)
+
     # === MEDIA ===
     photo = Column(String, nullable=True)
     gallery = Column(ARRAY(String), nullable=True, server_default="{}")
@@ -88,6 +96,20 @@ class Author(Base):
         back_populates="author",
         cascade="all, delete-orphan",
         order_by="TimelineEvent.sort_order"
+    )
+
+    citizenships = relationship(
+        "AuthorCitizenship",
+        back_populates="author",
+        cascade="all, delete-orphan",
+        order_by="AuthorCitizenship.from_date"
+    )
+
+    residences = relationship(
+        "AuthorResidence",
+        back_populates="author",
+        cascade="all, delete-orphan",
+        order_by="AuthorResidence.from_date"
     )
 
     created_at = Column(DateTime, default=datetime.utcnow)

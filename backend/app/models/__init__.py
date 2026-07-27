@@ -18,6 +18,10 @@ from app.models.source import Source
 from app.models.place import Place
 from app.models.author_knowledge_relation import AuthorKnowledgeRelation
 from app.models.timeline_event import TimelineEvent
+from app.models.author_quote import AuthorQuote
+from app.models.author_citizenship import AuthorCitizenship
+from app.models.author_residence import AuthorResidence
+from app.models.ai_proposal import AIProposal
 
 __all__ = [
     "User",
@@ -38,4 +42,8 @@ __all__ = [
     "Place",
     "AuthorKnowledgeRelation",
     "TimelineEvent",
+    "AuthorQuote",
+    "AuthorCitizenship",
+    "AuthorResidence",
+    "AIProposal",
 ]

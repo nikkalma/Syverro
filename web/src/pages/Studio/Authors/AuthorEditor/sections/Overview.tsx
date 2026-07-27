@@ -92,7 +92,8 @@ export default function Overview() {
   const [slugError, setSlugError] = useState('');
   const [photo, setPhoto] = useState('');
   const [heroBg, setHeroBg] = useState('');
-  const [shortDescription, setShortDescription] = useState('');
+  const [heroQuote, setHeroQuote] = useState('');
+  const [aboutSummary, setAboutSummary] = useState('');
 
   function generateSlugFrom(nameVal: string, nativeNameVal: string): string {
     const source = nativeNameVal || nameVal;
@@ -107,7 +108,8 @@ export default function Overview() {
     const nextSlugLocked = Boolean(a.slug_locked);
     const nextPhoto = a.photo || '';
     const nextHeroBg = a.hero_background_url || '';
-    const nextShortDesc = a.author_intro_quote || '';
+    setHeroQuote(a.hero_quote || '');
+    setAboutSummary(a.about_summary || '');
 
     setName(nextName);
     setNativeName(nextNativeName);
@@ -123,7 +125,6 @@ export default function Overview() {
 
     setPhoto(nextPhoto);
     setHeroBg(nextHeroBg);
-    setShortDescription(nextShortDesc);
     setSlugError('');
   };
 
@@ -154,7 +155,8 @@ export default function Overview() {
     slugLocked !== (author?.slug_locked || false) ||
     photo !== (author?.photo || '') ||
     heroBg !== (author?.hero_background_url || '') ||
-    shortDescription !== (author?.author_intro_quote || '');
+    heroQuote !== (author?.hero_quote || '') ||
+    aboutSummary !== (author?.about_summary || '');
 
   const reset = () => {
     syncFromAuthor(author);
@@ -168,7 +170,8 @@ export default function Overview() {
       slug_locked: slugLocked,
       photo: photo || null,
       hero_background_url: heroBg || null,
-      author_intro_quote: shortDescription || null,
+      hero_quote: heroQuote || null,
+      about_summary: aboutSummary || null,
     };
     await updateAuthor(data);
   };
@@ -233,16 +236,26 @@ export default function Overview() {
         <FormField label="URL" value={heroBg} onChange={setHeroBg} type="url" placeholder="https://..." />
       </EditorSectionCard>
 
+      <EditorSectionCard title="Hero Quote">
+        <FormField
+          label="Quote Text"
+          value={heroQuote}
+          onChange={setHeroQuote}
+          multiline
+          placeholder="A featured quote displayed near the author portrait"
+        />
+      </EditorSectionCard>
+
       <EditorSectionCard title={t.admin.authors.editor.overview.aboutAuthor}>
         <p style={{ fontSize: '13px', color: 'var(--text-muted)', margin: '-12px 0 16px 0', lineHeight: 1.5 }}>
           {t.admin.authors.editor.overview.aboutAuthorDesc}
         </p>
         <FormField
-          label={t.admin.authors.editor.overview.aboutAuthor}
-          value={shortDescription}
-          onChange={setShortDescription}
+          label="About Author Summary"
+          value={aboutSummary}
+          onChange={setAboutSummary}
           multiline
-          placeholder={t.admin.authors.editor.noAboutAuthor}
+          placeholder="SEO description, author card preview — one or two sentences"
         />
       </EditorSectionCard>
 

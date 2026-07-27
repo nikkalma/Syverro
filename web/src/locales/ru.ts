@@ -796,6 +796,7 @@ export const ru: LocaleData = {
           nativeName: 'Имя в оригинале',
           slugAuto: 'Slug (авто)',
           slugLocked: 'Зафиксировать slug',
+          slugInvalid: 'Slug должен быть в нижнем регистре, без спецсимволов',
           creationType: 'Тип создания',
           booksCount: 'Количество книг',
           created: 'Создан',

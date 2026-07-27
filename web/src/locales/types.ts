@@ -292,6 +292,7 @@ export interface LocaleData {
           nativeName: string;
           slugAuto: string;
           slugLocked: string;
+          slugInvalid: string;
           creationType: string;
           booksCount: string;
           created: string;

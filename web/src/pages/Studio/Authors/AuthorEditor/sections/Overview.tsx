@@ -5,15 +5,16 @@ import DetailGrid from '../../../../../components/Studio/shared/DetailGrid';
 import ActionBar from '../../../../../components/Studio/shared/ActionBar';
 import { getLocaleData, getBrowserLocale } from '../../../../../locales';
 import type { AdminAuthorUpdate } from '../../../../../types/admin';
+import { slugify } from 'transliteration';
 
-function slugify(text: string): string {
-  return text
-    .toLowerCase()
-    .replace(/[^\p{L}\p{N}\s-]/gu, '')
-    .replace(/[\s_]+/g, '-')
-    .replace(/-+/g, '-')
-    .replace(/^-+|-+$/g, '')
-    .trim();
+const SLUG_PATTERN = /^[a-z0-9][a-z0-9-]*[a-z0-9]$|^[a-z0-9]$/;
+
+function makeSlug(text: string): string {
+  return slugify(text, { lowercase: true, separator: '-' });
+}
+
+function isValidSlug(s: string): boolean {
+  return SLUG_PATTERN.test(s);
 }
 
 interface InputProps {
@@ -87,46 +88,60 @@ export default function Overview() {
   const [nativeName, setNativeName] = useState('');
   const [slug, setSlug] = useState('');
   const [slugLocked, setSlugLocked] = useState(false);
+  const [slugError, setSlugError] = useState('');
   const [photo, setPhoto] = useState('');
   const [heroBg, setHeroBg] = useState('');
   const [shortDescription, setShortDescription] = useState('');
 
-  // Sync all form state from author data.
-  // Generate slug from name when slug is empty and not locked.
-  useEffect(() => {
-    if (!author) return;
-    const nextName = author.name || '';
-    const nextNativeName = author.native_name || '';
-    const nextSlug = author.slug || '';
-    const nextSlugLocked = Boolean(author.slug_locked);
-    const nextPhoto = author.photo || '';
-    const nextHeroBg = author.hero_background_url || '';
-    const nextShortDesc = author.author_intro_quote || '';
+  const syncFromAuthor = (a: typeof author) => {
+    if (!a) return;
+    const nextName = a.name || '';
+    const nextNativeName = a.native_name || '';
+    const nextSlug = a.slug || '';
+    const nextSlugLocked = Boolean(a.slug_locked);
+    const nextPhoto = a.photo || '';
+    const nextHeroBg = a.hero_background_url || '';
+    const nextShortDesc = a.author_intro_quote || '';
 
     setName(nextName);
     setNativeName(nextNativeName);
     setSlugLocked(nextSlugLocked);
 
-    if (!nextSlugLocked && !nextSlug && nextName) {
-      setSlug(slugify(nextName));
-    } else {
+    if (nextSlugLocked) {
       setSlug(nextSlug);
+    } else if (nextSlug) {
+      setSlug(nextSlug);
+    } else if (nextName) {
+      setSlug(makeSlug(nextName));
+    } else {
+      setSlug('');
     }
 
     setPhoto(nextPhoto);
     setHeroBg(nextHeroBg);
     setShortDescription(nextShortDesc);
+    setSlugError('');
+  };
+
+  useEffect(() => {
+    syncFromAuthor(author);
   }, [author]);
 
-  // When user edits name, auto-update slug if not locked.
   useEffect(() => {
     if (!slugLocked && name && author) {
-      const generated = slugify(name);
-      if (generated !== slug) {
-        setSlug(generated);
-      }
+      const generated = makeSlug(name);
+      setSlug(generated);
+      setSlugError('');
     }
-  }, [name]);
+  }, [name, slugLocked]);
+
+  useEffect(() => {
+    if (slug) {
+      setSlugError(isValidSlug(slug) ? '' : t.admin.authors.editor.overview.slugInvalid);
+    } else {
+      setSlugError('');
+    }
+  }, [slug]);
 
   const hasChanges =
     name !== (author?.name || '') ||
@@ -138,14 +153,7 @@ export default function Overview() {
     shortDescription !== (author?.author_intro_quote || '');
 
   const reset = () => {
-    if (!author) return;
-    setName(author.name || '');
-    setNativeName(author.native_name || '');
-    setSlug(author.slug || '');
-    setSlugLocked(author.slug_locked || false);
-    setPhoto(author.photo || '');
-    setHeroBg(author.hero_background_url || '');
-    setShortDescription(author.author_intro_quote || '');
+    syncFromAuthor(author);
   };
 
   const handleSave = async () => {
@@ -189,6 +197,9 @@ export default function Overview() {
             <div style={{ marginTop: '16px', display: 'flex', gap: '12px', alignItems: 'center' }}>
               <div style={{ flex: 1 }}>
                 <FormField label={t.admin.authors.editor.overview.slugAuto} value={slug} onChange={(v) => { setSlug(v); setSlugLocked(true); }} />
+                {slugError && (
+                  <div style={{ fontSize: '12px', color: 'var(--error)', marginTop: '4px' }}>{slugError}</div>
+                )}
               </div>
               <div style={{ marginTop: '22px' }}>
                 <CheckboxField

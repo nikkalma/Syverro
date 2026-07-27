@@ -1116,6 +1116,8 @@ async def get_author_detail(
         "gallery": author.gallery or [],
         "signature_image": author.signature_image,
         "portrait_caption": author.portrait_caption,
+        "hero_background_url": author.hero_background_url,
+        "author_intro_quote": author.author_intro_quote,
         "creation_type": author.creation_type or "individual_author",
         "book_count": book_count,
         "awards": [{
@@ -1140,7 +1142,9 @@ def validate_author_slug(slug: Optional[str]) -> None:
 
 def _make_slug(name: str) -> str:
     import re as _re
-    slug = _re.sub(r'[^\w\s-]', '', name.lower())
+    from unidecode import unidecode
+    latin = unidecode(name)
+    slug = _re.sub(r'[^\w\s-]', '', latin.lower())
     slug = _re.sub(r'[-\s]+', '-', slug).strip('-')
     return slug or 'unknown'
 

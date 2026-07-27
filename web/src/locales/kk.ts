@@ -796,6 +796,7 @@ export const kk: LocaleData = {
           nativeName: 'Native Name',
           slugAuto: 'Slug (auto)',
           slugLocked: 'Lock slug',
+          slugInvalid: 'Slug must be lowercase, URL-safe, and non-empty',
           creationType: 'Creation Type',
           booksCount: 'Books Count',
           created: 'Created',

@@ -36,6 +36,7 @@ interface AuthorResponse {
   photo_url: string | null;
   hero_background_url?: string | null;
   author_intro_quote?: string | null;
+  featured_quote?: string | null;
   books: AuthorBook[];
   metadata: AuthorMetadata;
 }
@@ -290,7 +291,7 @@ export default function AuthorPage() {
         </div>
       </div>
 
-      {/* ──────── QUOTES ABOUT AUTHOR + TAGS ──────── */}
+      {/* ──────── FEATURED QUOTE ABOUT AUTHOR + TAGS ──────── */}
       <div style={{ paddingLeft: '204px', paddingRight: '28px', marginTop: '20px' }}>
         <div style={{
           marginBottom: '12px', maxWidth: '580px',
@@ -303,7 +304,7 @@ export default function AuthorPage() {
             color: 'var(--accent)', letterSpacing: '0.06em',
             textTransform: 'uppercase', marginBottom: '10px',
           }}>
-            {t.author.quotesAboutTitle}
+            {t.author.heroQuote}
           </div>
           <div style={{
             fontFamily: 'Cormorant Garamond, serif',
@@ -315,7 +316,7 @@ export default function AuthorPage() {
             fontSize: '15px', color: 'var(--text-muted)', fontStyle: 'italic',
             lineHeight: 1.6,
           }}>
-            {t.author.noQuotesAbout}
+            {author.featured_quote || t.author.noHeroQuote}
           </div>
         </div>
 

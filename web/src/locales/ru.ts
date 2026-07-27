@@ -517,6 +517,8 @@ export const ru: LocaleData = {
     metaWorks: 'Произведения',
     quotesAboutTitle: 'О нём говорят',
     noQuotesAbout: 'Цитаты об авторе пока не добавлены',
+    heroQuote: 'Цитата об авторе',
+    noHeroQuote: 'Избранная цитата об авторе пока не добавлена',
   },
 
   // ===== НАВИГАЦИЯ =====
@@ -756,7 +758,7 @@ export const ru: LocaleData = {
         add: 'Добавить',
         notSet: 'Не указано',
         noHeroBg: 'Фон не задан',
-        noShortDescription: 'Краткое описание не задано',
+        noAboutAuthor: 'Описание об авторе не задано',
         noBio: 'Биография ещё не написана',
         bioPlaceholder: 'Напишите или отредактируйте биографию автора...',
         noPortrait: 'Портрет не задан',
@@ -790,7 +792,8 @@ export const ru: LocaleData = {
         overview: {
           coreInfo: 'Основная информация',
           heroBackground: 'Фон страницы',
-          shortDescription: 'Краткое описание',
+          aboutAuthor: 'Об авторе',
+          aboutAuthorDesc: 'Редакторское описание автора: краткая характеристика, ключевые факты биографии и место в литературе.',
           publicationState: 'Состояние публикации',
           name: 'Имя',
           nativeName: 'Имя в оригинале',
@@ -812,6 +815,7 @@ export const ru: LocaleData = {
           occupations: 'Род деятельности',
           literaryMovements: 'Литературные течения',
           alternativeNames: 'Альтернативные имена',
+          nativeName: 'Имя в оригинале',
           birthName: 'Имя при рождении',
           penNames: 'Псевдонимы',
           sortName: 'Сортировочное имя',

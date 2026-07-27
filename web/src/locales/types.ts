@@ -252,7 +252,7 @@ export interface LocaleData {
         add: string;
         notSet: string;
         noHeroBg: string;
-        noShortDescription: string;
+        noAboutAuthor: string;
         noBio: string;
         bioPlaceholder: string;
         noPortrait: string;
@@ -286,7 +286,8 @@ export interface LocaleData {
         overview: {
           coreInfo: string;
           heroBackground: string;
-          shortDescription: string;
+          aboutAuthor: string;
+          aboutAuthorDesc: string;
           publicationState: string;
           name: string;
           nativeName: string;
@@ -308,6 +309,7 @@ export interface LocaleData {
           occupations: string;
           literaryMovements: string;
           alternativeNames: string;
+          nativeName: string;
           birthName: string;
           penNames: string;
           sortName: string;
@@ -601,5 +603,8 @@ export interface LocaleData {
     // Quote block (hero-area)
     quotesAboutTitle: string;
     noQuotesAbout: string;
+    // Featured quote about the author (hero-area)
+    heroQuote: string;
+    noHeroQuote: string;
   };
 }

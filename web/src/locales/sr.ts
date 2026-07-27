@@ -517,6 +517,8 @@ export const sr: LocaleData = {
     metaWorks: 'Dela',
     quotesAboutTitle: 'O njemu govore',
     noQuotesAbout: 'Citati o autoru još nisu dodati',
+    heroQuote: 'Citat o autoru',
+    noHeroQuote: 'Istaknuti citat o autoru još nije dodat',
   },
 
   // ===== NAVIGATION =====
@@ -756,7 +758,7 @@ export const sr: LocaleData = {
         add: 'Add',
         notSet: 'Not set',
         noHeroBg: 'No hero background set',
-        noShortDescription: 'No short description',
+        noAboutAuthor: 'No description about the author',
         noBio: 'No biography written yet',
         bioPlaceholder: "Write or edit the author's biography here...",
         noPortrait: 'No portrait set',
@@ -790,7 +792,8 @@ export const sr: LocaleData = {
         overview: {
           coreInfo: 'Core Information',
           heroBackground: 'Hero Background',
-          shortDescription: 'Short Description',
+          aboutAuthor: 'About Author',
+          aboutAuthorDesc: 'Editorial description of the author: a brief overview, key biographical facts, and literary significance.',
           publicationState: 'Publication State',
           name: 'Name',
           nativeName: 'Native Name',
@@ -812,6 +815,7 @@ export const sr: LocaleData = {
           occupations: 'Occupations',
           literaryMovements: 'Literary Movements',
           alternativeNames: 'Alternative Names',
+          nativeName: 'Native Name',
           birthName: 'Birth Name',
           penNames: 'Pen Names',
           sortName: 'Sort Name',

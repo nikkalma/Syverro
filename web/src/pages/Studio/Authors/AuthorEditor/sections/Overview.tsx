@@ -237,13 +237,16 @@ export default function Overview() {
         <FormField label="URL" value={heroBg} onChange={setHeroBg} type="url" placeholder="https://..." />
       </EditorSectionCard>
 
-      <EditorSectionCard title={t.admin.authors.editor.overview.shortDescription}>
+      <EditorSectionCard title={t.admin.authors.editor.overview.aboutAuthor}>
+        <p style={{ fontSize: '13px', color: 'var(--text-muted)', margin: '-12px 0 16px 0', lineHeight: 1.5 }}>
+          {t.admin.authors.editor.overview.aboutAuthorDesc}
+        </p>
         <FormField
-          label={t.admin.authors.editor.overview.shortDescription}
+          label={t.admin.authors.editor.overview.aboutAuthor}
           value={shortDescription}
           onChange={setShortDescription}
           multiline
-          placeholder={t.admin.authors.editor.noShortDescription}
+          placeholder={t.admin.authors.editor.noAboutAuthor}
         />
       </EditorSectionCard>
 

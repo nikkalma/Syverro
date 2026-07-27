@@ -182,9 +182,11 @@ export default function AuthorModal({ isOpen, mode, author, onClose, onSave }: A
   const slugManuallyEdited = useRef(false);
 
   useEffect(() => {
-    if (slugManuallyEdited.current || !computedDisplayName) return;
-    setSlug(slugify(computedDisplayName));
-  }, [computedDisplayName]);
+    if (slugManuallyEdited.current) return;
+    const source = nativeName || computedDisplayName;
+    if (!source) return;
+    setSlug(slugify(source));
+  }, [nativeName, computedDisplayName]);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -590,7 +592,7 @@ export default function AuthorModal({ isOpen, mode, author, onClose, onSave }: A
               <div style={{ display: 'flex', gap: '6px' }}>
                 <input value={slug} onChange={(e) => { slugManuallyEdited.current = true; setSlug(e.target.value); }}
                   placeholder="lev-tolstoj" style={{ ...inputStyle, flex: 1 }} />
-                <button type="button" onClick={() => { slugManuallyEdited.current = false; if (computedDisplayName) setSlug(slugify(computedDisplayName)); }}
+                <button type="button" onClick={() => { slugManuallyEdited.current = false; const source = nativeName || computedDisplayName; if (source) setSlug(slugify(source)); }}
                   style={{ padding: '8px 12px', background: 'rgba(91,134,161,0.15)',
                     border: '1px solid rgba(91,134,161,0.3)', borderRadius: '8px',
                     color: '#5B86A1', cursor: 'pointer', fontSize: '12px', whiteSpace: 'nowrap' }}>

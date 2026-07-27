@@ -3,6 +3,7 @@ import { useAuthorEditor } from '../AuthorEditorContext';
 import EditorSectionCard from '../../../../../components/Studio/shared/EditorSectionCard';
 import DetailGrid from '../../../../../components/Studio/shared/DetailGrid';
 import ActionBar from '../../../../../components/Studio/shared/ActionBar';
+
 import SuggestionInput from '../../../../../components/Studio/shared/SuggestionInput';
 import DatePickerField from '../../../../../components/Studio/shared/DatePickerField';
 import { getLocaleData, getBrowserLocale } from '../../../../../locales';
@@ -165,22 +166,35 @@ export default function Identity() {
         </DetailGrid>
       </EditorSectionCard>
 
-      <EditorSectionCard title={t.admin.authors.editor.identity.nationality}>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-          <FormField label={t.admin.authors.editor.identity.nationality} value={nationality} onChange={setNationality} />
-          <SuggestionInput
-            label={t.admin.authors.editor.identity.occupations}
-            values={occupations}
-            suggestions={[]}
-            onChange={setOccupations}
-          />
-          <SuggestionInput
-            label={t.admin.authors.editor.identity.literaryMovements}
-            values={literaryMovements}
-            suggestions={[]}
-            onChange={setLiteraryMovements}
-          />
-        </div>
+      <EditorSectionCard
+        title={t.admin.authors.editor.identity.nationality}
+        description={t.admin.authors.editor.identity.nationalityDesc}
+      >
+        <FormField label={t.admin.authors.editor.identity.nationality} value={nationality} onChange={setNationality} />
+      </EditorSectionCard>
+
+      <EditorSectionCard
+        title={t.admin.authors.editor.identity.occupations}
+        description={t.admin.authors.editor.identity.occupationsDesc}
+      >
+        <SuggestionInput
+          label={t.admin.authors.editor.identity.occupations}
+          values={occupations}
+          suggestions={[]}
+          onChange={setOccupations}
+        />
+      </EditorSectionCard>
+
+      <EditorSectionCard
+        title={t.admin.authors.editor.identity.literaryMovements}
+        description={t.admin.authors.editor.identity.literaryMovementsDesc}
+      >
+        <SuggestionInput
+          label={t.admin.authors.editor.identity.literaryMovements}
+          values={literaryMovements}
+          suggestions={[]}
+          onChange={setLiteraryMovements}
+        />
       </EditorSectionCard>
 
       {saveError && (

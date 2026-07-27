@@ -101,10 +101,6 @@ export default function Overview() {
 
   const syncFromAuthor = (a: typeof author) => {
     if (!a) return;
-    console.log('[DEBUG] Overview syncFromAuthor author:', a);
-    console.log('[DEBUG] hero_background_url:', a.hero_background_url);
-    console.log('[DEBUG] author_intro_quote:', a.author_intro_quote);
-    console.log('[DEBUG] name:', a.name);
     const nextName = a.name || '';
     const nextNativeName = a.native_name || '';
     const nextSlug = a.slug || '';

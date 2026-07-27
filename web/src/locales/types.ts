@@ -302,12 +302,15 @@ export interface LocaleData {
         identity: {
           nationalityStates: string;
           nationality: string;
+          nationalityDesc: string;
           country: string;
           languages: string;
           writingLanguages: string;
           spokenLanguages: string;
           occupations: string;
+          occupationsDesc: string;
           literaryMovements: string;
+          literaryMovementsDesc: string;
           alternativeNames: string;
           nativeName: string;
           birthName: string;

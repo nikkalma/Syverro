@@ -3,10 +3,16 @@ import ReactDOM from 'react-dom/client'
 import App from './App'
 import './styles/globals.css'
 
+console.log("Syverro frontend build: 2026-07-28");
+
+createRoot(document.getElementById("root")!).render(
+  <App />
+);
+console.log("Syverro frontend build: 2026-07-28");
+
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
     <App />
   </React.StrictMode>,
 )
 
-// force rebuild 2026-07-28

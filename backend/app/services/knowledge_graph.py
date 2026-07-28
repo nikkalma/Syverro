@@ -34,6 +34,26 @@ GRAPH_FIELD_MAP: Dict[str, Dict[str, Any]] = {
         "relation_type": "has_occupation",
         "confidence": 0.85,
     },
+    "languages": {
+        "node_type": "language",
+        "relation_type": "speaks",
+        "confidence": 0.95,
+    },
+    "writing_languages": {
+        "node_type": "language",
+        "relation_type": "writes_in",
+        "confidence": 0.95,
+    },
+    "birth_place": {
+        "node_type": "place",
+        "relation_type": "born_in",
+        "confidence": 1.0,
+    },
+    "death_place": {
+        "node_type": "place",
+        "relation_type": "died_in",
+        "confidence": 0.9,
+    },
 }
 
 

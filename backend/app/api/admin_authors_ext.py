@@ -8,6 +8,9 @@ from app.models.author_quote import AuthorQuote
 from app.models.author_citizenship import AuthorCitizenship
 from app.models.author_residence import AuthorResidence
 from app.models.ai_proposal import AIProposal
+from app.models.source import Source
+from app.models.timeline_event import TimelineEvent
+from app.models.author_knowledge_relation import AuthorKnowledgeRelation
 from app.schemas.author_quote import AuthorQuoteCreate, AuthorQuoteUpdate, AuthorQuoteResponse
 from app.schemas.author_citizenship import AuthorCitizenshipCreate, AuthorCitizenshipUpdate, AuthorCitizenshipResponse
 from app.schemas.author_residence import AuthorResidenceCreate, AuthorResidenceUpdate, AuthorResidenceResponse
@@ -295,6 +298,70 @@ async def delete_author_residence(
         raise HTTPException(status_code=404, detail="Residence not found")
     await db.delete(item)
     await db.commit()
+
+
+# ============================================================
+# AUTHOR SOURCES (scoped to sources referenced by this author)
+# ============================================================
+
+
+@router.get("/{author_id}/sources")
+async def get_author_sources(
+    author_id: str,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    await check_admin(current_user)
+    author = await get_author_or_404(db, author_id)
+
+    source_ids = set()
+
+    tl_result = await db.execute(
+        select(TimelineEvent.source_id).where(TimelineEvent.author_id == author.id)
+    )
+    source_ids.update(row[0] for row in tl_result if row[0])
+
+    q_result = await db.execute(
+        select(AuthorQuote.source_id).where(AuthorQuote.author_id == author.id)
+    )
+    source_ids.update(row[0] for row in q_result if row[0])
+
+    c_result = await db.execute(
+        select(AuthorCitizenship.source_id).where(AuthorCitizenship.author_id == author.id)
+    )
+    source_ids.update(row[0] for row in c_result if row[0])
+
+    res_result = await db.execute(
+        select(AuthorResidence.source_id).where(AuthorResidence.author_id == author.id)
+    )
+    source_ids.update(row[0] for row in res_result if row[0])
+
+    kr_result = await db.execute(
+        select(AuthorKnowledgeRelation.source_id).where(AuthorKnowledgeRelation.author_id == author.id)
+    )
+    source_ids.update(row[0] for row in kr_result if row[0])
+
+    if not source_ids:
+        return {"data": []}
+
+    result = await db.execute(
+        select(Source).where(Source.id.in_(list(source_ids))).order_by(Source.title)
+    )
+    sources = result.scalars().all()
+    return {
+        "data": [{
+            "id": str(s.id),
+            "title": s.title,
+            "source_type": s.source_type,
+            "url": s.url,
+            "citation": s.citation,
+            "notes": s.notes,
+            "language": s.language,
+            "reliability_score": s.reliability_score,
+            "source_origin": s.source_origin,
+            "created_at": s.created_at.isoformat() if s.created_at else None,
+        } for s in sources],
+    }
 
 
 # ============================================================

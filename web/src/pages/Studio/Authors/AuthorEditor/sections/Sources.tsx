@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import { useAuthorEditor } from '../AuthorEditorContext';
 import EditorSectionCard from '../../../../../components/Studio/shared/EditorSectionCard';
 import { apiClient } from '../../../../../shared/api/client';
 import { getLocaleData, getBrowserLocale } from '../../../../../locales';
@@ -32,6 +33,7 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
 }
 
 export default function Sources() {
+  const { author } = useAuthorEditor();
   const t = getLocaleData(getBrowserLocale());
   const [sources, setSources] = useState<Source[]>([]);
   const [loading, setLoading] = useState(true);
@@ -41,18 +43,21 @@ export default function Sources() {
   const [error, setError] = useState<string | null>(null);
 
   const fetchSources = useCallback(async () => {
+    if (!author) return;
     setLoading(true);
     try {
-      const res = await apiClient.get('/admin/sources');
-      setSources(res.data || []);
+      const res = await apiClient.get(`/admin/authors/${author.id}/sources`);
+      setSources(res.data?.data || []);
     } catch {
       setSources([]);
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [author]);
 
-  useEffect(() => { fetchSources(); }, [fetchSources]);
+  useEffect(() => {
+    if (author) fetchSources();
+  }, [author, fetchSources]);
 
   const st = t.admin.authors.editor.sources;
 

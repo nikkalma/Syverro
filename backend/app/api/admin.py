@@ -1241,6 +1241,15 @@ async def create_author(
 
     await db.commit()
     await db.refresh(author, ["awards"])
+
+    try:
+        create_data = data.model_dump(exclude={"awards"})
+        await sync_author_graph_fields(db, author.id, create_data)
+    except Exception as e:
+        logger.warning("Graph sync failed for author %s: %s", author.id, e)
+
+    await db.commit()
+
     return {
         "id": str(author.id),
         "message": "Author created",
@@ -1302,6 +1311,8 @@ async def update_author(
         await sync_author_graph_fields(db, author.id, update_data)
     except Exception as e:
         logger.warning("Graph sync failed for author %s: %s", author.id, e)
+
+    await db.commit()
 
     return {
         "message": "Author updated",

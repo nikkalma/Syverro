@@ -8,3 +8,5 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
     <App />
   </React.StrictMode>,
 )
+
+// force rebuild 2026-07-28

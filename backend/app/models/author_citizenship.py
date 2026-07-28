@@ -14,6 +14,7 @@ class AuthorCitizenship(Base):
     state_name = Column(String, nullable=False)
     from_date = Column(String, nullable=True)
     to_date = Column(String, nullable=True)
+    notes = Column(String, nullable=True)
     source_id = Column(UUID(as_uuid=True), ForeignKey("sources.id", ondelete="SET NULL"), nullable=True)
     confidence = Column(Float, server_default="1.0", nullable=False)
     status = Column(String, server_default="verified", nullable=False)

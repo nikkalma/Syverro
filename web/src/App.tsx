@@ -29,7 +29,6 @@ import {
   AuthorEditorLayout,
   Overview,
   Identity,
-  Biography,
   Timeline,
   Works,
   Quotes,
@@ -99,7 +98,6 @@ export default function App() {
               <Route index element={<Navigate to="overview" replace />} />
               <Route path="overview" element={<Overview />} />
               <Route path="identity" element={<Identity />} />
-              <Route path="biography" element={<Biography />} />
               <Route path="timeline" element={<Timeline />} />
               <Route path="works" element={<Works />} />
               <Route path="quotes" element={<Quotes />} />

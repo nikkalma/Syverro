@@ -323,6 +323,19 @@ export interface LocaleData {
           birthPlace: string;
           deathDate: string;
           deathPlace: string;
+          citizenshipHistory: string;
+          citizenshipState: string;
+          citizenshipFrom: string;
+          citizenshipTo: string;
+          citizenshipNotes: string;
+          citizenshipSource: string;
+          addCitizenship: string;
+          editCitizenship: string;
+          deleteCitizenship: string;
+          saveCitizenship: string;
+          cancelCitizenship: string;
+          citizenshipRequired: string;
+          confirmDeleteCitizenship: string;
         };
         biography: {
           biography: string;

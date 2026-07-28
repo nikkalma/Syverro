@@ -8,6 +8,7 @@ class AuthorCitizenshipBase(BaseModel):
     state_name: str
     from_date: Optional[str] = None
     to_date: Optional[str] = None
+    notes: Optional[str] = None
     source_id: Optional[UUID] = None
     confidence: Optional[float] = 1.0
     status: Optional[str] = "verified"

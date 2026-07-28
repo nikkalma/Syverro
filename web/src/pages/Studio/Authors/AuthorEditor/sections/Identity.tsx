@@ -7,7 +7,7 @@ import PlaceSelector from '../../../../../components/Studio/shared/PlaceSelector
 import TaxonomyPicker from '../../../../../components/Studio/shared/TaxonomyPicker';
 import { apiClient } from '../../../../../shared/api/client';
 import { getLocaleData, getBrowserLocale } from '../../../../../locales';
-import type { AdminAuthorUpdate, AuthorCitizenship } from '../../../../../types/admin';
+import type { AdminAuthorUpdate, AuthorCitizenship, AuthorCitizenshipCreate } from '../../../../../types/admin';
 
 const inputStyle: React.CSSProperties = {
   width: '100%', padding: '8px 12px', fontSize: '14px',
@@ -29,6 +29,20 @@ function FormField({ label, value, onChange, placeholder }: {
   );
 }
 
+function TextAreaField({ label, value, onChange, placeholder }: {
+  label: string; value: string; onChange: (v: string) => void; placeholder?: string;
+}) {
+  return (
+    <div>
+      <div style={{ fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--text-muted)', marginBottom: '4px' }}>
+        {label}
+      </div>
+      <textarea value={value} onChange={(e) => onChange(e.target.value)} placeholder={placeholder}
+        rows={2} style={{ ...inputStyle, resize: 'vertical', lineHeight: 1.5, fontFamily: 'Inter, sans-serif' }} />
+    </div>
+  );
+}
+
 const FIELD_STYLES = {
   status: (status: string): React.CSSProperties => ({
     padding: '1px 6px', borderRadius: '4px', fontSize: '10px', textTransform: 'uppercase',
@@ -37,39 +51,77 @@ const FIELD_STYLES = {
   }),
 };
 
+function CitizenshipForm({ values, onChange, onCancel, onSave, saving, locale }: {
+  values: { state_name: string; from_date: string; to_date: string; notes: string; source_id: string };
+  onChange: (f: string, v: string) => void;
+  onCancel: () => void;
+  onSave: () => void;
+  saving: boolean;
+  locale: any;
+}) {
+  const hasError = !values.state_name.trim();
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '8px' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+        <div>
+          <div style={{ fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--text-muted)', marginBottom: '4px' }}>
+            {locale.citizenshipState} <span style={{ color: 'var(--error)' }}>*</span>
+          </div>
+          <input type="text" value={values.state_name}
+            onChange={(e) => onChange('state_name', e.target.value)}
+            placeholder="e.g. USSR, Russian Federation"
+            style={{ ...inputStyle, borderColor: hasError && values.state_name ? undefined : hasError ? 'var(--error)' : undefined }} />
+        </div>
+        <div></div>
+        <FormField label={locale.citizenshipFrom} value={values.from_date} onChange={(v) => onChange('from_date', v)} placeholder="1924" />
+        <FormField label={locale.citizenshipTo} value={values.to_date} onChange={(v) => onChange('to_date', v)} placeholder="1991" />
+      </div>
+      <TextAreaField label={locale.citizenshipNotes} value={values.notes} onChange={(v) => onChange('notes', v)} placeholder="Optional notes" />
+      <FormField label={locale.citizenshipSource} value={values.source_id} onChange={(v) => onChange('source_id', v)} placeholder="Source ID (optional)" />
+      <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
+        <button type="button" onClick={onCancel}
+          style={{ padding: '6px 12px', background: 'transparent', border: '1px solid var(--border-soft)', borderRadius: '6px', color: 'var(--text-primary)', cursor: 'pointer', fontSize: '12px' }}>
+          {locale.cancelCitizenship}
+        </button>
+        <button type="button" onClick={onSave}
+          disabled={hasError || saving}
+          style={{ padding: '6px 12px', background: 'var(--accent)', border: 'none', borderRadius: '6px', color: '#fff', cursor: 'pointer', fontSize: '12px', opacity: hasError || saving ? 0.6 : 1 }}>
+          {locale.saveCitizenship}
+        </button>
+      </div>
+      {hasError && (
+        <div style={{ fontSize: '11px', color: 'var(--error)' }}>{locale.citizenshipRequired}</div>
+      )}
+    </div>
+  );
+}
+
 export default function Identity() {
   const t = getLocaleData(getBrowserLocale());
   const { author, loading, saving, saveError, updateAuthor } = useAuthorEditor();
   const idLocale = t.admin.authors.editor.identity;
 
-  // Core fields
   const [nationality, setNationality] = useState('');
   const [ethnicOrigin, setEthnicOrigin] = useState('');
   const [culturalIdentity, setCulturalIdentity] = useState('');
   const [languages, setLanguages] = useState('');
   const [writingLanguages, setWritingLanguages] = useState('');
 
-  // Pen names & sort name
   const [birthName, setBirthName] = useState('');
   const [sortName, setSortName] = useState('');
   const [penNamesText, setPenNamesText] = useState('');
 
-  // Birth/death places
   const [birthPlaceId, setBirthPlaceId] = useState<string | null>(null);
   const [birthPlaceName, setBirthPlaceName] = useState<string | null>(null);
   const [deathPlaceId, setDeathPlaceId] = useState<string | null>(null);
   const [deathPlaceName, setDeathPlaceName] = useState<string | null>(null);
 
-  // Occupations & literary movements (via TaxonomyPicker)
   const [occupations, setOccupations] = useState<string[]>([]);
   const [literaryMovements, setLiteraryMovements] = useState<string[]>([]);
 
-  // Extended: citizenships
   const [citizenships, setCitizenships] = useState<AuthorCitizenship[]>([]);
-  const [showCitForm, setShowCitForm] = useState(false);
-  const [citState, setCitState] = useState('');
-  const [citFrom, setCitFrom] = useState('');
-  const [citTo, setCitTo] = useState('');
+  const [editCitId, setEditCitId] = useState<string | null>(null);
+  const [editCit, setEditCit] = useState({ state_name: '', from_date: '', to_date: '', notes: '', source_id: '' });
 
   useEffect(() => {
     if (!author) return;
@@ -101,25 +153,53 @@ export default function Identity() {
     if (author) fetchCitizenships();
   }, [author, fetchCitizenships]);
 
-  const addCitizenship = async () => {
-    if (!author || !citState.trim()) return;
+  const openNewCitizen = () => {
+    setEditCitId('__new__');
+    setEditCit({ state_name: '', from_date: '', to_date: '', notes: '', source_id: '' });
+  };
+
+  const openEditCitizen = (c: AuthorCitizenship) => {
+    setEditCitId(c.id);
+    setEditCit({
+      state_name: c.state_name,
+      from_date: c.from_date || '',
+      to_date: c.to_date || '',
+      notes: c.notes || '',
+      source_id: c.source_id || '',
+    });
+  };
+
+  const cancelCitizen = () => {
+    setEditCitId(null);
+    setEditCit({ state_name: '', from_date: '', to_date: '', notes: '', source_id: '' });
+  };
+
+  const saveCitizen = async () => {
+    if (!author || !editCit.state_name.trim()) return;
+    const payload: AuthorCitizenshipCreate = {
+      state_name: editCit.state_name.trim(),
+      from_date: editCit.from_date.trim() || null,
+      to_date: editCit.to_date.trim() || null,
+      notes: editCit.notes.trim() || null,
+      source_id: editCit.source_id.trim() || null,
+    };
     try {
-      await apiClient.post(`/admin/authors/${author.id}/citizenships`, {
-        state_name: citState.trim(),
-        from_date: citFrom.trim() || null,
-        to_date: citTo.trim() || null,
-      });
-      setCitState(''); setCitFrom(''); setCitTo('');
-      setShowCitForm(false);
+      if (editCitId === '__new__') {
+        await apiClient.post(`/admin/authors/${author.id}/citizenships`, payload);
+      } else {
+        await apiClient.put(`/admin/authors/${author.id}/citizenships/${editCitId}`, payload);
+      }
+      cancelCitizen();
       await fetchCitizenships();
     } catch {}
   };
 
   const deleteCitizenship = async (id: string) => {
     if (!author) return;
-    if (!window.confirm('Delete this citizenship record?')) return;
+    if (!window.confirm(idLocale.confirmDeleteCitizenship)) return;
     try {
       await apiClient.delete(`/admin/authors/${author.id}/citizenships/${id}`);
+      if (editCitId === id) cancelCitizen();
       await fetchCitizenships();
     } catch {}
   };
@@ -186,53 +266,64 @@ export default function Identity() {
         </div>
       </EditorSectionCard>
 
-      <EditorSectionCard title="Citizenship History">
+      <EditorSectionCard title={idLocale.citizenshipHistory}>
         {citizenships.map((c) => (
-          <div key={c.id} style={{
-            display: 'flex', alignItems: 'center', gap: '8px',
-            padding: '8px 12px', marginBottom: '4px',
-            background: 'var(--surface-hover)', borderRadius: '6px', fontSize: '13px',
-          }}>
-            <span style={{ flex: 1, color: 'var(--text-primary)' }}>
-              {c.state_name}
-              <span style={{ color: 'var(--text-muted)', marginLeft: '8px' }}>
-                {c.from_date || '?'} — {c.to_date || 'present'}
-              </span>
-            </span>
-            <span style={FIELD_STYLES.status(c.status)}>{c.status}</span>
-            <button type="button" onClick={() => deleteCitizenship(c.id)}
-              style={{ background: 'none', border: 'none', color: 'var(--error)', cursor: 'pointer', fontSize: '16px' }}>
-              ×
-            </button>
+          <div key={c.id}>
+            {editCitId === c.id ? (
+              <CitizenshipForm
+                values={editCit}
+                onChange={(f, v) => setEditCit((p) => ({ ...p, [f]: v }))}
+                onCancel={cancelCitizen}
+                onSave={saveCitizen}
+                saving={saving}
+                locale={idLocale}
+              />
+            ) : (
+              <div style={{
+                display: 'flex', alignItems: 'flex-start', gap: '8px',
+                padding: '8px 12px', marginBottom: '4px',
+                background: 'var(--surface-hover)', borderRadius: '6px', fontSize: '13px',
+              }}>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ color: 'var(--text-primary)' }}>
+                    {c.state_name}
+                    <span style={{ color: 'var(--text-muted)', marginLeft: '8px' }}>
+                      {c.from_date || '?'} — {c.to_date || 'present'}
+                    </span>
+                  </div>
+                  {c.notes && (
+                    <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '2px', fontStyle: 'italic' }}>
+                      {c.notes}
+                    </div>
+                  )}
+                </div>
+                <span style={FIELD_STYLES.status(c.status)}>{c.status}</span>
+                <button type="button" onClick={() => openEditCitizen(c)}
+                  style={{ background: 'none', border: 'none', color: 'var(--text-secondary)', cursor: 'pointer', fontSize: '13px', padding: '0 4px' }}>
+                  ✎
+                </button>
+                <button type="button" onClick={() => deleteCitizenship(c.id)}
+                  style={{ background: 'none', border: 'none', color: 'var(--error)', cursor: 'pointer', fontSize: '16px' }}>
+                  ×
+                </button>
+              </div>
+            )}
           </div>
         ))}
-        {showCitForm && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '8px' }}>
-            <input type="text" value={citState} onChange={(e) => setCitState(e.target.value)}
-              placeholder="State name (e.g. USSR)" style={inputStyle} />
-            <div style={{ display: 'flex', gap: '8px' }}>
-              <input type="text" value={citFrom} onChange={(e) => setCitFrom(e.target.value)}
-                placeholder="From" style={{ ...inputStyle, flex: 1 }} />
-              <input type="text" value={citTo} onChange={(e) => setCitTo(e.target.value)}
-                placeholder="To" style={{ ...inputStyle, flex: 1 }} />
-            </div>
-            <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
-              <button type="button" onClick={() => setShowCitForm(false)}
-                style={{ padding: '6px 12px', background: 'transparent', border: '1px solid var(--border-soft)', borderRadius: '6px', color: 'var(--text-primary)', cursor: 'pointer', fontSize: '12px' }}>
-                Cancel
-              </button>
-              <button type="button" onClick={addCitizenship}
-                disabled={!citState.trim()}
-                style={{ padding: '6px 12px', background: 'var(--accent)', border: 'none', borderRadius: '6px', color: '#fff', cursor: 'pointer', fontSize: '12px' }}>
-                Add
-              </button>
-            </div>
-          </div>
+        {editCitId === '__new__' && (
+          <CitizenshipForm
+            values={editCit}
+            onChange={(f, v) => setEditCit((p) => ({ ...p, [f]: v }))}
+            onCancel={cancelCitizen}
+            onSave={saveCitizen}
+            saving={saving}
+            locale={idLocale}
+          />
         )}
-        {!showCitForm && (
-          <button type="button" onClick={() => setShowCitForm(true)}
+        {editCitId !== '__new__' && editCitId === null && (
+          <button type="button" onClick={openNewCitizen}
             style={{ marginTop: '8px', padding: '8px', width: '100%', background: 'var(--surface-hover)', borderRadius: '6px', border: '1px dashed var(--border-soft)', fontSize: '12px', color: 'var(--text-muted)', cursor: 'pointer' }}>
-            + Add Citizenship
+            + {idLocale.addCitizenship}
           </button>
         )}
       </EditorSectionCard>

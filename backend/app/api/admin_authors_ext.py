@@ -159,6 +159,7 @@ async def get_author_citizenships(
             "state_name": c.state_name,
             "from_date": c.from_date,
             "to_date": c.to_date,
+            "notes": c.notes,
             "source_id": str(c.source_id) if c.source_id else None,
             "confidence": c.confidence,
             "status": c.status,
@@ -182,6 +183,29 @@ async def create_author_citizenship(
     await db.commit()
     await db.refresh(item)
     return {"id": str(item.id), "message": "Citizenship created"}
+
+
+@router.put("/{author_id}/citizenships/{item_id}")
+async def update_author_citizenship(
+    author_id: str,
+    item_id: str,
+    data: AuthorCitizenshipUpdate,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    await check_admin(current_user)
+    author = await get_author_or_404(db, author_id)
+    result = await db.execute(
+        select(AuthorCitizenship).where(AuthorCitizenship.id == item_id, AuthorCitizenship.author_id == author.id)
+    )
+    item = result.scalar_one_or_none()
+    if not item:
+        raise HTTPException(status_code=404, detail="Citizenship not found")
+    for field, value in data.model_dump(exclude_unset=True).items():
+        setattr(item, field, value)
+    await db.commit()
+    await db.refresh(item)
+    return {"id": str(item.id), "message": "Citizenship updated"}
 
 
 @router.delete("/{author_id}/citizenships/{item_id}", status_code=204)

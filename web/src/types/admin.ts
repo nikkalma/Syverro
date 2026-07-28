@@ -368,6 +368,7 @@ export interface AuthorCitizenship {
   state_name: string;
   from_date?: string | null;
   to_date?: string | null;
+  notes?: string | null;
   source_id?: string | null;
   confidence: number;
   status: string;
@@ -378,6 +379,7 @@ export interface AuthorCitizenshipCreate {
   state_name: string;
   from_date?: string | null;
   to_date?: string | null;
+  notes?: string | null;
   source_id?: string | null;
   confidence?: number;
   status?: string;

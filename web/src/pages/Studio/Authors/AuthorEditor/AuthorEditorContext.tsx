@@ -78,6 +78,6 @@ export function useAuthorEditor() {
 }
 
 export const SECTION_PATHS = [
-  'overview', 'identity', 'biography', 'timeline', 'works',
+  'overview', 'identity', 'timeline', 'works',
   'quotes', 'graph', 'media', 'seo', 'sources', 'ai',
 ] as const;

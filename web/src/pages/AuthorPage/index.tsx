@@ -373,7 +373,23 @@ export default function AuthorPage() {
     setError(null);
     apiClient.get<AuthorResponse>(`/authors/${slug}`)
       .then((res) => {
-        setAuthor(res.data);
+        setAuthor({
+          ...res.data,
+          books: res.data.books ?? [],
+          awards: res.data.awards ?? [],
+          timeline_events: res.data.timeline_events ?? [],
+          quotes: res.data.quotes ?? [],
+          citizenships: res.data.citizenships ?? [],
+          sources: res.data.sources ?? [],
+          knowledge_relations: res.data.knowledge_relations ?? [],
+          metadata: {
+            genres: res.data.metadata?.genres ?? [],
+            themes: res.data.metadata?.themes ?? [],
+            motifs: res.data.metadata?.motifs ?? [],
+            literary_movements: res.data.metadata?.literary_movements ?? [],
+            languages: res.data.metadata?.languages ?? [],
+          },
+        });
         setLoading(false);
       })
       .catch((err) => {

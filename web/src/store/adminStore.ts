@@ -12,6 +12,12 @@ import {
 
 type AdminFilters = Record<string, any>;
 
+const DEFAULT_FILTERS: AdminFilters = {};
+const DEFAULT_AUTHOR_FILTERS: Partial<AdminAuthorFilters> = {};
+const DEFAULT_BOOK_FILTERS: Partial<AdminBookFilters> = {};
+const DEFAULT_USER_FILTERS: Partial<AdminUserFilters> = {};
+const DEFAULT_LOG_FILTERS: Partial<AdminLogFilters> = {};
+
 
 
 interface AdminState {
@@ -375,33 +381,32 @@ export const useAdminStore = create<AdminState>()(
 
 
     {
-
       name: 'syverro-admin-storage',
+      version: 2,
 
+      migrate: (persistedState: any, version: number) => {
+        let state = { ...persistedState };
 
+        if (version < 2) {
+          state = {
+            ...state,
+            filters: { ...DEFAULT_FILTERS },
+            authorsFilters: { ...DEFAULT_AUTHOR_FILTERS },
+            booksFilters: { ...DEFAULT_BOOK_FILTERS },
+            usersFilters: { ...DEFAULT_USER_FILTERS },
+            logsFilters: { ...DEFAULT_LOG_FILTERS },
+            searchQuery: '',
+            page: 1,
+          };
+        }
 
-      partialize: (
-        state
-      ) => ({
+        return state;
+      },
 
+      partialize: (state) => ({
         theme: state.theme,
-
-        filters: state.filters,
-
-
-        usersFilters: state.usersFilters,
-
-        booksFilters: state.booksFilters,
-
-        authorsFilters: state.authorsFilters,
-
-        logsFilters: state.logsFilters,
-
-
         limit: state.limit,
-
       }),
-
     }
 
   )

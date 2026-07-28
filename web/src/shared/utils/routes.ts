@@ -49,7 +49,17 @@ export function profilePath(): string {
   return '/profile';
 }
 
-const SITE_BASE = (import.meta as any).env?.VITE_SITE_URL || 'https://syverro.com';
+function getSiteBase(): string {
+  if (import.meta.env.DEV) {
+    return window.location.origin;
+  }
+  if (typeof window !== 'undefined' && window.location.hostname === 'localhost') {
+    return window.location.origin;
+  }
+  return (import.meta as any).env?.VITE_SITE_URL || 'https://syverro.com';
+}
+
+const SITE_BASE = getSiteBase();
 
 export function authorUrl(a: AuthorLike): string {
   return `${SITE_BASE}${authorPath(a)}`;

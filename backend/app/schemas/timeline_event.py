@@ -13,6 +13,7 @@ class TimelineEventBase(BaseModel):
     description: Optional[str] = None
     place_id: Optional[UUID] = None
     source_id: Optional[UUID] = None
+    extraction_source: str = "manual"
     confidence: float = 1.0
     status: str = "verified"
     sort_order: int = 0
@@ -26,6 +27,7 @@ class TimelineEventCreate(BaseModel):
     description: Optional[str] = None
     place_id: Optional[UUID] = None
     source_id: Optional[UUID] = None
+    extraction_source: str = "manual"
     confidence: float = 1.0
     status: str = "verified"
     sort_order: int = 0
@@ -39,6 +41,7 @@ class TimelineEventUpdate(BaseModel):
     description: Optional[str] = None
     place_id: Optional[UUID] = None
     source_id: Optional[UUID] = None
+    extraction_source: Optional[str] = None
     confidence: Optional[float] = None
     status: Optional[str] = None
     sort_order: Optional[int] = None

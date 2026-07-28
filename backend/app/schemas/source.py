@@ -10,6 +10,9 @@ class SourceBase(BaseModel):
     url: Optional[str] = None
     citation: Optional[str] = None
     notes: Optional[str] = None
+    language: Optional[str] = None
+    reliability_score: Optional[str] = "3"
+    source_origin: Optional[str] = "manual"
 
 
 class SourceCreate(SourceBase):
@@ -22,6 +25,9 @@ class SourceUpdate(BaseModel):
     url: Optional[str] = None
     citation: Optional[str] = None
     notes: Optional[str] = None
+    language: Optional[str] = None
+    reliability_score: Optional[str] = None
+    source_origin: Optional[str] = None
 
 
 class SourceResponse(SourceBase):

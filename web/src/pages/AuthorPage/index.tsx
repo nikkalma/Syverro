@@ -11,10 +11,71 @@ interface AuthorBook {
   cover: string | null;
 }
 
-interface AuthorMetadata {
+interface TimelineEvent {
+  id: string;
+  event_type: string;
+  date_value: string;
+  date_precision: string;
+  label: string;
+  description: string | null;
+  place_name: string | null;
+  source_title: string | null;
+  extraction_source: string;
+  confidence: number;
+  status: string;
+}
+
+interface Quote {
+  id: string;
+  text: string;
+  speaker: string | null;
+  source_title: string | null;
+  date_value: string | null;
+  confidence: number;
+  status: string;
+}
+
+interface Citizenship {
+  id: string;
+  state_name: string;
+  from_date: string | null;
+  to_date: string | null;
+  notes: string | null;
+  confidence: number;
+  status: string;
+}
+
+interface Award {
+  id: string;
+  name: string;
+  year: number | null;
+  organization: string | null;
+  work: string | null;
+}
+
+interface Source {
+  id: string;
+  title: string;
+  source_type: string;
+  url: string | null;
+  citation: string | null;
+}
+
+interface KnowledgeRelation {
+  id: string;
+  node_name: string | null;
+  node_type: string | null;
+  relation_type: string;
+  source: string | null;
+  status: string;
+}
+
+interface GoldenMetadata {
   genres: string[];
   themes: string[];
   motifs: string[];
+  literary_movements: string[];
+  languages: string[];
 }
 
 interface AuthorResponse {
@@ -26,35 +87,32 @@ interface AuthorResponse {
   first_name: string | null;
   last_name: string | null;
   native_name: string | null;
+  sort_name: string | null;
   nationality: string | null;
+  ethnic_origin: string | null;
+  cultural_identity: string | null;
+  birth_name: string | null;
+  pen_names: string[] | null;
   birth_date: string | null;
   death_date: string | null;
   birth_place: string | null;
   death_place: string | null;
-  occupations: string[] | null;
   biography: string | null;
+  hero_quote: string | null;
+  about_summary: string | null;
+  occupations: string[] | null;
   photo_url: string | null;
   hero_background_url?: string | null;
   author_intro_quote?: string | null;
-  featured_quote?: string | null;
   books: AuthorBook[];
-  metadata: AuthorMetadata;
+  awards: Award[];
+  timeline_events: TimelineEvent[];
+  quotes: Quote[];
+  citizenships: Citizenship[];
+  sources: Source[];
+  knowledge_relations: KnowledgeRelation[];
+  metadata: GoldenMetadata;
 }
-
-const tabStyle = (active: boolean): React.CSSProperties => ({
-  background: 'none',
-  border: 'none',
-  padding: '6px 20px',
-  fontFamily: 'Inter, sans-serif',
-  fontSize: '12px',
-  fontWeight: active ? '500' : '400',
-  letterSpacing: '0.8px',
-  cursor: 'default',
-  color: active ? 'var(--text-primary)' : 'var(--text-muted)',
-  borderBottom: active ? '1.5px solid var(--accent)' : '1.5px solid transparent',
-  transition: 'color 0.25s, border-color 0.25s',
-  textTransform: 'uppercase' as const,
-});
 
 const sectionTitleStyle: React.CSSProperties = {
   fontFamily: 'Cormorant Garamond, serif',
@@ -101,6 +159,204 @@ const glassCardStyle: React.CSSProperties = {
   height: '100%',
   boxShadow: 'var(--glass-shadow)',
 };
+
+const eventIcons: Record<string, string> = {
+  birth: '✦',
+  death: '✠',
+  publication: '📖',
+  military_service: '⚔',
+  milestone: '◆',
+};
+
+function TimelineSection({ events, t }: { events: TimelineEvent[]; t: { timelineEmpty: string } }) {
+  if (events.length === 0) {
+    return (
+      <div style={placeholderStyle}>
+        <span style={{ fontSize: '22px', opacity: 0.3 }}>📜</span>
+        <span>{t.timelineEmpty}</span>
+      </div>
+    );
+  }
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+      {events.map((ev) => (
+        <div key={ev.id} style={{
+          display: 'flex', gap: '12px', padding: '12px 16px',
+          borderRadius: '12px', background: 'var(--surface)',
+          border: '1px solid var(--border)',
+        }}>
+          <div style={{
+            width: '32px', height: '32px', borderRadius: '50%', flexShrink: 0,
+            background: 'var(--glass-bg)', display: 'flex', alignItems: 'center',
+            justifyContent: 'center', fontSize: '14px',
+            border: '1px solid var(--glass-border)',
+          }}>
+            {eventIcons[ev.event_type] || '•'}
+          </div>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginBottom: '2px' }}>
+              {ev.date_value}
+              {ev.place_name ? ` — ${ev.place_name}` : ''}
+            </div>
+            <div style={{ fontSize: '13px', fontWeight: 500, color: 'var(--text-primary)', marginBottom: '2px' }}>
+              {ev.label}
+            </div>
+            {ev.description && (
+              <div style={{ fontSize: '12px', color: 'var(--text-secondary)', lineHeight: 1.5 }}>
+                {ev.description}
+              </div>
+            )}
+            {ev.source_title && (
+              <div style={{ fontSize: '10px', color: 'var(--text-muted)', marginTop: '4px', fontStyle: 'italic' }}>
+                {ev.source_title}
+              </div>
+            )}
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function QuotesSection({ quotes, t }: { quotes: Quote[]; t: any }) {
+  if (quotes.length === 0) {
+    return (
+      <div style={placeholderStyle}>
+        <span style={{ fontFamily: 'Cormorant Garamond, serif', fontSize: '48px', color: 'var(--primary)', opacity: 0.2, lineHeight: 0.5 }}>❝</span>
+        <span style={{ fontStyle: 'italic' }}>{t.quotesEmpty}</span>
+      </div>
+    );
+  }
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+      {quotes.map((q) => (
+        <div key={q.id} style={{
+          padding: '20px 24px', borderRadius: '12px',
+          background: 'var(--surface)', border: '1px solid var(--border)',
+        }}>
+          <div style={{
+            fontFamily: 'Cormorant Garamond, serif',
+            fontSize: '36px', color: 'var(--primary)', opacity: 0.2,
+            lineHeight: 0.5, marginBottom: '4px',
+          }}>❝</div>
+          <div style={{
+            fontFamily: 'Cormorant Garamond, serif',
+            fontSize: '15px', color: 'var(--text-muted)', fontStyle: 'italic',
+            lineHeight: 1.6, marginBottom: '8px',
+          }}>
+            {q.text}
+          </div>
+          <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
+            {q.speaker && <span>{q.speaker}</span>}
+            {q.source_title && <span> — {q.source_title}</span>}
+            {q.date_value && <span> ({q.date_value})</span>}
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function AwardsSection({ awards, t }: { awards: Award[]; t: { awardsEmpty: string } }) {
+  if (awards.length === 0) {
+    return (
+      <div style={placeholderStyle}>
+        <span style={{ fontSize: '24px', opacity: 0.3 }}>🏆</span>
+        <span>{t.awardsEmpty}</span>
+      </div>
+    );
+  }
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+      {awards.map((a) => (
+        <div key={a.id} style={{
+          padding: '12px 16px', borderRadius: '10px',
+          background: 'var(--surface)', border: '1px solid var(--border)',
+        }}>
+          <div style={{ fontSize: '13px', fontWeight: 500, color: 'var(--text-primary)' }}>{a.name}</div>
+          <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '2px' }}>
+            {[a.organization, a.year].filter(Boolean).join(', ')}
+            {a.work ? ` — ${a.work}` : ''}
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function CitizenshipsSection({ citizenships }: { citizenships: Citizenship[] }) {
+  if (citizenships.length === 0) return null;
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+      {citizenships.map((c) => (
+        <div key={c.id} style={{
+          padding: '10px 14px', borderRadius: '10px',
+          background: 'var(--surface)', border: '1px solid var(--border)',
+          fontSize: '13px',
+        }}>
+          <span style={{ color: 'var(--text-primary)', fontWeight: 500 }}>{c.state_name}</span>
+          <span style={{ color: 'var(--text-muted)', marginLeft: '8px' }}>
+            {c.from_date}{c.to_date ? ` — ${c.to_date}` : ''}
+          </span>
+          {c.notes && <div style={{ fontSize: '11px', color: 'var(--text-secondary)', marginTop: '2px' }}>{c.notes}</div>}
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function KnowledgeSection({ relations, t }: { relations: KnowledgeRelation[]; t: { connectionsEmpty: string } }) {
+  if (relations.length === 0) {
+    return (
+      <div style={placeholderStyle}>
+        <span style={{ fontSize: '28px', opacity: 0.25 }}>🔮</span>
+        <span>{t.connectionsEmpty}</span>
+      </div>
+    );
+  }
+  return (
+    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+      {relations.map((r) => (
+        <div key={r.id} style={{
+          ...tagPillStyle,
+          background: 'color-mix(in srgb, var(--primary) 8%, transparent)',
+          color: 'var(--primary)',
+          border: '1px solid color-mix(in srgb, var(--primary) 12%, transparent)',
+          fontSize: '11px',
+        }}>
+          {r.node_name || r.relation_type}
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function SourcesSection({ sources }: { sources: Source[] }) {
+  if (sources.length === 0) return null;
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+      {sources.map((s) => (
+        <div key={s.id} style={{
+          padding: '12px 16px', borderRadius: '10px',
+          background: 'var(--surface)', border: '1px solid var(--border)',
+        }}>
+          <div style={{ fontSize: '13px', color: 'var(--text-primary)' }}>
+            {s.url ? (
+              <a href={s.url} target="_blank" rel="noopener noreferrer"
+                style={{ color: 'var(--accent)', textDecoration: 'none' }}>
+                {s.title}
+              </a>
+            ) : s.title}
+          </div>
+          <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '2px' }}>
+            {s.source_type}
+            {s.citation ? ` — ${s.citation}` : ''}
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
 
 export default function AuthorPage() {
   const { slug } = useParams<{ slug: string }>();
@@ -159,7 +415,8 @@ export default function AuthorPage() {
   const hasGenres = author.metadata.genres.length > 0;
   const hasThemes = author.metadata.themes.length > 0;
   const hasMotifs = author.metadata.motifs.length > 0;
-  const hasTags = hasGenres || hasThemes || hasMotifs;
+  const hasLiteraryMovements = author.metadata.literary_movements.length > 0;
+  const hasTags = hasGenres || hasThemes || hasMotifs || hasLiteraryMovements;
 
   const heroBgImage = author.hero_background_url
     ? `var(--hero-overlay), var(--hero-glow-1), var(--hero-glow-2), url(${author.hero_background_url})`
@@ -171,8 +428,21 @@ export default function AuthorPage() {
     ? author.occupations.join(' / ')
     : null;
 
+  const hasCitizenships = author.citizenships.length > 0;
+  const hasSources = author.sources.length > 0;
+
   const metadataRows = [
     author.nationality && { label: t.author.metaOrigin, value: author.nationality },
+    author.ethnic_origin && { label: t.author.metaEthnicOrigin, value: author.ethnic_origin },
+    author.cultural_identity && { label: t.author.metaCulturalIdentity, value: author.cultural_identity },
+    author.metadata.literary_movements.length > 0 && {
+      label: t.author.metaMovements,
+      value: author.metadata.literary_movements.join(' / '),
+    },
+    author.metadata.languages.length > 0 && {
+      label: t.author.metaLanguages,
+      value: author.metadata.languages.join(', '),
+    },
     (author.birth_place || formattedBirth) && {
       label: t.author.metaBorn,
       value: [formattedBirth, author.birth_place].filter(Boolean).join('\n'),
@@ -188,9 +458,7 @@ export default function AuthorPage() {
   return (
     <div style={{ width: '100%', padding: '0 24px 80px' }}>
 
-      {/* ======================================================================= */}
-      {/* HERO                                                                    */}
-      {/* ======================================================================= */}
+      {/* HERO */}
       <div style={{ position: 'relative', paddingTop: '60px' }}>
         <div style={{
           width: '100%', height: '380px', borderRadius: '0 0 24px 24px',
@@ -212,7 +480,6 @@ export default function AuthorPage() {
             background: 'linear-gradient(to top, var(--bg) 0%, transparent 100%)',
           }} />
 
-          {/* Hero name */}
           <div style={{
             position: 'absolute', bottom: '60px', left: '200px', right: '200px', zIndex: 2,
           }}>
@@ -235,7 +502,6 @@ export default function AuthorPage() {
             )}
           </div>
 
-          {/* Expanded metadata panel — entity passport */}
           <div style={{
             position: 'absolute', bottom: '60px', right: '24px', zIndex: 2,
             padding: '20px 28px', minWidth: '340px',
@@ -269,7 +535,6 @@ export default function AuthorPage() {
           </div>
         </div>
 
-        {/* Portrait — bridges hero and content */}
         <div style={{
           position: 'absolute', bottom: '-52px', left: '28px', zIndex: 3,
           width: '156px', height: '156px', borderRadius: '50%',
@@ -291,42 +556,63 @@ export default function AuthorPage() {
         </div>
       </div>
 
-      {/* ──────── FEATURED QUOTE ABOUT AUTHOR + TAGS ──────── */}
+      {/* FEATURED QUOTE + TAGS */}
       <div style={{ paddingLeft: '204px', paddingRight: '28px', marginTop: '20px' }}>
-        <div style={{
-          marginBottom: '12px', maxWidth: '580px',
-          padding: '20px 24px', borderRadius: '12px',
-          background: 'var(--surface)', border: '1px solid var(--border)',
-        }}>
+        {(author.hero_quote || author.about_summary) && (
           <div style={{
-            fontFamily: 'Cormorant Garamond, serif',
-            fontSize: '13px', fontWeight: 500,
-            color: 'var(--accent)', letterSpacing: '0.06em',
-            textTransform: 'uppercase', marginBottom: '10px',
+            marginBottom: '12px', maxWidth: '580px',
+            padding: '20px 24px', borderRadius: '12px',
+            background: 'var(--surface)', border: '1px solid var(--border)',
           }}>
-            {t.author.heroQuote}
+            {author.hero_quote && (
+              <>
+                <div style={{
+                  fontFamily: 'Cormorant Garamond, serif',
+                  fontSize: '13px', fontWeight: 500,
+                  color: 'var(--accent)', letterSpacing: '0.06em',
+                  textTransform: 'uppercase', marginBottom: '10px',
+                }}>
+                  {t.author.heroQuote}
+                </div>
+                <div style={{
+                  fontFamily: 'Cormorant Garamond, serif',
+                  fontSize: '36px', color: 'var(--primary)', opacity: 0.2,
+                  lineHeight: 0.5, marginBottom: '4px',
+                }}>❝</div>
+                <div style={{
+                  fontFamily: 'Cormorant Garamond, serif',
+                  fontSize: '15px', color: 'var(--text-muted)', fontStyle: 'italic',
+                  lineHeight: 1.6,
+                }}>
+                  {author.hero_quote}
+                </div>
+              </>
+            )}
+            {author.about_summary && !author.hero_quote && (
+              <div style={{
+                fontFamily: 'Cormorant Garamond, serif',
+                fontSize: '15px', color: 'var(--text-muted)', fontStyle: 'italic',
+                lineHeight: 1.6,
+              }}>
+                {author.about_summary}
+              </div>
+            )}
           </div>
-          <div style={{
-            fontFamily: 'Cormorant Garamond, serif',
-            fontSize: '36px', color: 'var(--primary)', opacity: 0.2,
-            lineHeight: 0.5, marginBottom: '4px',
-          }}>❝</div>
-          <div style={{
-            fontFamily: 'Cormorant Garamond, serif',
-            fontSize: '15px', color: 'var(--text-muted)', fontStyle: 'italic',
-            lineHeight: 1.6,
-          }}>
-            {author.featured_quote || t.author.noHeroQuote}
-          </div>
-        </div>
+        )}
 
         {hasTags && (
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginBottom: '12px' }}>
             {hasGenres && author.metadata.genres.map((g) => (
               <span key={g} style={{
                 ...tagPillStyle, background: 'color-mix(in srgb, var(--primary) 10%, transparent)',
                 color: 'var(--primary)', border: '1px solid color-mix(in srgb, var(--primary) 15%, transparent)',
               }}>{g}</span>
+            ))}
+            {hasLiteraryMovements && author.metadata.literary_movements.map((lm) => (
+              <span key={lm} style={{
+                ...tagPillStyle, background: 'color-mix(in srgb, var(--accent) 10%, transparent)',
+                color: 'var(--accent)', border: '1px solid color-mix(in srgb, var(--accent) 15%, transparent)',
+              }}>{lm}</span>
             ))}
             {hasThemes && author.metadata.themes.map((t) => (
               <span key={t} style={{
@@ -344,248 +630,182 @@ export default function AuthorPage() {
         )}
       </div>
 
-      {/* ──────── TABS ──────── */}
-      <div style={{
-        display: 'flex', gap: '2px', marginTop: '40px',
-        paddingLeft: '28px', paddingRight: '28px',
-        borderBottom: '1px solid var(--border)',
-      }}>
-        <button style={tabStyle(true)}>{t.author.tabAbout}</button>
-        <button style={tabStyle(false)}>{t.author.tabBooks}</button>
-        <button style={tabStyle(false)}>{t.author.tabWorlds}</button>
-        <button style={tabStyle(false)}>{t.author.tabConnections}</button>
-        <button style={tabStyle(false)}>{t.author.tabQuotes}</button>
-      </div>
+      {/* CONTENT GRID */}
+      <div style={{ paddingLeft: '28px', paddingRight: '28px' }}>
 
-      {/* ======================================================================= */}
-      {/* CONTENT                                                                  */}
-      {/* ======================================================================= */}
+        {/* Row 1: About | Timeline | Citizenships */}
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: '1.3fr 1fr 1fr',
+          gap: '24px',
+          marginTop: '40px',
+        }}>
+          <div>
+            <div style={sectionTitleStyle}>{t.author.aboutAuthor}</div>
+            <div style={glassCardStyle}>
+              {hasBio ? (
+                <div>
+                  <p style={{
+                    fontSize: '14px', color: 'var(--text-secondary)', lineHeight: 1.85,
+                    margin: 0, whiteSpace: 'pre-wrap',
+                  }}>
+                    {bioExpanded || !bioIsLong
+                      ? author.biography
+                      : author.biography!.slice(0, 300) + '...'}
+                  </p>
+                  {bioIsLong && (
+                    <button
+                      onClick={() => setBioExpanded(!bioExpanded)}
+                      style={{
+                        background: 'none', border: 'none', color: 'var(--primary)',
+                        cursor: 'pointer', fontSize: '12px', marginTop: '12px', padding: 0,
+                        fontFamily: 'Inter, sans-serif', fontStyle: 'italic',
+                        letterSpacing: '0.03em',
+                      }}
+                    >
+                      {bioExpanded ? t.author.showLess : t.author.readMore}
+                    </button>
+                  )}
+                </div>
+              ) : (
+                <p style={{ fontSize: '13px', color: 'var(--primary)', margin: 0, fontStyle: 'italic' }}>{t.author.noBiography}</p>
+              )}
+            </div>
+          </div>
 
-      {/* Row 1: About | Timeline | Atmosphere */}
-      <div style={{
-        display: 'grid',
-        gridTemplateColumns: '1.3fr 1fr 1fr',
-        gap: '24px',
-        marginTop: '40px',
-        paddingLeft: '28px', paddingRight: '28px',
-      }}>
-        {/* About */}
-        <div>
-          <div style={sectionTitleStyle}>{t.author.aboutAuthor}</div>
-          <div style={glassCardStyle}>
-            {hasBio ? (
-              <div>
-                <p style={{
-                  fontSize: '14px', color: 'var(--text-secondary)', lineHeight: 1.85,
-                  margin: 0, whiteSpace: 'pre-wrap',
-                }}>
-                  {bioExpanded || !bioIsLong
-                    ? author.biography
-                    : author.biography!.slice(0, 300) + '...'}
-                </p>
-                {bioIsLong && (
-                  <button
-                    onClick={() => setBioExpanded(!bioExpanded)}
-                    style={{
-                      background: 'none', border: 'none', color: 'var(--primary)',
-                      cursor: 'pointer', fontSize: '12px', marginTop: '12px', padding: 0,
-                      fontFamily: 'Inter, sans-serif', fontStyle: 'italic',
-                      letterSpacing: '0.03em',
-                    }}
-                  >
-                    {bioExpanded ? t.author.showLess : t.author.readMore}
-                  </button>
-                )}
-              </div>
+          <div>
+            <div style={sectionTitleStyle}>{t.author.timeline}</div>
+            <TimelineSection events={author.timeline_events} t={t.author} />
+          </div>
+
+          <div>
+            <div style={sectionTitleStyle}>{t.author.citizenships}</div>
+            {hasCitizenships ? (
+              <CitizenshipsSection citizenships={author.citizenships} />
             ) : (
-              <p style={{ fontSize: '13px', color: 'var(--primary)', margin: 0, fontStyle: 'italic' }}>{t.author.noBiography}</p>
+              <div style={{ ...placeholderStyle, minHeight: '120px' }}>
+                <span style={{ fontSize: '22px', opacity: 0.3 }}>🪪</span>
+                <span>{t.author.citizenshipsEmpty}</span>
+              </div>
             )}
           </div>
         </div>
 
-        {/* Timeline */}
-        <div>
-          <div style={sectionTitleStyle}>{t.author.timeline}</div>
-          <div style={{
-            ...placeholderStyle,
-            minHeight: '180px',
-            border: '1px solid var(--border)',
-          }}>
-            <span style={{ fontSize: '22px', opacity: 0.3 }}>📜</span>
-            <span>{t.author.timelineComingSoon}</span>
+        {/* Row 2: Awards | Quotes */}
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: '1fr 1fr',
+          gap: '28px',
+          marginTop: '56px',
+        }}>
+          <div>
+            <div style={sectionTitleStyle}>{t.author.awards}</div>
+            <AwardsSection awards={author.awards} t={t.author} />
+          </div>
+
+          <div>
+            <div style={sectionTitleStyle}>{t.author.quotes}</div>
+            <QuotesSection quotes={author.quotes} t={t.author} />
           </div>
         </div>
 
-        {/* Atmosphere */}
-        <div>
-          <div style={sectionTitleStyle}>{t.author.atmosphere}</div>
-          <div style={{
-            ...glassCardStyle,
-            minHeight: '180px',
-          }}>
-            {hasThemes ? (
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', alignItems: 'flex-start' }}>
-                {author.metadata.themes.map((t) => (
-                  <span key={t} style={{
-                    ...tagPillStyle,
-                    padding: '6px 16px',
-                    background: 'color-mix(in srgb, var(--warning) 8%, transparent)',
-                    color: 'var(--warning)',
-                    border: '1px solid color-mix(in srgb, var(--warning) 12%, transparent)',
-                    fontSize: '13px',
-                  }}>{t}</span>
+        {/* Row 3: Books | Connections */}
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: '1.6fr 1fr',
+          gap: '28px',
+          marginTop: '56px',
+        }}>
+          <div>
+            <div style={sectionTitleStyle}>{t.author.authorBooks}</div>
+            {author.books.length > 0 ? (
+              <div style={{
+                display: 'flex', gap: '20px', overflowX: 'auto', paddingBottom: '16px',
+                scrollSnapType: 'x mandatory',
+              }}>
+                {author.books.map((book) => (
+                  <div
+                    key={book.id}
+                    onClick={() => navigate(bookPath(book))}
+                    style={{
+                      flex: '0 0 170px', cursor: 'pointer', borderRadius: '12px', overflow: 'hidden',
+                      background: 'var(--card)',
+                      border: '1px solid var(--border)',
+                      transition: 'border-color 0.25s, transform 0.25s, box-shadow 0.25s',
+                      scrollSnapAlign: 'start',
+                      boxShadow: 'var(--glass-shadow)',
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.borderColor = 'var(--accent)';
+                      e.currentTarget.style.transform = 'translateY(-4px)';
+                      e.currentTarget.style.boxShadow = 'var(--glass-shadow)';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.borderColor = 'var(--border)';
+                      e.currentTarget.style.transform = 'translateY(0)';
+                      e.currentTarget.style.boxShadow = 'var(--glass-shadow)';
+                    }}
+                  >
+                    <div style={{
+                      width: '100%', aspectRatio: '2/3',
+                      background: 'linear-gradient(145deg, var(--surface), var(--bg))',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      fontSize: '36px', color: 'var(--primary)',
+                    }}>
+                      {book.cover ? (
+                        <img src={book.cover} alt={book.title}
+                          style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                      ) : (
+                        <span style={{ opacity: 0.2 }}>📖</span>
+                      )}
+                    </div>
+                    <div style={{ padding: '10px 14px 14px' }}>
+                      <div style={{
+                        fontSize: '12px', color: 'var(--accent)',
+                        overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+                        lineHeight: 1.4, letterSpacing: '0.02em',
+                      }}>
+                        {book.title}
+                      </div>
+                    </div>
+                  </div>
                 ))}
               </div>
             ) : (
-              <p style={{ fontSize: '13px', color: 'var(--primary)', margin: 0, fontStyle: 'italic' }}>{t.author.noAtmosphere}</p>
+              <div style={placeholderStyle}>
+                <span style={{ fontSize: '24px', opacity: 0.3 }}>📚</span>
+                {t.author.noBooks}
+              </div>
             )}
           </div>
-        </div>
-      </div>
 
-      {/* Row 2: Books | Quote */}
-      <div style={{
-        display: 'grid',
-        gridTemplateColumns: '2fr 1fr',
-        gap: '28px',
-        marginTop: '56px',
-        paddingLeft: '28px', paddingRight: '28px',
-      }}>
-        {/* Books */}
-        <div>
-          <div style={sectionTitleStyle}>{t.author.authorBooks}</div>
-          {author.books.length > 0 ? (
-            <div style={{
-              display: 'flex', gap: '20px', overflowX: 'auto', paddingBottom: '16px',
-              scrollSnapType: 'x mandatory',
-            }}>
-              {author.books.map((book) => (
-                <div
-                  key={book.id}
-                  onClick={() => navigate(bookPath(book))}
-                  style={{
-                    flex: '0 0 170px', cursor: 'pointer', borderRadius: '12px', overflow: 'hidden',
-                    background: 'var(--card)',
-                    border: '1px solid var(--border)',
-                    transition: 'border-color 0.25s, transform 0.25s, box-shadow 0.25s',
-                    scrollSnapAlign: 'start',
-                    boxShadow: 'var(--glass-shadow)',
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.borderColor = 'var(--accent)';
-                    e.currentTarget.style.transform = 'translateY(-4px)';
-                    e.currentTarget.style.boxShadow = 'var(--glass-shadow)';
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.borderColor = 'var(--border)';
-                    e.currentTarget.style.transform = 'translateY(0)';
-                    e.currentTarget.style.boxShadow = 'var(--glass-shadow)';
-                  }}
-                >
-                  <div style={{
-                    width: '100%', aspectRatio: '2/3',
-                    background: 'linear-gradient(145deg, var(--surface), var(--bg))',
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    fontSize: '36px', color: 'var(--primary)',
-                  }}>
-                    {book.cover ? (
-                      <img src={book.cover} alt={book.title}
-                        style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                    ) : (
-                      <span style={{ opacity: 0.2 }}>📖</span>
-                    )}
-                  </div>
-                  <div style={{ padding: '10px 14px 14px' }}>
-                    <div style={{
-                      fontSize: '12px', color: 'var(--accent)',
-                      overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
-                      lineHeight: 1.4, letterSpacing: '0.02em',
-                    }}>
-                      {book.title}
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <div style={placeholderStyle}>
-              <span style={{ fontSize: '24px', opacity: 0.3 }}>📚</span>
-              {t.author.noBooks}
-            </div>
-          )}
+          <div>
+            <div style={sectionTitleStyle}>{t.author.connections}</div>
+            <KnowledgeSection relations={author.knowledge_relations} t={t.author} />
+          </div>
         </div>
 
-        {/* Quote */}
-        <div>
-          <div style={sectionTitleStyle}>{t.author.quote}</div>
+        {/* Sources / References */}
+        {hasSources && (
+          <div style={{ marginTop: '56px' }}>
+            <div style={sectionTitleStyle}>{t.author.sources}</div>
+            <SourcesSection sources={author.sources} />
+          </div>
+        )}
+
+        {/* You May Also Like */}
+        <div style={{ marginTop: '56px' }}>
+          <div style={sectionTitleStyle}>{t.author.youMayAlsoLike}</div>
           <div style={{
             ...placeholderStyle,
-            minHeight: '200px', padding: '36px 28px',
-            justifyContent: 'center',
+            minHeight: '120px',
             border: '1px solid var(--border)',
           }}>
-            <span style={{
-              fontFamily: 'Cormorant Garamond, serif',
-              fontSize: '48px', color: 'var(--primary)', opacity: 0.2,
-              lineHeight: 0.5,
-            }}>❝</span>
-            <span style={{ fontStyle: 'italic', color: 'var(--text-muted)', marginTop: '-4px' }}>{t.author.quoteComingSoon}</span>
-          </div>
-        </div>
-      </div>
-
-      {/* Row 3: Connections | Collections */}
-      <div style={{
-        display: 'grid',
-        gridTemplateColumns: '1.6fr 1fr',
-        gap: '28px',
-        marginTop: '56px',
-        paddingLeft: '28px', paddingRight: '28px',
-      }}>
-        {/* Connections */}
-        <div>
-          <div style={sectionTitleStyle}>{t.author.connections}</div>
-          <div style={{
-            padding: '56px 40px', borderRadius: '16px', textAlign: 'center',
-            background: 'var(--surface)',
-            border: '1px solid var(--border)',
-            color: 'var(--text-muted)', fontSize: '13px', fontStyle: 'italic',
-            backdropFilter: 'blur(10px)',
-            WebkitBackdropFilter: 'blur(10px)',
-            boxShadow: 'var(--glass-shadow)',
-          }}>
-            <div style={{ fontSize: '36px', marginBottom: '14px', opacity: 0.3 }}>🔮</div>
-            {t.author.graphComingSoon}
+            <span style={{ fontSize: '28px', opacity: 0.25 }}>✨</span>
+            <span style={{ fontStyle: 'italic' }}>{t.author.recommendationsEmpty}</span>
           </div>
         </div>
 
-        {/* Collections */}
-        <div>
-          <div style={sectionTitleStyle}>{t.author.collections}</div>
-          <div style={{
-            ...placeholderStyle,
-            minHeight: '180px',
-          }}>
-            <span style={{ fontSize: '24px', opacity: 0.3 }}>📦</span>
-            {t.author.collectionsComingSoon}
-          </div>
-        </div>
-      </div>
-
-      {/* ──────── BOTTOM: YOU MAY ALSO LIKE ──────── */}
-      <div style={{
-        marginTop: '56px',
-        paddingLeft: '28px', paddingRight: '28px',
-      }}>
-        <div style={sectionTitleStyle}>{t.author.youMayAlsoLike}</div>
-        <div style={{
-          ...placeholderStyle,
-          minHeight: '200px',
-          border: '1px solid var(--border)',
-        }}>
-          <span style={{ fontSize: '28px', opacity: 0.25 }}>✨</span>
-          <span style={{ fontStyle: 'italic' }}>{t.author.recommendationsComingSoon}</span>
-        </div>
       </div>
 
     </div>

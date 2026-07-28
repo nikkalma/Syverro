@@ -95,6 +95,10 @@ class AuthorBase(BaseModel):
     hero_background_url: Optional[str] = None
     author_intro_quote: Optional[str] = None
 
+    # Metadata
+    creation_type: Optional[str] = "individual_author"
+    metadata_status: Optional[str] = "draft"
+
 
 class AuthorCreate(AuthorBase):
     awards: Optional[List[AuthorAwardPayload]] = None
@@ -238,6 +242,145 @@ class AuthorPublicResponse(BaseModel):
     occupations: Optional[List[str]] = None
     books: List[AuthorBookBrief] = []
     metadata: AuthorMetadata = AuthorMetadata()
+
+    class Config:
+        from_attributes = True
+
+
+# ============================================================
+# GOLDEN AUTHOR — public sub-schemas
+# ============================================================
+
+
+class TimelineEventPublic(BaseModel):
+    id: UUID
+    event_type: str
+    date_value: str
+    date_precision: str = "full"
+    label: str
+    description: Optional[str] = None
+    place_name: Optional[str] = None
+    source_title: Optional[str] = None
+    extraction_source: str = "manual"
+    confidence: float = 1.0
+    status: str = "verified"
+    sort_order: int = 0
+
+    class Config:
+        from_attributes = True
+
+
+class QuotePublic(BaseModel):
+    id: UUID
+    text: str
+    speaker: Optional[str] = None
+    source_title: Optional[str] = None
+    date_value: Optional[str] = None
+    confidence: float = 1.0
+    status: str = "draft"
+
+    class Config:
+        from_attributes = True
+
+
+class CitizenshipPublic(BaseModel):
+    id: UUID
+    state_name: str
+    from_date: Optional[str] = None
+    to_date: Optional[str] = None
+    notes: Optional[str] = None
+    confidence: float = 1.0
+    status: str = "verified"
+
+    class Config:
+        from_attributes = True
+
+
+class AwardPublic(BaseModel):
+    id: UUID
+    name: str
+    year: Optional[int] = None
+    organization: Optional[str] = None
+    work: Optional[str] = None
+
+    class Config:
+        from_attributes = True
+
+
+class SourcePublic(BaseModel):
+    id: UUID
+    title: str
+    source_type: str
+    url: Optional[str] = None
+    citation: Optional[str] = None
+    language: Optional[str] = None
+    reliability_score: Optional[str] = "3"
+    source_origin: Optional[str] = "manual"
+
+    class Config:
+        from_attributes = True
+
+
+class KnowledgeRelationPublic(BaseModel):
+    id: UUID
+    node_name: Optional[str] = None
+    node_type: Optional[str] = None
+    relation_type: str
+    source: Optional[str] = None
+    status: str = "proposed"
+    confidence: float = 0.0
+
+    class Config:
+        from_attributes = True
+
+
+class GoldenAuthorMetadata(BaseModel):
+    genres: List[str] = []
+    themes: List[str] = []
+    motifs: List[str] = []
+    literary_movements: List[str] = []
+    languages: List[str] = []
+
+
+class GoldenAuthorResponse(BaseModel):
+    id: UUID
+    slug: Optional[str] = None
+    name: str
+    display_name: Optional[str] = None
+    display_name_mode: Optional[str] = None
+    first_name: Optional[str] = None
+    last_name: Optional[str] = None
+    native_name: Optional[str] = None
+    sort_name: Optional[str] = None
+
+    nationality: Optional[str] = None
+    ethnic_origin: Optional[str] = None
+    cultural_identity: Optional[str] = None
+    birth_name: Optional[str] = None
+    pen_names: Optional[List[str]] = None
+
+    birth_date: Optional[str] = None
+    death_date: Optional[str] = None
+    birth_place: Optional[str] = None
+    death_place: Optional[str] = None
+    biography: Optional[str] = None
+    hero_quote: Optional[str] = None
+    about_summary: Optional[str] = None
+
+    occupations: Optional[List[str]] = None
+
+    photo_url: Optional[str] = None
+    hero_background_url: Optional[str] = None
+    author_intro_quote: Optional[str] = None
+
+    books: List[AuthorBookBrief] = []
+    awards: List[AwardPublic] = []
+    timeline_events: List[TimelineEventPublic] = []
+    quotes: List[QuotePublic] = []
+    citizenships: List[CitizenshipPublic] = []
+    sources: List[SourcePublic] = []
+    knowledge_relations: List[KnowledgeRelationPublic] = []
+    metadata: GoldenAuthorMetadata = GoldenAuthorMetadata()
 
     class Config:
         from_attributes = True

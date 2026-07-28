@@ -618,8 +618,12 @@ export interface LocaleData {
     atmosphere: string;
     authorBooks: string;
     quote: string;
+    quotes: string;
     connections: string;
     collections: string;
+    citizenships: string;
+    awards: string;
+    sources: string;
     youMayAlsoLike: string;
     tabAbout: string;
     tabBooks: string;
@@ -632,7 +636,13 @@ export interface LocaleData {
     noAtmosphere: string;
     noBooks: string;
     timelineComingSoon: string;
+    timelineEmpty: string;
     quoteComingSoon: string;
+    quotesEmpty: string;
+    awardsEmpty: string;
+    citizenshipsEmpty: string;
+    connectionsEmpty: string;
+    recommendationsEmpty: string;
     graphComingSoon: string;
     collectionsComingSoon: string;
     recommendationsComingSoon: string;
@@ -640,6 +650,10 @@ export interface LocaleData {
     authorNotFound: string;
     // Hero metadata panel
     metaOrigin: string;
+    metaEthnicOrigin: string;
+    metaCulturalIdentity: string;
+    metaMovements: string;
+    metaLanguages: string;
     metaBorn: string;
     metaDied: string;
     metaProfessions: string;

@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from app.api import auth, books, sync, admin, taxonomy, admin_taxonomy, admin_books, authors, graph, graph_queries
+from app.api import auth, books, sync, admin, taxonomy, admin_taxonomy, admin_books, admin_authors_ext, admin_timeline, admin_sources, admin_places, admin_author_knowledge, authors, graph, graph_queries
 from app.database import engine, Base, AsyncSessionLocal
 from app.seeds.knowledge_graph_seed import seed_knowledge_graph
 from app.models import user, book, author, genre, knowledge_node, knowledge_relation, book_knowledge_relation, user_book_experience
@@ -43,6 +43,11 @@ app.include_router(taxonomy.router)
 app.include_router(admin_taxonomy.router)
 app.include_router(admin_books.router)
 app.include_router(authors.router)
+app.include_router(admin_authors_ext.router)
+app.include_router(admin_timeline.router)
+app.include_router(admin_sources.router)
+app.include_router(admin_places.router)
+app.include_router(admin_author_knowledge.router)
 app.include_router(graph.router)
 app.include_router(graph_queries.router)
 

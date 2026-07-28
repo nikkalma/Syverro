@@ -13,6 +13,7 @@ from app.services.book_service import (
     link_author, sync_book_genres, unlink_author,
 )
 from app.services.metadata_service import recalculate_metadata_status
+from app.services.knowledge_graph import sync_author_graph_fields
 from app.models.user import User
 from app.models.book import Book
 from app.models.user_book import UserBook
@@ -1296,6 +1297,12 @@ async def update_author(
 
     await db.commit()
     await db.refresh(author, ["awards"])
+
+    try:
+        await sync_author_graph_fields(db, author.id, update_data)
+    except Exception as e:
+        logger.warning("Graph sync failed for author %s: %s", author.id, e)
+
     return {
         "message": "Author updated",
         "awards": [{

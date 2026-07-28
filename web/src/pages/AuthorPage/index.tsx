@@ -140,15 +140,6 @@ const placeholderStyle: React.CSSProperties = {
   padding: '32px 24px',
 };
 
-const tagPillStyle: React.CSSProperties = {
-  padding: '5px 14px',
-  borderRadius: '16px',
-  fontSize: '12px',
-  display: 'inline-block',
-  fontWeight: 400,
-  letterSpacing: '0.02em',
-};
-
 const glassCardStyle: React.CSSProperties = {
   background: 'var(--glass-bg)',
   backdropFilter: 'blur(10px)',
@@ -218,45 +209,6 @@ function TimelineSection({ events, t }: { events: TimelineEvent[]; t: { timeline
   );
 }
 
-function QuotesSection({ quotes, t }: { quotes: Quote[]; t: any }) {
-  if (quotes.length === 0) {
-    return (
-      <div style={placeholderStyle}>
-        <span style={{ fontFamily: 'Cormorant Garamond, serif', fontSize: '48px', color: 'var(--primary)', opacity: 0.2, lineHeight: 0.5 }}>❝</span>
-        <span style={{ fontStyle: 'italic' }}>{t.quotesEmpty}</span>
-      </div>
-    );
-  }
-  return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-      {quotes.map((q) => (
-        <div key={q.id} style={{
-          padding: '20px 24px', borderRadius: '12px',
-          background: 'var(--surface)', border: '1px solid var(--border)',
-        }}>
-          <div style={{
-            fontFamily: 'Cormorant Garamond, serif',
-            fontSize: '36px', color: 'var(--primary)', opacity: 0.2,
-            lineHeight: 0.5, marginBottom: '4px',
-          }}>❝</div>
-          <div style={{
-            fontFamily: 'Cormorant Garamond, serif',
-            fontSize: '15px', color: 'var(--text-muted)', fontStyle: 'italic',
-            lineHeight: 1.6, marginBottom: '8px',
-          }}>
-            {q.text}
-          </div>
-          <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
-            {q.speaker && <span>{q.speaker}</span>}
-            {q.source_title && <span> — {q.source_title}</span>}
-            {q.date_value && <span> ({q.date_value})</span>}
-          </div>
-        </div>
-      ))}
-    </div>
-  );
-}
-
 function AwardsSection({ awards, t }: { awards: Award[]; t: { awardsEmpty: string } }) {
   if (awards.length === 0) {
     return (
@@ -277,80 +229,6 @@ function AwardsSection({ awards, t }: { awards: Award[]; t: { awardsEmpty: strin
           <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '2px' }}>
             {[a.organization, a.year].filter(Boolean).join(', ')}
             {a.work ? ` — ${a.work}` : ''}
-          </div>
-        </div>
-      ))}
-    </div>
-  );
-}
-
-function CitizenshipsSection({ citizenships }: { citizenships: Citizenship[] }) {
-  if (citizenships.length === 0) return null;
-  return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-      {citizenships.map((c) => (
-        <div key={c.id} style={{
-          padding: '10px 14px', borderRadius: '10px',
-          background: 'var(--surface)', border: '1px solid var(--border)',
-          fontSize: '13px',
-        }}>
-          <span style={{ color: 'var(--text-primary)', fontWeight: 500 }}>{c.state_name}</span>
-          <span style={{ color: 'var(--text-muted)', marginLeft: '8px' }}>
-            {c.from_date}{c.to_date ? ` — ${c.to_date}` : ''}
-          </span>
-          {c.notes && <div style={{ fontSize: '11px', color: 'var(--text-secondary)', marginTop: '2px' }}>{c.notes}</div>}
-        </div>
-      ))}
-    </div>
-  );
-}
-
-function KnowledgeSection({ relations, t }: { relations: KnowledgeRelation[]; t: { connectionsEmpty: string } }) {
-  if (relations.length === 0) {
-    return (
-      <div style={placeholderStyle}>
-        <span style={{ fontSize: '28px', opacity: 0.25 }}>🔮</span>
-        <span>{t.connectionsEmpty}</span>
-      </div>
-    );
-  }
-  return (
-    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
-      {relations.map((r) => (
-        <div key={r.id} style={{
-          ...tagPillStyle,
-          background: 'color-mix(in srgb, var(--primary) 8%, transparent)',
-          color: 'var(--primary)',
-          border: '1px solid color-mix(in srgb, var(--primary) 12%, transparent)',
-          fontSize: '11px',
-        }}>
-          {r.node_name || r.relation_type}
-        </div>
-      ))}
-    </div>
-  );
-}
-
-function SourcesSection({ sources }: { sources: Source[] }) {
-  if (sources.length === 0) return null;
-  return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-      {sources.map((s) => (
-        <div key={s.id} style={{
-          padding: '12px 16px', borderRadius: '10px',
-          background: 'var(--surface)', border: '1px solid var(--border)',
-        }}>
-          <div style={{ fontSize: '13px', color: 'var(--text-primary)' }}>
-            {s.url ? (
-              <a href={s.url} target="_blank" rel="noopener noreferrer"
-                style={{ color: 'var(--accent)', textDecoration: 'none' }}>
-                {s.title}
-              </a>
-            ) : s.title}
-          </div>
-          <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '2px' }}>
-            {s.source_type}
-            {s.citation ? ` — ${s.citation}` : ''}
           </div>
         </div>
       ))}
@@ -428,12 +306,6 @@ export default function AuthorPage() {
   const hasBio = author.biography && author.biography.trim().length > 0;
   const bioIsLong = hasBio && (author.biography!.length > 300);
 
-  const hasGenres = author.metadata.genres.length > 0;
-  const hasThemes = author.metadata.themes.length > 0;
-  const hasMotifs = author.metadata.motifs.length > 0;
-  const hasLiteraryMovements = author.metadata.literary_movements.length > 0;
-  const hasTags = hasGenres || hasThemes || hasMotifs || hasLiteraryMovements;
-
   const heroBgImage = author.hero_background_url
     ? `var(--hero-overlay), var(--hero-glow-1), var(--hero-glow-2), url(${author.hero_background_url})`
     : 'linear-gradient(160deg, var(--surface) 0%, var(--bg) 35%, var(--bg) 100%)';
@@ -444,21 +316,8 @@ export default function AuthorPage() {
     ? author.occupations.join(' / ')
     : null;
 
-  const hasCitizenships = author.citizenships.length > 0;
-  const hasSources = author.sources.length > 0;
-
   const metadataRows = [
     author.nationality && { label: t.author.metaOrigin, value: author.nationality },
-    author.ethnic_origin && { label: t.author.metaEthnicOrigin, value: author.ethnic_origin },
-    author.cultural_identity && { label: t.author.metaCulturalIdentity, value: author.cultural_identity },
-    author.metadata.literary_movements.length > 0 && {
-      label: t.author.metaMovements,
-      value: author.metadata.literary_movements.join(' / '),
-    },
-    author.metadata.languages.length > 0 && {
-      label: t.author.metaLanguages,
-      value: author.metadata.languages.join(', '),
-    },
     (author.birth_place || formattedBirth) && {
       label: t.author.metaBorn,
       value: [formattedBirth, author.birth_place].filter(Boolean).join('\n'),
@@ -616,43 +475,15 @@ export default function AuthorPage() {
           </div>
         )}
 
-        {hasTags && (
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginBottom: '12px' }}>
-            {hasGenres && author.metadata.genres.map((g) => (
-              <span key={g} style={{
-                ...tagPillStyle, background: 'color-mix(in srgb, var(--primary) 10%, transparent)',
-                color: 'var(--primary)', border: '1px solid color-mix(in srgb, var(--primary) 15%, transparent)',
-              }}>{g}</span>
-            ))}
-            {hasLiteraryMovements && author.metadata.literary_movements.map((lm) => (
-              <span key={lm} style={{
-                ...tagPillStyle, background: 'color-mix(in srgb, var(--accent) 10%, transparent)',
-                color: 'var(--accent)', border: '1px solid color-mix(in srgb, var(--accent) 15%, transparent)',
-              }}>{lm}</span>
-            ))}
-            {hasThemes && author.metadata.themes.map((t) => (
-              <span key={t} style={{
-                ...tagPillStyle, background: 'color-mix(in srgb, var(--warning) 8%, transparent)',
-                color: 'var(--warning)', border: '1px solid color-mix(in srgb, var(--warning) 12%, transparent)',
-              }}>{t}</span>
-            ))}
-            {hasMotifs && author.metadata.motifs.map((m) => (
-              <span key={m} style={{
-                ...tagPillStyle, background: 'color-mix(in srgb, var(--error) 8%, transparent)',
-                color: 'var(--error)', border: '1px solid color-mix(in srgb, var(--error) 12%, transparent)',
-              }}>{m}</span>
-            ))}
-          </div>
-        )}
       </div>
 
       {/* CONTENT GRID */}
       <div style={{ paddingLeft: '28px', paddingRight: '28px' }}>
 
-        {/* Row 1: About | Timeline | Citizenships */}
+        {/* Row 1: About | Timeline */}
         <div style={{
           display: 'grid',
-          gridTemplateColumns: '1.3fr 1fr 1fr',
+          gridTemplateColumns: '1.3fr 1fr',
           gap: '24px',
           marginTop: '40px',
         }}>
@@ -693,43 +524,20 @@ export default function AuthorPage() {
             <div style={sectionTitleStyle}>{t.author.timeline}</div>
             <TimelineSection events={author.timeline_events} t={t.author} />
           </div>
-
-          <div>
-            <div style={sectionTitleStyle}>{t.author.citizenships}</div>
-            {hasCitizenships ? (
-              <CitizenshipsSection citizenships={author.citizenships} />
-            ) : (
-              <div style={{ ...placeholderStyle, minHeight: '120px' }}>
-                <span style={{ fontSize: '22px', opacity: 0.3 }}>🪪</span>
-                <span>{t.author.citizenshipsEmpty}</span>
-              </div>
-            )}
-          </div>
         </div>
 
-        {/* Row 2: Awards | Quotes */}
+        {/* Row 2: Awards */}
         <div style={{
-          display: 'grid',
-          gridTemplateColumns: '1fr 1fr',
-          gap: '28px',
           marginTop: '56px',
         }}>
           <div>
             <div style={sectionTitleStyle}>{t.author.awards}</div>
             <AwardsSection awards={author.awards} t={t.author} />
           </div>
-
-          <div>
-            <div style={sectionTitleStyle}>{t.author.quotes}</div>
-            <QuotesSection quotes={author.quotes} t={t.author} />
-          </div>
         </div>
 
-        {/* Row 3: Books | Connections */}
+        {/* Row 3: Books */}
         <div style={{
-          display: 'grid',
-          gridTemplateColumns: '1.6fr 1fr',
-          gap: '28px',
           marginTop: '56px',
         }}>
           <div>
@@ -794,20 +602,7 @@ export default function AuthorPage() {
               </div>
             )}
           </div>
-
-          <div>
-            <div style={sectionTitleStyle}>{t.author.connections}</div>
-            <KnowledgeSection relations={author.knowledge_relations} t={t.author} />
-          </div>
         </div>
-
-        {/* Sources / References */}
-        {hasSources && (
-          <div style={{ marginTop: '56px' }}>
-            <div style={sectionTitleStyle}>{t.author.sources}</div>
-            <SourcesSection sources={author.sources} />
-          </div>
-        )}
 
         {/* You May Also Like */}
         <div style={{ marginTop: '56px' }}>

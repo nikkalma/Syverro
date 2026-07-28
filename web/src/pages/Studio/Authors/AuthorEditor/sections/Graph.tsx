@@ -10,6 +10,9 @@ const RELATION_CONFIGS = [
   { type: 'concept', icon: '💡', labelKey: 'concepts' as const },
   { type: 'atmosphere', icon: '🌌', labelKey: 'atmospheres' as const },
   { type: 'relation', icon: '🔗', labelKey: 'relations' as const },
+  { type: 'belongs_to_movement', icon: '📜', label: 'Literary Movements' },
+  { type: 'belongs_to_genre', icon: '📚', label: 'Genres' },
+  { type: 'has_occupation', icon: '💼', label: 'Occupations' },
 ] as const;
 
 const inputStyle: React.CSSProperties = {
@@ -142,7 +145,7 @@ export default function Graph() {
             }} onClick={() => { setActiveType(isActive ? null : rc.type); setQuery(''); }}>
               <div style={{ fontSize: '24px', marginBottom: '8px' }}>{rc.icon}</div>
               <div style={{ fontSize: '14px', fontWeight: '500', color: 'var(--text-primary)', marginBottom: '4px' }}>
-                {graphLocale[rc.labelKey]}
+                {'label' in rc ? rc.label : graphLocale[rc.labelKey]}
               </div>
               <div style={{ fontSize: '12px', color: 'var(--text-muted)', lineHeight: 1.5 }}>
                 {typeRelations.length} item(s)

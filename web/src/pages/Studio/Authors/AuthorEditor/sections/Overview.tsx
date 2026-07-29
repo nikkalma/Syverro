@@ -5,6 +5,7 @@ import DetailGrid from '../../../../../components/Studio/shared/DetailGrid';
 import ActionBar from '../../../../../components/Studio/shared/ActionBar';
 import { getLocaleData, getBrowserLocale } from '../../../../../locales';
 import type { AdminAuthorUpdate } from '../../../../../types/admin';
+import { getAuthorDisplayName } from '../../../../../types/admin';
 import { slugify } from 'transliteration';
 
 const SLUG_PATTERN = /^[a-z0-9][a-z0-9-]*[a-z0-9]$|^[a-z0-9]$/;
@@ -178,6 +179,8 @@ export default function Overview() {
 
   if (loading || !author) return null;
 
+  const displayName = getAuthorDisplayName(author);
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
       <div style={{ display: 'flex', gap: '24px', alignItems: 'flex-start' }}>
@@ -190,9 +193,9 @@ export default function Overview() {
           overflow: 'hidden', flexShrink: 0,
         }}>
           {photo ? (
-            <img src={photo} alt={author.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+            <img src={photo} alt={displayName} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
           ) : (
-            author.name.charAt(0).toUpperCase()
+            displayName.charAt(0).toUpperCase() || '?'
           )}
         </div>
         <div style={{ flex: 1 }}>

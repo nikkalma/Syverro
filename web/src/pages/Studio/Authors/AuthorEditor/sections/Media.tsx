@@ -4,6 +4,7 @@ import EditorSectionCard from '../../../../../components/Studio/shared/EditorSec
 import ActionBar from '../../../../../components/Studio/shared/ActionBar';
 import { getLocaleData, getBrowserLocale } from '../../../../../locales';
 import type { AdminAuthorUpdate } from '../../../../../types/admin';
+import { getAuthorDisplayName } from '../../../../../types/admin';
 
 function FormField({ label, value, onChange, placeholder }: {
   label: string;
@@ -96,7 +97,7 @@ export default function Media() {
           <EditorSectionCard title={t.admin.authors.editor.media.portrait}>
             {photo && (
               <div style={{ textAlign: 'center', marginBottom: '12px' }}>
-                <img src={photo} alt={author.name}
+                <img src={photo} alt={getAuthorDisplayName(author)}
                   style={{ width: '140px', height: '140px', borderRadius: '50%', objectFit: 'cover', border: '2px solid var(--border-soft)' }} />
               </div>
             )}

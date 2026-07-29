@@ -3,6 +3,7 @@ import { useAuthorEditor } from '../AuthorEditorContext';
 import EditorSectionCard from '../../../../../components/Studio/shared/EditorSectionCard';
 import { apiClient } from '../../../../../shared/api/client';
 import { getLocaleData, getBrowserLocale } from '../../../../../locales';
+import { getAuthorDisplayName } from '../../../../../types/admin';
 
 const inputStyle: React.CSSProperties = {
   width: '100%', padding: '8px 12px', fontSize: '14px',
@@ -90,8 +91,8 @@ export default function Works() {
               Featured Works ({linkedBooks.length})
             </div>
             {linkedBooks.map((book: any) => {
-              const bookAuthors: Array<{ id: string; name: string }> = book.authors || [];
-              const authorNames = bookAuthors.map((a) => a.name).join(', ') || book.author;
+              const bookAuthors: Array<any> = book.authors || [];
+              const authorNames = bookAuthors.map((a: any) => getAuthorDisplayName(a)).join(', ') || book.author;
               return (
                 <div key={book.id} style={{
                   display: 'flex', gap: '12px', alignItems: 'center',
@@ -122,8 +123,8 @@ export default function Works() {
         {searching && <div style={{ fontSize: '13px', color: 'var(--text-muted)' }}>Searching...</div>}
         {bookResults.map((book: any) => {
           const isLinked = linkedBookIds.has(book.id);
-          const bookAuthors: Array<{ id: string; name: string }> = book.authors || [];
-          const authorNames = bookAuthors.map((a) => a.name).join(', ') || book.author;
+          const bookAuthors: Array<any> = book.authors || [];
+          const authorNames = bookAuthors.map((a: any) => getAuthorDisplayName(a)).join(', ') || book.author;
           return (
             <div key={book.id} style={{
               display: 'flex', gap: '12px', alignItems: 'center',

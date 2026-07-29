@@ -1,7 +1,7 @@
 import { Outlet } from 'react-router-dom';
 import { getLocaleData, getBrowserLocale } from '../../../../locales';
 import { AuthorEditorProvider, useAuthorEditor, SECTION_PATHS } from './AuthorEditorContext';
-import type { AdminAuthor } from '../../../../types/admin';
+import { type AdminAuthor, getAuthorDisplayName } from '../../../../types/admin';
 import EntityEditorHeader from '../../../../components/Studio/shared/EntityEditorHeader';
 import EditorSectionNav from '../../../../components/Studio/shared/EditorSectionNav';
 import EmptyWorkspace from '../../../../components/Studio/shared/EmptyWorkspace';
@@ -41,7 +41,7 @@ function EditorContent() {
     );
   }
 
-  const displayName = author.display_name || author.name;
+  const displayName = getAuthorDisplayName(author);
   const completionPercent = computeCompletion(author);
 
   const now = new Date();

@@ -996,7 +996,7 @@ async def get_authors(
 
     total = await db.scalar(count_query) or 0
     
-    query = query.order_by(Author.name).offset((page - 1) * limit).limit(limit)
+    query = query.order_by(Author.sort_name.asc().nullslast(), Author.name).offset((page - 1) * limit).limit(limit)
     result = await db.execute(query)
     authors = result.scalars().all()
 
@@ -1229,6 +1229,13 @@ async def create_author(
         if existing_slug.scalar_one_or_none():
             raise HTTPException(status_code=400, detail="Slug already in use")
 
+    # Auto-generate sort_name from structured name fields
+    if data.last_name:
+        given = [p for p in [data.first_name, data.middle_name] if p]
+        data.sort_name = data.last_name + ", " + " ".join(given) if given else data.last_name
+    else:
+        data.sort_name = data.display_name or data.name
+
     author = Author(**data.model_dump(exclude={"awards"}))
     db.add(author)
     await db.flush()
@@ -1295,6 +1302,13 @@ async def update_author(
     for key, value in update_data.items():
         if hasattr(author, key):
             setattr(author, key, value)
+
+    # Auto-generate sort_name from structured name fields
+    if author.last_name:
+        given = [p for p in [author.first_name, author.middle_name] if p]
+        author.sort_name = author.last_name + ", " + " ".join(given) if given else author.last_name
+    else:
+        author.sort_name = author.display_name or author.name
 
     # Handle awards from main payload
     if "awards" in data.model_dump(exclude_unset=True):

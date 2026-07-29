@@ -3,7 +3,6 @@ import { getLocaleData, getBrowserLocale } from '../../../locales';
 interface Props {
   name: string;
   photoUrl?: string | null;
-  nativeName?: string | null;
   completionPercent?: number;
   lastUpdated?: string;
   statusLabel?: string;
@@ -20,7 +19,7 @@ const METADATA_STATUS_STYLES: Record<string, { label: string; color: string; bg:
   golden:             { label: 'Golden',              color: '#FFD700', bg: 'rgba(255,215,0,0.15)' },
 };
 
-export default function EntityEditorHeader({ name, photoUrl, nativeName, completionPercent, lastUpdated, statusLabel, identitySummary, metadataStatus }: Props) {
+export default function EntityEditorHeader({ name, photoUrl, completionPercent, lastUpdated, statusLabel, identitySummary, metadataStatus }: Props) {
   const t = getLocaleData(getBrowserLocale());
   return (
     <div style={{
@@ -50,11 +49,6 @@ export default function EntityEditorHeader({ name, photoUrl, nativeName, complet
         <div style={{ fontSize: '18px', fontWeight: '500', color: 'var(--text-primary)', lineHeight: 1.3 }}>
           {name}
         </div>
-        {nativeName && (
-          <div style={{ fontSize: '13px', color: 'var(--text-muted)', fontStyle: 'italic' }}>
-            {nativeName}
-          </div>
-        )}
         {identitySummary && (
           <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '4px' }}>
             {identitySummary}

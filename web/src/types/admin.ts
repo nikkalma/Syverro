@@ -246,6 +246,7 @@ export interface AdminAuthor {
 
 export function getAuthorDisplayName(author: AdminAuthor): string {
   if (author.display_name) return author.display_name;
+  if (author.name) return author.name;
   if (author.display_name_mode && author.display_name_mode !== 'custom') {
     const computed = computeDisplayName(
       author.display_name_mode,
@@ -257,14 +258,12 @@ export function getAuthorDisplayName(author: AdminAuthor): string {
     );
     if (computed) return computed;
   }
-  if (author.native_name) return author.native_name;
   if (author.first_name || author.last_name) {
     return [author.first_name, author.middle_name, author.last_name]
       .filter(Boolean)
       .join(' ');
   }
-  if (author.sort_name) return author.sort_name;
-  return author.name;
+  return author.native_name || '';
 }
 
 export interface AdminAuthorFilters {

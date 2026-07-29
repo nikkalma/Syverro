@@ -1,7 +1,12 @@
 """Backfill structured name fields for existing Author records.
 
-Parses the legacy `name` field into first_name, middle_name, last_name,
-and sort_name. Only fills empty fields — never overwrites existing values.
+Parses the legacy `name` field into first_name, middle_name, last_name.
+Recomputes sort_name for every author using the canonical algorithm:
+
+  if last_name exists:
+    sort_name = "{last_name}, {first_name} {middle_name}"
+  else:
+    sort_name = display_name or name
 
 Usage:
     python -m app.scripts.backfill_author_names
@@ -10,7 +15,6 @@ Safe to run multiple times. Idempotent.
 """
 import asyncio
 import logging
-import sys
 from typing import Optional
 
 from sqlalchemy import select
@@ -32,7 +36,7 @@ def parse_author_name(name: str) -> dict:
         2 words → first_name + last_name
         3+ words → first_name + middle_name(s) + last_name
 
-    Returns dict with first_name, middle_name, last_name, sort_name.
+    Returns dict with first_name, middle_name, last_name.
     """
     parts = [p.strip() for p in name.split(",")]
     first_name: Optional[str] = None
@@ -40,7 +44,6 @@ def parse_author_name(name: str) -> dict:
     last_name: Optional[str] = None
 
     if len(parts) == 2:
-        # "Last, First Middle"
         last_name = parts[0].strip()
         after_comma = [w.strip() for w in parts[1].split() if w.strip()]
         if after_comma:
@@ -48,7 +51,6 @@ def parse_author_name(name: str) -> dict:
             if len(after_comma) > 1:
                 middle_name = " ".join(after_comma[1:])
     elif len(parts) == 1:
-        # No comma — simple parsing
         words = [w.strip() for w in name.split() if w.strip()]
         if len(words) == 1:
             last_name = words[0]
@@ -64,8 +66,15 @@ def parse_author_name(name: str) -> dict:
         "first_name": first_name,
         "middle_name": middle_name,
         "last_name": last_name,
-        "sort_name": name,
     }
+
+
+def compute_sort_name(last_name: Optional[str], first_name: Optional[str], middle_name: Optional[str], display_name: Optional[str], name: str) -> str:
+    """Compute sort_name using the canonical algorithm."""
+    if last_name:
+        given = [p for p in [first_name, middle_name] if p]
+        return last_name + ", " + " ".join(given) if given else last_name
+    return display_name or name
 
 
 async def run_backfill() -> None:
@@ -83,7 +92,6 @@ async def run_backfill() -> None:
 
             parsed = parse_author_name(author.name)
 
-            # Only fill empty fields — never overwrite
             if not author.first_name and parsed["first_name"]:
                 author.first_name = parsed["first_name"]
                 needs_update = True
@@ -96,8 +104,16 @@ async def run_backfill() -> None:
                 author.last_name = parsed["last_name"]
                 needs_update = True
 
-            if not author.sort_name and parsed["sort_name"]:
-                author.sort_name = parsed["sort_name"]
+            # Always recompute sort_name with the canonical algorithm
+            new_sort_name = compute_sort_name(
+                author.last_name,
+                author.first_name,
+                author.middle_name,
+                author.display_name,
+                author.name,
+            )
+            if author.sort_name != new_sort_name:
+                author.sort_name = new_sort_name
                 needs_update = True
 
             if needs_update:
@@ -106,7 +122,8 @@ async def run_backfill() -> None:
                     f"  Updated {author.name!r}: "
                     f"first={author.first_name!r}, "
                     f"middle={author.middle_name!r}, "
-                    f"last={author.last_name!r}"
+                    f"last={author.last_name!r}, "
+                    f"sort={author.sort_name!r}"
                 )
             else:
                 stats["skipped"] += 1
@@ -120,8 +137,7 @@ async def run_backfill() -> None:
         print(f"  Total authors:    {stats['total']}")
         print(f"  Updated:          {stats['updated']}")
         print(f"  Skipped (already  {stats['skipped']}")
-        print(f"         filled or")
-        print(f"         unparseable)")
+        print(f"         correct)")
         print("=" * 60)
 
 

@@ -63,7 +63,6 @@ function EditorContent() {
       <EntityEditorHeader
         name={displayName}
         photoUrl={author.photo}
-        nativeName={author.native_name}
         completionPercent={completionPercent}
         lastUpdated={lastUpdated}
         statusLabel={author.creation_type === 'auto' ? t.admin.authors.editor.autoImported : t.admin.authors.editor.curated}

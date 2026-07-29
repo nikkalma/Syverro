@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { apiClient } from '../../../shared/api/client';
 import type { AdminBook, AdminAuthor, AdminGenre } from '../../../types/admin';
+import { getAuthorDisplayName } from '../../../types/admin';
 import { useAuthStore } from '../../../store/authStore';
 
 interface BookModalProps {
@@ -119,7 +120,7 @@ export default function BookModal({ isOpen, mode, book, onClose, onSave }: BookM
 
   const handleSelectAuthor = (author: AdminAuthor) => {
     setFormData({ ...formData, author: author.name, author_id: author.id });
-    setAuthorQuery(author.name);
+    setAuthorQuery(getAuthorDisplayName(author));
     setShowAuthorDropdown(false);
   };
 
@@ -290,7 +291,7 @@ export default function BookModal({ isOpen, mode, book, onClose, onSave }: BookM
                       onMouseEnter={(e) => (e.currentTarget.style.background = 'rgba(255,255,255,0.05)')}
                       onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
                     >
-                      {a.name}
+                      {getAuthorDisplayName(a)}
                       {a.country && <span style={{ color: '#5B86A1', fontSize: '12px', marginLeft: '8px' }}>{a.country}</span>}
                     </div>
                   ))}

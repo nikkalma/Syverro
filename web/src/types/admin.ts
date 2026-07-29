@@ -246,23 +246,19 @@ export interface AdminAuthor {
 
 export function getAuthorDisplayName(author: AdminAuthor): string {
   if (author.display_name) return author.display_name;
+
   if (author.name) return author.name;
-  if (author.display_name_mode && author.display_name_mode !== 'custom') {
-    const computed = computeDisplayName(
-      author.display_name_mode,
+
+  if (author.first_name || author.middle_name || author.last_name) {
+    return [
       author.first_name,
-      author.last_name,
       author.middle_name,
-      author.birth_name,
-      author.pen_names || author.pseudonyms,
-    );
-    if (computed) return computed;
-  }
-  if (author.first_name || author.last_name) {
-    return [author.first_name, author.middle_name, author.last_name]
+      author.last_name,
+    ]
       .filter(Boolean)
       .join(' ');
   }
+
   return author.native_name || '';
 }
 

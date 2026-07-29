@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { AdminBook } from '../../../types/admin';
+import { AdminBook, getAuthorDisplayName } from '../../../types/admin';
 import { METADATA_STATUS_LABELS, METADATA_STATUS_COLORS, ENRICHMENT_FIELD_LABELS } from '../../../types/admin';
 import { Save, ArrowLeft, RefreshCw, AlertCircle, CheckCircle, X, Plus, UserPlus, Link2 } from 'lucide-react';
 import { getLocaleData, getBrowserLocale } from '../../../locales';
@@ -70,7 +70,7 @@ export default function BookEnrichmentPage() {
   const [publicationType, setPublicationType] = useState('official');
 
   // Author management
-  const [linkedAuthors, setLinkedAuthors] = useState<Array<{ id: string; name: string; country?: string | null }>>([]);
+  const [linkedAuthors, setLinkedAuthors] = useState<Array<{ id: string; name: string; display_name?: string | null; first_name?: string | null; middle_name?: string | null; last_name?: string | null; native_name?: string | null; country?: string | null }>>([]);
   const [authorSearchQuery, setAuthorSearchQuery] = useState('');
   const [authorSearchResults, setAuthorSearchResults] = useState<any[]>([]);
   const [showAuthorSearch, setShowAuthorSearch] = useState(false);
@@ -468,7 +468,7 @@ export default function BookEnrichmentPage() {
               fontSize: '13px', color: '#5B86A1', border: '1px solid rgba(91,134,161,0.3)',
             }}>
               <Link2 size={12} />
-              {a.name}
+              {getAuthorDisplayName(a)}
               {a.country && <span style={{ color: '#97A6BA', fontSize: '11px' }}>({a.country})</span>}
               {canEdit && (
                 <button
@@ -523,7 +523,7 @@ export default function BookEnrichmentPage() {
                         key={a.id}
                         onClick={async () => {
                           await apiClient.post(`/admin/books/${id}/authors?author_id=${a.id}`);
-                          setLinkedAuthors((prev) => [...prev, { id: a.id, name: a.name, country: a.country }]);
+                          setLinkedAuthors((prev) => [...prev, { id: a.id, name: a.name, display_name: a.display_name, first_name: a.first_name, middle_name: a.middle_name, last_name: a.last_name, native_name: a.native_name, country: a.country }]);
                           setAuthorSearchQuery('');
                           setAuthorSearchResults([]);
                           setShowAuthorSearch(false);
@@ -534,7 +534,7 @@ export default function BookEnrichmentPage() {
                         }}
                       >
                         <Plus size={14} color="#5B86A1" />
-                        {a.name}
+                        {getAuthorDisplayName(a)}
                         {a.country && <span style={{ color: '#5B86A1', fontSize: '12px' }}>{a.country}</span>}
                       </div>
                     ))}
@@ -557,7 +557,8 @@ export default function BookEnrichmentPage() {
                       const res = await apiClient.post('/admin/authors', { name: createAuthorName.trim() });
                       const newAuthor = res.data;
                       await apiClient.post(`/admin/books/${id}/authors?author_id=${newAuthor.id}`);
-                      setLinkedAuthors((prev) => [...prev, { id: newAuthor.id, name: newAuthor.name, country: newAuthor.country }]);
+                      const authorName = createAuthorName.trim();
+                      setLinkedAuthors((prev) => [...prev, { id: newAuthor.id, name: authorName, country: newAuthor.country }]);
                     } catch (_) { /* ignore */ }
                     setCreateAuthorName('');
                     setShowCreateAuthor(false);

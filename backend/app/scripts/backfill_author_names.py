@@ -85,59 +85,88 @@ async def run_backfill() -> None:
         result = await db.execute(select(Author).order_by(Author.name))
         authors = result.scalars().all()
 
-        stats = {"total": len(authors), "updated": 0, "skipped": 0}
+        stats = {
+            "total_authors": len(authors),
+            "gen_from_last_name": 0,
+            "gen_from_display_name": 0,
+            "gen_from_name": 0,
+            "updated_existing": 0,
+            "already_correct": 0,
+            "errors": 0,
+        }
 
         for author in authors:
             needs_update = False
 
-            parsed = parse_author_name(author.name)
+            try:
+                parsed = parse_author_name(author.name)
 
-            if not author.first_name and parsed["first_name"]:
-                author.first_name = parsed["first_name"]
-                needs_update = True
+                if not author.first_name and parsed["first_name"]:
+                    author.first_name = parsed["first_name"]
+                    needs_update = True
 
-            if not author.middle_name and parsed["middle_name"]:
-                author.middle_name = parsed["middle_name"]
-                needs_update = True
+                if not author.middle_name and parsed["middle_name"]:
+                    author.middle_name = parsed["middle_name"]
+                    needs_update = True
 
-            if not author.last_name and parsed["last_name"]:
-                author.last_name = parsed["last_name"]
-                needs_update = True
+                if not author.last_name and parsed["last_name"]:
+                    author.last_name = parsed["last_name"]
+                    needs_update = True
 
-            # Always recompute sort_name with the canonical algorithm
-            new_sort_name = compute_sort_name(
-                author.last_name,
-                author.first_name,
-                author.middle_name,
-                author.display_name,
-                author.name,
-            )
-            if author.sort_name != new_sort_name:
-                author.sort_name = new_sort_name
-                needs_update = True
-
-            if needs_update:
-                stats["updated"] += 1
-                logger.info(
-                    f"  Updated {author.name!r}: "
-                    f"first={author.first_name!r}, "
-                    f"middle={author.middle_name!r}, "
-                    f"last={author.last_name!r}, "
-                    f"sort={author.sort_name!r}"
+                # Always recompute sort_name with the canonical algorithm
+                new_sort_name = compute_sort_name(
+                    author.last_name,
+                    author.first_name,
+                    author.middle_name,
+                    author.display_name,
+                    author.name,
                 )
-            else:
-                stats["skipped"] += 1
+
+                if new_sort_name != author.sort_name:
+                    was_null = not author.sort_name
+
+                    if was_null and author.last_name:
+                        stats["gen_from_last_name"] += 1
+                    elif was_null and author.display_name:
+                        stats["gen_from_display_name"] += 1
+                    elif was_null:
+                        stats["gen_from_name"] += 1
+                    else:
+                        stats["updated_existing"] += 1
+
+                    author.sort_name = new_sort_name
+                    needs_update = True
+                elif not needs_update:
+                    stats["already_correct"] += 1
+
+                if needs_update:
+                    logger.info(
+                        f"  Updated {author.name!r}: "
+                        f"first={author.first_name!r}, "
+                        f"middle={author.middle_name!r}, "
+                        f"last={author.last_name!r}, "
+                        f"sort={author.sort_name!r}"
+                    )
+            except Exception as e:
+                stats["errors"] += 1
+                logger.error(f"  Error processing {author.name!r}: {e}")
 
         await db.commit()
 
         print()
         print("=" * 60)
-        print("  BACKFILL SUMMARY")
+        print("  Author sort_name backfill report")
         print("=" * 60)
-        print(f"  Total authors:    {stats['total']}")
-        print(f"  Updated:          {stats['updated']}")
-        print(f"  Skipped (already  {stats['skipped']}")
-        print(f"         correct)")
+        print(f"  Total authors: {stats['total_authors']}")
+        print()
+        print("  Generated:")
+        print(f"    from last_name:      {stats['gen_from_last_name']}")
+        print(f"    from display_name:   {stats['gen_from_display_name']}")
+        print(f"    from name:           {stats['gen_from_name']}")
+        print()
+        print(f"  Updated existing: {stats['updated_existing']}")
+        print(f"  Already correct:  {stats['already_correct']}")
+        print(f"  Errors:           {stats['errors']}")
         print("=" * 60)
 
 

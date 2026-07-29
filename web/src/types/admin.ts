@@ -244,7 +244,14 @@ export interface AdminAuthor {
   updated_at: string;
 }
 
-export function getAuthorDisplayName(author: AdminAuthor): string {
+export function getAuthorDisplayName(author: {
+  display_name?: string | null;
+  name?: string | null;
+  first_name?: string | null;
+  middle_name?: string | null;
+  last_name?: string | null;
+  native_name?: string | null;
+}): string {
   if (author.display_name) return author.display_name;
 
   if (author.name) return author.name;

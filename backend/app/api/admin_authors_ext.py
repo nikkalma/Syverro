@@ -11,10 +11,12 @@ from app.models.ai_proposal import AIProposal
 from app.models.source import Source
 from app.models.timeline_event import TimelineEvent
 from app.models.author_knowledge_relation import AuthorKnowledgeRelation
+from app.models.author_publication import AuthorPublication
 from app.schemas.author_quote import AuthorQuoteCreate, AuthorQuoteUpdate, AuthorQuoteResponse
 from app.schemas.author_citizenship import AuthorCitizenshipCreate, AuthorCitizenshipUpdate, AuthorCitizenshipResponse
 from app.schemas.author_residence import AuthorResidenceCreate, AuthorResidenceUpdate, AuthorResidenceResponse
 from app.schemas.ai_proposal import AIProposalCreate, AIProposalUpdate, AIProposalResponse
+from app.schemas.author_publication import AuthorPublicationCreate, AuthorPublicationUpdate, AuthorPublicationResponse
 import logging
 from typing import Optional
 from uuid import UUID
@@ -510,3 +512,117 @@ async def check_taxonomy_duplicates(
         "author_count": author_count,
         "normalized": normalized,
     }
+
+
+# ============================================================
+# AUTHOR PUBLICATIONS CRUD
+# ============================================================
+
+
+@router.get("/{author_id}/publications", response_model=dict)
+async def get_author_publications(
+    author_id: str,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    await check_admin(current_user)
+    author = await get_author_or_404(db, author_id)
+
+    result = await db.execute(
+        select(AuthorPublication).where(AuthorPublication.author_id == author.id).order_by(AuthorPublication.publication_year)
+    )
+    pubs = result.scalars().all()
+    return {
+        "data": [{
+            "id": str(p.id),
+            "author_id": str(p.author_id),
+            "title": p.title,
+            "original_title": p.original_title,
+            "publication_year": p.publication_year,
+            "publication_date": p.publication_date.isoformat() if p.publication_date else None,
+            "publication_type": p.publication_type,
+            "description": p.description,
+            "pen_name": p.pen_name,
+            "wikipedia_url": p.wikipedia_url,
+            "source_id": str(p.source_id) if p.source_id else None,
+            "created_at": p.created_at.isoformat() if p.created_at else None,
+            "updated_at": p.updated_at.isoformat() if p.updated_at else None,
+        } for p in pubs],
+    }
+
+
+@router.post("/{author_id}/publications", status_code=201)
+async def create_author_publication(
+    author_id: str,
+    data: AuthorPublicationCreate,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    await check_admin(current_user)
+    author = await get_author_or_404(db, author_id)
+
+    pub = AuthorPublication(author_id=author.id, **data.model_dump())
+    db.add(pub)
+    await db.commit()
+    await db.refresh(pub)
+    return {
+        "id": str(pub.id),
+        "message": "Publication created",
+    }
+
+
+@router.put("/{author_id}/publications/{publication_id}")
+async def update_author_publication(
+    author_id: str,
+    publication_id: str,
+    data: AuthorPublicationUpdate,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    await check_admin(current_user)
+    await get_author_or_404(db, author_id)
+
+    result = await db.execute(
+        select(AuthorPublication).where(
+            AuthorPublication.id == publication_id,
+            AuthorPublication.author_id == author_id
+        )
+    )
+    pub = result.scalar_one_or_none()
+    if not pub:
+        raise HTTPException(status_code=404, detail="Publication not found")
+
+    update_data = data.model_dump(exclude_unset=True)
+    for key, value in update_data.items():
+        setattr(pub, key, value)
+    await db.commit()
+    await db.refresh(pub)
+    return {
+        "id": str(pub.id),
+        "message": "Publication updated",
+    }
+
+
+@router.delete("/{author_id}/publications/{publication_id}", status_code=204)
+async def delete_author_publication(
+    author_id: str,
+    publication_id: str,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    await check_admin(current_user)
+    await get_author_or_404(db, author_id)
+
+    result = await db.execute(
+        select(AuthorPublication).where(
+            AuthorPublication.id == publication_id,
+            AuthorPublication.author_id == author_id
+        )
+    )
+    pub = result.scalar_one_or_none()
+    if not pub:
+        raise HTTPException(status_code=404, detail="Publication not found")
+
+    await db.delete(pub)
+    await db.commit()
+    return None

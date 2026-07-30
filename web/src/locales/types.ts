@@ -240,7 +240,22 @@ export interface LocaleData {
             media: string;
             seo: string;
             sources: string;
+            publications: string;
           };
+        publications: {
+          title: string;
+          originalTitle: string;
+          publicationYear: string;
+          publicationDate: string;
+          publicationType: string;
+          description: string;
+          source: string;
+          noPublications: string;
+          addPublication: string;
+          editPublication: string;
+          deletePublication: string;
+          confirmedDelete: string;
+        };
         status: string;
         complete: string;
         updated: string;

@@ -553,6 +553,40 @@ export interface PlaceCreate {
 export interface PlaceUpdate extends Partial<PlaceCreate> {}
 
 // ============================================================
+// AUTHOR PUBLICATIONS
+// ============================================================
+
+export interface AuthorPublication {
+  id: string;
+  author_id: string;
+  title: string;
+  original_title?: string | null;
+  publication_year: number;
+  publication_date?: string | null;
+  publication_type: string;
+  description?: string | null;
+  pen_name?: string | null;
+  wikipedia_url?: string | null;
+  source_id?: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface AuthorPublicationCreate {
+  title: string;
+  original_title?: string | null;
+  publication_year: number;
+  publication_date?: string | null;
+  publication_type: string;
+  description?: string | null;
+  pen_name?: string | null;
+  wikipedia_url?: string | null;
+  source_id?: string | null;
+}
+
+export interface AuthorPublicationUpdate extends Partial<AuthorPublicationCreate> {}
+
+// ============================================================
 // AUTHOR KNOWLEDGE RELATIONS
 // ============================================================
 

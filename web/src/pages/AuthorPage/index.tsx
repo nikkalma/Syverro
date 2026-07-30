@@ -159,7 +159,27 @@ const eventIcons: Record<string, string> = {
   milestone: '◆',
 };
 
-function TimelineSection({ events, t }: { events: TimelineEvent[]; t: { timelineEmpty: string } }) {
+const relationsLabels: Record<string, string> = {
+  influenced_by: 'Influenced by',
+  influenced: 'Influenced',
+  contemporary_of: 'Contemporary of',
+  collaborated_with: 'Collaborated with',
+  relative_of: 'Relative of',
+  friend_of: 'Friend of',
+  mentor_of: 'Mentor of',
+  student_of: 'Student of',
+  literary_movement: 'Movement',
+  identity: 'Identity',
+  work: 'Work',
+  character: 'Character',
+};
+
+function TimelineSection({ events, t }: { events: TimelineEvent[]; t: any }) {
+  const [expanded, setExpanded] = useState(false);
+  const INITIAL_SHOW = 3;
+  const showAll = expanded || events.length <= INITIAL_SHOW;
+  const visibleEvents = showAll ? events : events.slice(0, INITIAL_SHOW);
+
   if (events.length === 0) {
     return (
       <div style={placeholderStyle}>
@@ -170,7 +190,7 @@ function TimelineSection({ events, t }: { events: TimelineEvent[]; t: { timeline
   }
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-      {events.map((ev) => (
+      {visibleEvents.map((ev) => (
         <div key={ev.id} style={{
           display: 'flex', gap: '12px', padding: '12px 16px',
           borderRadius: '12px', background: 'var(--surface)',
@@ -205,6 +225,19 @@ function TimelineSection({ events, t }: { events: TimelineEvent[]; t: { timeline
           </div>
         </div>
       ))}
+      {events.length > INITIAL_SHOW && (
+        <button
+          onClick={() => setExpanded(!expanded)}
+          style={{
+            background: 'none', border: '1px solid var(--glass-border)',
+            borderRadius: '8px', padding: '8px 16px', cursor: 'pointer',
+            fontSize: '12px', color: 'var(--text-muted)', fontStyle: 'italic',
+            alignSelf: 'flex-start',
+          }}
+        >
+          {expanded ? t.showLess || 'Collapse timeline' : `${t.readMore || 'Show full timeline'} (${events.length})`}
+        </button>
+      )}
     </div>
   );
 }
@@ -278,6 +311,116 @@ export default function AuthorPage() {
 
   const t = getLocaleData(getBrowserLocale());
 
+function localizeField(value: string | null | undefined, map: Record<string, string>): string | null {
+  if (!value) return null;
+  return map[value.toLowerCase()] || value;
+}
+
+const nationalityMap: Record<string, string> = {
+  english: 'англичанка',
+  russian: 'русская',
+  french: 'француженка',
+  german: 'немка',
+  italian: 'итальянка',
+  spanish: 'испанка',
+  american: 'американка',
+  british: 'британка',
+  irish: 'ирландка',
+  scottish: 'шотландка',
+  dutch: 'голландка',
+  polish: 'полька',
+  japanese: 'японка',
+  chinese: 'китаянка',
+  indian: 'индианка',
+  swedish: 'шведка',
+  norwegian: 'норвежка',
+  danish: 'датчанка',
+  greek: 'гречанка',
+  turkish: 'турчанка',
+  australian: 'австралийка',
+  canadian: 'канадка',
+  mexican: 'мексиканка',
+  brazilian: 'бразильянка',
+  portuguese: 'португалка',
+  belgian: 'бельгийка',
+  swiss: 'швейцарка',
+  austrian: 'австрийка',
+  czech: 'чешка',
+  hungarian: 'венгерка',
+  romanian: 'румынка',
+  ukrainian: 'украинка',
+  belarusian: 'белоруска',
+  kazakh: 'казашка',
+  albanian: 'албанка',
+  croatian: 'хорватка',
+  serbian: 'сербка',
+  bulgarian: 'болгарка',
+  finnish: 'финка',
+  icelandic: 'исландка',
+  persian: 'персиянка',
+  arabic: 'арабка',
+  hebrew: 'еврейка',
+  armenian: 'армянка',
+  georgian: 'грузинка',
+  afghan: 'афганка',
+};
+
+const ethnicOriginMap: Record<string, string> = {
+  english: 'англичане',
+  russian: 'русские',
+  french: 'французы',
+  german: 'немцы',
+  italian: 'итальянцы',
+  spanish: 'испанцы',
+  american: 'американцы',
+  british: 'британцы',
+  irish: 'ирландцы',
+  scottish: 'шотландцы',
+  dutch: 'голландцы',
+  polish: 'поляки',
+  japanese: 'японцы',
+  chinese: 'китайцы',
+  indian: 'индийцы',
+  jewish: 'евреи',
+  celtic: 'кельты',
+  scandinavian: 'скандинавы',
+  slavic: 'славяне',
+  germanic: 'германцы',
+  latin: 'латиняне',
+};
+
+const literaryMovementMap: Record<string, string> = {
+  'victorian literature': 'викторианская литература',
+  'english literature': 'английская литература',
+  'romanticism': 'романтизм',
+  'realism': 'реализм',
+  'modernism': 'модернизм',
+  'postmodernism': 'постмодернизм',
+  'gothic fiction': 'готическая литература',
+  'gothic literature': 'готическая литература',
+  'naturalism': 'натурализм',
+  'symbolism': 'символизм',
+  'existentialism': 'экзистенциализм',
+  'surrealism': 'сюрреализм',
+  'classicism': 'классицизм',
+  'sentimentalism': 'сентиментализм',
+  'baroque': 'барокко',
+  'renaissance': 'возрождение',
+  'medieval literature': 'средневековая литература',
+  'enlightenment': 'просвещение',
+  'neoclassicism': 'неоклассицизм',
+  'transcendentalism': 'трансцендентализм',
+  'aestheticism': 'эстетизм',
+  'decadence': 'декаданс',
+  'futurism': 'футуризм',
+  'impressionism': 'импрессионизм',
+  'expressionism': 'экспрессионизм',
+  'absurdism': 'абсурдизм',
+  'magic realism': 'магический реализм',
+  'socialist realism': 'социалистический реализм',
+  'postcolonial literature': 'постколониальная литература',
+};
+
   if (loading) {
     return (
       <div style={{ width: '100%', padding: '40px 24px' }}>
@@ -316,8 +459,18 @@ export default function AuthorPage() {
     ? author.occupations.join(' / ')
     : null;
 
+  const localizedNationality = localizeField(author.nationality, nationalityMap);
+  const localizedEthnicOrigin = localizeField(author.ethnic_origin, ethnicOriginMap);
+  const localizedMovements = (author.metadata?.literary_movements || [])
+    .map((m) => localizeField(m, literaryMovementMap))
+    .filter(Boolean)
+    .map((m) => m!.toLocaleLowerCase())
+    .join(', ');
+
   const metadataRows = [
-    author.nationality && { label: t.author.metaOrigin, value: author.nationality },
+    author.nationality && { label: t.author.metaOrigin, value: localizedNationality || author.nationality },
+    author.ethnic_origin && { label: t.author.metaEthnicOrigin, value: localizedEthnicOrigin || author.ethnic_origin },
+    localizedMovements && { label: t.author.metaMovements, value: localizedMovements },
     (author.birth_place || formattedBirth) && {
       label: t.author.metaBorn,
       value: [formattedBirth, author.birth_place].filter(Boolean).join('\n'),
@@ -490,6 +643,15 @@ export default function AuthorPage() {
           <div>
             <div style={sectionTitleStyle}>{t.author.aboutAuthor}</div>
             <div style={glassCardStyle}>
+              {author.about_summary && (
+                <div style={{
+                  fontSize: '13px', color: 'var(--text-muted)', fontStyle: 'italic',
+                  lineHeight: 1.7, marginBottom: '16px', paddingBottom: '16px',
+                  borderBottom: '1px solid var(--glass-border)',
+                }}>
+                  {author.about_summary}
+                </div>
+              )}
               {hasBio ? (
                 <div>
                   <p style={{
@@ -526,7 +688,38 @@ export default function AuthorPage() {
           </div>
         </div>
 
-        {/* Row 2: Awards */}
+        {/* Row 2: Connections */}
+        <div style={{ marginTop: '56px' }}>
+          <div>
+            <div style={sectionTitleStyle}>{t.author.connections}</div>
+            {author.knowledge_relations && author.knowledge_relations.length > 0 ? (
+              <div style={{
+                display: 'flex', flexWrap: 'wrap', gap: '8px',
+              }}>
+                {author.knowledge_relations.map((rel) => (
+                  <div key={rel.id} style={{
+                    padding: '8px 14px', borderRadius: '20px',
+                    background: 'var(--surface)', border: '1px solid var(--border)',
+                    fontSize: '12px', color: 'var(--text-primary)',
+                  }}>
+                    <span style={{ color: 'var(--text-muted)', fontSize: '11px' }}>
+                      {relationsLabels[rel.relation_type] || rel.relation_type}
+                    </span>
+                    {' '}
+                    <span style={{ fontWeight: 500 }}>{rel.node_name}</span>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div style={placeholderStyle}>
+                <span style={{ fontSize: '28px', opacity: 0.25 }}>🕸️</span>
+                {t.author.connectionsEmpty}
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Row 3: Awards */}
         <div style={{
           marginTop: '56px',
         }}>

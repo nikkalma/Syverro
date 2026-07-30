@@ -110,6 +110,7 @@ export default function Identity() {
   const [birthName, setBirthName] = useState('');
   const [sortName, setSortName] = useState('');
   const [penNamesText, setPenNamesText] = useState('');
+  const [pseudonymsText, setPseudonymsText] = useState('');
 
   const [birthPlaceId, setBirthPlaceId] = useState<string | null>(null);
   const [birthPlaceName, setBirthPlaceName] = useState<string | null>(null);
@@ -133,6 +134,7 @@ export default function Identity() {
     setBirthName(author.birth_name || '');
     setSortName(author.sort_name || '');
     setPenNamesText((author.pen_names || []).join(', '));
+    setPseudonymsText((author.pseudonyms || []).join(', '));
     setBirthPlaceId(author.birth_place_id || null);
     setBirthPlaceName(author.birth_place || null);
     setDeathPlaceId(author.death_place_id || null);
@@ -213,6 +215,7 @@ export default function Identity() {
     birthName !== (author?.birth_name || '') ||
     sortName !== (author?.sort_name || '') ||
     penNamesText !== (author?.pen_names || []).join(', ') ||
+    pseudonymsText !== (author?.pseudonyms || []).join(', ') ||
     birthPlaceId !== (author?.birth_place_id || null) ||
     deathPlaceId !== (author?.death_place_id || null);
 
@@ -226,6 +229,7 @@ export default function Identity() {
     setBirthName(author.birth_name || '');
     setSortName(author.sort_name || '');
     setPenNamesText((author.pen_names || []).join(', '));
+    setPseudonymsText((author.pseudonyms || []).join(', '));
     setBirthPlaceId(author.birth_place_id || null);
     setBirthPlaceName(author.birth_place || null);
     setDeathPlaceId(author.death_place_id || null);
@@ -244,6 +248,7 @@ export default function Identity() {
       birth_name: birthName || null,
       sort_name: sortName || null,
       pen_names: penNamesText ? penNamesText.split(',').map((s) => s.trim()).filter(Boolean) : [],
+      pseudonyms: pseudonymsText ? pseudonymsText.split(',').map((s) => s.trim()).filter(Boolean) : [],
       birth_place_id: birthPlaceId,
       death_place_id: deathPlaceId,
       occupations,
@@ -356,6 +361,9 @@ export default function Identity() {
         </DetailGrid>
         <div style={{ marginTop: '12px' }}>
           <FormField label={idLocale.penNames} value={penNamesText} onChange={setPenNamesText} placeholder="Pen name 1, Pen name 2..." />
+        </div>
+        <div style={{ marginTop: '12px' }}>
+          <FormField label="Pseudonyms" value={pseudonymsText} onChange={setPseudonymsText} placeholder="Pseudonym 1, Pseudonym 2..." />
         </div>
       </EditorSectionCard>
 

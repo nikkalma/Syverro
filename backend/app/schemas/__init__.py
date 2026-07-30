@@ -38,6 +38,10 @@ from app.schemas.author_knowledge_relation import (
     AuthorKnowledgeRelationBase, AuthorKnowledgeRelationCreate,
     AuthorKnowledgeRelationUpdate, AuthorKnowledgeRelationResponse,
 )
+from app.schemas.author_publication import (
+    AuthorPublicationBase, AuthorPublicationCreate,
+    AuthorPublicationUpdate, AuthorPublicationResponse,
+)
 
 __all__ = [
     # User
@@ -73,4 +77,7 @@ __all__ = [
     # Author Knowledge
     "AuthorKnowledgeRelationBase", "AuthorKnowledgeRelationCreate",
     "AuthorKnowledgeRelationUpdate", "AuthorKnowledgeRelationResponse",
+    # Author Publication
+    "AuthorPublicationBase", "AuthorPublicationCreate",
+    "AuthorPublicationUpdate", "AuthorPublicationResponse",
 ]

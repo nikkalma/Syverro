@@ -26,7 +26,9 @@ export default function Quotes() {
   const [formText, setFormText] = useState('');
   const [formSpeaker, setFormSpeaker] = useState('');
   const [formDate, setFormDate] = useState('');
+  const [formQuoteType, setFormQuoteType] = useState('author');
   const [saving, setSaving] = useState(false);
+  const [activeTab, setActiveTab] = useState<'author' | 'about_author'>('author');
 
   const fetchQuotes = useCallback(async () => {
     if (!author) return;
@@ -45,10 +47,11 @@ export default function Quotes() {
     if (author) fetchQuotes();
   }, [author, fetchQuotes]);
 
-  const openNew = () => {
+  const openNew = (type: string = 'author') => {
     setFormText('');
     setFormSpeaker('');
     setFormDate('');
+    setFormQuoteType(type);
     setEditingId(null);
     setShowForm(true);
     setError(null);
@@ -58,6 +61,7 @@ export default function Quotes() {
     setFormText(q.text);
     setFormSpeaker(q.speaker || '');
     setFormDate(q.date_value || '');
+    setFormQuoteType(q.quote_type || 'author');
     setEditingId(q.id);
     setShowForm(true);
     setError(null);
@@ -69,6 +73,7 @@ export default function Quotes() {
     setFormText('');
     setFormSpeaker('');
     setFormDate('');
+    setFormQuoteType('author');
     setError(null);
   };
 
@@ -80,6 +85,7 @@ export default function Quotes() {
       const payload: AuthorQuoteCreate = {
         text: formText.trim(),
         speaker: formSpeaker.trim() || null,
+        quote_type: formQuoteType || 'author',
         date_value: formDate.trim() || null,
         status: 'verified',
         confidence: 1.0,
@@ -111,18 +117,37 @@ export default function Quotes() {
 
   if (!author) return null;
 
+  const filteredQuotes = quotes.filter((q) => (q.quote_type || 'author') === activeTab);
+
+  const tabStyle = (active: boolean): React.CSSProperties => ({
+    padding: '8px 16px', borderRadius: '8px',
+    background: active ? 'var(--accent)' : 'transparent',
+    color: active ? '#fff' : 'var(--text-muted)',
+    border: active ? 'none' : '1px solid var(--border-soft)',
+    cursor: 'pointer', fontSize: '13px', fontFamily: 'Inter, sans-serif',
+  });
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-      <EditorSectionCard title="Author Quotes">
+      <EditorSectionCard title="Quotes">
+        <div style={{ display: 'flex', gap: '8px', marginBottom: '16px' }}>
+          <button type="button" onClick={() => setActiveTab('author')} style={tabStyle(activeTab === 'author')}>
+            By author ({quotes.filter((q) => (q.quote_type || 'author') === 'author').length})
+          </button>
+          <button type="button" onClick={() => setActiveTab('about_author')} style={tabStyle(activeTab === 'about_author')}>
+            About author ({quotes.filter((q) => q.quote_type === 'about_author').length})
+          </button>
+        </div>
+
         {loading && <div style={{ fontSize: '13px', color: 'var(--text-muted)' }}>Loading...</div>}
 
-        {!loading && quotes.length === 0 && !showForm && (
+        {!loading && filteredQuotes.length === 0 && !showForm && (
           <p style={{ fontSize: '13px', color: 'var(--text-muted)', fontStyle: 'italic', margin: 0 }}>
-            No quotes yet. Add a notable quote from or about this author.
+            {activeTab === 'author' ? 'No quotes by author yet.' : 'No quotes about author yet.'}
           </p>
         )}
 
-        {quotes.map((q) => (
+        {filteredQuotes.map((q) => (
           <div key={q.id} style={{
             padding: '12px 16px', marginBottom: '8px',
             background: 'var(--surface-hover)', borderRadius: '8px',
@@ -149,6 +174,9 @@ export default function Quotes() {
                 {q.status}
               </span>
               <span>{(q.confidence * 100).toFixed(0)}%</span>
+              <span style={{ fontSize: '10px', color: 'var(--text-muted)', padding: '1px 6px', borderRadius: '4px', background: 'rgba(91,134,161,0.15)' }}>
+                {q.quote_type || 'author'}
+              </span>
               {q.date_value && <span>{q.date_value}</span>}
               <div style={{ marginLeft: 'auto', display: 'flex', gap: '6px' }}>
                 <button type="button" onClick={() => openEdit(q)}
@@ -166,6 +194,16 @@ export default function Quotes() {
 
         {showForm && (
           <div style={{ marginTop: '16px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+            <div>
+              <div style={{ fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--text-muted)', marginBottom: '4px' }}>
+                Quote Type
+              </div>
+              <select value={formQuoteType} onChange={(e) => setFormQuoteType(e.target.value)}
+                style={inputStyle}>
+                <option value="author">By author</option>
+                <option value="about_author">About author</option>
+              </select>
+            </div>
             <div>
               <div style={{ fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--text-muted)', marginBottom: '4px' }}>
                 Quote Text
@@ -204,14 +242,14 @@ export default function Quotes() {
         )}
 
         {!showForm && (
-          <button type="button" onClick={openNew}
+          <button type="button" onClick={() => openNew(activeTab === 'about_author' ? 'about_author' : 'author')}
             style={{
               marginTop: '12px', padding: '10px', width: '100%',
               background: 'var(--surface-hover)', borderRadius: '8px',
               border: '1px dashed var(--border-soft)',
               fontSize: '13px', color: 'var(--text-muted)', cursor: 'pointer',
             }}>
-            + Add Quote
+            + Add {activeTab === 'about_author' ? 'quote about author' : 'quote by author'}
           </button>
         )}
       </EditorSectionCard>

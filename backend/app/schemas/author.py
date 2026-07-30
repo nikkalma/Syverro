@@ -274,6 +274,7 @@ class QuotePublic(BaseModel):
     id: UUID
     text: str
     speaker: Optional[str] = None
+    quote_type: str = "author"
     source_title: Optional[str] = None
     date_value: Optional[str] = None
     confidence: float = 1.0

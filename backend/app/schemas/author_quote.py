@@ -7,6 +7,7 @@ from uuid import UUID
 class AuthorQuoteBase(BaseModel):
     text: str
     speaker: Optional[str] = None
+    quote_type: Optional[str] = "author"
     source_id: Optional[UUID] = None
     date_value: Optional[str] = None
     confidence: Optional[float] = 1.0
@@ -21,6 +22,7 @@ class AuthorQuoteCreate(AuthorQuoteBase):
 class AuthorQuoteUpdate(BaseModel):
     text: Optional[str] = None
     speaker: Optional[str] = None
+    quote_type: Optional[str] = None
     source_id: Optional[UUID] = None
     date_value: Optional[str] = None
     confidence: Optional[float] = None

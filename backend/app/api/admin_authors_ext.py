@@ -64,6 +64,7 @@ async def get_author_quotes(
             "author_id": str(q.author_id),
             "text": q.text,
             "speaker": q.speaker,
+            "quote_type": q.quote_type or "author",
             "source_id": str(q.source_id) if q.source_id else None,
             "date_value": q.date_value,
             "confidence": q.confidence,

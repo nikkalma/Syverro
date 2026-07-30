@@ -182,7 +182,7 @@ async def get_author(
             source_map[s.id] = s.title
 
     quotes = [QuotePublic(
-        id=q.id, text=q.text, speaker=q.speaker,
+        id=q.id, text=q.text, speaker=q.speaker, quote_type=q.quote_type or "author",
         source_title=source_map.get(q.source_id) if q.source_id else None,
         date_value=q.date_value, confidence=q.confidence, status=q.status,
     ) for q in quotes_raw]

@@ -29,6 +29,7 @@ interface Quote {
   id: string;
   text: string;
   speaker: string | null;
+  quote_type?: string;
   source_title: string | null;
   date_value: string | null;
   confidence: number;
@@ -159,19 +160,19 @@ const eventIcons: Record<string, string> = {
   milestone: '◆',
 };
 
-const relationsLabels: Record<string, string> = {
-  influenced_by: 'Influenced by',
-  influenced: 'Influenced',
-  contemporary_of: 'Contemporary of',
-  collaborated_with: 'Collaborated with',
-  relative_of: 'Relative of',
-  friend_of: 'Friend of',
-  mentor_of: 'Mentor of',
-  student_of: 'Student of',
-  literary_movement: 'Movement',
-  identity: 'Identity',
-  work: 'Work',
-  character: 'Character',
+const relationsLabelsEn: Record<string, string> = {
+  influenced_by: 'Influenced by', influenced: 'Influenced',
+  contemporary_of: 'Contemporary of', collaborated_with: 'Collaborated with',
+  relative_of: 'Relative of', friend_of: 'Friend of', mentor_of: 'Mentor of',
+  student_of: 'Student of', literary_movement: 'Movement', identity: 'Identity',
+  work: 'Work', character: 'Character',
+};
+const relationsLabelsRu: Record<string, string> = {
+  influenced_by: 'Под влиянием', influenced: 'Повлиял на',
+  contemporary_of: 'Современник', collaborated_with: 'Сотрудничал',
+  relative_of: 'Родственник', friend_of: 'Друг', mentor_of: 'Наставник',
+  student_of: 'Ученик', literary_movement: 'Направление', identity: 'Псевдоним',
+  work: 'Произведение', character: 'Персонаж',
 };
 
 function TimelineSection({ events, t }: { events: TimelineEvent[]; t: any }) {
@@ -276,7 +277,7 @@ export default function AuthorPage() {
   const [author, setAuthor] = useState<AuthorResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [bioExpanded, setBioExpanded] = useState(false);
+  const [bioModalOpen, setBioModalOpen] = useState(false);
 
   useEffect(() => {
     if (!slug) return;
@@ -310,10 +311,57 @@ export default function AuthorPage() {
   }, [slug]);
 
   const t = getLocaleData(getBrowserLocale());
+  const localRelationLabels = getBrowserLocale()?.startsWith('ru') ? relationsLabelsRu : relationsLabelsEn;
 
 function localizeField(value: string | null | undefined, map: Record<string, string>): string | null {
   if (!value) return null;
   return map[value.toLowerCase()] || value;
+}
+
+function formatLiteraryMovement(value: string): string {
+  let result = value.charAt(0).toUpperCase() + value.slice(1);
+  result = result.replace(/\b([ivxlcdm]+)\b/gi, (m) => m.toUpperCase());
+  return result;
+}
+
+function BiographyModal({ text, onClose }: { text: string; onClose: () => void }) {
+  return (
+    <div
+      onClick={onClose}
+      style={{
+        position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)',
+        backdropFilter: 'blur(6px)', display: 'flex', alignItems: 'center',
+        justifyContent: 'center', zIndex: 1000, padding: '24px',
+      }}
+    >
+      <div
+        onClick={(e) => e.stopPropagation()}
+        style={{
+          background: 'var(--bg)', borderRadius: '16px',
+          border: '1px solid var(--glass-border)',
+          maxWidth: '680px', width: '100%', maxHeight: '80vh',
+          overflowY: 'auto', padding: '32px',
+        }}
+      >
+        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '16px' }}>
+          <div style={{
+            fontFamily: 'Cormorant Garamond, serif', fontSize: '20px',
+            fontWeight: 500, color: 'var(--accent)',
+          }}>Биография</div>
+          <button onClick={onClose} style={{
+            background: 'none', border: 'none', color: 'var(--text-muted)',
+            fontSize: '20px', cursor: 'pointer', padding: '0 4px',
+          }}>✕</button>
+        </div>
+        <div style={{
+          fontSize: '14px', color: 'var(--text-secondary)', lineHeight: 1.85,
+          whiteSpace: 'pre-wrap',
+        }}>
+          {text}
+        </div>
+      </div>
+    </div>
+  );
 }
 
 const nationalityMap: Record<string, string> = {
@@ -447,7 +495,6 @@ const literaryMovementMap: Record<string, string> = {
   const showNative = author.native_name && author.native_name !== displayName;
 
   const hasBio = author.biography && author.biography.trim().length > 0;
-  const bioIsLong = hasBio && (author.biography!.length > 300);
 
   const heroBgImage = author.hero_background_url
     ? `var(--hero-overlay), var(--hero-glow-1), var(--hero-glow-2), url(${author.hero_background_url})`
@@ -464,7 +511,7 @@ const literaryMovementMap: Record<string, string> = {
   const localizedMovements = (author.metadata?.literary_movements || [])
     .map((m) => localizeField(m, literaryMovementMap))
     .filter(Boolean)
-    .map((m) => m!.toLocaleLowerCase())
+    .map((m) => formatLiteraryMovement(m!))
     .join(', ');
 
   const metadataRows = [
@@ -652,32 +699,18 @@ const literaryMovementMap: Record<string, string> = {
                   {author.about_summary}
                 </div>
               )}
-              {hasBio ? (
-                <div>
-                  <p style={{
-                    fontSize: '14px', color: 'var(--text-secondary)', lineHeight: 1.85,
-                    margin: 0, whiteSpace: 'pre-wrap',
-                  }}>
-                    {bioExpanded || !bioIsLong
-                      ? author.biography
-                      : author.biography!.slice(0, 300) + '...'}
-                  </p>
-                  {bioIsLong && (
-                    <button
-                      onClick={() => setBioExpanded(!bioExpanded)}
-                      style={{
-                        background: 'none', border: 'none', color: 'var(--primary)',
-                        cursor: 'pointer', fontSize: '12px', marginTop: '12px', padding: 0,
-                        fontFamily: 'Inter, sans-serif', fontStyle: 'italic',
-                        letterSpacing: '0.03em',
-                      }}
-                    >
-                      {bioExpanded ? t.author.showLess : t.author.readMore}
-                    </button>
-                  )}
-                </div>
-              ) : (
-                <p style={{ fontSize: '13px', color: 'var(--primary)', margin: 0, fontStyle: 'italic' }}>{t.author.noBiography}</p>
+              {hasBio && (
+                <button
+                  onClick={() => setBioModalOpen(true)}
+                  style={{
+                    background: 'none', border: '1px solid var(--glass-border)',
+                    borderRadius: '8px', padding: '8px 18px', cursor: 'pointer',
+                    fontSize: '13px', color: 'var(--accent)', fontStyle: 'italic',
+                    fontFamily: 'Inter, sans-serif', marginTop: '4px',
+                  }}
+                >
+                  {t.author.readMore}
+                </button>
               )}
             </div>
           </div>
@@ -689,10 +722,10 @@ const literaryMovementMap: Record<string, string> = {
         </div>
 
         {/* Row 2: Connections */}
-        <div style={{ marginTop: '56px' }}>
-          <div>
-            <div style={sectionTitleStyle}>{t.author.connections}</div>
-            {author.knowledge_relations && author.knowledge_relations.length > 0 ? (
+        {author.knowledge_relations && author.knowledge_relations.length > 0 && (
+          <div style={{ marginTop: '56px' }}>
+            <div>
+              <div style={sectionTitleStyle}>{t.author.connections}</div>
               <div style={{
                 display: 'flex', flexWrap: 'wrap', gap: '8px',
               }}>
@@ -703,33 +736,70 @@ const literaryMovementMap: Record<string, string> = {
                     fontSize: '12px', color: 'var(--text-primary)',
                   }}>
                     <span style={{ color: 'var(--text-muted)', fontSize: '11px' }}>
-                      {relationsLabels[rel.relation_type] || rel.relation_type}
+                      {localRelationLabels[rel.relation_type] || rel.relation_type}
                     </span>
                     {' '}
                     <span style={{ fontWeight: 500 }}>{rel.node_name}</span>
                   </div>
                 ))}
               </div>
-            ) : (
-              <div style={placeholderStyle}>
-                <span style={{ fontSize: '28px', opacity: 0.25 }}>🕸️</span>
-                {t.author.connectionsEmpty}
+            </div>
+          </div>
+        )}
+
+        {/* Awards */}
+        {author.awards.length > 0 && (
+          <div style={{ marginTop: '56px' }}>
+            <div>
+              <div style={sectionTitleStyle}>{t.author.awards}</div>
+              <AwardsSection awards={author.awards} t={t.author} />
+            </div>
+          </div>
+        )}
+
+        {/* Quotes */}
+        {(author.quotes?.filter((q) => (q as any).quote_type !== 'about_author').length > 0) && (
+          <div style={{ marginTop: '56px' }}>
+            <div>
+              <div style={sectionTitleStyle}>{t.author.quotes}</div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                {author.quotes.filter((q) => (q as any).quote_type !== 'about_author').map((q) => (
+                  <div key={q.id} style={{
+                    padding: '16px 20px', borderRadius: '12px',
+                    background: 'var(--surface)', border: '1px solid var(--border)',
+                  }}>
+                    <div style={{ fontFamily: 'Cormorant Garamond, serif', fontSize: '15px', fontStyle: 'italic', color: 'var(--text-primary)', lineHeight: 1.6, marginBottom: '6px' }}>
+                      &ldquo;{q.text}&rdquo;
+                    </div>
+                    {q.speaker && <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>— {q.speaker}</div>}
+                  </div>
+                ))}
               </div>
-            )}
+            </div>
           </div>
-        </div>
-
-        {/* Row 3: Awards */}
-        <div style={{
-          marginTop: '56px',
-        }}>
-          <div>
-            <div style={sectionTitleStyle}>{t.author.awards}</div>
-            <AwardsSection awards={author.awards} t={t.author} />
+        )}
+        {author.quotes?.filter((q) => (q as any).quote_type === 'about_author').length > 0 && (
+          <div style={{ marginTop: '32px' }}>
+            <div>
+              <div style={sectionTitleStyle}>{t.author.quotesAboutTitle || 'About author'}</div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                {author.quotes.filter((q) => (q as any).quote_type === 'about_author').map((q) => (
+                  <div key={q.id} style={{
+                    padding: '16px 20px', borderRadius: '12px',
+                    background: 'var(--surface)', border: '1px solid var(--border)',
+                  }}>
+                    <div style={{ fontFamily: 'Cormorant Garamond, serif', fontSize: '15px', fontStyle: 'italic', color: 'var(--text-primary)', lineHeight: 1.6, marginBottom: '6px' }}>
+                      &ldquo;{q.text}&rdquo;
+                    </div>
+                    {q.speaker && <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>— {q.speaker}</div>}
+                  </div>
+                ))}
+              </div>
+            </div>
           </div>
-        </div>
+        )}
 
-        {/* Row 3: Books */}
+        {/* Books */}
         <div style={{
           marginTop: '56px',
         }}>
@@ -797,21 +867,35 @@ const literaryMovementMap: Record<string, string> = {
           </div>
         </div>
 
-        {/* You May Also Like */}
-        <div style={{ marginTop: '56px' }}>
-          <div style={sectionTitleStyle}>{t.author.youMayAlsoLike}</div>
-          <div style={{
-            ...placeholderStyle,
-            minHeight: '120px',
-            border: '1px solid var(--border)',
-          }}>
-            <span style={{ fontSize: '28px', opacity: 0.25 }}>✨</span>
-            <span style={{ fontStyle: 'italic' }}>{t.author.recommendationsEmpty}</span>
+        {/* Sources */}
+        {author.sources && author.sources.length > 0 && (
+          <div style={{ marginTop: '56px' }}>
+            <div>
+              <div style={sectionTitleStyle}>{t.author.sources}</div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                {author.sources.map((s) => (
+                  <div key={s.id} style={{
+                    padding: '10px 16px', borderRadius: '8px',
+                    background: 'var(--surface)', border: '1px solid var(--border)',
+                  }}>
+                    <div style={{ fontSize: '13px', color: 'var(--text-primary)' }}>{s.title}</div>
+                    {s.url && (
+                      <a href={s.url} target="_blank" rel="noopener noreferrer"
+                        style={{ fontSize: '11px', color: 'var(--accent)', textDecoration: 'none' }}>
+                        {s.url}
+                      </a>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
           </div>
-        </div>
+        )}
 
+        {bioModalOpen && author.biography && (
+          <BiographyModal text={author.biography} onClose={() => setBioModalOpen(false)} />
+        )}
       </div>
-
     </div>
   );
 }

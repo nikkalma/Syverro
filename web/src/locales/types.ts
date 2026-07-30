@@ -255,6 +255,14 @@ export interface LocaleData {
           editPublication: string;
           deletePublication: string;
           confirmedDelete: string;
+          novel: string;
+          poetry: string;
+          essay: string;
+          collection: string;
+          posthumous: string;
+          other: string;
+          penName: string;
+          wikipediaUrl: string;
         };
         status: string;
         complete: string;
@@ -634,6 +642,7 @@ export interface LocaleData {
     authorBooks: string;
     quote: string;
     quotes: string;
+    quotesAboutTitle: string;
     connections: string;
     collections: string;
     citizenships: string;
@@ -674,7 +683,6 @@ export interface LocaleData {
     metaProfessions: string;
     metaWorks: string;
     // Quote block (hero-area)
-    quotesAboutTitle: string;
     noQuotesAbout: string;
     // Featured quote about the author (hero-area)
     heroQuote: string;

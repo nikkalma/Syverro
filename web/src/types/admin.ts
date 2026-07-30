@@ -339,6 +339,7 @@ export interface AuthorQuote {
   author_id: string;
   text: string;
   speaker?: string | null;
+  quote_type?: string;
   source_id?: string | null;
   date_value?: string | null;
   confidence: number;
@@ -351,6 +352,7 @@ export interface AuthorQuote {
 export interface AuthorQuoteCreate {
   text: string;
   speaker?: string | null;
+  quote_type?: string;
   source_id?: string | null;
   date_value?: string | null;
   confidence?: number;

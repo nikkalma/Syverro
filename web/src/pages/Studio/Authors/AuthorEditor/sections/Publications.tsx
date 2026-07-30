@@ -59,20 +59,7 @@ export default function Publications() {
     if (author) fetchPublications();
   }, [author, fetchPublications]);
 
-  const st = t.admin.authors.editor.publications || {
-    title: 'Title',
-    noPublications: 'No publications yet',
-    addPublication: 'Add publication',
-    editPublication: 'Edit publication',
-    deletePublication: 'Delete',
-    confirmedDelete: 'Delete this publication?',
-    originalTitle: 'Original title',
-    publicationYear: 'Year',
-    publicationDate: 'Date',
-    publicationType: 'Type',
-    description: 'Description',
-    source: 'Source',
-  };
+  const st = (t.admin.authors.editor.publications || {}) as Record<string, string>;
 
   const startAdd = () => {
     setDraft(emptyPublication());
@@ -153,7 +140,7 @@ export default function Publications() {
           <div style={{ display: 'flex', gap: '12px', fontSize: '13px', color: 'var(--text-secondary)', marginBottom: '6px', flexWrap: 'wrap' }}>
             {p.original_title && <span>{p.original_title}</span>}
             <span>{p.publication_year}</span>
-            <span style={{ color: 'var(--text-muted)' }}>{p.publication_type}</span>
+            <span style={{ color: 'var(--text-muted)' }}>{st[p.publication_type] || p.publication_type}</span>
             {p.pen_name && <span style={{ color: 'var(--accent)' }}>as {p.pen_name}</span>}
           </div>
           {p.description && (
@@ -203,15 +190,15 @@ export default function Publications() {
               <select value={draft.publication_type} onChange={(e) => setDraft({ ...draft, publication_type: e.target.value })}
                 style={inputStyle}>
                 {PUBLICATION_TYPES.map((pt) => (
-                  <option key={pt} value={pt}>{pt}</option>
+                  <option key={pt} value={pt}>{st[pt] || pt}</option>
                 ))}
               </select>
             </Field>
-            <Field label="Pen name">
+            <Field label={st.penName || 'Pen name'}>
               <input type="text" value={draft.pen_name || ''} onChange={(e) => setDraft({ ...draft, pen_name: e.target.value || null })}
                 style={inputStyle} placeholder="e.g. Currer Bell" />
             </Field>
-            <Field label="Wikipedia URL">
+            <Field label={st.wikipediaUrl || 'Wikipedia URL'}>
               <input type="url" value={draft.wikipedia_url || ''} onChange={(e) => setDraft({ ...draft, wikipedia_url: e.target.value || null })}
                 style={inputStyle} placeholder="https://en.wikipedia.org/wiki/Jane_Eyre" />
             </Field>

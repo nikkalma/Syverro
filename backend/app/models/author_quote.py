@@ -13,6 +13,7 @@ class AuthorQuote(Base):
     author_id = Column(UUID(as_uuid=True), ForeignKey("authors.id", ondelete="CASCADE"), nullable=False, index=True)
     text = Column(Text, nullable=False)
     speaker = Column(String, nullable=True)
+    quote_type = Column(String, server_default="author", nullable=False)
     source_id = Column(UUID(as_uuid=True), ForeignKey("sources.id", ondelete="SET NULL"), nullable=True)
     date_value = Column(String, nullable=True)
     confidence = Column(Float, server_default="1.0", nullable=False)

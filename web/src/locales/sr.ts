@@ -515,6 +515,7 @@ export const sr: LocaleData = {
     metaDied: 'Umro',
     metaProfessions: 'Profesije',
     metaWorks: 'Dela',
+    metaAltNames: 'Pseudonimi',
     quotesAboutTitle: 'O njemu govore',
     noQuotesAbout: 'Citati o autoru još nisu dodati',
     heroQuote: 'Citat o autoru',

@@ -530,6 +530,7 @@ export const en: LocaleData = {
     metaDied: 'Died',
     metaProfessions: 'Professions',
     metaWorks: 'Works',
+    metaAltNames: 'Pen names',
     noQuotesAbout: 'No quotes about this author yet',
     heroQuote: 'Quote About the Author',
     noHeroQuote: 'No featured quote about the author yet',

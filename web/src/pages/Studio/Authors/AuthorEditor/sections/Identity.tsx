@@ -119,6 +119,7 @@ export default function Identity() {
 
   const [occupations, setOccupations] = useState<string[]>([]);
   const [literaryMovements, setLiteraryMovements] = useState<string[]>([]);
+  const [genres, setGenres] = useState<string[]>([]);
 
   const [citizenships, setCitizenships] = useState<AuthorCitizenship[]>([]);
   const [editCitId, setEditCitId] = useState<string | null>(null);
@@ -141,6 +142,7 @@ export default function Identity() {
     setDeathPlaceName(author.death_place || null);
     setOccupations(author.occupations || []);
     setLiteraryMovements(author.literary_movements || []);
+    setGenres(author.genres || []);
   }, [author]);
 
   const fetchCitizenships = useCallback(async () => {
@@ -236,6 +238,7 @@ export default function Identity() {
     setDeathPlaceName(author.death_place || null);
     setOccupations(author.occupations || []);
     setLiteraryMovements(author.literary_movements || []);
+    setGenres(author.genres || []);
   };
 
   const handleSave = async () => {
@@ -253,6 +256,7 @@ export default function Identity() {
       death_place_id: deathPlaceId,
       occupations,
       literary_movements: literaryMovements,
+      genres,
     };
     await updateAuthor(data);
   };
@@ -382,6 +386,15 @@ export default function Identity() {
           value={literaryMovements}
           onChange={setLiteraryMovements}
           placeholder="Search or create literary movements..."
+        />
+      </EditorSectionCard>
+
+      <EditorSectionCard title="Genres">
+        <TaxonomyPicker
+          nodeType="genre"
+          value={genres}
+          onChange={setGenres}
+          placeholder="Search or create genres..."
         />
       </EditorSectionCard>
 

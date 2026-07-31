@@ -94,10 +94,15 @@ interface AuthorResponse {
   cultural_identity: string | null;
   birth_name: string | null;
   pen_names: string[] | null;
+  pseudonyms: string[] | null;
   birth_date: string | null;
   death_date: string | null;
   birth_place: string | null;
+  birth_place_region: string | null;
+  birth_place_country: string | null;
   death_place: string | null;
+  death_place_region: string | null;
+  death_place_country: string | null;
   biography: string | null;
   hero_quote: string | null;
   about_summary: string | null;
@@ -318,6 +323,14 @@ function localizeField(value: string | null | undefined, map: Record<string, str
   return map[value.toLowerCase()] || value;
 }
 
+function formatPlace(place: string | null | undefined, region: string | null | undefined, country: string | null | undefined): string {
+  if (!place) return '';
+  const parts = [place];
+  if (region && region !== place) parts.push(region);
+  if (country && country !== place && country !== region) parts.push(localizeField(country, countryMap) || country);
+  return parts.join(', ');
+}
+
 function formatLiteraryMovement(value: string): string {
   let result = value.charAt(0).toUpperCase() + value.slice(1);
   result = result.replace(/\b([ivxlcdm]+)\b/gi, (m) => m.toUpperCase());
@@ -437,6 +450,34 @@ const ethnicOriginMap: Record<string, string> = {
   latin: 'латиняне',
 };
 
+const culturalIdentityMap: Record<string, string> = {
+  'victorian english literature / english literary tradition': 'викторианская английская литература / английская литературная традиция',
+  'victorian english literature': 'викторианская английская литература',
+  'english literary tradition': 'английская литературная традиция',
+  'russian literature': 'русская литература',
+  'soviet literature': 'советская литература',
+  'french literature': 'французская литература',
+  'american literature': 'американская литература',
+};
+
+const countryMap: Record<string, string> = {
+  'united kingdom': 'Великобритания',
+  england: 'Англия',
+  scotland: 'Шотландия',
+  ireland: 'Ирландия',
+  wales: 'Уэльс',
+  russia: 'Россия',
+  'russian federation': 'Россия',
+  'ussr': 'СССР',
+  france: 'Франция',
+  germany: 'Германия',
+  italy: 'Италия',
+  spain: 'Испания',
+  usa: 'США',
+  'united states': 'США',
+};
+
+
 const literaryMovementMap: Record<string, string> = {
   'victorian literature': 'викторианская литература',
   'english literature': 'английская литература',
@@ -508,25 +549,36 @@ const literaryMovementMap: Record<string, string> = {
 
   const localizedNationality = localizeField(author.nationality, nationalityMap);
   const localizedEthnicOrigin = localizeField(author.ethnic_origin, ethnicOriginMap);
+  const localizedCulturalIdentity = localizeField(author.cultural_identity, culturalIdentityMap);
   const localizedMovements = (author.metadata?.literary_movements || [])
     .map((m) => localizeField(m, literaryMovementMap))
     .filter(Boolean)
     .map((m) => formatLiteraryMovement(m!))
     .join(', ');
 
+  const birthPlaceFull = formatPlace(author.birth_place, author.birth_place_region, author.birth_place_country);
+  const deathPlaceFull = formatPlace(author.death_place, author.death_place_region, author.death_place_country);
+
+  const alternativeNames = [
+    ...(author.pen_names || []),
+    ...(author.pseudonyms || []),
+  ].filter((n) => n && n.trim()).map((n) => n.trim());
+
   const metadataRows = [
     author.nationality && { label: t.author.metaOrigin, value: localizedNationality || author.nationality },
     author.ethnic_origin && { label: t.author.metaEthnicOrigin, value: localizedEthnicOrigin || author.ethnic_origin },
+    author.cultural_identity && { label: t.author.metaCulturalIdentity, value: localizedCulturalIdentity || author.cultural_identity },
     localizedMovements && { label: t.author.metaMovements, value: localizedMovements },
     (author.birth_place || formattedBirth) && {
       label: t.author.metaBorn,
-      value: [formattedBirth, author.birth_place].filter(Boolean).join('\n'),
+      value: [formattedBirth, birthPlaceFull].filter(Boolean).join('\n'),
     },
     (author.death_place || formattedDeath) && {
       label: t.author.metaDied,
-      value: [formattedDeath, author.death_place].filter(Boolean).join('\n'),
+      value: [formattedDeath, deathPlaceFull].filter(Boolean).join('\n'),
     },
     professions && { label: t.author.metaProfessions, value: professions },
+    alternativeNames.length > 0 && { label: t.author.metaAltNames, value: alternativeNames.join(', ') },
     { label: t.author.metaWorks, value: String(author.books.length) },
   ].filter(Boolean) as { label: string; value: string }[];
 

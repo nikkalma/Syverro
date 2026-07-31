@@ -682,6 +682,7 @@ export interface LocaleData {
     metaDied: string;
     metaProfessions: string;
     metaWorks: string;
+    metaAltNames: string;
     // Quote block (hero-area)
     noQuotesAbout: string;
     // Featured quote about the author (hero-area)

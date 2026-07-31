@@ -80,6 +80,24 @@ async def get_author(
 
     aid = author.id
 
+    # --- Place details for birth/death locations ---
+    birth_place_region = None
+    birth_place_country = None
+    death_place_region = None
+    death_place_country = None
+    if author.birth_place_id or author.death_place_id:
+        place_ids = {author.birth_place_id, author.death_place_id}
+        place_ids.discard(None)
+        if place_ids:
+            places_db = await db.execute(select(Place).where(Place.id.in_(list(place_ids))))
+            for p in places_db.scalars().all():
+                if p.id == author.birth_place_id:
+                    birth_place_region = p.region
+                    birth_place_country = p.country
+                if p.id == author.death_place_id:
+                    death_place_region = p.region
+                    death_place_country = p.country
+
     # --- Books ---
     book_rows = await db.execute(
         select(Book.id, Book.title, Book.cover)
@@ -240,10 +258,15 @@ async def get_author(
         cultural_identity=author.cultural_identity,
         birth_name=author.birth_name,
         pen_names=author.pen_names,
+        pseudonyms=author.pseudonyms,
         birth_date=author.birth_date or (str(author.birth_year) if author.birth_year is not None else None),
         death_date=author.death_date or (str(author.death_year) if author.death_year is not None else None),
         birth_place=author.birth_place,
+        birth_place_region=birth_place_region,
+        birth_place_country=birth_place_country,
         death_place=author.death_place,
+        death_place_region=death_place_region,
+        death_place_country=death_place_country,
         biography=author.bio,
         hero_quote=author.hero_quote,
         about_summary=author.about_summary,

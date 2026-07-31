@@ -515,6 +515,7 @@ export const be: LocaleData = {
     metaDied: 'Памёр',
     metaProfessions: 'Прафесіі',
     metaWorks: 'Творы',
+    metaAltNames: 'Псеўданімы',
     quotesAboutTitle: 'Пра яго кажуць',
     noQuotesAbout: 'Цытат пра аўтара пакуль няма',
     heroQuote: 'Цытата пра аўтара',

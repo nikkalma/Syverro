@@ -515,6 +515,7 @@ export const uk: LocaleData = {
     metaDied: 'Помер',
     metaProfessions: 'Професії',
     metaWorks: 'Твори',
+    metaAltNames: 'Псевдоніми',
     quotesAboutTitle: 'Про нього говорять',
     noQuotesAbout: 'Цитат про автора поки що немає',
     heroQuote: 'Цитата про автора',

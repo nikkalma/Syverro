@@ -359,11 +359,16 @@ class GoldenAuthorResponse(BaseModel):
     cultural_identity: Optional[str] = None
     birth_name: Optional[str] = None
     pen_names: Optional[List[str]] = None
+    pseudonyms: Optional[List[str]] = None
 
     birth_date: Optional[str] = None
     death_date: Optional[str] = None
     birth_place: Optional[str] = None
+    birth_place_region: Optional[str] = None
+    birth_place_country: Optional[str] = None
     death_place: Optional[str] = None
+    death_place_region: Optional[str] = None
+    death_place_country: Optional[str] = None
     biography: Optional[str] = None
     hero_quote: Optional[str] = None
     about_summary: Optional[str] = None

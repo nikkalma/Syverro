@@ -530,6 +530,7 @@ export const ru: LocaleData = {
     metaDied: 'Умер',
     metaProfessions: 'Профессии',
     metaWorks: 'Произведения',
+    metaAltNames: 'Псевдонимы',
 
     noQuotesAbout: 'Цитаты об авторе пока не добавлены',
     heroQuote: 'Цитата об авторе',

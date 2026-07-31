@@ -5,14 +5,14 @@ import { apiClient } from '../../../../../shared/api/client';
 import { getLocaleData, getBrowserLocale } from '../../../../../locales';
 
 const RELATION_CONFIGS = [
-  { type: 'theme', icon: '🏷️', labelKey: 'thematicTags' as const },
-  { type: 'motif', icon: '🔁', labelKey: 'motifs' as const },
-  { type: 'concept', icon: '💡', labelKey: 'concepts' as const },
-  { type: 'atmosphere', icon: '🌌', labelKey: 'atmospheres' as const },
-  { type: 'relation', icon: '🔗', labelKey: 'relations' as const },
-  { type: 'belongs_to_movement', icon: '📜', label: 'Literary Movements' },
-  { type: 'belongs_to_genre', icon: '📚', label: 'Genres' },
-  { type: 'has_occupation', icon: '💼', label: 'Occupations' },
+  { type: 'theme', icon: '🏷️', labelKey: 'thematicTags' as const, nodeType: 'theme' },
+  { type: 'motif', icon: '🔁', labelKey: 'motifs' as const, nodeType: 'motif' },
+  { type: 'concept', icon: '💡', labelKey: 'concepts' as const, nodeType: 'concept' },
+  { type: 'atmosphere', icon: '🌌', labelKey: 'atmospheres' as const, nodeType: 'atmosphere' },
+  { type: 'relation', icon: '🔗', labelKey: 'relations' as const, nodeType: '' },
+  { type: 'belongs_to_movement', icon: '📜', label: 'Literary Movements', nodeType: 'literary_direction' },
+  { type: 'belongs_to_genre', icon: '📚', label: 'Genres', nodeType: 'genre' },
+  { type: 'has_occupation', icon: '💼', label: 'Occupations', nodeType: 'occupation' },
 ] as const;
 
 const inputStyle: React.CSSProperties = {
@@ -52,9 +52,13 @@ export default function Graph() {
   useEffect(() => {
     if (debounceRef.current) clearTimeout(debounceRef.current);
     if (!query.trim() || !activeType) { setSuggestions([]); return; }
+    const config = RELATION_CONFIGS.find((rc) => rc.type === activeType);
+    const nodeType = config?.nodeType;
     debounceRef.current = setTimeout(async () => {
       try {
-        const res = await apiClient.get('/taxonomy/nodes', { params: { node_type: activeType, search: query } });
+        const res = await apiClient.get('/taxonomy/nodes', {
+          params: nodeType ? { node_type: nodeType, search: query } : { search: query },
+        });
         const nodes: any[] = res.data || [];
         const existingNodeIds = new Set(relations.filter((r) => r.relation_type === activeType).map((r) => r.node_id));
         setSuggestions(nodes.filter((n) => !existingNodeIds.has(n.id)));

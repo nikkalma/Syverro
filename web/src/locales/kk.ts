@@ -515,6 +515,7 @@ export const kk: LocaleData = {
     metaDied: 'Қайтыс болған',
     metaProfessions: 'Мамандықтары',
     metaWorks: 'Шығармалары',
+    metaAltNames: 'Бүркеншік аттар',
     quotesAboutTitle: 'Ол туралы айтады',
     noQuotesAbout: 'Автор туралы дәйексөздер әлі жоқ',
     heroQuote: 'Автор туралы дәйексөз',

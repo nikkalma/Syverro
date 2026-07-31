@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from app.api import auth, books, sync, admin, taxonomy, admin_taxonomy, admin_books, admin_authors_ext, admin_timeline, admin_sources, admin_places, admin_author_knowledge, authors, graph, graph_queries
+from app.api import auth, books, sync, admin, taxonomy, admin_taxonomy, admin_books, admin_authors_ext, admin_timeline, admin_sources, admin_places, admin_author_knowledge, authors, graph, graph_queries, user_book_experience as user_book_experience_api
 from app.database import engine, Base, AsyncSessionLocal
 from app.seeds.knowledge_graph_seed import seed_knowledge_graph
 from app.models import user, book, author, genre, knowledge_node, knowledge_relation, book_knowledge_relation, user_book_experience
@@ -50,6 +50,7 @@ app.include_router(admin_places.router)
 app.include_router(admin_author_knowledge.router)
 app.include_router(graph.router)
 app.include_router(graph_queries.router)
+app.include_router(user_book_experience_api.router)
 
 async def ensure_user_profile_columns(conn):
     """Add columns that create_all won't add to existing tables."""
@@ -75,6 +76,8 @@ async def ensure_user_profile_columns(conn):
         "ALTER TABLE books ADD COLUMN IF NOT EXISTS original_publication_year INTEGER",
         "ALTER TABLE books ADD COLUMN IF NOT EXISTS series_name VARCHAR",
         "ALTER TABLE books ADD COLUMN IF NOT EXISTS series_position INTEGER",
+        "ALTER TABLE books ADD COLUMN IF NOT EXISTS publication_id UUID REFERENCES author_publications(id) ON DELETE SET NULL",
+        "CREATE INDEX IF NOT EXISTS ix_books_publication_id ON books (publication_id)",
         "ALTER TABLE books ADD COLUMN IF NOT EXISTS themes JSONB DEFAULT '[]'::jsonb",
         "ALTER TABLE books ADD COLUMN IF NOT EXISTS motifs JSONB DEFAULT '[]'::jsonb",
         "ALTER TABLE genres ADD COLUMN IF NOT EXISTS parent_id UUID REFERENCES genres(id)",
@@ -128,6 +131,8 @@ async def ensure_user_profile_columns(conn):
         "ALTER TABLE authors ADD COLUMN IF NOT EXISTS atmospheres VARCHAR[] DEFAULT '{}'",
         "ALTER TABLE knowledge_nodes ADD COLUMN IF NOT EXISTS author_id UUID REFERENCES authors(id) ON DELETE SET NULL",
         "CREATE INDEX IF NOT EXISTS ix_knowledge_nodes_author_id ON knowledge_nodes (author_id)",
+        "ALTER TABLE knowledge_nodes ADD COLUMN IF NOT EXISTS place_id UUID REFERENCES places(id) ON DELETE SET NULL",
+        "CREATE INDEX IF NOT EXISTS ix_knowledge_nodes_place_id ON knowledge_nodes (place_id)",
         "ALTER TABLE timeline_events ADD COLUMN IF NOT EXISTS extraction_source VARCHAR NOT NULL DEFAULT 'manual'",
         "ALTER TABLE sources ADD COLUMN IF NOT EXISTS language VARCHAR",
         "ALTER TABLE sources ADD COLUMN IF NOT EXISTS reliability_score VARCHAR NOT NULL DEFAULT '3'",

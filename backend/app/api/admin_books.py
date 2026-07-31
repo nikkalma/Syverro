@@ -5,6 +5,7 @@ from app.core.deps import get_current_user, get_db
 from app.models.user import User
 from app.models.book import Book
 from app.models.author import Author
+from app.models.author_publication import AuthorPublication
 from app.models.book_author import book_authors
 from app.services.book_service import link_author, unlink_author
 from app.services.metadata_service import recalculate_metadata_status
@@ -109,3 +110,57 @@ async def unlink_author_from_book(
     await db.commit()
     logger.info(f"Book {book_id} unlinked from author {author_id} by {current_user.email}")
     return {"message": "Author unlinked from book"}
+
+
+# ============================================================
+# BOOK ↔ PUBLICATION (canonical bibliography link)
+# ============================================================
+
+
+@router.put("/books/{book_id}/publication")
+async def link_publication_to_book(
+    book_id: UUID,
+    publication_id: UUID = Query(..., description="AuthorPublication ID to link"),
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    await check_moderator(current_user)
+
+    book_result = await db.execute(select(Book).where(Book.id == book_id))
+    book = book_result.scalar_one_or_none()
+    if not book:
+        raise HTTPException(status_code=404, detail="Book not found")
+
+    pub_result = await db.execute(
+        select(AuthorPublication).where(AuthorPublication.id == publication_id)
+    )
+    publication = pub_result.scalar_one_or_none()
+    if not publication:
+        raise HTTPException(status_code=404, detail="Publication not found")
+
+    book.publication_id = publication_id
+    await db.commit()
+    logger.info(f"Book {book_id} linked to publication {publication_id} by {current_user.email}")
+    return {"message": "Publication linked to book", "publication_id": str(publication_id)}
+
+
+@router.delete("/books/{book_id}/publication")
+async def unlink_publication_from_book(
+    book_id: UUID,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    await check_moderator(current_user)
+
+    book_result = await db.execute(select(Book).where(Book.id == book_id))
+    book = book_result.scalar_one_or_none()
+    if not book:
+        raise HTTPException(status_code=404, detail="Book not found")
+
+    if not book.publication_id:
+        raise HTTPException(status_code=404, detail="Book has no linked publication")
+
+    book.publication_id = None
+    await db.commit()
+    logger.info(f"Book {book_id} unlinked from publication by {current_user.email}")
+    return {"message": "Publication unlinked from book"}

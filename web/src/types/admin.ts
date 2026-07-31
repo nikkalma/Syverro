@@ -72,6 +72,7 @@ export interface AdminBook {
   title: string;
   author: string;
   author_id?: string | null;
+  publication_id?: string | null;
   cover?: string | null;
   genres: string[];
   genre_ids?: string[];
@@ -239,6 +240,7 @@ export interface AdminAuthor {
   creation_type: string;
   metadata_status: string;
   book_count: number;
+  publications_count: number;
   awards?: AuthorAward[];
   created_at: string;
   updated_at: string;

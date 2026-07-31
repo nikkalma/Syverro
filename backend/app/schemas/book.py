@@ -32,6 +32,7 @@ class BookCreate(BookBase):
 class BookResponse(BookBase):
     id: UUID
     author_id: Optional[UUID] = None
+    publication_id: Optional[UUID] = None
     author_name: Optional[str] = None
     author_country: Optional[str] = None
     author_bio: Optional[str] = None

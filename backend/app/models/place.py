@@ -1,6 +1,7 @@
 from sqlalchemy import Column, String, Float, DateTime
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.sql import func
+from sqlalchemy.orm import relationship
 from app.database import Base
 import uuid
 
@@ -18,3 +19,5 @@ class Place(Base):
     place_type = Column(String, nullable=True)
     wikidata_id = Column(String, nullable=True)
     created_at = Column(DateTime, server_default=func.now(), nullable=False)
+
+    knowledge_nodes = relationship("KnowledgeNode", back_populates="place")

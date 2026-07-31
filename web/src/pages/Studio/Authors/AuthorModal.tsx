@@ -159,7 +159,6 @@ export default function AuthorModal({ isOpen, mode, author, onClose, onSave }: A
   const [authorIntroQuote, setAuthorIntroQuote] = useState('');
   const [activeFromYear, setActiveFromYear] = useState<number | null>(null);
   const [activeToYear, setActiveToYear] = useState<number | null>(null);
-  const [notableWorks, setNotableWorks] = useState<string[]>([]);
   const [writingLanguages, setWritingLanguages] = useState<string[]>([]);
   const [genres, setGenres] = useState<string[]>([]);
 
@@ -220,7 +219,6 @@ export default function AuthorModal({ isOpen, mode, author, onClose, onSave }: A
       setAwards(author.awards || []);
       setActiveFromYear(author.active_from_year ?? null);
       setActiveToYear(author.active_to_year ?? null);
-      setNotableWorks(author.notable_works || []);
       setWritingLanguages(author.writing_languages || []);
       setGenres(author.genres || []);
       setPhoto(author.photo || '');
@@ -255,7 +253,6 @@ export default function AuthorModal({ isOpen, mode, author, onClose, onSave }: A
       setAwards([]);
       setActiveFromYear(null);
       setActiveToYear(null);
-      setNotableWorks([]);
       setWritingLanguages([]);
       setGenres([]);
       setPhoto('');
@@ -417,7 +414,6 @@ export default function AuthorModal({ isOpen, mode, author, onClose, onSave }: A
       literary_movements: literaryMovements.length > 0 ? literaryMovements : null,
       active_from_year: activeFromYear,
       active_to_year: activeToYear,
-      notable_works: notableWorks.length > 0 ? notableWorks : null,
       writing_languages: writingLanguages.length > 0 ? writingLanguages : null,
       genres: genres.length > 0 ? genres : null,
       awards: awards.map(({ name, year, organization, work }) => ({ name, year, organization, work })),
@@ -692,11 +688,6 @@ export default function AuthorModal({ isOpen, mode, author, onClose, onSave }: A
                 <input type="number" value={activeToYear ?? ''} onChange={(e) => setActiveToYear(e.target.value ? parseInt(e.target.value) : null)}
                   placeholder="1910" style={inputStyle} />
               </div>
-            </div>
-            <div style={{ marginBottom: '12px' }}>
-              <label style={labelStyle}>Известные произведения</label>
-              <ChipInput tags={notableWorks} onChange={(v) => { setIsDirty(true); setNotableWorks(v); v.forEach((t) => recordChip('notable_works', t)); }}
-                placeholder="Добавить произведение..." color={tagColors.notable_works} suggestions={chipDict.notable_works || []} />
             </div>
             <div style={{ marginBottom: '12px' }}>
               <label style={labelStyle}>Языки письма</label>

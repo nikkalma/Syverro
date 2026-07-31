@@ -12,6 +12,7 @@ from app.models.author import Author
 from app.models.author_award import AuthorAward
 from app.models.timeline_event import TimelineEvent
 from app.models.author_quote import AuthorQuote
+from app.models.author_publication import AuthorPublication
 from app.models.author_citizenship import AuthorCitizenship
 from app.models.author_knowledge_relation import AuthorKnowledgeRelation
 from app.models.source import Source
@@ -20,7 +21,7 @@ from app.schemas.author import (
     AuthorPublicResponse, AuthorBookBrief, AuthorMetadata, AuthorListBrief,
     GoldenAuthorResponse, TimelineEventPublic, QuotePublic,
     CitizenshipPublic, AwardPublic, SourcePublic,
-    KnowledgeRelationPublic, GoldenAuthorMetadata,
+    KnowledgeRelationPublic, GoldenAuthorMetadata, AuthorPublicationPublic,
 )
 from uuid import UUID
 from typing import Optional, List
@@ -227,6 +228,17 @@ async def get_author(
         to_date=c.to_date, notes=c.notes, confidence=c.confidence, status=c.status,
     ) for c in cit_rows.scalars().all()]
 
+    # --- Publications (canonical bibliography) ---
+    pub_rows = await db.execute(
+        select(AuthorPublication).where(AuthorPublication.author_id == aid).order_by(AuthorPublication.publication_year)
+    )
+    publications = [AuthorPublicationPublic(
+        id=p.id, title=p.title, original_title=p.original_title,
+        publication_year=p.publication_year, publication_date=p.publication_date,
+        publication_type=p.publication_type, description=p.description,
+        pen_name=p.pen_name, wikipedia_url=p.wikipedia_url,
+    ) for p in pub_rows.scalars().all()]
+
     # --- Sources (all sources referenced by this author's entities) ---
     source_list = []
     if all_source_ids:
@@ -324,6 +336,7 @@ async def get_author(
         citizenships=citizenships,
         sources=source_list,
         knowledge_relations=knowledge_relations,
+        publications=publications,
         metadata=GoldenAuthorMetadata(
             genres=_merge_lists(relation_taxonomy["genres"], author.genres, genres),
             themes=_merge_lists(relation_taxonomy["themes"], author.themes, themes),

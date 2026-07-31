@@ -25,3 +25,4 @@ class AuthorPublication(Base):
 
     author = relationship("Author", backref="author_publications")
     source = relationship("Source", backref="author_publications")
+    books = relationship("Book", back_populates="publication")

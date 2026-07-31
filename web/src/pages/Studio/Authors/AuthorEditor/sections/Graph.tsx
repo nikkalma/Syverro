@@ -8,11 +8,10 @@ const RELATION_CONFIGS = [
   { type: 'theme', icon: '🏷️', labelKey: 'thematicTags' as const, nodeType: 'theme' },
   { type: 'motif', icon: '🔁', labelKey: 'motifs' as const, nodeType: 'motif' },
   { type: 'concept', icon: '💡', labelKey: 'concepts' as const, nodeType: 'concept' },
-  { type: 'atmosphere', icon: '🌌', labelKey: 'atmospheres' as const, nodeType: 'atmosphere' },
   { type: 'relation', icon: '🔗', labelKey: 'relations' as const, nodeType: '' },
-  { type: 'belongs_to_movement', icon: '📜', label: 'Literary Movements', nodeType: 'literary_direction' },
-  { type: 'belongs_to_genre', icon: '📚', label: 'Genres', nodeType: 'genre' },
-  { type: 'has_occupation', icon: '💼', label: 'Occupations', nodeType: 'occupation' },
+  { type: 'belongs_to_movement', icon: '📜', labelKey: 'movements' as const, nodeType: 'literary_direction' },
+  { type: 'belongs_to_genre', icon: '📚', labelKey: 'genres' as const, nodeType: 'genre' },
+  { type: 'has_occupation', icon: '💼', labelKey: 'occupations' as const, nodeType: 'occupation' },
 ] as const;
 
 const inputStyle: React.CSSProperties = {
@@ -149,10 +148,10 @@ export default function Graph() {
             }} onClick={() => { setActiveType(isActive ? null : rc.type); setQuery(''); }}>
               <div style={{ fontSize: '24px', marginBottom: '8px' }}>{rc.icon}</div>
               <div style={{ fontSize: '14px', fontWeight: '500', color: 'var(--text-primary)', marginBottom: '4px' }}>
-                {'label' in rc ? rc.label : graphLocale[rc.labelKey]}
+                {graphLocale[rc.labelKey]}
               </div>
               <div style={{ fontSize: '12px', color: 'var(--text-muted)', lineHeight: 1.5 }}>
-                {typeRelations.length} item(s)
+                {typeRelations.length} {graphLocale.items}
               </div>
               {isActive && (
                 <div onClick={(e) => e.stopPropagation()} style={{ marginTop: '12px' }}>
@@ -177,7 +176,7 @@ export default function Graph() {
                     type="text"
                     value={query}
                     onChange={(e) => setQuery(e.target.value)}
-                    placeholder="Search nodes..."
+                    placeholder={graphLocale.searchNodes}
                     style={inputStyle}
                   />
                   {suggestions.length > 0 && (

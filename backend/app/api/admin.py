@@ -19,6 +19,7 @@ from app.models.book import Book
 from app.models.user_book import UserBook
 from app.models.author import Author
 from app.models.author_award import AuthorAward
+from app.models.author_publication import AuthorPublication
 from app.models.genre import Genre
 from app.models.book_genre import book_genres
 from app.models.book_author import book_authors
@@ -1004,6 +1005,9 @@ async def get_authors(
     authors_data = []
     for author in authors:
         book_count = await get_author_book_count(db, author.id)
+        publications_count = await db.scalar(
+            select(func.count()).select_from(AuthorPublication).where(AuthorPublication.author_id == author.id)
+        ) or 0
         authors_data.append({
             "id": str(author.id),
             "name": author.name,
@@ -1049,6 +1053,7 @@ async def get_authors(
             "cultural_identity": author.cultural_identity,
             "creation_type": author.creation_type or "individual_author",
             "book_count": book_count,
+            "publications_count": publications_count,
             "created_at": author.created_at,
             "updated_at": author.updated_at,
         })
@@ -1075,8 +1080,9 @@ async def get_author_detail(
         raise HTTPException(status_code=404, detail="Author not found")
     
     book_count = await get_author_book_count(db, author.id)
-
-    # Load awards
+    publications_count = await db.scalar(
+        select(func.count()).select_from(AuthorPublication).where(AuthorPublication.author_id == author.id)
+    ) or 0
     awards_result = await db.execute(
         select(AuthorAward).where(AuthorAward.author_id == author.id).order_by(AuthorAward.year)
     )
@@ -1134,6 +1140,7 @@ async def get_author_detail(
         "creation_type": author.creation_type or "individual_author",
         "metadata_status": author.metadata_status or "draft",
         "book_count": book_count,
+        "publications_count": publications_count,
         "awards": [{
             "id": str(a.id),
             "author_id": str(a.author_id),

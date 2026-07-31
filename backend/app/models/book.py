@@ -13,6 +13,7 @@ class Book(Base):
     title = Column(String, nullable=False)
     author = Column(String, nullable=False)  # Денормализовано для быстрых запросов
     author_id = Column(UUID(as_uuid=True), ForeignKey("authors.id"), nullable=True)
+    publication_id = Column(UUID(as_uuid=True), ForeignKey("author_publications.id", ondelete="SET NULL"), nullable=True, index=True)
     cover = Column(String, nullable=True)
     genres = Column(JSON, default=[])
     description = Column(Text, nullable=True)
@@ -55,6 +56,7 @@ class Book(Base):
 
     # Relationships
     user_books = relationship("UserBook", back_populates="book", cascade="all, delete-orphan")
+    publication = relationship("AuthorPublication", back_populates="books")
     author_ref = relationship("Author", back_populates="books")  # legacy one-to-many via author_id
     authors = relationship("Author", secondary="book_authors", back_populates="book_refs")  # many-to-many
     genres_rel = relationship("Genre", secondary="book_genres", back_populates="books")

@@ -14,17 +14,13 @@ const inputStyle: React.CSSProperties = {
 
 export default function Works() {
   const t = getLocaleData(getBrowserLocale());
-  const { author, loading, updateAuthor } = useAuthorEditor();
+  const { author, loading } = useAuthorEditor();
 
   const [bookQuery, setBookQuery] = useState('');
   const [bookResults, setBookResults] = useState<any[]>([]);
   const [searching, setSearching] = useState(false);
   const [linkedBookIds, setLinkedBookIds] = useState<Set<string>>(new Set());
   const [linkedBooks, setLinkedBooks] = useState<any[]>([]);
-  const [notableWorks, setNotableWorks] = useState<string[]>([]);
-  const [nwDraft, setNwDraft] = useState('');
-  const [nwEditingIdx, setNwEditingIdx] = useState<number | null>(null);
-  const [nwError, setNwError] = useState<string | null>(null);
   const debounceRef = useRef<ReturnType<typeof setTimeout>>();
 
   useEffect(() => {
@@ -47,7 +43,6 @@ export default function Works() {
       } catch {}
     };
     fetchLinkedBooks();
-    setNotableWorks(author.notable_works || []);
   }, [author]);
 
   useEffect(() => {
@@ -162,77 +157,6 @@ export default function Works() {
             {t.admin.authors.editor.noConnectedBooks}
           </div>
         )}
-      </EditorSectionCard>
-
-      <EditorSectionCard title="Notable Works">
-        {nwError && (
-          <div style={{ padding: '8px 12px', marginBottom: '12px', background: 'rgba(220,38,38,0.1)', borderRadius: '6px', color: 'var(--error)', fontSize: '13px' }}>
-            {nwError}
-          </div>
-        )}
-        {notableWorks.length > 0 && (
-          <div style={{ marginBottom: '12px' }}>
-            {notableWorks.map((nw, i) => (
-              <div key={i} style={{
-                display: 'flex', gap: '8px', alignItems: 'center',
-                padding: '8px 10px', marginBottom: '4px',
-                background: 'var(--surface-hover)', borderRadius: '6px',
-              }}>
-                {nwEditingIdx === i ? (
-                  <input type="text" value={nwDraft} onChange={(e) => setNwDraft(e.target.value)}
-                    style={{ ...inputStyle, flex: 1 }} autoFocus />
-                ) : (
-                  <div style={{ flex: 1, fontSize: '13px', color: 'var(--text-primary)' }}>{nw}</div>
-                )}
-                {nwEditingIdx === i ? (
-                  <button type="button" onClick={async () => {
-                    if (!nwDraft.trim()) return;
-                    const next = [...notableWorks];
-                    next[i] = nwDraft.trim();
-                    setNotableWorks(next);
-                    try {
-                      await updateAuthor({ notable_works: next });
-                      setNwEditingIdx(null);
-                      setNwError(null);
-                    } catch { setNwError('Failed to save'); }
-                  }} style={{ padding: '4px 8px', fontSize: '11px', borderRadius: '4px', border: 'none', cursor: 'pointer', background: 'var(--accent)', color: '#fff' }}>
-                    Save
-                  </button>
-                ) : (
-                  <button type="button" onClick={() => { setNwDraft(nw); setNwEditingIdx(i); }}
-                    style={{ background: 'none', border: 'none', color: 'var(--text-secondary)', cursor: 'pointer', fontSize: '13px', padding: '0 4px' }}>
-                    ✎
-                  </button>
-                )}
-                <button type="button" onClick={async () => {
-                  if (!window.confirm('Remove this notable work?')) return;
-                  const next = notableWorks.filter((_, j) => j !== i);
-                  setNotableWorks(next);
-                  try { await updateAuthor({ notable_works: next }); } catch { setNwError('Failed to save'); }
-                }} style={{ background: 'none', border: 'none', color: 'var(--error)', cursor: 'pointer', fontSize: '16px' }}>
-                  ×
-                </button>
-              </div>
-            ))}
-          </div>
-        )}
-        <div style={{ display: 'flex', gap: '8px' }}>
-          <input type="text" value={nwDraft} onChange={(e) => setNwDraft(e.target.value)}
-            placeholder={nwEditingIdx === null ? 'Add a notable work...' : ''}
-            style={{ ...inputStyle, flex: 1 }} />
-          {nwEditingIdx === null && (
-            <button type="button" onClick={async () => {
-              if (!nwDraft.trim()) return;
-              const next = [...notableWorks, nwDraft.trim()];
-              setNotableWorks(next);
-              setNwDraft('');
-              try { await updateAuthor({ notable_works: next }); } catch { setNwError('Failed to save'); }
-            }} disabled={!nwDraft.trim()}
-              style={{ padding: '8px 16px', background: 'var(--accent)', border: 'none', borderRadius: '8px', color: '#fff', cursor: 'pointer', fontSize: '13px' }}>
-              Add
-            </button>
-          )}
-        </div>
       </EditorSectionCard>
     </div>
   );

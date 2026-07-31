@@ -6,6 +6,7 @@ from app.models.user import User
 from app.models.author import Author
 from app.models.knowledge_node import KnowledgeNode
 from app.models.author_knowledge_relation import AuthorKnowledgeRelation
+from app.services.knowledge_graph import materialize_author_taxonomy_cache
 from app.schemas.author_knowledge_relation import (
     AuthorKnowledgeRelationCreate, AuthorKnowledgeRelationUpdate,
     AuthorKnowledgeRelationResponse,
@@ -102,6 +103,8 @@ async def create_author_knowledge(
     db.add(rel)
     await db.commit()
     await db.refresh(rel)
+    await materialize_author_taxonomy_cache(db, author_id)
+    await db.commit()
     return {
         "id": rel.id,
         "author_id": rel.author_id,
@@ -140,6 +143,8 @@ async def update_author_knowledge(
         setattr(rel, key, value)
     await db.commit()
     await db.refresh(rel)
+    await materialize_author_taxonomy_cache(db, author_id)
+    await db.commit()
 
     node_result = await db.execute(
         select(KnowledgeNode).where(KnowledgeNode.id == rel.node_id)
@@ -178,4 +183,6 @@ async def delete_author_knowledge(
     if not rel:
         raise HTTPException(status_code=404, detail="Relation not found")
     await db.delete(rel)
+    await db.commit()
+    await materialize_author_taxonomy_cache(db, author_id)
     await db.commit()

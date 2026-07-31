@@ -14,8 +14,26 @@ from sqlalchemy import select, delete
 
 from app.models.knowledge_node import KnowledgeNode
 from app.models.author_knowledge_relation import AuthorKnowledgeRelation
+from app.models.author import Author
+from app.models.place import Place
 
 logger = logging.getLogger(__name__)
+
+# Inverse of GRAPH_FIELD_MAP: relation_type → Author array/scalar field.
+# The KnowledgeGraph (nodes + relations) is the source of truth for taxonomy;
+# the Author columns below are a denormalized cache derived from relations.
+RELATION_TO_FIELD_MAP: Dict[str, str] = {
+    "born_in": "birth_place",
+    "died_in": "death_place",
+    "belongs_to_movement": "literary_movements",
+    "belongs_to_genre": "genres",
+    "has_occupation": "occupations",
+    "speaks": "languages",
+    "writes_in": "writing_languages",
+    "theme": "themes",
+    "motif": "motifs",
+    "concept": "concepts",
+}
 
 # Map of Author model fields → KnowledgeNode + relation config
 GRAPH_FIELD_MAP: Dict[str, Dict[str, Any]] = {
@@ -59,11 +77,6 @@ GRAPH_FIELD_MAP: Dict[str, Dict[str, Any]] = {
         "relation_type": "concept",
         "confidence": 0.8,
     },
-    "atmospheres": {
-        "node_type": "atmosphere",
-        "relation_type": "atmosphere",
-        "confidence": 0.75,
-    },
     "birth_place": {
         "node_type": "place",
         "relation_type": "born_in",
@@ -84,6 +97,23 @@ def _normalize_slug(name: str) -> str:
     return slug if slug else "unknown"
 
 
+async def ensure_place(db: AsyncSession, name: str) -> Place:
+    """Find or create a geographic Place row for a place-type knowledge node."""
+    normalized_name = name.strip()
+    result = await db.execute(
+        select(Place).where(Place.name == normalized_name)
+    )
+    place = result.scalar_one_or_none()
+    if place:
+        return place
+    place = Place(name=normalized_name)
+    db.add(place)
+    await db.flush()
+    await db.refresh(place)
+    logger.info("Created Place: %s", place.name)
+    return place
+
+
 async def ensure_knowledge_node(
     db: AsyncSession, name: str, node_type: str
 ) -> KnowledgeNode:
@@ -95,6 +125,9 @@ async def ensure_knowledge_node(
     )
     existing = result.scalar_one_or_none()
     if existing:
+        if node_type == "place" and existing.place_id is None:
+            place = await ensure_place(db, normalized_name)
+            existing.place_id = place.id
         return existing
 
     node = KnowledgeNode(
@@ -105,8 +138,71 @@ async def ensure_knowledge_node(
     db.add(node)
     await db.flush()
     await db.refresh(node)
+    if node_type == "place":
+        place = await ensure_place(db, normalized_name)
+        node.place_id = place.id
     logger.info("Created KnowledgeNode: %s (%s)", node.name, node.node_type)
     return node
+
+
+async def materialize_author_taxonomy_cache(
+    db: AsyncSession, author_id: Any
+) -> None:
+    """Recompute the Author taxonomy columns from graph relations.
+
+    The KnowledgeGraph (KnowledgeNode + AuthorKnowledgeRelation) is the single
+    source of truth; the Author's plain-text array/scalar columns are a
+    denormalized cache. Called after every graph mutation.
+    """
+    result = await db.execute(
+        select(AuthorKnowledgeRelation)
+        .where(
+            AuthorKnowledgeRelation.author_id == author_id,
+            AuthorKnowledgeRelation.status == "verified",
+        )
+        .order_by(AuthorKnowledgeRelation.created_at)
+    )
+    relations = result.scalars().all()
+    if not relations:
+        return
+
+    node_ids = list({r.node_id for r in relations})
+    nodes_result = await db.execute(
+        select(KnowledgeNode).where(KnowledgeNode.id.in_(node_ids))
+    )
+    nodes = {n.id: n for n in nodes_result.scalars().all()}
+
+    author = await db.get(Author, author_id)
+    if not author:
+        return
+
+    field_values: Dict[str, List[str]] = {}
+    place_refs: Dict[str, Any] = {}
+    for rel in relations:
+        field = RELATION_TO_FIELD_MAP.get(rel.relation_type)
+        if not field:
+            continue
+        node = nodes.get(rel.node_id)
+        if not node:
+            continue
+        field_values.setdefault(field, [])
+        if node.name not in field_values[field]:
+            field_values[field].append(node.name)
+        if rel.relation_type == "born_in":
+            place_refs["birth_place_id"] = node.place_id
+        elif rel.relation_type == "died_in":
+            place_refs["death_place_id"] = node.place_id
+
+    for field, values in field_values.items():
+        if field in ("birth_place", "death_place"):
+            setattr(author, field, values[-1] if values else None)
+        else:
+            setattr(author, field, values)
+
+    for attr, place_id in place_refs.items():
+        setattr(author, attr, place_id)
+
+    logger.info("Materialized taxonomy cache for author %s", author_id)
 
 
 async def sync_author_graph_field(
@@ -154,22 +250,23 @@ async def sync_author_graph_field(
             author_id, node.name, relation_type,
         )
 
-    if not current_node_ids:
-        return
-
-    stale = await db.execute(
-        select(AuthorKnowledgeRelation).where(
-            AuthorKnowledgeRelation.author_id == author_id,
-            AuthorKnowledgeRelation.relation_type == relation_type,
-            AuthorKnowledgeRelation.node_id.notin_(current_node_ids),
-        )
+    stale_query = select(AuthorKnowledgeRelation).where(
+        AuthorKnowledgeRelation.author_id == author_id,
+        AuthorKnowledgeRelation.relation_type == relation_type,
     )
+    if current_node_ids:
+        stale_query = stale_query.where(
+            AuthorKnowledgeRelation.node_id.notin_(current_node_ids)
+        )
+    stale = await db.execute(stale_query)
     for rel in stale.scalars().all():
         await db.delete(rel)
         logger.info(
             "Removed stale relation: author %s → node %s (%s)",
             author_id, rel.node_id, relation_type,
         )
+
+    await materialize_author_taxonomy_cache(db, author_id)
 
 
 async def sync_author_graph_fields(

@@ -99,7 +99,8 @@ export function validateStatusPromotion(
   }
 
   if (targetStatus === 'knowledge_complete' || canPromoteTo(targetStatus, 'knowledge_complete')) {
-    if (missing(author, 'notable_works')) errors.push({ field: 'notable_works', label: FIELD_LABELS.notable_works });
+    const pubCount = (author as any).publications_count ?? 0;
+    if (pubCount <= 0) errors.push({ field: 'publications', label: 'Publications' });
     if (missing(author, 'genres')) errors.push({ field: 'genres', label: FIELD_LABELS.genres });
   }
 

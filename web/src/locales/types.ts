@@ -327,6 +327,10 @@ export interface LocaleData {
           nationalityStates: string;
           nationality: string;
           nationalityDesc: string;
+          ethnicOrigin: string;
+          culturalIdentity: string;
+          languagesBirthDeath: string;
+          genres: string;
           country: string;
           languages: string;
           writingLanguages: string;
@@ -416,6 +420,11 @@ export interface LocaleData {
           atmospheresDesc: string;
           relations: string;
           relationsDesc: string;
+          movements: string;
+          genres: string;
+          occupations: string;
+          items: string;
+          searchNodes: string;
           manage: string;
           loading: string;
           adding: string;
@@ -642,6 +651,7 @@ export interface LocaleData {
     timeline: string;
     atmosphere: string;
     authorBooks: string;
+    bibliography: string;
     quote: string;
     quotes: string;
     quotesAboutTitle: string;

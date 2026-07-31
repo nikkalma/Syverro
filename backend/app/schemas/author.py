@@ -1,6 +1,6 @@
 from pydantic import BaseModel
 from typing import Optional, List
-from datetime import datetime
+from datetime import datetime, date
 from uuid import UUID
 
 
@@ -336,6 +336,21 @@ class SourcePublic(BaseModel):
         from_attributes = True
 
 
+class AuthorPublicationPublic(BaseModel):
+    id: UUID
+    title: str
+    original_title: Optional[str] = None
+    publication_year: int
+    publication_date: Optional[date] = None
+    publication_type: str
+    description: Optional[str] = None
+    pen_name: Optional[str] = None
+    wikipedia_url: Optional[str] = None
+
+    class Config:
+        from_attributes = True
+
+
 class KnowledgeRelationPublic(BaseModel):
     id: UUID
     node_name: Optional[str] = None
@@ -403,6 +418,7 @@ class GoldenAuthorResponse(BaseModel):
     citizenships: List[CitizenshipPublic] = []
     sources: List[SourcePublic] = []
     knowledge_relations: List[KnowledgeRelationPublic] = []
+    publications: List[AuthorPublicationPublic] = []
     metadata: GoldenAuthorMetadata = GoldenAuthorMetadata()
 
     class Config:

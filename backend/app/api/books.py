@@ -44,6 +44,7 @@ async def _book_to_response_dict(db: AsyncSession, book: Book) -> dict:
         "title": book.title,
         "author": book.author,
         "author_id": author_id,
+        "publication_id": book.publication_id,
         "author_name": author_name,
         "author_country": author_country,
         "author_bio": author_bio,

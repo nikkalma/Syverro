@@ -72,6 +72,18 @@ interface KnowledgeRelation {
   author_slug?: string | null;
 }
 
+interface AuthorPublication {
+  id: string;
+  title: string;
+  original_title: string | null;
+  publication_year: number;
+  publication_date: string | null;
+  publication_type: string;
+  description: string | null;
+  pen_name: string | null;
+  wikipedia_url: string | null;
+}
+
 interface GoldenMetadata {
   genres: string[];
   themes: string[];
@@ -120,6 +132,7 @@ interface AuthorResponse {
   citizenships: Citizenship[];
   sources: Source[];
   knowledge_relations: KnowledgeRelation[];
+  publications: AuthorPublication[];
   metadata: GoldenMetadata;
 }
 
@@ -181,6 +194,15 @@ const relationsLabelsRu: Record<string, string> = {
   relative_of: 'Родственник', friend_of: 'Друг', mentor_of: 'Наставник',
   student_of: 'Ученик', literary_movement: 'Направление', identity: 'Псевдоним',
   work: 'Произведение', character: 'Персонаж',
+};
+
+const localPublicationTypeLabels: Record<string, string> = {
+  novel: 'роман',
+  poetry: 'поэзия',
+  essay: 'эссе',
+  collection: 'сборник',
+  posthumous: 'посмертно',
+  other: 'другое',
 };
 
 function TimelineSection({ events, t }: { events: TimelineEvent[]; t: any }) {
@@ -302,6 +324,7 @@ export default function AuthorPage() {
           citizenships: res.data.citizenships ?? [],
           sources: res.data.sources ?? [],
           knowledge_relations: res.data.knowledge_relations ?? [],
+          publications: res.data.publications ?? [],
           metadata: {
             genres: res.data.metadata?.genres ?? [],
             themes: res.data.metadata?.themes ?? [],
@@ -584,7 +607,7 @@ const literaryMovementMap: Record<string, string> = {
     },
     professions && { label: t.author.metaProfessions, value: professions },
     alternativeNames.length > 0 && { label: t.author.metaAltNames, value: alternativeNames.join(', ') },
-    { label: t.author.metaWorks, value: String(author.books.length) },
+    { label: t.author.metaWorks, value: String(author.publications.length || author.books.length) },
   ].filter(Boolean) as { label: string; value: string }[];
 
   return (
@@ -861,6 +884,46 @@ const literaryMovementMap: Record<string, string> = {
                       &ldquo;{q.text}&rdquo;
                     </div>
                     {q.speaker && <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>— {q.speaker}</div>}
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Bibliography */}
+        {author.publications && author.publications.length > 0 && (
+          <div style={{ marginTop: '56px' }}>
+            <div>
+              <div style={sectionTitleStyle}>{t.author.bibliography}</div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                {author.publications.map((p) => (
+                  <div key={p.id} style={{
+                    padding: '16px 20px', borderRadius: '12px',
+                    background: 'var(--surface)', border: '1px solid var(--border)',
+                  }}>
+                    <div style={{ display: 'flex', alignItems: 'baseline', gap: '10px', flexWrap: 'wrap', marginBottom: '4px' }}>
+                      <span style={{ fontSize: '15px', fontWeight: 500, color: 'var(--text-primary)' }}>{p.title}</span>
+                      {p.original_title && p.original_title !== p.title && (
+                        <span style={{ fontSize: '12px', fontStyle: 'italic', color: 'var(--text-muted)' }}>{p.original_title}</span>
+                      )}
+                    </div>
+                    <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '6px', display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+                      <span>{p.publication_year}</span>
+                      {p.publication_type && <span>{localPublicationTypeLabels[p.publication_type] || p.publication_type}</span>}
+                      {p.pen_name && <span style={{ color: 'var(--accent)' }}>{t.author.heroQuote ? `Псевдоним: ${p.pen_name}` : `as ${p.pen_name}`}</span>}
+                    </div>
+                    {p.description && (
+                      <div style={{ fontSize: '13px', color: 'var(--text-secondary)', lineHeight: 1.6, marginBottom: '6px' }}>
+                        {p.description}
+                      </div>
+                    )}
+                    {p.wikipedia_url && (
+                      <a href={p.wikipedia_url} target="_blank" rel="noopener noreferrer"
+                        style={{ fontSize: '12px', color: 'var(--accent)', textDecoration: 'none' }}>
+                        Wikipedia
+                      </a>
+                    )}
                   </div>
                 ))}
               </div>

@@ -219,7 +219,10 @@ export default function Identity() {
     penNamesText !== (author?.pen_names || []).join(', ') ||
     pseudonymsText !== (author?.pseudonyms || []).join(', ') ||
     birthPlaceId !== (author?.birth_place_id || null) ||
-    deathPlaceId !== (author?.death_place_id || null);
+    deathPlaceId !== (author?.death_place_id || null) ||
+    occupations.join(',') !== (author?.occupations || []).join(',') ||
+    literaryMovements.join(',') !== (author?.literary_movements || []).join(',') ||
+    genres.join(',') !== (author?.genres || []).join(',');
 
   const reset = () => {
     if (!author) return;
@@ -268,10 +271,10 @@ export default function Identity() {
       <EditorSectionCard title={idLocale.nationalityStates}>
         <DetailGrid columns={2}>
           <FormField label={idLocale.nationality} value={nationality} onChange={setNationality} placeholder="e.g. Russian" />
-          <FormField label="Ethnic Origin" value={ethnicOrigin} onChange={setEthnicOrigin} placeholder="e.g. Jewish" />
+          <FormField label={idLocale.ethnicOrigin} value={ethnicOrigin} onChange={setEthnicOrigin} placeholder="e.g. Jewish" />
         </DetailGrid>
         <div style={{ marginTop: '12px' }}>
-          <FormField label="Cultural Identity" value={culturalIdentity} onChange={setCulturalIdentity} placeholder="e.g. Russian literature" />
+          <FormField label={idLocale.culturalIdentity} value={culturalIdentity} onChange={setCulturalIdentity} placeholder="e.g. Russian literature" />
         </div>
       </EditorSectionCard>
 
@@ -337,7 +340,7 @@ export default function Identity() {
         )}
       </EditorSectionCard>
 
-      <EditorSectionCard title="Languages & Birth/Death">
+      <EditorSectionCard title={idLocale.languagesBirthDeath}>
         <DetailGrid columns={2}>
           <FormField label={idLocale.spokenLanguages} value={languages} onChange={setLanguages} placeholder="English, Russian..." />
           <FormField label={idLocale.writingLanguages} value={writingLanguages} onChange={setWritingLanguages} placeholder="Russian, French..." />
@@ -358,7 +361,7 @@ export default function Identity() {
         </div>
       </EditorSectionCard>
 
-      <EditorSectionCard title="Alternative Names">
+      <EditorSectionCard title={idLocale.alternativeNames}>
         <DetailGrid columns={2}>
           <FormField label={idLocale.birthName} value={birthName} onChange={setBirthName} />
           <FormField label={idLocale.sortName} value={sortName} onChange={setSortName} />
@@ -367,7 +370,7 @@ export default function Identity() {
           <FormField label={idLocale.penNames} value={penNamesText} onChange={setPenNamesText} placeholder="Pen name 1, Pen name 2..." />
         </div>
         <div style={{ marginTop: '12px' }}>
-          <FormField label="Pseudonyms" value={pseudonymsText} onChange={setPseudonymsText} placeholder="Pseudonym 1, Pseudonym 2..." />
+          <FormField label={idLocale.pseudonyms} value={pseudonymsText} onChange={setPseudonymsText} placeholder="Pseudonym 1, Pseudonym 2..." />
         </div>
       </EditorSectionCard>
 
@@ -389,7 +392,7 @@ export default function Identity() {
         />
       </EditorSectionCard>
 
-      <EditorSectionCard title="Genres">
+      <EditorSectionCard title={idLocale.genres}>
         <TaxonomyPicker
           nodeType="genre"
           value={genres}

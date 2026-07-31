@@ -23,6 +23,7 @@ from app.schemas.author import (
     KnowledgeRelationPublic, GoldenAuthorMetadata,
 )
 from uuid import UUID
+from typing import Optional, List
 import logging
 
 logger = logging.getLogger(__name__)

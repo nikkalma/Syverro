@@ -104,7 +104,7 @@ export default function Graph() {
         <p style={{ fontSize: '13px', color: 'var(--text-muted)', margin: '0 0 16px 0', lineHeight: 1.5 }}>
           {graphLocale.workspaceDesc}
         </p>
-        {loading && <div style={{ fontSize: '13px', color: 'var(--text-muted)' }}>LoadingraphLocale...</div>}
+        {loading && <div style={{ fontSize: '13px', color: 'var(--text-muted)' }}>{graphLocale.loading}</div>}
         {!loading && relations.length === 0 && (
           <p style={{ fontSize: '13px', color: 'var(--text-muted)', fontStyle: 'italic', margin: 0 }}>
             {graphLocale.workspace}
@@ -195,7 +195,7 @@ export default function Graph() {
                       ))}
                     </div>
                   )}
-                  {saving && <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '4px' }}>AddingraphLocale...</div>}
+                  {saving && <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '4px' }}>{graphLocale.adding}</div>}
                 </div>
               )}
             </div>

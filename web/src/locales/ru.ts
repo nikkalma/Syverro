@@ -939,6 +939,8 @@ export const ru: LocaleData = {
           relations: 'Связи',
           relationsDesc: 'Связи с другими авторами, произведениями, школами',
           manage: 'Управлять →',
+          loading: 'Загрузка...',
+          adding: 'Добавление...',
         },
         media: {
           portrait: 'Портрет',

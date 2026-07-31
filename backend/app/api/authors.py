@@ -29,6 +29,18 @@ logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/authors", tags=["authors"])
 
 
+def _merge_lists(*lists: Optional[List[str]]) -> List[str]:
+    result: List[str] = []
+    for lst in lists:
+        if not lst:
+            continue
+        for item in lst:
+            item = (item or "").strip()
+            if item and item not in result:
+                result.append(item)
+    return result
+
+
 @router.get("", response_model=list[AuthorListBrief])
 async def list_authors(db: AsyncSession = Depends(get_db)):
     cols = ["id", "slug", "name", "display_name", "display_name_mode",
@@ -224,7 +236,7 @@ async def get_author(
             reliability_score=s.reliability_score, source_origin=s.source_origin,
         ) for s in src_db.scalars().all()]
 
-    # --- Knowledge relations (with node names) ---
+    # --- Knowledge relations (with node names + linked author slugs) ---
     kr_rows = await db.execute(
         select(AuthorKnowledgeRelation).where(AuthorKnowledgeRelation.author_id == aid)
     )
@@ -235,12 +247,42 @@ async def get_author(
         nodes_db = await db.execute(select(KnowledgeNode).where(KnowledgeNode.id.in_(list(node_ids))))
         node_map = {n.id: n for n in nodes_db.scalars().all()}
 
+    # --- Author-level taxonomy from relations + plain-text columns ---
+    TAXONOMY_RELATION_TYPES = {
+        "belongs_to_genre": "genres",
+        "belongs_to_movement": "literary_movements",
+        "theme": "themes",
+        "motif": "motifs",
+        "concept": "concepts",
+        "atmosphere": "atmospheres",
+    }
+    relation_taxonomy = {key: [] for key in TAXONOMY_RELATION_TYPES.values()}
+    author_slug_by_node = {}
+    linked_author_ids = {n.author_id for n in node_map.values() if n.author_id}
+    if linked_author_ids:
+        linked = await db.execute(
+            select(Author.id, Author.slug).where(Author.id.in_(list(linked_author_ids)))
+        )
+        linked_slugs = {row_id: slug for row_id, slug in linked.all()}
+        author_slug_by_node = {
+            nid: linked_slugs[n.author_id]
+            for nid, n in node_map.items()
+            if n.author_id and n.author_id in linked_slugs
+        }
+
+    for kr in krs:
+        meta_key = TAXONOMY_RELATION_TYPES.get(kr.relation_type)
+        node = node_map.get(kr.node_id)
+        if meta_key and node and node.name and node.name not in relation_taxonomy[meta_key]:
+            relation_taxonomy[meta_key].append(node.name)
+
     knowledge_relations = [KnowledgeRelationPublic(
         id=kr.id,
         node_name=node_map[kr.node_id].name if kr.node_id in node_map else None,
         node_type=node_map[kr.node_id].node_type if kr.node_id in node_map else None,
         relation_type=kr.relation_type, source=kr.source,
         status=kr.status, confidence=kr.confidence,
+        author_slug=author_slug_by_node.get(kr.node_id),
     ) for kr in krs]
 
     return GoldenAuthorResponse(
@@ -282,10 +324,12 @@ async def get_author(
         sources=source_list,
         knowledge_relations=knowledge_relations,
         metadata=GoldenAuthorMetadata(
-            genres=genres,
-            themes=themes,
-            motifs=motifs,
-            literary_movements=author.literary_movements or [],
+            genres=_merge_lists(relation_taxonomy["genres"], author.genres, genres),
+            themes=_merge_lists(relation_taxonomy["themes"], author.themes, themes),
+            motifs=_merge_lists(relation_taxonomy["motifs"], author.motifs, motifs),
+            concepts=_merge_lists(relation_taxonomy["concepts"], author.concepts),
+            atmospheres=_merge_lists(relation_taxonomy["atmospheres"], author.atmospheres),
+            literary_movements=_merge_lists(relation_taxonomy["literary_movements"], author.literary_movements),
             languages=author.languages or [],
         ),
     )

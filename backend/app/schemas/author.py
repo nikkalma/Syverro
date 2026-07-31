@@ -79,6 +79,12 @@ class AuthorBase(BaseModel):
     genres: Optional[List[str]] = None
     writing_languages: Optional[List[str]] = None
 
+    # Taxonomy Extended
+    themes: Optional[List[str]] = None
+    motifs: Optional[List[str]] = None
+    concepts: Optional[List[str]] = None
+    atmospheres: Optional[List[str]] = None
+
     # About
     hero_quote: Optional[str] = None
     about_summary: Optional[str] = None
@@ -151,6 +157,12 @@ class AuthorUpdate(BaseModel):
     genres: Optional[List[str]] = None
     writing_languages: Optional[List[str]] = None
 
+    # Taxonomy Extended
+    themes: Optional[List[str]] = None
+    motifs: Optional[List[str]] = None
+    concepts: Optional[List[str]] = None
+    atmospheres: Optional[List[str]] = None
+
     hero_quote: Optional[str] = None
     about_summary: Optional[str] = None
     ethnic_origin: Optional[str] = None
@@ -205,6 +217,8 @@ class AuthorMetadata(BaseModel):
     genres: List[str] = []
     themes: List[str] = []
     motifs: List[str] = []
+    concepts: List[str] = []
+    atmospheres: List[str] = []
 
 
 class AuthorListBrief(BaseModel):
@@ -330,6 +344,7 @@ class KnowledgeRelationPublic(BaseModel):
     source: Optional[str] = None
     status: str = "proposed"
     confidence: float = 0.0
+    author_slug: Optional[str] = None
 
     class Config:
         from_attributes = True
@@ -339,6 +354,8 @@ class GoldenAuthorMetadata(BaseModel):
     genres: List[str] = []
     themes: List[str] = []
     motifs: List[str] = []
+    concepts: List[str] = []
+    atmospheres: List[str] = []
     literary_movements: List[str] = []
     languages: List[str] = []
 

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, Link } from 'react-router-dom';
 import { apiClient } from '../../shared/api/client';
 import { formatAuthorName } from '../../shared/utils/formatAuthorName';
 import { bookPath, formatDate } from '../../shared/utils/routes';
@@ -69,12 +69,15 @@ interface KnowledgeRelation {
   relation_type: string;
   source: string | null;
   status: string;
+  author_slug?: string | null;
 }
 
 interface GoldenMetadata {
   genres: string[];
   themes: string[];
   motifs: string[];
+  concepts: string[];
+  atmospheres: string[];
   literary_movements: string[];
   languages: string[];
 }
@@ -303,6 +306,8 @@ export default function AuthorPage() {
             genres: res.data.metadata?.genres ?? [],
             themes: res.data.metadata?.themes ?? [],
             motifs: res.data.metadata?.motifs ?? [],
+            concepts: res.data.metadata?.concepts ?? [],
+            atmospheres: res.data.metadata?.atmospheres ?? [],
             literary_movements: res.data.metadata?.literary_movements ?? [],
             languages: res.data.metadata?.languages ?? [],
           },
@@ -781,19 +786,31 @@ const literaryMovementMap: Record<string, string> = {
               <div style={{
                 display: 'flex', flexWrap: 'wrap', gap: '8px',
               }}>
-                {author.knowledge_relations.map((rel) => (
-                  <div key={rel.id} style={{
-                    padding: '8px 14px', borderRadius: '20px',
-                    background: 'var(--surface)', border: '1px solid var(--border)',
-                    fontSize: '12px', color: 'var(--text-primary)',
-                  }}>
-                    <span style={{ color: 'var(--text-muted)', fontSize: '11px' }}>
-                      {localRelationLabels[rel.relation_type] || rel.relation_type}
-                    </span>
-                    {' '}
-                    <span style={{ fontWeight: 500 }}>{rel.node_name}</span>
-                  </div>
-                ))}
+                {author.knowledge_relations.map((rel) => {
+                  const isLinkedAuthor = rel.author_slug && rel.node_type === 'person';
+                  const chip = (
+                    <div key={rel.id} style={{
+                      padding: '8px 14px', borderRadius: '20px',
+                      background: 'var(--surface)', border: '1px solid var(--border)',
+                      fontSize: '12px', color: 'var(--text-primary)',
+                    }}>
+                      <span style={{ color: 'var(--text-muted)', fontSize: '11px' }}>
+                        {localRelationLabels[rel.relation_type] || rel.relation_type}
+                      </span>
+                      {' '}
+                      <span style={{ fontWeight: 500 }}>{rel.node_name}</span>
+                    </div>
+                  );
+                  return isLinkedAuthor ? (
+                    <Link
+                      key={rel.id}
+                      to={`/author/${rel.author_slug}`}
+                      style={{ textDecoration: 'none', color: 'inherit' }}
+                    >
+                      {chip}
+                    </Link>
+                  ) : chip;
+                })}
               </div>
             </div>
           </div>

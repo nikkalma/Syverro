@@ -938,6 +938,8 @@ export const sr: LocaleData = {
           relations: 'Relations',
           relationsDesc: 'Connections to other authors, works, schools',
           manage: 'Manage →',
+          loading: 'Loading...',
+          adding: 'Adding...',
         },
         media: {
           portrait: 'Portrait',

@@ -1,4 +1,4 @@
-"""Seed Charlotte Brontë data: places, timeline events, connections, publications."""
+"""Seed Charlotte Brontë data: places, timeline events, connections, taxonomy, publications."""
 import asyncio
 import uuid
 from datetime import date
@@ -11,6 +11,7 @@ from app.models.knowledge_node import KnowledgeNode
 from app.models.author_knowledge_relation import AuthorKnowledgeRelation
 from app.models.source import Source
 from app.models.author_quote import AuthorQuote
+from app.services.knowledge_graph import _normalize_slug
 from sqlalchemy import select, text
 
 CHARLOTTE_SLUG = "charlotte-bronte"
@@ -22,10 +23,10 @@ PLACES = [
 ]
 
 CONNECTIONS = [
-    {"name": "Emily Brontë", "name_ru": "Эмили Бронте", "node_type": "person", "relation": "relative_of"},
-    {"name": "Anne Brontë", "name_ru": "Энн Бронте", "node_type": "person", "relation": "relative_of"},
-    {"name": "Patrick Brontë", "name_ru": "Патрик Бронте", "node_type": "person", "relation": "relative_of"},
-    {"name": "Elizabeth Gaskell", "name_ru": "Элизабет Гаскелл", "node_type": "person", "relation": "friend_of"},
+    {"name": "Emily Brontë", "name_ru": "Эмили Бронте", "node_type": "person", "relation": "relative_of", "author_slug": "emily-bronte"},
+    {"name": "Anne Brontë", "name_ru": "Энн Бронте", "node_type": "person", "relation": "relative_of", "author_slug": "anne-bronte"},
+    {"name": "Patrick Brontë", "name_ru": "Патрик Бронте", "node_type": "person", "relation": "relative_of", "author_slug": "patrick-bronte"},
+    {"name": "Elizabeth Gaskell", "name_ru": "Элизабет Гаскелл", "node_type": "person", "relation": "friend_of", "author_slug": "elizabeth-gaskell"},
     {"name": "Robert Southey", "name_ru": "Роберт Саути", "node_type": "person", "relation": "influenced_by"},
     {"name": "Hartley Coleridge", "name_ru": "Хартли Кольридж", "node_type": "person", "relation": "influenced_by"},
     {"name": "William Makepeace Thackeray", "name_ru": "Уильям Мейкпис Теккерей", "node_type": "person", "relation": "contemporary_of"},
@@ -35,6 +36,40 @@ CONNECTIONS = [
     {"name": "Shirley", "name_ru": "Шерли", "node_type": "work", "relation": "work"},
     {"name": "The Professor", "name_ru": "Учитель", "node_type": "work", "relation": "work"},
 ]
+
+TAXONOMY = {
+    "genres": [
+        "роман", "готический роман", "социальный роман", "психологический роман",
+    ],
+    "themes": [
+        "женская независимость", "социальное неравенство", "образование", "поиск идентичности",
+    ],
+    "motifs": [
+        "сиротство", "одиночество", "брак", "самопознание",
+    ],
+    "concepts": [
+        "викторианское общество", "личная свобода", "положение женщины",
+    ],
+    "atmospheres": [
+        "готическая", "меланхоличная", "интроспективная",
+    ],
+}
+
+TAXONOMY_NODE_TYPE = {
+    "genres": "genre",
+    "themes": "theme",
+    "motifs": "motif",
+    "concepts": "concept",
+    "atmospheres": "atmosphere",
+}
+
+TAXONOMY_RELATION_TYPE = {
+    "genres": "belongs_to_genre",
+    "themes": "theme",
+    "motifs": "motif",
+    "concepts": "concept",
+    "atmospheres": "atmosphere",
+}
 
 TIMELINE_EVENTS = [
     {"event_type": "education", "date_value": "1824", "date_precision": "year",
@@ -135,7 +170,7 @@ async def get_or_create_source(session, title: str, url: str = None) -> Source:
 
 
 async def get_or_create_knowledge_node(session, name: str, name_ru: str, node_type: str) -> KnowledgeNode:
-    slug = name.lower().replace(" ", "-").replace("'", "")
+    slug = _normalize_slug(name)
     result = await session.execute(
         select(KnowledgeNode).where(KnowledgeNode.slug == slug)
     )
@@ -217,6 +252,47 @@ async def main():
                 session, cdata["name"], cdata["name_ru"], cdata["node_type"]
             )
             await ensure_relation(session, author.id, node.id, cdata["relation"])
+            author_slug = cdata.get("author_slug")
+            if author_slug:
+                linked = await session.execute(
+                    select(Author).where(Author.slug == author_slug)
+                )
+                linked_author = linked.scalar_one_or_none()
+                if linked_author and node.author_id != linked_author.id:
+                    node.author_id = linked_author.id
+                    print(f"  Linked node {node.name} → author {linked_author.slug}")
+
+        # === 2.1. Taxonomy (genres/themes/motifs/concepts/atmospheres) ===
+        print("\n--- Taxonomy ---")
+        for field, items in TAXONOMY.items():
+            node_type = TAXONOMY_NODE_TYPE[field]
+            relation_type = TAXONOMY_RELATION_TYPE[field]
+
+            if field == "genres":
+                stale = await session.execute(
+                    select(AuthorKnowledgeRelation).where(
+                        AuthorKnowledgeRelation.author_id == author.id,
+                        AuthorKnowledgeRelation.relation_type == relation_type,
+                    )
+                )
+                for rel in stale.scalars().all():
+                    await session.delete(rel)
+                    print(f"  Removed stale genre relation: {rel.node_id}")
+
+            linked_node_ids = set()
+            for item in items:
+                node = await get_or_create_knowledge_node(session, item, item, node_type)
+                linked_node_ids.add(node.id)
+                await ensure_relation(session, author.id, node.id, relation_type)
+
+            print(f"  {field}: {len(linked_node_ids)} relations")
+
+        author.genres = list(TAXONOMY["genres"])
+        author.themes = list(TAXONOMY["themes"])
+        author.motifs = list(TAXONOMY["motifs"])
+        author.concepts = list(TAXONOMY["concepts"])
+        author.atmospheres = list(TAXONOMY["atmospheres"])
+        print("  Updated author taxonomy columns (genres/themes/motifs/concepts/atmospheres)")
 
         # === 3. Add timeline events ===
         print("\n--- Timeline Events ---")
@@ -289,6 +365,17 @@ async def main():
             select(AuthorKnowledgeRelation).where(AuthorKnowledgeRelation.author_id == author.id)
         )
         print(f"  Knowledge relations: {len(rel_count.scalars().all())}")
+
+        tax_counts = {}
+        for field, relation_type in TAXONOMY_RELATION_TYPE.items():
+            n = await session.execute(
+                select(AuthorKnowledgeRelation).where(
+                    AuthorKnowledgeRelation.author_id == author.id,
+                    AuthorKnowledgeRelation.relation_type == relation_type,
+                )
+            )
+            tax_counts[field] = len(n.scalars().all())
+        print(f"  Taxonomy relations: {tax_counts}")
 
         pub_count = await session.execute(
             select(AuthorPublication).where(AuthorPublication.author_id == author.id)

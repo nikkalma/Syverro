@@ -44,6 +44,26 @@ GRAPH_FIELD_MAP: Dict[str, Dict[str, Any]] = {
         "relation_type": "writes_in",
         "confidence": 0.95,
     },
+    "themes": {
+        "node_type": "theme",
+        "relation_type": "theme",
+        "confidence": 0.8,
+    },
+    "motifs": {
+        "node_type": "motif",
+        "relation_type": "motif",
+        "confidence": 0.8,
+    },
+    "concepts": {
+        "node_type": "concept",
+        "relation_type": "concept",
+        "confidence": 0.8,
+    },
+    "atmospheres": {
+        "node_type": "atmosphere",
+        "relation_type": "atmosphere",
+        "confidence": 0.75,
+    },
     "birth_place": {
         "node_type": "place",
         "relation_type": "born_in",

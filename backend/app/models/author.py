@@ -59,6 +59,12 @@ class Author(Base):
     genres = Column(ARRAY(String), nullable=True, server_default="{}")
     writing_languages = Column(ARRAY(String), nullable=True, server_default="{}")
 
+    # === TAXONOMY EXTENDED ===
+    themes = Column(ARRAY(String), nullable=True, server_default="{}")
+    motifs = Column(ARRAY(String), nullable=True, server_default="{}")
+    concepts = Column(ARRAY(String), nullable=True, server_default="{}")
+    atmospheres = Column(ARRAY(String), nullable=True, server_default="{}")
+
     # === ABOUT ===
     hero_quote = Column(String, nullable=True)
     about_summary = Column(String, nullable=True)
@@ -88,6 +94,10 @@ class Author(Base):
         "Book",
         secondary="book_authors",
         back_populates="authors"
+    )
+    knowledge_nodes = relationship(
+        "KnowledgeNode",
+        back_populates="author"
     )
 
     awards = relationship("AuthorAward", back_populates="author", cascade="all, delete-orphan")

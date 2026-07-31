@@ -14,12 +14,14 @@ class KnowledgeNode(Base):
     slug = Column(String, nullable=False)
     node_type = Column(String, nullable=False, index=True)
     parent_id = Column(UUID(as_uuid=True), ForeignKey("knowledge_nodes.id", ondelete="SET NULL"), nullable=True, index=True)
+    author_id = Column(UUID(as_uuid=True), ForeignKey("authors.id", ondelete="SET NULL"), nullable=True, index=True)
     meta = Column("metadata", JSONB, server_default="{}", nullable=False)
     created_at = Column(DateTime, server_default=func.now(), nullable=False)
     updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now(), nullable=False)
 
     parent = relationship("KnowledgeNode", remote_side="KnowledgeNode.id", back_populates="children")
     children = relationship("KnowledgeNode", back_populates="parent")
+    author = relationship("Author", back_populates="knowledge_nodes")
 
     __table_args__ = (
         UniqueConstraint("slug", name="uq_knowledge_nodes_slug"),

@@ -417,6 +417,8 @@ export interface LocaleData {
           relations: string;
           relationsDesc: string;
           manage: string;
+          loading: string;
+          adding: string;
         };
         media: {
           portrait: string;

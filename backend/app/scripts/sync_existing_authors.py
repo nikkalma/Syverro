@@ -53,14 +53,15 @@ async def run_sync(dry_run: bool = False) -> None:
                 stats["updated"] += 1
                 continue
 
+            author_label = author.name
             try:
                 await sync_author_graph_fields(db, author.id, update_data)
                 await db.commit()
                 stats["updated"] += 1
-                logger.info("Synced author %s (%s)", author.id, author.name)
+                logger.info("Synced author %s (%s)", author.id, author_label)
             except Exception as e:
                 await db.rollback()
-                logger.error("Failed to sync author %s (%s): %s", author.id, author.name, e)
+                logger.error("Failed to sync author %s (%s): %s", author.id, author_label, e)
                 stats["skipped"] += 1
 
         print()

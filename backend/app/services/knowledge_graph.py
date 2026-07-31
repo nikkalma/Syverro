@@ -71,10 +71,7 @@ async def ensure_knowledge_node(
     slug = _normalize_slug(normalized_name)
 
     result = await db.execute(
-        select(KnowledgeNode).where(
-            KnowledgeNode.slug == slug,
-            KnowledgeNode.node_type == node_type,
-        )
+        select(KnowledgeNode).where(KnowledgeNode.slug == slug)
     )
     existing = result.scalar_one_or_none()
     if existing:

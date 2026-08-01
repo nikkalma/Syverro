@@ -46,6 +46,7 @@ export interface LocaleData {
       authors: string;
       genres: string;
       taxonomy: string;
+      entities: string;
       moderation: string;
       metadata: string;
       logs: string;
@@ -92,6 +93,7 @@ export interface LocaleData {
       books: string;
       authors: string;
       genres: string;
+      entities: string;
       activeUsers: string;
       newUsers24h: string;
       recentRegistrations: string;
@@ -107,6 +109,7 @@ export interface LocaleData {
         authors: { description: string };
         genres: { description: string };
         taxonomy: { description: string };
+        entities: { description: string };
         moderation: { description: string };
         metadata: { description: string };
         logs: { description: string };
@@ -612,6 +615,40 @@ export interface LocaleData {
       saved: string;
       errorLoad: string;
       errorSave: string;
+    };
+    entities: {
+      title: string;
+      subtitle: string;
+      type: string;
+      name: string;
+      slug: string;
+      description: string;
+      status: string;
+      statusDraft: string;
+      statusPublished: string;
+      sapphire: string;
+      explorer: string;
+      create: string;
+      edit: string;
+      delete: string;
+      cancel: string;
+      save: string;
+      empty: string;
+      searchPlaceholder: string;
+      confirmDelete: string;
+      entityTypes: {
+        genre: string;
+        literary_direction: string;
+        place: string;
+        timeline_event: string;
+      };
+      filters: {
+        all: string;
+        genre: string;
+        movement: string;
+        place: string;
+        timeline: string;
+      };
     };
   };
 

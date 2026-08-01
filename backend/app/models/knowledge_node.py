@@ -1,4 +1,4 @@
-from sqlalchemy import Column, String, DateTime, ForeignKey, UniqueConstraint
+from sqlalchemy import Column, String, Text, Boolean, DateTime, ForeignKey, UniqueConstraint
 from sqlalchemy.dialects.postgresql import UUID, JSONB
 from sqlalchemy.sql import func
 from sqlalchemy.orm import relationship
@@ -17,6 +17,10 @@ class KnowledgeNode(Base):
     author_id = Column(UUID(as_uuid=True), ForeignKey("authors.id", ondelete="SET NULL"), nullable=True, index=True)
     place_id = Column(UUID(as_uuid=True), ForeignKey("places.id", ondelete="SET NULL"), nullable=True, index=True)
     meta = Column("metadata", JSONB, server_default="{}", nullable=False)
+    description = Column(Text, nullable=True)
+    status = Column(String, server_default="draft", nullable=False)
+    is_sapphire = Column(Boolean, server_default="false", nullable=False)
+    explorer_visible = Column(Boolean, server_default="false", nullable=False)
     created_at = Column(DateTime, server_default=func.now(), nullable=False)
     updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now(), nullable=False)
 

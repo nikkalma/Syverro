@@ -60,10 +60,10 @@ async def create_node(
     existing = await db.execute(
         select(KnowledgeNode).where(KnowledgeNode.slug == normalized_slug)
     )
-    if existing.scalar_one_or_none():
+    existing_node = existing.scalar_one_or_none()
+    if existing_node:
         # Return existing node instead of error
-        node = existing.scalar_one()
-        return node
+        return existing_node
 
     data.slug = normalized_slug
 
@@ -110,10 +110,48 @@ async def update_node(
         node.parent_id = data.parent_id
     if data.meta is not None:
         node.meta = data.meta
+    if data.description is not None:
+        node.description = data.description
+    if data.status is not None:
+        node.status = data.status
+    if data.is_sapphire is not None:
+        node.is_sapphire = data.is_sapphire
+    if data.explorer_visible is not None:
+        node.explorer_visible = data.explorer_visible
 
     await db.commit()
     await db.refresh(node)
     return node
+
+
+@router.get("/entities", response_model=List[KnowledgeNodeResponse])
+async def list_entities(
+    entity_type: str = None,
+    search: str = None,
+    status_filter: str = None,
+    is_sapphire: bool = None,
+    explorer_visible: bool = None,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    await check_moderator(current_user)
+
+    query = select(KnowledgeNode)
+    if entity_type:
+        query = query.where(KnowledgeNode.node_type == entity_type)
+    if status_filter:
+        query = query.where(KnowledgeNode.status == status_filter)
+    if is_sapphire is not None:
+        query = query.where(KnowledgeNode.is_sapphire == is_sapphire)
+    if explorer_visible is not None:
+        query = query.where(KnowledgeNode.explorer_visible == explorer_visible)
+    if search:
+        like = f"%{search.lower()}%"
+        query = query.where(func.lower(KnowledgeNode.name).like(like))
+
+    query = query.order_by(KnowledgeNode.updated_at.desc()).limit(500)
+    result = await db.execute(query)
+    return list(result.scalars().all())
 
 
 @router.delete("/taxonomy/nodes/{node_id}", status_code=status.HTTP_204_NO_CONTENT)

@@ -41,6 +41,7 @@ import {
 } from "./pages/Studio/Authors/AuthorEditor";
 import StudioGenres from "./pages/Studio/Genres";
 import StudioTaxonomy from "./pages/Studio/Taxonomy";
+import StudioEntities from "./pages/Studio/Entities";
 import ActivityLog from "./pages/Studio/Logs";
 import StudioSettings from "./pages/Studio/Settings";
 import ModerationQueue from "./pages/Studio/Moderation/ModerationPage";
@@ -84,6 +85,7 @@ export default function App() {
           <Route path="books" element={<StudioBooks />} />
           <Route path="genres" element={<StudioGenres />} />
           <Route path="taxonomy" element={<StudioTaxonomy />} />
+          <Route path="entities" element={<StudioEntities />} />
           <Route path="moderation" element={<ModerationQueue />} />
           <Route path="metadata" element={<MetadataWorkspace />} />
           <Route path="logs" element={<ActivityLog />} />

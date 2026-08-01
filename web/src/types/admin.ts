@@ -980,6 +980,28 @@ export const TAXONOMY_NODE_COLORS: Record<TaxonomyNodeType, string> = {
   concept: '#4CAF50',
 };
 
+// ============================================================
+// СУЩНОСТИ (Entity architecture)
+// ============================================================
+
+export type EntityType = 'genre' | 'literary_direction' | 'place' | 'timeline_event';
+
+export const ENTITY_TYPES: EntityType[] = ['genre', 'literary_direction', 'place', 'timeline_event'];
+
+export interface KnowledgeEntity {
+  id: string;
+  name: string;
+  slug: string;
+  node_type: string;
+  description: string | null;
+  parent_id: string | null;
+  status: 'draft' | 'published';
+  is_sapphire: boolean;
+  explorer_visible: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
 export const CREATION_TYPE_LABELS: Record<string, string> = {
   individual_author: 'Индивидуальный автор',
   multiple_authors: 'Несколько авторов',

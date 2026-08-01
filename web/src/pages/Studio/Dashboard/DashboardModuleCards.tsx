@@ -14,6 +14,7 @@ const modules = (t: LocaleData): ModuleCard[] => [
   { path: '/studio/authors', icon: '✍️', label: t.admin.nav.authors, description: t.admin.dashboard.modules.authors.description },
   { path: '/studio/genres', icon: '🏷️', label: t.admin.nav.genres, description: t.admin.dashboard.modules.genres.description },
   { path: '/studio/taxonomy', icon: '🏛️', label: t.admin.nav.taxonomy, description: t.admin.dashboard.modules.taxonomy.description },
+  { path: '/studio/entities', icon: '🧭', label: t.admin.nav.entities, description: t.admin.dashboard.modules.entities.description },
   { path: '/studio/moderation', icon: '🛡️', label: t.admin.nav.moderation, description: t.admin.dashboard.modules.moderation.description },
   { path: '/studio/metadata', icon: '📝', label: t.admin.nav.metadata, description: t.admin.dashboard.modules.metadata.description },
   { path: '/studio/logs', icon: '📋', label: t.admin.nav.logs, description: t.admin.dashboard.modules.logs.description },

@@ -10,10 +10,14 @@ from uuid import UUID
 
 class KnowledgeNodeBase(BaseModel):
     name: str
-    slug: str
+    slug: Optional[str] = None
     node_type: str
     parent_id: Optional[UUID] = None
     meta: Optional[dict] = {}
+    description: Optional[str] = None
+    status: Optional[str] = "draft"
+    is_sapphire: Optional[bool] = False
+    explorer_visible: Optional[bool] = False
 
 
 class KnowledgeNodeCreate(KnowledgeNodeBase):
@@ -25,6 +29,10 @@ class KnowledgeNodeUpdate(BaseModel):
     slug: Optional[str] = None
     parent_id: Optional[UUID] = None
     meta: Optional[dict] = None
+    description: Optional[str] = None
+    status: Optional[str] = None
+    is_sapphire: Optional[bool] = None
+    explorer_visible: Optional[bool] = None
 
 
 class KnowledgeNodeResponse(KnowledgeNodeBase):

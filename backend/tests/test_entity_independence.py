@@ -126,6 +126,8 @@ async def test_entity_edited_independently(session: AsyncSession):
     nodes = [_standalone_node(t) for t in ENTITY_TYPES]
     session.add_all(nodes)
     await session.commit()
+    for node in nodes:
+        await session.refresh(node)
 
     genre = next(n for n in nodes if n.node_type == "genre")
     genre.name = "Gothic"
@@ -140,9 +142,9 @@ async def test_entity_edited_independently(session: AsyncSession):
 
     # The other types were not touched.
     for node in nodes:
+        await session.refresh(node)
         if node.id == genre.id:
             continue
-        await session.refresh(node)
         assert node.name == f"Standalone {node.node_type}"
 
 
@@ -157,6 +159,8 @@ async def test_entity_deleted_independently(session: AsyncSession):
     nodes = [_standalone_node(t) for t in ENTITY_TYPES]
     session.add_all(nodes)
     await session.commit()
+    for node in nodes:
+        await session.refresh(node)
 
     target = next(n for n in nodes if n.node_type == "timeline_event")
     await session.delete(target)

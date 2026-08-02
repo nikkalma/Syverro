@@ -484,6 +484,24 @@ export const uk: LocaleData = {
   },
 
   // ===== AUTHOR PAGE =====
+  bookPage: {
+    loading: 'Завантаження книги…', notFound: 'Книгу не знайдено', loadError: 'Не вдалося завантажити книгу',
+    retry: 'Повторити', backToLibrary: 'Назад до бібліотеки', heroEyebrow: 'Книга у просторі Syverro',
+    originalTitle: 'Оригінальна назва', addToLibrary: 'Додати до бібліотеки', inLibrary: 'У вашій бібліотеці',
+    aboutTitle: 'Про книгу', noDescription: 'Опис ще не додано.',
+    howToldTitle: 'Як розказана ця книга', howToldEmpty: 'Форму оповіді ще не описано. Тут з’явиться лише перевірений редакційний матеріал.',
+    knowledgeTitle: 'Знання навколо книги', knowledgeIntro: 'Теми й образи, через які книга поєднується з літературою та культурою.',
+    knowledgeEmpty: 'Опублікованих зв’язків поки немає.', genres: 'Жанри', themes: 'Теми', motifs: 'Мотиви', concepts: 'Концепти', atmospheres: 'Атмосфери',
+    mapTitle: 'Мапа навколо книги', mapDescription: 'Обмежений погляд на найближче смислове оточення книги.',
+    mapEmpty: 'Для попередньої мапи поки недостатньо зв’язків.', openSapphire: 'Відкрити Sapphire Space', comingSoon: 'Незабаром',
+    personalTitle: 'Моя бібліотека', personalIntro: 'Ваш особистий простір читання відокремлено від публічного портрета книги.',
+    personalEmpty: 'Додайте книгу, щоб зберігати статус і нотатки.', status: 'Статус', started: 'Розпочато', completed: 'Завершено', reads: 'Прочитань',
+    notes: 'Мої нотатки', notesPlaceholder: 'Запишіть думку про книгу…', notesHint: 'Нотатка зберігається у вашому просторі читання.',
+    metadata: { year: 'Рік', country: 'Країна', pages: 'Сторінок', language: 'Мова', publicationType: 'Тип публікації', series: 'Серія', seriesPosition: 'Книга в серії' },
+    statuses: { reading: 'Читаю', rereading: 'Перечитую', completed: 'Прочитано', planned: 'У планах', postponed: 'Відкладено', abandoned: 'Залишено' },
+    modal: { title: 'Додати до бібліотеки', subtitle: 'Оберіть початковий статус для «{title}»', status: 'Статус читання', add: 'Додати', cancel: 'Скасувати' },
+  },
+
   author: {
     aboutAuthor: 'Про автора',
     timeline: 'Хронологія',

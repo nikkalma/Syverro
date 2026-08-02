@@ -484,6 +484,24 @@ export const sr: LocaleData = {
   },
 
   // ===== AUTHOR PAGE =====
+  bookPage: {
+    loading: 'Učitavanje knjige…', notFound: 'Knjiga nije pronađena', loadError: 'Knjiga nije mogla da se učita',
+    retry: 'Pokušaj ponovo', backToLibrary: 'Nazad u biblioteku', heroEyebrow: 'Knjiga u prostoru Syverro',
+    originalTitle: 'Izvorni naslov', addToLibrary: 'Dodaj u biblioteku', inLibrary: 'U vašoj biblioteci',
+    aboutTitle: 'O knjizi', noDescription: 'Opis još nije dodat.',
+    howToldTitle: 'Kako je knjiga ispričana', howToldEmpty: 'Forma pripovedanja još nije opisana. Ovde će se pojaviti samo provereni urednički materijal.',
+    knowledgeTitle: 'Znanje oko knjige', knowledgeIntro: 'Teme i slike kroz koje se knjiga povezuje sa književnošću i kulturom.',
+    knowledgeEmpty: 'Još nema objavljenih veza.', genres: 'Žanrovi', themes: 'Teme', motifs: 'Motivi', concepts: 'Koncepti', atmospheres: 'Atmosfere',
+    mapTitle: 'Mapa oko knjige', mapDescription: 'Ograničen pogled na najbliže semantičko okruženje knjige.',
+    mapEmpty: 'Još nema dovoljno objavljenih veza za pregled.', openSapphire: 'Otvori Sapphire Space', comingSoon: 'Uskoro',
+    personalTitle: 'Moja biblioteka', personalIntro: 'Vaš privatni prostor čitanja ostaje odvojen od javnog portreta knjige.',
+    personalEmpty: 'Dodajte knjigu da biste sačuvali status i beleške.', status: 'Status', started: 'Početo', completed: 'Završeno', reads: 'Čitanja',
+    notes: 'Moje beleške', notesPlaceholder: 'Zapišite misao o knjizi…', notesHint: 'Beleška se čuva u vašem prostoru čitanja.',
+    metadata: { year: 'Godina', country: 'Zemlja', pages: 'Stranice', language: 'Jezik', publicationType: 'Vrsta publikacije', series: 'Serijal', seriesPosition: 'Knjiga u serijalu' },
+    statuses: { reading: 'Čitam', rereading: 'Čitam ponovo', completed: 'Pročitano', planned: 'U planu', postponed: 'Odloženo', abandoned: 'Napušteno' },
+    modal: { title: 'Dodaj u biblioteku', subtitle: 'Izaberite početni status za „{title}“', status: 'Status čitanja', add: 'Dodaj', cancel: 'Otkaži' },
+  },
+
   author: {
     aboutAuthor: 'O autoru',
     timeline: 'Hronologija',

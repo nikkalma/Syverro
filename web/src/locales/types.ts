@@ -37,6 +37,70 @@ export interface LocaleData {
     title: string;
   };
 
+  // ===== PUBLIC BOOK PAGE =====
+  bookPage: {
+    loading: string;
+    notFound: string;
+    loadError: string;
+    retry: string;
+    backToLibrary: string;
+    heroEyebrow: string;
+    originalTitle: string;
+    addToLibrary: string;
+    inLibrary: string;
+    aboutTitle: string;
+    noDescription: string;
+    howToldTitle: string;
+    howToldEmpty: string;
+    knowledgeTitle: string;
+    knowledgeIntro: string;
+    knowledgeEmpty: string;
+    genres: string;
+    themes: string;
+    motifs: string;
+    concepts: string;
+    atmospheres: string;
+    mapTitle: string;
+    mapDescription: string;
+    mapEmpty: string;
+    openSapphire: string;
+    comingSoon: string;
+    personalTitle: string;
+    personalIntro: string;
+    personalEmpty: string;
+    status: string;
+    started: string;
+    completed: string;
+    reads: string;
+    notes: string;
+    notesPlaceholder: string;
+    notesHint: string;
+    metadata: {
+      year: string;
+      country: string;
+      pages: string;
+      language: string;
+      publicationType: string;
+      series: string;
+      seriesPosition: string;
+    };
+    statuses: {
+      reading: string;
+      rereading: string;
+      completed: string;
+      planned: string;
+      postponed: string;
+      abandoned: string;
+    };
+    modal: {
+      title: string;
+      subtitle: string;
+      status: string;
+      add: string;
+      cancel: string;
+    };
+  };
+
   // ===== ADMIN PANEL =====
   admin: {
     editorial: {

@@ -484,6 +484,24 @@ export const en: LocaleData = {
   },
 
   // ===== AUTHOR PAGE =====
+  bookPage: {
+    loading: 'Loading book…', notFound: 'Book not found', loadError: 'Could not load this book',
+    retry: 'Try again', backToLibrary: 'Back to the library', heroEyebrow: 'A book in Syverro',
+    originalTitle: 'Original title', addToLibrary: 'Add to library', inLibrary: 'In your library',
+    aboutTitle: 'About the book', noDescription: 'No description has been added yet.',
+    howToldTitle: 'How the book is told', howToldEmpty: 'Its narrative form has not been described yet. Only verified editorial material will appear here.',
+    knowledgeTitle: 'Knowledge around the book', knowledgeIntro: 'Themes and images through which the book connects to literature and culture.',
+    knowledgeEmpty: 'No published connections are available yet.', genres: 'Genres', themes: 'Themes', motifs: 'Motifs', concepts: 'Concepts', atmospheres: 'Atmospheres',
+    mapTitle: 'Map around the book', mapDescription: 'A limited view of the book’s nearest semantic surroundings.',
+    mapEmpty: 'There are not enough published connections for a preview yet.', openSapphire: 'Open Sapphire Space', comingSoon: 'Coming soon',
+    personalTitle: 'My library', personalIntro: 'Your private reading space remains separate from the public portrait of the book.',
+    personalEmpty: 'Add the book to keep a reading status and notes.', status: 'Status', started: 'Started', completed: 'Completed', reads: 'Reads',
+    notes: 'My notes', notesPlaceholder: 'Write down a thought about the book…', notesHint: 'The note is saved in your reading space.',
+    metadata: { year: 'Year', country: 'Country', pages: 'Pages', language: 'Language', publicationType: 'Publication type', series: 'Series', seriesPosition: 'Book in series' },
+    statuses: { reading: 'Reading', rereading: 'Rereading', completed: 'Read', planned: 'Planning', postponed: 'Postponed', abandoned: 'Abandoned' },
+    modal: { title: 'Add to library', subtitle: 'Choose an initial status for “{title}”', status: 'Reading status', add: 'Add', cancel: 'Cancel' },
+  },
+
   author: {
     aboutAuthor: 'About Author',
     timeline: 'Timeline',

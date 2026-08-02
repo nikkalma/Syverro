@@ -484,6 +484,24 @@ export const be: LocaleData = {
   },
 
   // ===== АЎТАР =====
+  bookPage: {
+    loading: 'Загрузка кнігі…', notFound: 'Кніга не знойдзена', loadError: 'Не ўдалося загрузіць кнігу',
+    retry: 'Паўтарыць', backToLibrary: 'Назад у бібліятэку', heroEyebrow: 'Кніга ў прасторы Syverro',
+    originalTitle: 'Арыгінальная назва', addToLibrary: 'Дадаць у бібліятэку', inLibrary: 'У вашай бібліятэцы',
+    aboutTitle: 'Пра кнігу', noDescription: 'Апісанне пакуль не дададзена.',
+    howToldTitle: 'Як расказана гэтая кніга', howToldEmpty: 'Форма аповеду яшчэ не апісана. Тут з’явіцца толькі правераны рэдакцыйны матэрыял.',
+    knowledgeTitle: 'Веды вакол кнігі', knowledgeIntro: 'Тэмы і вобразы, праз якія кніга злучаецца з літаратурай і культурай.',
+    knowledgeEmpty: 'Апублікаваных сувязяў пакуль няма.', genres: 'Жанры', themes: 'Тэмы', motifs: 'Матывы', concepts: 'Канцэпты', atmospheres: 'Атмасферы',
+    mapTitle: 'Карта вакол кнігі', mapDescription: 'Абмежаваны погляд на найбліжэйшае сэнсавае асяроддзе кнігі.',
+    mapEmpty: 'Для папярэдняй карты пакуль недастаткова сувязяў.', openSapphire: 'Адкрыць Sapphire Space', comingSoon: 'Хутка',
+    personalTitle: 'Мая бібліятэка', personalIntro: 'Ваша асабістая прастора чытання аддзелена ад публічнага партрэта кнігі.',
+    personalEmpty: 'Дадайце кнігу, каб захоўваць статус і нататкі.', status: 'Статус', started: 'Пачата', completed: 'Завершана', reads: 'Прачытанняў',
+    notes: 'Мае нататкі', notesPlaceholder: 'Запішыце думку пра кнігу…', notesHint: 'Нататка захоўваецца ў вашай прасторы чытання.',
+    metadata: { year: 'Год', country: 'Краіна', pages: 'Старонак', language: 'Мова', publicationType: 'Тып публікацыі', series: 'Серыя', seriesPosition: 'Кніга ў серыі' },
+    statuses: { reading: 'Чытаю', rereading: 'Перачытваю', completed: 'Прачытана', planned: 'У планах', postponed: 'Адкладзена', abandoned: 'Пакінута' },
+    modal: { title: 'Дадаць у бібліятэку', subtitle: 'Абярыце пачатковы статус для «{title}»', status: 'Статус чытання', add: 'Дадаць', cancel: 'Скасаваць' },
+  },
+
   author: {
     aboutAuthor: 'Пра аўтара',
     timeline: 'Храналогія',

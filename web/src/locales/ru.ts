@@ -484,6 +484,24 @@ export const ru: LocaleData = {
   },
 
   // ===== СТРАНИЦА АВТОРА =====
+  bookPage: {
+    loading: 'Загрузка книги…', notFound: 'Книга не найдена', loadError: 'Не удалось загрузить книгу',
+    retry: 'Повторить', backToLibrary: 'Назад в библиотеку', heroEyebrow: 'Книга в пространстве Syverro',
+    originalTitle: 'Оригинальное название', addToLibrary: 'Добавить в библиотеку', inLibrary: 'В вашей библиотеке',
+    aboutTitle: 'О книге', noDescription: 'Описание пока не добавлено.',
+    howToldTitle: 'Как рассказана эта книга', howToldEmpty: 'Способ повествования ещё не описан. Здесь появится только проверенный редакционный материал.',
+    knowledgeTitle: 'Знание вокруг книги', knowledgeIntro: 'Темы и образы, через которые книга соединяется с литературой и культурой.',
+    knowledgeEmpty: 'Связи этой книги ещё не опубликованы.', genres: 'Жанры', themes: 'Темы', motifs: 'Мотивы', concepts: 'Концепты', atmospheres: 'Атмосферы',
+    mapTitle: 'Карта вокруг книги', mapDescription: 'Ограниченный взгляд на ближайшее смысловое окружение книги.',
+    mapEmpty: 'Для предварительной карты пока недостаточно опубликованных связей.', openSapphire: 'Открыть Sapphire Space', comingSoon: 'Скоро',
+    personalTitle: 'Моя библиотека', personalIntro: 'Ваше личное пространство чтения отделено от публичного портрета книги.',
+    personalEmpty: 'Добавьте книгу, чтобы сохранить статус чтения и заметки.', status: 'Статус', started: 'Начато', completed: 'Завершено', reads: 'Прочтений',
+    notes: 'Мои заметки', notesPlaceholder: 'Запишите мысль о книге…', notesHint: 'Заметка сохраняется в вашем пространстве чтения.',
+    metadata: { year: 'Год', country: 'Страна', pages: 'Страниц', language: 'Язык', publicationType: 'Тип публикации', series: 'Серия', seriesPosition: 'Книга в серии' },
+    statuses: { reading: 'Читаю', rereading: 'Перечитываю', completed: 'Прочитано', planned: 'В планах', postponed: 'Отложено', abandoned: 'Оставлено' },
+    modal: { title: 'Добавить в библиотеку', subtitle: 'Выберите начальный статус для «{title}»', status: 'Статус чтения', add: 'Добавить', cancel: 'Отмена' },
+  },
+
   author: {
     aboutAuthor: 'Об авторе',
     timeline: 'Хронология',

@@ -484,6 +484,24 @@ export const kk: LocaleData = {
   },
 
   // ===== AUTHOR PAGE =====
+  bookPage: {
+    loading: 'Кітап жүктелуде…', notFound: 'Кітап табылмады', loadError: 'Кітапты жүктеу мүмкін болмады',
+    retry: 'Қайталау', backToLibrary: 'Кітапханаға оралу', heroEyebrow: 'Syverro кеңістігіндегі кітап',
+    originalTitle: 'Түпнұсқа атауы', addToLibrary: 'Кітапханаға қосу', inLibrary: 'Кітапханаңызда',
+    aboutTitle: 'Кітап туралы', noDescription: 'Сипаттама әлі қосылмаған.',
+    howToldTitle: 'Кітап қалай баяндалған', howToldEmpty: 'Баяндау формасы әлі сипатталмаған. Мұнда тек тексерілген редакциялық материал пайда болады.',
+    knowledgeTitle: 'Кітап айналасындағы білім', knowledgeIntro: 'Кітапты әдебиет пен мәдениетке байланыстыратын тақырыптар мен бейнелер.',
+    knowledgeEmpty: 'Жарияланған байланыстар әзірге жоқ.', genres: 'Жанрлар', themes: 'Тақырыптар', motifs: 'Мотивтер', concepts: 'Ұғымдар', atmospheres: 'Атмосфералар',
+    mapTitle: 'Кітап айналасындағы карта', mapDescription: 'Кітаптың ең жақын мағыналық ортасына шектеулі көзқарас.',
+    mapEmpty: 'Алдын ала карта үшін байланыстар жеткіліксіз.', openSapphire: 'Sapphire Space ашу', comingSoon: 'Жақында',
+    personalTitle: 'Менің кітапханам', personalIntro: 'Жеке оқу кеңістігіңіз кітаптың қоғамдық бейнесінен бөлек сақталады.',
+    personalEmpty: 'Оқу күйі мен жазбаларды сақтау үшін кітапты қосыңыз.', status: 'Күйі', started: 'Басталды', completed: 'Аяқталды', reads: 'Оқылым',
+    notes: 'Менің жазбаларым', notesPlaceholder: 'Кітап туралы ойыңызды жазыңыз…', notesHint: 'Жазба оқу кеңістігіңізде сақталады.',
+    metadata: { year: 'Жыл', country: 'Ел', pages: 'Бет', language: 'Тіл', publicationType: 'Жарияланым түрі', series: 'Серия', seriesPosition: 'Сериядағы кітап' },
+    statuses: { reading: 'Оқып жатырмын', rereading: 'Қайта оқып жатырмын', completed: 'Оқылды', planned: 'Жоспарда', postponed: 'Кейінге қалды', abandoned: 'Тоқтатылды' },
+    modal: { title: 'Кітапханаға қосу', subtitle: '«{title}» үшін бастапқы күйді таңдаңыз', status: 'Оқу күйі', add: 'Қосу', cancel: 'Болдырмау' },
+  },
+
   author: {
     aboutAuthor: 'Автор туралы',
     timeline: 'Өмірбаян',

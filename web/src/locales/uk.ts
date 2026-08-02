@@ -561,6 +561,24 @@ export const uk: LocaleData = {
 },
 
   admin: {
+    editorial: {
+      title: 'Редакційна картина',
+      subtitle: 'Структурований статус редакції: що заповнено, що потребує уваги та чого бракує для повного запису.',
+      empty: 'Поки немає жодного напрямку для оцінки.',
+      notTracked: 'Studio поки не веде облік за цією категорією — планується в наступних ітераціях.',
+      groups: {
+        identity: 'Ідентичність',
+        content: 'Контент',
+        research: 'Дослідження',
+        quality: 'Якість',
+      },
+      statuses: {
+        completed: 'Заповнено',
+        attention: 'Потребує уваги',
+        missing: 'Бракує',
+        unavailable: 'Не відстежується',
+      },
+    },
     nav: {
       dashboard: 'Dashboard',
       users: 'Users',

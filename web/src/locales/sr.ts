@@ -561,6 +561,24 @@ export const sr: LocaleData = {
 },
 
   admin: {
+    editorial: {
+      title: 'Redakcijska slika',
+      subtitle: 'Strukturisani status redakcije: sta je ispunjeno, sta trazi paznju i sta nedostaje.',
+      empty: 'Jos uvek nema oblasti za procenu.',
+      notTracked: 'Studio trenutno ne vodi evidenciju za ovu kategoriju.',
+      groups: {
+        identity: 'Identitet',
+        content: 'Sadrzaj',
+        research: 'Istrazivanje',
+        quality: 'Kvalitet',
+      },
+      statuses: {
+        completed: 'Ispunjeno',
+        attention: 'Trazi paznju',
+        missing: 'Nedostaje',
+        unavailable: 'Ne prati se',
+      },
+    },
     nav: {
       dashboard: 'Dashboard',
       users: 'Users',

@@ -39,6 +39,24 @@ export interface LocaleData {
 
   // ===== ADMIN PANEL =====
   admin: {
+    editorial: {
+      title: string;
+      subtitle: string;
+      empty: string;
+      notTracked: string;
+      groups: {
+        identity: string;
+        content: string;
+        research: string;
+        quality: string;
+      };
+      statuses: {
+        completed: string;
+        attention: string;
+        missing: string;
+        unavailable: string;
+      };
+    },
     nav: {
       dashboard: string;
       users: string;

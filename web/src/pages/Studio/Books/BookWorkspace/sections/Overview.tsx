@@ -6,6 +6,8 @@ import ActionBar from '../../../../../components/Studio/shared/ActionBar';
 import { getLocaleData, getBrowserLocale } from '../../../../../locales';
 import type { AdminGenre } from '../../../../../types/admin';
 import { apiClient } from '../../../../../shared/api/client';
+import EditorialIntelligence from '../../../../../components/Studio/editorialIntelligence/EditorialIntelligence';
+import { buildBookReport, type BookEditorialLabels } from '../editorialIntelligence';
 
 const inputStyle: React.CSSProperties = {
   width: '100%', padding: '8px 12px', fontSize: '14px',
@@ -132,8 +134,20 @@ export default function Overview() {
     }
   };
 
+  const editorialLabels: BookEditorialLabels = {
+    name: bLocale.name,
+    author: bLocale.author,
+    cover: bLocale.coverUrl,
+    genres: bLocale.genres,
+    description: bLocale.description,
+    pages: bLocale.pages,
+    status: bLocale.status,
+  };
+  const editorialReport = buildBookReport(book, editorialLabels);
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+      <EditorialIntelligence report={editorialReport} />
       <EditorSectionCard title={bLocale.name}>
         <DetailGrid columns={2}>
           <FormField label={bLocale.name} value={title} onChange={setTitle} />

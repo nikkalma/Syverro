@@ -6,6 +6,8 @@ import ActionBar from '../../../../components/Studio/shared/ActionBar';
 import { getLocaleData, getBrowserLocale } from '../../../../locales';
 import { ENTITY_TYPES } from '../../../../types/admin';
 import { entityTypeLabel } from '../entityType';
+import EditorialIntelligence from '../../../../components/Studio/editorialIntelligence/EditorialIntelligence';
+import { buildEntityReport } from '../editorialIntelligence';
 
 const inputStyle: React.CSSProperties = {
   width: '100%', padding: '8px 12px', fontSize: '14px',
@@ -154,6 +156,17 @@ export default function Overview() {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+      {entity && (
+        <EditorialIntelligence
+          report={buildEntityReport(entity, {
+            name: eLocale.name,
+            slug: eLocale.slug,
+            type: eLocale.type,
+            description: eLocale.description,
+            status: eLocale.status,
+          })}
+        />
+      )}
       <EditorSectionCard title={eLocale.name}>
         <DetailGrid columns={2}>
           <FormField label={eLocale.name} value={name} onChange={setName} />

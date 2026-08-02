@@ -7,6 +7,8 @@ import { getLocaleData, getBrowserLocale } from '../../../../../locales';
 import type { AdminAuthorUpdate } from '../../../../../types/admin';
 import { getAuthorDisplayName } from '../../../../../types/admin';
 import { slugify } from 'transliteration';
+import EditorialIntelligence from '../../../../../components/Studio/editorialIntelligence/EditorialIntelligence';
+import { buildAuthorReport, type AuthorEditorialLabels } from '../editorialIntelligence';
 
 const SLUG_PATTERN = /^[a-z0-9][a-z0-9-]*[a-z0-9]$|^[a-z0-9]$/;
 
@@ -181,8 +183,27 @@ export default function Overview() {
 
   const displayName = getAuthorDisplayName(author);
 
+  const ei = t.admin.authors.editor;
+  const editorialLabels: AuthorEditorialLabels = {
+    name: ei.overview.name,
+    nativeName: ei.overview.nativeName,
+    slug: ei.overview.slugAuto,
+    penNames: ei.identity.penNames,
+    biography: ei.biography.biography,
+    summary: ei.overview.aboutAuthor,
+    nationality: ei.identity.nationality,
+    birthDate: ei.identity.birthDate,
+    birthPlace: ei.identity.birthPlace,
+    deathPlace: ei.identity.deathPlace,
+    genres: ei.identity.genres,
+    occupations: ei.identity.occupations,
+    movements: ei.identity.literaryMovements,
+  };
+  const editorialReport = buildAuthorReport(author, editorialLabels);
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+      <EditorialIntelligence report={editorialReport} />
       <div style={{ display: 'flex', gap: '24px', alignItems: 'flex-start' }}>
         <div style={{
           width: '100px', height: '100px', borderRadius: '50%',

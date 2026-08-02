@@ -561,6 +561,24 @@ export const be: LocaleData = {
 },
 
   admin: {
+    editorial: {
+      title: 'Рэдакцыйная карціна',
+      subtitle: 'Структурны статус рэдакцыі: што запоўнена, што патрабуе ўвагі і чаго бракуе для поўнага запісу.',
+      empty: 'Пакуль няма ніводнага напрамку для ацэнкі.',
+      notTracked: 'Studio пакуль не вядзе ўлік па гэтай катэгорыі — плануецца ў наступных ітэрацыях.',
+      groups: {
+        identity: 'Ідэнтычнасць',
+        content: 'Кантэнт',
+        research: 'Даследаванні',
+        quality: 'Якасць',
+      },
+      statuses: {
+        completed: 'Запоўнена',
+        attention: 'Патрабуе ўвагі',
+        missing: 'Не хапае',
+        unavailable: 'Не адсочваецца',
+      },
+    },
     nav: {
       dashboard: 'Dashboard',
       users: 'Users',

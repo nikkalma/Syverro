@@ -561,6 +561,24 @@ export const kk: LocaleData = {
 },
 
   admin: {
+    editorial: {
+      title: 'Editorial intelligence',
+      subtitle: 'Structured editorial progress: what is filled in, what needs attention, and what is still missing.',
+      empty: 'No editorial areas are being assessed yet.',
+      notTracked: 'Not currently tracked in Studio — planned in upcoming iterations.',
+      groups: {
+        identity: 'Identity',
+        content: 'Content',
+        research: 'Research',
+        quality: 'Quality',
+      },
+      statuses: {
+        completed: 'Filled in',
+        attention: 'Needs attention',
+        missing: 'Missing',
+        unavailable: 'Not tracked',
+      },
+    },
     nav: {
       dashboard: 'Dashboard',
       users: 'Users',

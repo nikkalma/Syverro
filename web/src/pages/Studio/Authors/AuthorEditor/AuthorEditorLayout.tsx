@@ -1,9 +1,7 @@
-import { Activity } from 'lucide-react';
 import { getLocaleData, getBrowserLocale } from '../../../../locales';
 import { AuthorEditorProvider, useAuthorEditor, SECTION_PATHS } from './AuthorEditorContext';
 import { type AdminAuthor, getAuthorDisplayName } from '../../../../types/admin';
 import EntityWorkspaceLayout from '../../../../components/Studio/shared/EntityWorkspaceLayout';
-import EmptyWorkspace from '../../../../components/Studio/shared/EmptyWorkspace';
 import MetadataStatusControl from './MetadataStatusControl';
 
 function computeCompletion(author: AdminAuthor): number {
@@ -54,11 +52,6 @@ function EditorContent() {
       notFoundLabel={t.admin.authors.editAuthor}
       preview={<>
         <MetadataStatusControl />
-        <EmptyWorkspace
-          icon={<Activity size={20} />}
-          title={t.admin.authors.editor.activityTitle}
-          description={t.admin.authors.editor.activityDesc}
-        />
       </>}
     />
   );

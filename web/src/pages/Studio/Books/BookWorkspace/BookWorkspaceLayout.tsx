@@ -5,7 +5,7 @@ import EmptyWorkspace from '../../../../components/Studio/shared/EmptyWorkspace'
 import type { AdminBook } from '../../../../types/admin';
 import { BookWorkspaceProvider, useBookWorkspace } from './BookWorkspaceContext';
 
-const SECTION_PATHS = ['overview', 'identity', 'knowledge', 'connections', 'content', 'media', 'preview'] as const;
+const SECTION_PATHS = ['overview', 'identity', 'preview'] as const;
 
 function computeCompletion(book: AdminBook): number {
   const fields = [

@@ -4,8 +4,6 @@ import EditorSectionCard from '../../../../../components/Studio/shared/EditorSec
 import DetailGrid from '../../../../../components/Studio/shared/DetailGrid';
 import ActionBar from '../../../../../components/Studio/shared/ActionBar';
 import { getLocaleData, getBrowserLocale } from '../../../../../locales';
-import type { AdminGenre } from '../../../../../types/admin';
-import { apiClient } from '../../../../../shared/api/client';
 import EditorialIntelligence from '../../../../../components/Studio/editorialIntelligence/EditorialIntelligence';
 import { buildBookReport, type BookEditorialLabels } from '../editorialIntelligence';
 
@@ -46,7 +44,6 @@ export default function Overview() {
   const [countryOfOrigin, setCountryOfOrigin] = useState('');
   const [year, setYear] = useState('');
   const [totalPages, setTotalPages] = useState('');
-  const [availableGenres, setAvailableGenres] = useState<AdminGenre[]>([]);
 
   useEffect(() => {
     if (!book) return;
@@ -63,12 +60,6 @@ export default function Overview() {
     setYear(book.original_publication_year != null ? String(book.original_publication_year) : '');
     setTotalPages(book.total_pages != null ? String(book.total_pages) : '');
   }, [book]);
-
-  useEffect(() => {
-    apiClient.get('/admin/genres', { params: { limit: 200 } })
-      .then((res) => setAvailableGenres(res.data?.data ?? []))
-      .catch(() => {});
-  }, []);
 
   if (!book) return null;
 
@@ -122,18 +113,6 @@ export default function Overview() {
     });
   };
 
-  const handleToggleGenre = (genreId: string, genreName: string) => {
-    const currentIds = genreIds;
-    const currentNames = genres;
-    if (currentIds.includes(genreId)) {
-      setGenreIds(currentIds.filter((id) => id !== genreId));
-      setGenres(currentNames.filter((name) => name !== genreName));
-    } else {
-      setGenreIds([...currentIds, genreId]);
-      setGenres([...currentNames, genreName]);
-    }
-  };
-
   const editorialLabels: BookEditorialLabels = {
     name: bLocale.name,
     author: bLocale.author,
@@ -185,33 +164,6 @@ export default function Overview() {
             <input type="number" value={totalPages} onChange={(e) => setTotalPages(e.target.value)} style={inputStyle} />
           </div>
         </DetailGrid>
-      </EditorSectionCard>
-
-      <EditorSectionCard title={bLocale.genres}>
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
-          {availableGenres.map((genre) => {
-            const selected = genreIds.includes(genre.id);
-            return (
-              <button
-                key={genre.id}
-                type="button"
-                onClick={() => handleToggleGenre(genre.id, genre.name)}
-                style={{
-                  padding: '4px 12px',
-                  borderRadius: '16px',
-                  fontSize: '13px',
-                  cursor: 'pointer',
-                  fontFamily: 'Inter, sans-serif',
-                  background: selected ? 'var(--primary-soft)' : 'var(--surface-hover)',
-                  border: `1px solid ${selected ? 'var(--primary)' : 'var(--border-soft)'}`,
-                  color: selected ? 'var(--primary)' : 'var(--text-secondary)',
-                }}
-              >
-                {selected ? '✓ ' : ''}{genre.name}
-              </button>
-            );
-          })}
-        </div>
       </EditorSectionCard>
 
       <EditorSectionCard title={bLocale.description}>

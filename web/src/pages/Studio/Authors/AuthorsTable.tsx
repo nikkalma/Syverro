@@ -1,8 +1,10 @@
 // src/pages/Admin/Authors/AuthorsTable.tsx
 
+import { Pencil, Trash2, AlertCircle, PenLine, ChevronLeft, ChevronRight } from 'lucide-react';
 import { AdminAuthor, getAuthorDisplayName } from '../../../types/admin';
 import { useAdminStore } from '../../../store/adminStore';
 import { authorUrl } from '../../../shared/utils/authorUrl';
+import { getLocaleData, getBrowserLocale } from '../../../locales';
 
 interface AuthorsTableProps {
   authors: AdminAuthor[];
@@ -31,16 +33,17 @@ export default function AuthorsTable({
 }: AuthorsTableProps) {
   const { setPage } = useAdminStore();
   const totalPages = Math.ceil(total / limit);
+  const t = getLocaleData(getBrowserLocale());
 
   // ===== СКЕЛЕТОН =====
   if (loading) {
     return (
       <div style={{ overflowX: 'auto' }}>
-        <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+        <table className="studio-table">
           <thead>
-            <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
-              {['Фото', 'Имя', 'Страна', 'Книг', 'Дата', 'Действия'].map((h) => (
-                <th key={h} style={{ padding: '12px 16px', textAlign: 'left', color: '#97A6BA', fontSize: '12px', fontWeight: '500' }}>
+            <tr style={{ borderBottom: '1px solid var(--border)' }}>
+              {[t.admin.authors.photo, t.admin.authors.name, t.admin.authors.country, t.admin.authors.books, t.admin.authors.date, t.admin.authors.actions].map((h) => (
+                <th key={h}>
                   {h}
                 </th>
               ))}
@@ -48,10 +51,10 @@ export default function AuthorsTable({
           </thead>
           <tbody>
             {[...Array(5)].map((_, i) => (
-              <tr key={i} style={{ borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
+              <tr key={i} style={{ borderBottom: '1px solid var(--border)' }}>
                 {[...Array(6)].map((_, j) => (
-                  <td key={j} style={{ padding: '12px 16px' }}>
-                    <div style={{ height: '20px', background: 'rgba(255,255,255,0.05)', borderRadius: '4px', width: j === 0 ? '40px' : j === 5 ? '60%' : '80%' }} />
+                  <td key={j}>
+                    <div style={{ height: '20px', background: 'var(--chip)', borderRadius: '4px', width: j === 0 ? '40px' : j === 5 ? '60%' : '80%' }} />
                   </td>
                 ))}
               </tr>
@@ -68,27 +71,27 @@ export default function AuthorsTable({
       <div style={{
         padding: '40px',
         textAlign: 'center',
-        color: '#EF5350',
-        background: 'rgba(18, 28, 36, 0.6)',
+        color: 'var(--error)',
+        background: 'var(--glass-bg)',
         borderRadius: '12px',
-        border: '1px solid rgba(239,83,80,0.2)',
+        border: '1px solid var(--error)',
       }}>
-        <div style={{ fontSize: '32px', marginBottom: '12px' }}>⚠️</div>
+        <div style={{ display: 'inline-flex', color: 'var(--error)', marginBottom: '12px' }}><AlertCircle size={32} /></div>
         <p>{error}</p>
         <button
           onClick={onRefresh}
           style={{
             marginTop: '12px',
             padding: '8px 20px',
-            background: '#5B86A1',
+            background: 'var(--primary)',
             border: 'none',
             borderRadius: '8px',
-            color: '#0A1118',
+            color: '#FFFFFF',
             cursor: 'pointer',
             fontFamily: 'Inter, sans-serif',
           }}
         >
-          Повторить
+          {t.admin.common.retry}
         </button>
       </div>
     );
@@ -100,13 +103,13 @@ export default function AuthorsTable({
       <div style={{
         padding: '40px',
         textAlign: 'center',
-        color: '#97A6BA',
-        background: 'rgba(18, 28, 36, 0.6)',
+        color: 'var(--text-secondary)',
+        background: 'var(--glass-bg)',
         borderRadius: '12px',
-        border: '1px solid rgba(255,255,255,0.06)',
+        border: '1px solid var(--border)',
       }}>
-        <div style={{ fontSize: '48px', marginBottom: '12px' }}>✍️</div>
-        <p>Авторы не найдены</p>
+        <div style={{ display: 'inline-flex', color: 'var(--text-muted)', marginBottom: '12px', opacity: 0.5 }}><PenLine size={48} /></div>
+        <p>{t.admin.authors.noAuthors}</p>
       </div>
     );
   }
@@ -114,15 +117,15 @@ export default function AuthorsTable({
   // ===== ТАБЛИЦА =====
   return (
     <div style={{ overflowX: 'auto' }}>
-      <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+      <table className="studio-table">
         <thead>
-          <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
-            <th style={{ padding: '12px 16px', textAlign: 'left', color: '#97A6BA', fontSize: '12px', fontWeight: '500' }}>Фото</th>
-            <th style={{ padding: '12px 16px', textAlign: 'left', color: '#97A6BA', fontSize: '12px', fontWeight: '500' }}>Имя</th>
-            <th style={{ padding: '12px 16px', textAlign: 'left', color: '#97A6BA', fontSize: '12px', fontWeight: '500' }}>Страна</th>
-            <th style={{ padding: '12px 16px', textAlign: 'left', color: '#97A6BA', fontSize: '12px', fontWeight: '500' }}>Книг</th>
-            <th style={{ padding: '12px 16px', textAlign: 'left', color: '#97A6BA', fontSize: '12px', fontWeight: '500' }}>Дата</th>
-            <th style={{ padding: '12px 16px', textAlign: 'left', color: '#97A6BA', fontSize: '12px', fontWeight: '500' }}>Действия</th>
+          <tr style={{ borderBottom: '1px solid var(--border)' }}>
+            <th>{t.admin.authors.photo}</th>
+            <th>{t.admin.authors.name}</th>
+            <th>{t.admin.authors.country}</th>
+            <th>{t.admin.authors.books}</th>
+            <th>{t.admin.authors.date}</th>
+            <th>{t.admin.authors.actions}</th>
           </tr>
         </thead>
         <tbody>
@@ -130,24 +133,24 @@ export default function AuthorsTable({
             <tr
               key={author.id}
               style={{
-                borderBottom: '1px solid rgba(255,255,255,0.04)',
+                borderBottom: '1px solid var(--border)',
                 transition: 'background 0.2s',
               }}
-              onMouseEnter={(e) => (e.currentTarget.style.background = 'rgba(255,255,255,0.03)')}
+              onMouseEnter={(e) => (e.currentTarget.style.background = 'var(--surface-hover)')}
               onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
             >
-              <td style={{ padding: '12px 16px' }}>
+              <td>
                 <div style={{
                   width: '40px',
                   height: '40px',
                   borderRadius: '50%',
-                  background: '#0A1118',
-                  border: '1px solid rgba(255,255,255,0.06)',
+                  background: 'var(--bg)',
+                  border: '1px solid var(--border)',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
                   fontSize: '20px',
-                  color: '#5B86A1',
+                  color: 'var(--primary)',
                   overflow: 'hidden',
                 }}>
                   {author.photo ? (
@@ -157,70 +160,78 @@ export default function AuthorsTable({
                   )}
                 </div>
               </td>
-              <td style={{ padding: '12px 16px', color: '#E6EDF3', fontSize: '14px', fontWeight: '500' }}>
+              <td style={{ padding: '12px 16px', color: 'var(--text-primary)', fontSize: '14px', fontWeight: '500' }}>
                 <a href={authorUrl(author)} target="_blank" rel="noopener noreferrer"
-                  style={{ color: '#5B86A1', textDecoration: 'none', cursor: 'pointer' }}
+                  style={{ color: 'var(--primary)', textDecoration: 'none', cursor: 'pointer' }}
                   onMouseEnter={(e) => (e.currentTarget.style.textDecoration = 'underline')}
                   onMouseLeave={(e) => (e.currentTarget.style.textDecoration = 'none')}>
                   {getAuthorDisplayName(author)}
                 </a>
               </td>
-              <td style={{ padding: '12px 16px', color: '#97A6BA', fontSize: '13px' }}>
+              <td style={{ padding: '12px 16px', color: 'var(--text-secondary)', fontSize: '13px' }}>
                 {author.country || '—'}
               </td>
-              <td style={{ padding: '12px 16px', color: '#5B86A1', fontSize: '13px' }}>
+              <td style={{ padding: '12px 16px', color: 'var(--primary)', fontSize: '13px' }}>
                 {author.book_count || 0}
               </td>
-              <td style={{ padding: '12px 16px', color: '#5B86A1', fontSize: '12px' }}>
+              <td style={{ padding: '12px 16px', color: 'var(--primary)', fontSize: '12px' }}>
                 {new Date(author.created_at).toLocaleDateString('ru-RU')}
               </td>
-              <td style={{ padding: '12px 16px' }}>
+              <td>
                 <div style={{ display: 'flex', gap: '6px' }}>
                   <a href={authorUrl(author)} target="_blank" rel="noopener noreferrer"
                     style={{
                       padding: '4px 10px',
-                      background: 'rgba(91,134,161,0.1)',
-                      border: '1px solid rgba(91,134,161,0.2)',
+                      background: 'var(--primary-soft)',
+                      border: '1px solid var(--primary)',
                       borderRadius: '6px',
-                      color: '#5B86A1',
+                      color: 'var(--primary)',
                       fontSize: '11px',
                       cursor: 'pointer',
                       fontFamily: 'Inter, sans-serif',
                       textDecoration: 'none',
                     }}>
-                    Просмотр
+                    {t.admin.common.view}
                   </a>
                   {canManage && (
                     <>
                       <button
                         onClick={() => onEdit(author)}
+                        title={t.admin.common.edit}
                         style={{
                           padding: '4px 10px',
-                          background: 'rgba(255,255,255,0.05)',
-                          border: '1px solid rgba(255,255,255,0.08)',
+                          background: 'var(--chip)',
+                          border: '1px solid var(--border)',
                           borderRadius: '6px',
-                          color: '#5B86A1',
+                          color: 'var(--primary)',
                           fontSize: '11px',
                           cursor: 'pointer',
                           fontFamily: 'Inter, sans-serif',
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
                         }}
                       >
-                        ✏️
+                        <Pencil size={14} />
                       </button>
                       <button
                         onClick={() => onDelete(author)}
+                        title={t.admin.common.delete}
                         style={{
                           padding: '4px 10px',
-                          background: 'rgba(239,83,80,0.1)',
-                          border: '1px solid rgba(239,83,80,0.2)',
+                          background: 'var(--chip)',
+                          border: '1px solid var(--error)',
                           borderRadius: '6px',
-                          color: '#EF5350',
+                          color: 'var(--error)',
                           fontSize: '11px',
                           cursor: 'pointer',
                           fontFamily: 'Inter, sans-serif',
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
                         }}
                       >
-                        🗑️
+                        <Trash2 size={14} />
                       </button>
                     </>
                   )}
@@ -238,11 +249,11 @@ export default function AuthorsTable({
           justifyContent: 'space-between',
           alignItems: 'center',
           padding: '16px 0',
-          borderTop: '1px solid rgba(255,255,255,0.06)',
+          borderTop: '1px solid var(--border)',
           marginTop: '8px',
         }}>
-          <div style={{ color: '#97A6BA', fontSize: '13px' }}>
-            Показано {authors.length} из {total}
+          <div style={{ color: 'var(--text-secondary)', fontSize: '13px' }}>
+            {t.admin.common.showing} {authors.length} {t.admin.common.of} {total}
           </div>
           <div style={{ display: 'flex', gap: '8px' }}>
             <button
@@ -250,18 +261,18 @@ export default function AuthorsTable({
               disabled={page <= 1}
               style={{
                 padding: '6px 14px',
-                background: 'rgba(255,255,255,0.05)',
-                border: '1px solid rgba(255,255,255,0.08)',
+                background: 'var(--chip)',
+                border: '1px solid var(--border)',
                 borderRadius: '6px',
-                color: page <= 1 ? '#2A4B60' : '#97A6BA',
+                color: page <= 1 ? 'var(--text-muted)' : 'var(--text-secondary)',
                 cursor: page <= 1 ? 'not-allowed' : 'pointer',
                 fontFamily: 'Inter, sans-serif',
                 fontSize: '13px',
               }}
             >
-              ←
+              <ChevronLeft size={16} />
             </button>
-            <span style={{ padding: '6px 14px', color: '#E6EDF3', fontSize: '13px' }}>
+            <span style={{ padding: '6px 14px', color: 'var(--text-primary)', fontSize: '13px' }}>
               {page} / {totalPages}
             </span>
             <button
@@ -269,16 +280,16 @@ export default function AuthorsTable({
               disabled={page >= totalPages}
               style={{
                 padding: '6px 14px',
-                background: 'rgba(255,255,255,0.05)',
-                border: '1px solid rgba(255,255,255,0.08)',
+                background: 'var(--chip)',
+                border: '1px solid var(--border)',
                 borderRadius: '6px',
-                color: page >= totalPages ? '#2A4B60' : '#97A6BA',
+                color: page >= totalPages ? 'var(--text-muted)' : 'var(--text-secondary)',
                 cursor: page >= totalPages ? 'not-allowed' : 'pointer',
                 fontFamily: 'Inter, sans-serif',
                 fontSize: '13px',
               }}
             >
-              →
+              <ChevronRight size={16} />
             </button>
           </div>
         </div>

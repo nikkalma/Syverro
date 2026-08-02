@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { AlertTriangle } from 'lucide-react';
 
 import { useAdminStore } from '../../../store/adminStore';
 import {
@@ -109,7 +110,7 @@ export default function AdminUsers() {
       setError(
         err.response?.data?.detail ??
         err.message ??
-        'Ошибка загрузки пользователей'
+        t.admin.users.errorLoad
       );
 
     } finally {
@@ -160,7 +161,7 @@ export default function AdminUsers() {
 
       setError(
         err.response?.data?.detail ??
-        'Ошибка изменения роли'
+        t.admin.users.errorRole
       );
 
     }
@@ -198,7 +199,7 @@ export default function AdminUsers() {
 
       setError(
         err.response?.data?.detail ??
-        'Ошибка изменения статуса'
+        t.admin.users.errorStatus
       );
 
     }
@@ -238,7 +239,7 @@ export default function AdminUsers() {
 
       setError(
         err.response?.data?.detail ??
-        'Ошибка удаления пользователя'
+        t.admin.users.errorDelete
       );
 
     }
@@ -268,7 +269,7 @@ export default function AdminUsers() {
 
       setError(
         err.response?.data?.detail ??
-        'Ошибка завершения сессий'
+        t.admin.users.errorSessions
       );
 
     }
@@ -322,7 +323,7 @@ export default function AdminUsers() {
           style={{
             fontSize: '24px',
             fontWeight: 400,
-            color: '#E6EDF3',
+            color: 'var(--text-primary)',
             margin: 0,
           }}
         >
@@ -331,7 +332,7 @@ export default function AdminUsers() {
           <span
             style={{
               fontSize: '14px',
-              color: '#97A6BA',
+              color: 'var(--text-secondary)',
               marginLeft: '12px',
             }}
           >
@@ -431,13 +432,13 @@ export default function AdminUsers() {
           <div
 
             style={{
-              background: '#121C24',
+              background: 'var(--surface)',
               borderRadius: '16px',
               padding: '32px',
               maxWidth: '400px',
               width: '100%',
               border:
-                '1px solid rgba(255,255,255,0.08)',
+                '1px solid var(--border)',
             }}
 
             onClick={(e) =>
@@ -455,16 +456,18 @@ export default function AdminUsers() {
 
               <div
                 style={{
-                  fontSize: '48px',
+                  display: 'inline-flex',
+                  color: 'var(--error)',
+                  marginBottom: '16px',
                 }}
               >
-                ⚠️
+                <AlertTriangle size={40} />
               </div>
 
 
               <h2
                 style={{
-                  color: '#E6EDF3',
+                  color: 'var(--text-primary)',
                   fontSize: '20px',
                 }}
               >
@@ -474,7 +477,7 @@ export default function AdminUsers() {
 
               <p
                 style={{
-                  color: '#97A6BA',
+                  color: 'var(--text-secondary)',
                   fontSize: '14px',
                 }}
               >
@@ -483,7 +486,7 @@ export default function AdminUsers() {
 
                 <strong
                   style={{
-                    color: '#E6EDF3',
+                    color: 'var(--text-primary)',
                   }}
                 >
                   {userToDelete.email || userToDelete.username || userToDelete.id}
@@ -509,7 +512,7 @@ export default function AdminUsers() {
                 style={{
                   flex: 1,
                   padding: '12px',
-                  background: '#EF5350',
+                  background: 'var(--error)',
                   border: 'none',
                   borderRadius: '8px',
                   color: '#fff',
@@ -528,11 +531,11 @@ export default function AdminUsers() {
                   flex: 1,
                   padding: '12px',
                   background:
-                    'rgba(255,255,255,0.05)',
+                    'var(--chip)',
                   border:
-                    '1px solid rgba(255,255,255,0.08)',
+                    '1px solid var(--border)',
                   borderRadius: '8px',
-                  color: '#97A6BA',
+                  color: 'var(--text-secondary)',
                   cursor: 'pointer',
                 }}
               >

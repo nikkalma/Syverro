@@ -1,13 +1,16 @@
 // src/pages/Admin/Genres/GenresFilters.tsx
 
 import { useState, useEffect } from 'react';
+import { X } from 'lucide-react';
 import { useAdminStore } from '../../../store/adminStore';
+import { getLocaleData, getBrowserLocale } from '../../../locales';
 
 interface GenresFiltersProps {
   onFilterChange: () => void;
 }
 
 export default function GenresFilters({ onFilterChange }: GenresFiltersProps) {
+const t = getLocaleData(getBrowserLocale());
 const { searchQuery, setSearchQuery, setFilters, clearFilters } = useAdminStore();  
   const [localSearch, setLocalSearch] = useState(searchQuery);
 
@@ -38,10 +41,10 @@ const { searchQuery, setSearchQuery, setFilters, clearFilters } = useAdminStore(
       flexWrap: 'wrap',
       gap: '12px',
       padding: '16px',
-      background: 'rgba(18, 28, 36, 0.4)',
+      background: 'var(--glass-bg)',
       backdropFilter: 'blur(8px)',
       borderRadius: '12px',
-      border: '1px solid rgba(255,255,255,0.06)',
+      border: '1px solid var(--border)',
       alignItems: 'center',
     }}>
       <div style={{ flex: 1, minWidth: '200px' }}>
@@ -49,14 +52,14 @@ const { searchQuery, setSearchQuery, setFilters, clearFilters } = useAdminStore(
           type="text"
           value={localSearch}
           onChange={(e) => setLocalSearch(e.target.value)}
-          placeholder="🔍 Поиск по названию..."
+          placeholder={t.admin.genres.searchPlaceholder}
           style={{
             width: '100%',
             padding: '8px 14px',
-            background: 'rgba(255,255,255,0.05)',
-            border: '1px solid rgba(255,255,255,0.08)',
+            background: 'var(--chip)',
+            border: '1px solid var(--border)',
             borderRadius: '8px',
-            color: '#E6EDF3',
+            color: 'var(--text-primary)',
             fontSize: '14px',
             fontFamily: 'Inter, sans-serif',
             outline: 'none',
@@ -68,20 +71,23 @@ const { searchQuery, setSearchQuery, setFilters, clearFilters } = useAdminStore(
         onClick={handleClear}
         style={{
           padding: '8px 16px',
-          background: 'rgba(255,255,255,0.05)',
-          border: '1px solid rgba(255,255,255,0.08)',
+          background: 'var(--chip)',
+          border: '1px solid var(--border)',
           borderRadius: '8px',
-          color: '#97A6BA',
+          color: 'var(--text-secondary)',
           fontSize: '13px',
           cursor: 'pointer',
           fontFamily: 'Inter, sans-serif',
+          display: 'inline-flex',
+          alignItems: 'center',
+          gap: '6px',
         }}
       >
-        ✕ Очистить
+        <> <X size={12} /> {t.admin.common.clear} </>
       </button>
 
-      <div style={{ color: '#5B86A1', fontSize: '13px', marginLeft: 'auto' }}>
-        {localSearch ? '🔍 Фильтры активны' : '🏷️ Все жанры'}
+      <div style={{ color: 'var(--primary)', fontSize: '13px', marginLeft: 'auto' }}>
+        {localSearch ? t.admin.common.filtersActive : t.admin.genres.allGenres}
       </div>
     </div>
   );

@@ -72,6 +72,34 @@ export interface LocaleData {
       booksCount: string;
       filtersActive: string;
       all: string;
+      view: string;
+      unsavedChangesConfirm: string;
+    };
+    workspace: {
+      entityType: string;
+      author: string;
+      book: string;
+      status: string;
+      complete: string;
+      updated: string;
+      metadata: string;
+      sapphire: string;
+      explorer: string;
+      visible: string;
+      hidden: string;
+      preview: string;
+      previewDesc: string;
+      comingSoon: string;
+      sections: {
+        overview: string;
+        identity: string;
+        knowledge: string;
+        context: string;
+        connections: string;
+        content: string;
+        media: string;
+        preview: string;
+      };
     };
     access: {
       denied: string;
@@ -136,6 +164,7 @@ export interface LocaleData {
       activeFilter: string;
       blockedFilter: string;
       allUsers: string;
+      noUsers: string;
       deleteConfirm: string;
       deleteConfirmText: string;
       name: string;
@@ -148,6 +177,7 @@ export interface LocaleData {
       lastActive: string;
       editProfile: string;
       errorLoad: string;
+      errorSave: string;
       errorRole: string;
       errorStatus: string;
       errorDelete: string;
@@ -189,6 +219,10 @@ export interface LocaleData {
       publishedFilter: string;
       draftFilter: string;
       allBooks: string;
+      noBooks: string;
+      submitForModeration: string;
+      awaiting: string;
+      archive: string;
       deleteConfirm: string;
       deleteConfirmText: string;
       irreversible: string;
@@ -223,6 +257,7 @@ export interface LocaleData {
       searchPlaceholder: string;
       countryFilterPlaceholder: string;
       allAuthors: string;
+      noAuthors: string;
       deleteConfirm: string;
       deleteConfirmText: string;
       irreversible: string;
@@ -231,8 +266,13 @@ export interface LocaleData {
       errorCreate: string;
       errorUpdate: string;
       errorDelete: string;
+      errorSave: string;
+      invalidBirthDate: string;
+      birthDateFuture: string;
+      invalidDeathDate: string;
+      deathBeforeBirth: string;
       editor: {
-          sections: {
+        sections: {
             overview: string;
             identity: string;
             biography: string;
@@ -489,6 +529,7 @@ export interface LocaleData {
       deleteConfirm: string;
       deleteConfirmText: string;
       linkedBooksWarning: string;
+      linkedBooksCount: string;
       searchPlaceholder: string;
       allGenres: string;
       loadingTree: string;
@@ -498,6 +539,26 @@ export interface LocaleData {
       errorLoad: string;
       errorCreate: string;
       nameRequired: string;
+      errorUpdate: string;
+      errorDelete: string;
+    };
+    taxonomy: {
+      title: string;
+      searchPlaceholder: string;
+      noNodes: string;
+      expandAll: string;
+      collapseAll: string;
+      addNode: string;
+      addChild: string;
+      newNode: string;
+      editNode: string;
+      statusDraft: string;
+      deleteConfirm: string;
+      deleteConfirmText: string;
+      linkedObjects: string;
+      nameRequired: string;
+      errorLoad: string;
+      errorCreate: string;
       errorUpdate: string;
       errorDelete: string;
     };
@@ -520,6 +581,12 @@ export interface LocaleData {
       noBooksForModeration: string;
       official: string;
       unofficial: string;
+      type: string;
+      pipeline: string;
+      submit: string;
+      publish: string;
+      archive: string;
+      createdDate: string;
     };
     metadata: {
       title: string;
@@ -532,6 +599,8 @@ export interface LocaleData {
       refresh: string;
       noBooksToEnrich: string;
       searchPlaceholder: string;
+      officialShort: string;
+      unofficialShort: string;
     };
     enrichment: {
       title: string;
@@ -591,6 +660,9 @@ export interface LocaleData {
       status: string;
       noLogs: string;
       errorLoad: string;
+      allLogs: string;
+      allEvents: string;
+      searchPlaceholder: string;
     };
     settings: {
       title: string;
@@ -629,6 +701,9 @@ export interface LocaleData {
       sapphire: string;
       explorer: string;
       create: string;
+      newEntity: string;
+      parent: string;
+      noParent: string;
       edit: string;
       delete: string;
       cancel: string;

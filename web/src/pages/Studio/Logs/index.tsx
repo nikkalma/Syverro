@@ -33,7 +33,7 @@ export default function AdminLogs() {
       setLogs(response.data.data || []);
       setTotal(response.data.total || 0);
     } catch (err: any) {
-      setError(err.response?.data?.detail || err.message || 'Ошибка загрузки логов');
+      setError(err.response?.data?.detail || err.message || t.admin.logs.errorLoad);
     } finally {
       setLoading(false);
     }
@@ -46,9 +46,9 @@ export default function AdminLogs() {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <h1 style={{ fontSize: '24px', fontWeight: '400', color: '#E6EDF3', margin: 0 }}>
+        <h1 style={{ fontSize: '24px', fontWeight: '400', color: 'var(--text-primary)', margin: 0 }}>
           {t.admin.logs.title}
-          <span style={{ fontSize: '14px', color: '#97A6BA', marginLeft: '12px' }}>
+          <span style={{ fontSize: '14px', color: 'var(--text-secondary)', marginLeft: '12px' }}>
             {total} {t.admin.common.records}
           </span>
         </h1>
@@ -56,10 +56,10 @@ export default function AdminLogs() {
           onClick={fetchLogs}
           style={{
             padding: '8px 16px',
-            background: 'rgba(255,255,255,0.05)',
-            border: '1px solid rgba(255,255,255,0.08)',
+            background: 'var(--chip)',
+            border: '1px solid var(--border)',
             borderRadius: '8px',
-            color: '#97A6BA',
+            color: 'var(--text-secondary)',
             fontSize: '13px',
             cursor: 'pointer',
             fontFamily: 'Inter, sans-serif',

@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
+import { X } from 'lucide-react';
 import type { TaxonomyNode, TaxonomyNodeType } from '../../../types/admin';
 import { apiClient } from '../../../shared/api/client';
+import { getLocaleData, getBrowserLocale } from '../../../locales';
 
 interface TaxonomyModalProps {
   isOpen: boolean;
@@ -13,12 +15,13 @@ interface TaxonomyModalProps {
 
 const inputStyle: React.CSSProperties = {
   width: '100%', padding: '10px 14px',
-  background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.08)',
-  borderRadius: '8px', color: '#E6EDF3', fontSize: '14px',
+  background: 'rgba(0,0,0,0.3)', border: '1px solid var(--border)',
+  borderRadius: '8px', color: 'var(--text-primary)', fontSize: '14px',
   fontFamily: 'Inter, sans-serif', outline: 'none', boxSizing: 'border-box',
 };
 
 export default function TaxonomyModal({ isOpen, mode, node, nodeType, onClose, onSave }: TaxonomyModalProps) {
+  const t = getLocaleData(getBrowserLocale());
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [parentId, setParentId] = useState<string | null>(null);
@@ -77,7 +80,7 @@ export default function TaxonomyModal({ isOpen, mode, node, nodeType, onClose, o
     setError(null);
     try {
       const trimmed = name.trim();
-      if (!trimmed) throw new Error('Название обязательно');
+      if (!trimmed) throw new Error(t.admin.taxonomy.nameRequired);
       onSave({
         name: trimmed,
         description: description.trim() || null,
@@ -101,28 +104,29 @@ export default function TaxonomyModal({ isOpen, mode, node, nodeType, onClose, o
       justifyContent: 'center', zIndex: 1000, padding: '20px',
     }} onClick={onClose}>
       <div style={{
-        background: '#121C24', borderRadius: '16px',
-        border: '1px solid rgba(255,255,255,0.08)',
+        background: 'var(--surface)', borderRadius: '16px',
+        border: '1px solid var(--border)',
         maxWidth: '500px', width: '100%', padding: '32px',
       }} onClick={(e) => e.stopPropagation()}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
-          <h2 style={{ color: '#E6EDF3', fontSize: '22px', fontWeight: '400', margin: 0 }}>
-            {mode === 'create' ? '➕ Новый узел' : '✏️ Редактировать узел'}
+          <h2 style={{ color: 'var(--text-primary)', fontSize: '22px', fontWeight: '400', margin: 0 }}>
+            {mode === 'create' ? t.admin.taxonomy.newNode : t.admin.taxonomy.editNode}
           </h2>
           <button onClick={onClose} style={{
-            background: 'none', border: 'none', color: '#97A6BA',
-            fontSize: '24px', cursor: 'pointer', padding: '4px 8px',
-          }}>✕</button>
+            background: 'none', border: 'none', color: 'var(--text-secondary)',
+            cursor: 'pointer', padding: '4px 8px', display: 'inline-flex',
+            alignItems: 'center', justifyContent: 'center',
+          }}><X size={20} /></button>
         </div>
 
         <form onSubmit={handleSubmit}>
           <div style={{ marginBottom: '16px' }}>
-            <label style={{ color: '#97A6BA', fontSize: '13px', display: 'block', marginBottom: '4px' }}>Название *</label>
+            <label style={{ color: 'var(--text-secondary)', fontSize: '13px', display: 'block', marginBottom: '4px' }}>Название *</label>
             <input value={name} onChange={(e) => setName(e.target.value)} placeholder="Название узла" required style={inputStyle} />
           </div>
 
           <div style={{ marginBottom: '16px' }}>
-            <label style={{ color: '#97A6BA', fontSize: '13px', display: 'block', marginBottom: '4px' }}>Родительский узел</label>
+            <label style={{ color: 'var(--text-secondary)', fontSize: '13px', display: 'block', marginBottom: '4px' }}>Родительский узел</label>
             <select value={parentId || ''} onChange={(e) => setParentId(e.target.value || null)} style={inputStyle}>
               <option value="">— Нет (корневой) —</option>
               {flatNodes.map((n) => (
@@ -132,13 +136,13 @@ export default function TaxonomyModal({ isOpen, mode, node, nodeType, onClose, o
           </div>
 
           <div style={{ marginBottom: '16px' }}>
-            <label style={{ color: '#97A6BA', fontSize: '13px', display: 'block', marginBottom: '4px' }}>Описание</label>
+            <label style={{ color: 'var(--text-secondary)', fontSize: '13px', display: 'block', marginBottom: '4px' }}>Описание</label>
             <textarea value={description} onChange={(e) => setDescription(e.target.value)}
               placeholder="Описание..." rows={2} style={{ ...inputStyle, resize: 'vertical' }} />
           </div>
 
           <div style={{ marginBottom: '16px' }}>
-            <label style={{ color: '#97A6BA', fontSize: '13px', display: 'block', marginBottom: '4px' }}>
+            <label style={{ color: 'var(--text-secondary)', fontSize: '13px', display: 'block', marginBottom: '4px' }}>
               Алиасы (через запятую)
             </label>
             <input value={aliases} onChange={(e) => setAliases(e.target.value)}
@@ -147,48 +151,48 @@ export default function TaxonomyModal({ isOpen, mode, node, nodeType, onClose, o
 
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '16px' }}>
             <div>
-              <label style={{ color: '#97A6BA', fontSize: '13px', display: 'block', marginBottom: '4px' }}>
+              <label style={{ color: 'var(--text-secondary)', fontSize: '13px', display: 'block', marginBottom: '4px' }}>
                 Порядок сортировки
               </label>
               <input type="number" value={sortOrder} onChange={(e) => setSortOrder(parseInt(e.target.value) || 0)}
                 style={inputStyle} />
             </div>
             <div>
-              <label style={{ color: '#97A6BA', fontSize: '13px', display: 'block', marginBottom: '4px' }}>Статус</label>
+              <label style={{ color: 'var(--text-secondary)', fontSize: '13px', display: 'block', marginBottom: '4px' }}>Статус</label>
               <div style={{ display: 'flex', gap: '12px', paddingTop: '8px' }}>
-                <label style={{ color: '#E6EDF3', fontSize: '13px', display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer' }}>
+                <label style={{ color: 'var(--text-primary)', fontSize: '13px', display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer' }}>
                   <input type="checkbox" checked={isActive}
                     onChange={(e) => setIsActive(e.target.checked)}
-                    style={{ accentColor: '#5B86A1' }} />
+                    style={{ accentColor: 'var(--primary)' }} />
                   Активен
                 </label>
-                <label style={{ color: '#E6EDF3', fontSize: '13px', display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer' }}>
+                <label style={{ color: 'var(--text-primary)', fontSize: '13px', display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer' }}>
                   <input type="checkbox" checked={isPublished}
                     onChange={(e) => setIsPublished(e.target.checked)}
-                    style={{ accentColor: '#4CAF50' }} />
+                    style={{ accentColor: 'var(--success)' }} />
                   Опубликован
                 </label>
               </div>
             </div>
           </div>
 
-          {error && <div style={{ color: '#EF5350', fontSize: '13px', marginBottom: '16px' }}>{error}</div>}
+          {error && <div style={{ color: 'var(--error)', fontSize: '13px', marginBottom: '16px' }}>{error}</div>}
 
           <div style={{ display: 'flex', gap: '12px' }}>
             <button type="submit" disabled={loading} style={{
-              flex: 1, padding: '12px', background: '#5B86A1', border: 'none',
-              borderRadius: '8px', color: '#0A1118', fontSize: '14px', fontWeight: '500',
+              flex: 1, padding: '12px', background: 'var(--primary)', border: 'none',
+              borderRadius: '8px', color: '#FFFFFF', fontSize: '14px', fontWeight: '500',
               cursor: loading ? 'not-allowed' : 'pointer', opacity: loading ? 0.6 : 1,
               fontFamily: 'Inter, sans-serif',
             }}>
-              {loading ? 'Сохранение...' : mode === 'create' ? '➕ Создать' : '💾 Сохранить'}
+              {loading ? t.admin.common.saving : t.admin.common.save}
             </button>
             <button type="button" onClick={onClose} style={{
-              padding: '12px 24px', background: 'rgba(255,255,255,0.05)',
-              border: '1px solid rgba(255,255,255,0.08)', borderRadius: '8px',
-              color: '#97A6BA', fontSize: '14px', cursor: 'pointer',
+              padding: '12px 24px', background: 'var(--chip)',
+              border: '1px solid var(--border)', borderRadius: '8px',
+              color: 'var(--text-secondary)', fontSize: '14px', cursor: 'pointer',
               fontFamily: 'Inter, sans-serif',
-            }}>Отмена</button>
+            }}>{t.admin.common.cancel}</button>
           </div>
         </form>
       </div>

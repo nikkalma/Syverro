@@ -5,12 +5,7 @@ import { apiClient } from '../../../../../shared/api/client';
 import { getLocaleData, getBrowserLocale } from '../../../../../locales';
 
 const RELATION_CONFIGS = [
-  { type: 'theme', icon: '🏷️', labelKey: 'thematicTags' as const, nodeType: 'theme' },
-  { type: 'motif', icon: '🔁', labelKey: 'motifs' as const, nodeType: 'motif' },
-  { type: 'concept', icon: '💡', labelKey: 'concepts' as const, nodeType: 'concept' },
   { type: 'relation', icon: '🔗', labelKey: 'relations' as const, nodeType: '' },
-  { type: 'belongs_to_movement', icon: '📜', labelKey: 'movements' as const, nodeType: 'literary_direction' },
-  { type: 'belongs_to_genre', icon: '📚', labelKey: 'genres' as const, nodeType: 'genre' },
   { type: 'has_occupation', icon: '💼', labelKey: 'occupations' as const, nodeType: 'occupation' },
 ] as const;
 

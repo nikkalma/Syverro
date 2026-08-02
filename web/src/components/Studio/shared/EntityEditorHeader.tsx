@@ -8,6 +8,9 @@ interface Props {
   statusLabel?: string;
   identitySummary?: string;
   metadataStatus?: string;
+  entityTypeLabel?: string;
+  sapphireStatus?: string;
+  explorerVisible?: boolean;
 }
 
 const METADATA_STATUS_STYLES: Record<string, { label: string; color: string; bg: string }> = {
@@ -19,8 +22,40 @@ const METADATA_STATUS_STYLES: Record<string, { label: string; color: string; bg:
   golden:             { label: 'Golden',              color: '#FFD700', bg: 'rgba(255,215,0,0.15)' },
 };
 
-export default function EntityEditorHeader({ name, photoUrl, completionPercent, lastUpdated, statusLabel, identitySummary, metadataStatus }: Props) {
+const pillStyle = (color: string, bg: string): React.CSSProperties => ({
+  fontSize: '11px',
+  fontWeight: 500,
+  color,
+  background: bg,
+  padding: '2px 10px',
+  borderRadius: '12px',
+  display: 'inline-block',
+  whiteSpace: 'nowrap',
+});
+
+const captionStyle: React.CSSProperties = {
+  fontSize: '10px',
+  textTransform: 'uppercase',
+  letterSpacing: '0.08em',
+  color: 'var(--text-muted)',
+  marginBottom: '2px',
+};
+
+export default function EntityEditorHeader({
+  name,
+  photoUrl,
+  completionPercent,
+  lastUpdated,
+  statusLabel,
+  identitySummary,
+  metadataStatus,
+  entityTypeLabel,
+  sapphireStatus,
+  explorerVisible,
+}: Props) {
   const t = getLocaleData(getBrowserLocale());
+  const ws = t.admin.workspace;
+
   return (
     <div style={{
       display: 'flex',
@@ -46,8 +81,15 @@ export default function EntityEditorHeader({ name, photoUrl, completionPercent, 
       </div>
 
       <div style={{ flex: 1, minWidth: 0 }}>
-        <div style={{ fontSize: '18px', fontWeight: '500', color: 'var(--text-primary)', lineHeight: 1.3 }}>
-          {name}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
+          <div style={{ fontSize: '18px', fontWeight: '500', color: 'var(--text-primary)', lineHeight: 1.3 }}>
+            {name}
+          </div>
+          {entityTypeLabel && (
+            <span style={pillStyle('var(--primary)', 'var(--primary-soft)')}>
+              {entityTypeLabel}
+            </span>
+          )}
         </div>
         {identitySummary && (
           <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '4px' }}>
@@ -59,33 +101,41 @@ export default function EntityEditorHeader({ name, photoUrl, completionPercent, 
       <div style={{ display: 'flex', gap: '16px', alignItems: 'center', flexShrink: 0 }}>
         {metadataStatus && METADATA_STATUS_STYLES[metadataStatus] && (
           <div style={{ textAlign: 'right' }}>
-            <div style={{ fontSize: '10px', textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--text-muted)', marginBottom: '2px' }}>Metadata</div>
-            <div style={{
-              fontSize: '12px', fontWeight: 500,
-              color: METADATA_STATUS_STYLES[metadataStatus].color,
-              background: METADATA_STATUS_STYLES[metadataStatus].bg,
-              padding: '2px 10px', borderRadius: '12px',
-              display: 'inline-block',
-            }}>
+            <div style={captionStyle}>{ws.metadata}</div>
+            <span style={pillStyle(METADATA_STATUS_STYLES[metadataStatus].color, METADATA_STATUS_STYLES[metadataStatus].bg)}>
               {METADATA_STATUS_STYLES[metadataStatus].label}
-            </div>
+            </span>
+          </div>
+        )}
+        {sapphireStatus && (
+          <div style={{ textAlign: 'right' }}>
+            <div style={captionStyle}>{ws.sapphire}</div>
+            <span style={pillStyle('#FFD700', 'rgba(255,215,0,0.15)')}>{sapphireStatus}</span>
+          </div>
+        )}
+        {explorerVisible !== undefined && (
+          <div style={{ textAlign: 'right' }}>
+            <div style={captionStyle}>{ws.explorer}</div>
+            <span style={pillStyle(explorerVisible ? '#4CAF50' : '#97A6BA', explorerVisible ? 'rgba(76,175,80,0.12)' : 'rgba(151,166,186,0.12)')}>
+              {explorerVisible ? ws.visible : ws.hidden}
+            </span>
           </div>
         )}
         {statusLabel && (
           <div style={{ textAlign: 'right' }}>
-            <div style={{ fontSize: '10px', textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--text-muted)', marginBottom: '2px' }}>{t.admin.authors.editor.status}</div>
+            <div style={captionStyle}>{ws.status}</div>
             <div style={{ fontSize: '13px', color: 'var(--text-primary)' }}>{statusLabel}</div>
           </div>
         )}
         {completionPercent !== undefined && (
           <div style={{ textAlign: 'right' }}>
-            <div style={{ fontSize: '10px', textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--text-muted)', marginBottom: '2px' }}>{t.admin.authors.editor.complete}</div>
+            <div style={captionStyle}>{ws.complete}</div>
             <div style={{ fontSize: '13px', color: completionPercent >= 80 ? 'var(--success)' : 'var(--warning)' }}>{completionPercent}%</div>
           </div>
         )}
         {lastUpdated && (
           <div style={{ textAlign: 'right' }}>
-            <div style={{ fontSize: '10px', textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--text-muted)', marginBottom: '2px' }}>{t.admin.authors.editor.updated}</div>
+            <div style={captionStyle}>{ws.updated}</div>
             <div style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>{lastUpdated}</div>
           </div>
         )}

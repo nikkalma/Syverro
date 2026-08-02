@@ -1,8 +1,10 @@
  // src/pages/Studio/Users/UsersFilters.tsx
 
 import { useState, useEffect } from 'react';
+import { X } from 'lucide-react';
 import { useAdminStore } from '../../../store/adminStore';
 import { AdminRole, ALL_ROLES, ROLE_LABELS } from '../../../types/admin';
+import { getLocaleData, getBrowserLocale } from '../../../locales';
 
 
 interface UsersFiltersProps {
@@ -12,6 +14,7 @@ interface UsersFiltersProps {
 
 
 export default function UsersFilters({ onFilterChange, viewerRole }: UsersFiltersProps) {
+  const t = getLocaleData(getBrowserLocale());
   const {
     searchQuery,
     setSearchQuery,
@@ -99,10 +102,10 @@ export default function UsersFilters({ onFilterChange, viewerRole }: UsersFilter
       flexWrap: 'wrap',
       gap: '12px',
       padding: '16px',
-      background: 'rgba(18, 28, 36, 0.4)',
+      background: 'var(--glass-bg)',
       backdropFilter: 'blur(8px)',
       borderRadius: '12px',
-      border: '1px solid rgba(255,255,255,0.06)',
+      border: '1px solid var(--border)',
       alignItems: 'center',
     }}>
 
@@ -113,14 +116,14 @@ export default function UsersFilters({ onFilterChange, viewerRole }: UsersFilter
           type="text"
           value={localSearch}
           onChange={(e) => setLocalSearch(e.target.value)}
-          placeholder="🔍 Поиск по email, имени..."
+          placeholder={t.admin.users.searchPlaceholder}
           style={{
             width: '100%',
             padding: '8px 14px',
-            background: 'rgba(255,255,255,0.05)',
-            border: '1px solid rgba(255,255,255,0.08)',
+            background: 'var(--chip)',
+            border: '1px solid var(--border)',
             borderRadius: '8px',
-            color: '#E6EDF3',
+            color: 'var(--text-primary)',
             fontSize: '14px',
             fontFamily: 'Inter, sans-serif',
             outline: 'none',
@@ -137,7 +140,7 @@ export default function UsersFilters({ onFilterChange, viewerRole }: UsersFilter
           value={roleFilter}
           onChange={(e) => setRoleFilter(e.target.value)}
         >
-          <option value="all">Все роли</option>
+          <option value="all">{t.admin.users.allRoles}</option>
 
           {ALL_ROLES.filter((role) => viewerRole === 'owner' || role !== 'owner').map((role) => (
             <option key={role} value={role}>
@@ -155,24 +158,39 @@ export default function UsersFilters({ onFilterChange, viewerRole }: UsersFilter
           value={statusFilter}
           onChange={(e) => setStatusFilter(e.target.value)}
         >
-          <option value="all">Все статусы</option>
-          <option value="active">🟢 Активные</option>
-          <option value="blocked">🔴 Заблокированные</option>
+          <option value="all">{t.admin.users.allStatuses}</option>
+          <option value="active">{t.admin.users.activeFilter}</option>
+          <option value="blocked">{t.admin.users.blockedFilter}</option>
         </select>
       </div>
 
 
       {/* КНОПКА */}
 
-      <button onClick={handleClear}>
-        ✕ Очистить
+      <button
+        onClick={handleClear}
+        style={{
+          padding: '8px 16px',
+          background: 'var(--chip)',
+          border: '1px solid var(--border)',
+          borderRadius: '8px',
+          color: 'var(--text-secondary)',
+          fontSize: '13px',
+          cursor: 'pointer',
+          fontFamily: 'Inter, sans-serif',
+          display: 'inline-flex',
+          alignItems: 'center',
+          gap: '6px',
+        }}
+      >
+        <> <X size={12} /> {t.admin.common.clear} </>
       </button>
 
 
       {/* ИНФО */}
 
       <div style={{
-        color: '#5B86A1',
+        color: 'var(--primary)',
         fontSize: '13px',
         marginLeft: 'auto',
       }}>
@@ -180,8 +198,8 @@ export default function UsersFilters({ onFilterChange, viewerRole }: UsersFilter
           roleFilter !== 'all' ||
           statusFilter !== 'all' ||
           localSearch
-            ? '🔍 Фильтры активны'
-            : '📋 Все пользователи'
+            ? t.admin.common.filtersActive
+            : t.admin.users.allUsers
         }
       </div>
 

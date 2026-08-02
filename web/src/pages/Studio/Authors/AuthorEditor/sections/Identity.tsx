@@ -118,8 +118,6 @@ export default function Identity() {
   const [deathPlaceName, setDeathPlaceName] = useState<string | null>(null);
 
   const [occupations, setOccupations] = useState<string[]>([]);
-  const [literaryMovements, setLiteraryMovements] = useState<string[]>([]);
-  const [genres, setGenres] = useState<string[]>([]);
 
   const [citizenships, setCitizenships] = useState<AuthorCitizenship[]>([]);
   const [editCitId, setEditCitId] = useState<string | null>(null);
@@ -141,8 +139,6 @@ export default function Identity() {
     setDeathPlaceId(author.death_place_id || null);
     setDeathPlaceName(author.death_place || null);
     setOccupations(author.occupations || []);
-    setLiteraryMovements(author.literary_movements || []);
-    setGenres(author.genres || []);
   }, [author]);
 
   const fetchCitizenships = useCallback(async () => {
@@ -220,9 +216,7 @@ export default function Identity() {
     pseudonymsText !== (author?.pseudonyms || []).join(', ') ||
     birthPlaceId !== (author?.birth_place_id || null) ||
     deathPlaceId !== (author?.death_place_id || null) ||
-    occupations.join(',') !== (author?.occupations || []).join(',') ||
-    literaryMovements.join(',') !== (author?.literary_movements || []).join(',') ||
-    genres.join(',') !== (author?.genres || []).join(',');
+    occupations.join(',') !== (author?.occupations || []).join(',');
 
   const reset = () => {
     if (!author) return;
@@ -240,8 +234,6 @@ export default function Identity() {
     setDeathPlaceId(author.death_place_id || null);
     setDeathPlaceName(author.death_place || null);
     setOccupations(author.occupations || []);
-    setLiteraryMovements(author.literary_movements || []);
-    setGenres(author.genres || []);
   };
 
   const handleSave = async () => {
@@ -258,8 +250,6 @@ export default function Identity() {
       birth_place_id: birthPlaceId,
       death_place_id: deathPlaceId,
       occupations,
-      literary_movements: literaryMovements,
-      genres,
     };
     await updateAuthor(data);
   };
@@ -380,24 +370,6 @@ export default function Identity() {
           value={occupations}
           onChange={setOccupations}
           placeholder="Search or create occupations..."
-        />
-      </EditorSectionCard>
-
-      <EditorSectionCard title={idLocale.literaryMovements}>
-        <TaxonomyPicker
-          nodeType="literary_direction"
-          value={literaryMovements}
-          onChange={setLiteraryMovements}
-          placeholder="Search or create literary movements..."
-        />
-      </EditorSectionCard>
-
-      <EditorSectionCard title={idLocale.genres}>
-        <TaxonomyPicker
-          nodeType="genre"
-          value={genres}
-          onChange={setGenres}
-          placeholder="Search or create genres..."
         />
       </EditorSectionCard>
 

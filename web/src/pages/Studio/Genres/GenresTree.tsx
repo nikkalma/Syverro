@@ -1,6 +1,7 @@
 // src/pages/Admin/Genres/GenresTree.tsx
 
 import { useState, useMemo } from 'react';
+import { Pencil, X } from 'lucide-react';
 import { AdminGenre } from '../../../types/admin';
 import { getLocaleData, getBrowserLocale } from '../../../locales';
 import type { LocaleData } from '../../../locales';
@@ -18,11 +19,11 @@ interface GenreTreeNode {
 }
 
 const GENRE_TYPE_COLORS: Record<string, string> = {
-  literary: '#5B86A1',
+  literary: 'var(--primary)',
   non_fiction: '#6B9B7A',
   spiritual: '#A855F7',
   cultural: '#D4A76A',
-  practical: '#97A6BA',
+  practical: 'var(--text-secondary)',
 };
 
 const GENRE_TYPE_ICONS: Record<string, string> = {
@@ -94,10 +95,10 @@ function TreeNode({
           borderRadius: '8px',
           cursor: 'default',
           transition: 'background 0.15s',
-          background: matchesSearch ? 'rgba(91,134,161,0.1)' : 'transparent',
+          background: matchesSearch ? 'var(--primary-soft)' : 'transparent',
         }}
         onMouseEnter={(e) => {
-          if (!matchesSearch) e.currentTarget.style.background = 'rgba(255,255,255,0.03)';
+          if (!matchesSearch) e.currentTarget.style.background = 'var(--surface-hover)';
         }}
         onMouseLeave={(e) => {
           if (!matchesSearch) e.currentTarget.style.background = 'transparent';
@@ -110,7 +111,7 @@ function TreeNode({
             style={{
               background: 'none',
               border: 'none',
-              color: '#97A6BA',
+              color: 'var(--text-secondary)',
               cursor: 'pointer',
               padding: '2px',
               fontSize: '12px',
@@ -134,7 +135,7 @@ function TreeNode({
         <span style={{
           fontSize: '14px',
           fontWeight: depth === 0 ? '500' : '400',
-          color: '#E6EDF3',
+          color: 'var(--text-primary)',
           flex: 1,
           minWidth: 0,
           overflow: 'hidden',
@@ -148,8 +149,8 @@ function TreeNode({
         {node.book_count > 0 && (
           <span style={{
             fontSize: '11px',
-            color: '#97A6BA',
-            background: 'rgba(255,255,255,0.04)',
+            color: 'var(--text-secondary)',
+            background: 'var(--chip)',
             padding: '2px 8px',
             borderRadius: '10px',
             flexShrink: 0,
@@ -170,9 +171,9 @@ function TreeNode({
               style={{
                 padding: '3px 8px',
                 background: 'none',
-                border: '1px solid rgba(255,255,255,0.08)',
+                border: '1px solid var(--border)',
                 borderRadius: '4px',
-                color: '#97A6BA',
+                color: 'var(--text-secondary)',
                 fontSize: '12px',
                 cursor: 'pointer',
                 fontFamily: 'Inter, sans-serif',
@@ -193,18 +194,22 @@ function TreeNode({
                 created_at: node.created_at || new Date().toISOString(),
                 updated_at: '',
               } as AdminGenre)}
+              title="Edit"
               style={{
                 padding: '3px 8px',
                 background: 'none',
-                border: '1px solid rgba(255,255,255,0.08)',
+                border: '1px solid var(--border)',
                 borderRadius: '4px',
-                color: '#5B86A1',
+                color: 'var(--primary)',
                 fontSize: '12px',
                 cursor: 'pointer',
                 fontFamily: 'Inter, sans-serif',
+                display: 'inline-flex',
+                alignItems: 'center',
+                justifyContent: 'center',
               }}
             >
-              ✏
+              <Pencil size={14} />
             </button>
             <button
               onClick={() => onDelete({
@@ -219,18 +224,22 @@ function TreeNode({
                 created_at: node.created_at || new Date().toISOString(),
                 updated_at: '',
               } as AdminGenre)}
+              title="Delete"
               style={{
                 padding: '3px 8px',
                 background: 'none',
-                border: '1px solid rgba(239,83,80,0.2)',
+                border: '1px solid var(--error)',
                 borderRadius: '4px',
-                color: '#EF5350',
+                color: 'var(--error)',
                 fontSize: '12px',
                 cursor: 'pointer',
                 fontFamily: 'Inter, sans-serif',
+                display: 'inline-flex',
+                alignItems: 'center',
+                justifyContent: 'center',
               }}
             >
-              ✕
+              <X size={14} />
             </button>
           </div>
         )}
@@ -311,7 +320,7 @@ export default function GenresTree({
 
   if (loading) {
     return (
-      <div style={{ padding: '20px', color: '#97A6BA', textAlign: 'center' }}>
+      <div style={{ padding: '20px', color: 'var(--text-secondary)', textAlign: 'center' }}>
         {t.admin.genres.loadingTree}
       </div>
     );
@@ -322,10 +331,10 @@ export default function GenresTree({
       <div style={{
         padding: '40px',
         textAlign: 'center',
-        color: '#EF5350',
-        background: 'rgba(18, 28, 36, 0.6)',
+        color: 'var(--error)',
+        background: 'var(--glass-bg)',
         borderRadius: '12px',
-        border: '1px solid rgba(239,83,80,0.2)',
+        border: '1px solid var(--error)',
       }}>
         <div style={{ fontSize: '32px', marginBottom: '12px' }}>⚠</div>
         <p>{error}</p>
@@ -334,10 +343,10 @@ export default function GenresTree({
           style={{
             marginTop: '12px',
             padding: '8px 20px',
-            background: '#5B86A1',
+            background: 'var(--primary)',
             border: 'none',
             borderRadius: '8px',
-            color: '#0A1118',
+            color: '#FFFFFF',
             cursor: 'pointer',
             fontFamily: 'Inter, sans-serif',
           }}
@@ -353,10 +362,10 @@ export default function GenresTree({
       <div style={{
         padding: '40px',
         textAlign: 'center',
-        color: '#97A6BA',
-        background: 'rgba(18, 28, 36, 0.6)',
+        color: 'var(--text-secondary)',
+        background: 'var(--glass-bg)',
         borderRadius: '12px',
-        border: '1px solid rgba(255,255,255,0.06)',
+        border: '1px solid var(--border)',
       }}>
         <div style={{ fontSize: '48px', marginBottom: '12px' }}>🏷</div>
         <p>{t.admin.genres.noGenres}</p>
@@ -380,10 +389,10 @@ export default function GenresTree({
           onClick={expandAll}
           style={{
             padding: '6px 12px',
-            background: 'rgba(255,255,255,0.04)',
-            border: '1px solid rgba(255,255,255,0.08)',
+            background: 'var(--chip)',
+            border: '1px solid var(--border)',
             borderRadius: '6px',
-            color: '#97A6BA',
+            color: 'var(--text-secondary)',
             fontSize: '12px',
             cursor: 'pointer',
             fontFamily: 'Inter, sans-serif',
@@ -395,10 +404,10 @@ export default function GenresTree({
           onClick={collapseAll}
           style={{
             padding: '6px 12px',
-            background: 'rgba(255,255,255,0.04)',
-            border: '1px solid rgba(255,255,255,0.08)',
+            background: 'var(--chip)',
+            border: '1px solid var(--border)',
             borderRadius: '6px',
-            color: '#97A6BA',
+            color: 'var(--text-secondary)',
             fontSize: '12px',
             cursor: 'pointer',
             fontFamily: 'Inter, sans-serif',
@@ -410,7 +419,7 @@ export default function GenresTree({
 
       {/* Tree by type */}
       {Array.from(byType.entries()).map(([type, genres]) => {
-        const color = GENRE_TYPE_COLORS[type] || '#97A6BA';
+        const color = GENRE_TYPE_COLORS[type] || 'var(--text-secondary)';
         const isTypeExpanded = expandedTypes.has(type);
         const totalCount = (() => {
           let c = 0;
@@ -426,9 +435,9 @@ export default function GenresTree({
 
         return (
           <div key={type} style={{
-            background: 'rgba(18, 28, 36, 0.5)',
+            background: 'var(--glass-bg)',
             borderRadius: '12px',
-            border: '1px solid rgba(255,255,255,0.06)',
+            border: '1px solid var(--border)',
             overflow: 'hidden',
           }}>
             {/* Type header */}
@@ -440,15 +449,15 @@ export default function GenresTree({
                 gap: '10px',
                 padding: '14px 16px',
                 cursor: 'pointer',
-                borderBottom: isTypeExpanded ? '1px solid rgba(255,255,255,0.06)' : 'none',
+                borderBottom: isTypeExpanded ? '1px solid var(--border)' : 'none',
                 transition: 'background 0.15s',
               }}
-              onMouseEnter={(e) => (e.currentTarget.style.background = 'rgba(255,255,255,0.03)')}
+              onMouseEnter={(e) => (e.currentTarget.style.background = 'var(--surface-hover)')}
               onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
             >
               <span style={{
                 fontSize: '12px',
-                color: '#97A6BA',
+                color: 'var(--text-secondary)',
                 transform: isTypeExpanded ? 'rotate(90deg)' : 'rotate(0deg)',
                 transition: 'transform 0.2s',
                 display: 'inline-block',
@@ -465,8 +474,8 @@ export default function GenresTree({
               </span>
               <span style={{
                 fontSize: '12px',
-                color: '#97A6BA',
-                background: 'rgba(255,255,255,0.04)',
+                color: 'var(--text-secondary)',
+                background: 'var(--chip)',
                 padding: '2px 8px',
                 borderRadius: '10px',
               }}>

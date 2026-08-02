@@ -1,11 +1,13 @@
 // src/components/Studio/StudioLayout.tsx
 
 import { ReactNode, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { ShieldAlert } from 'lucide-react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuthStore } from '../../store/authStore';
 import { useAdminTheme } from '../../store/adminStore';
 import { ADMIN_ROLES } from '../../types/admin';
 import { getLocaleData, getBrowserLocale } from '../../locales';
+import type { LocaleData } from '../../locales';
 import StudioHeader from './shared/StudioHeader';
 import './StudioLayout.css';
 
@@ -13,12 +15,29 @@ interface AdminLayoutProps {
   children: ReactNode;
 }
 
+const MODULE_ROUTES: { prefix: string; key: keyof LocaleData['admin']['nav'] }[] = [
+  { prefix: '/studio/users', key: 'users' },
+  { prefix: '/studio/books', key: 'books' },
+  { prefix: '/studio/authors', key: 'authors' },
+  { prefix: '/studio/genres', key: 'genres' },
+  { prefix: '/studio/taxonomy', key: 'taxonomy' },
+  { prefix: '/studio/entities', key: 'entities' },
+  { prefix: '/studio/moderation', key: 'moderation' },
+  { prefix: '/studio/metadata', key: 'metadata' },
+  { prefix: '/studio/logs', key: 'logs' },
+  { prefix: '/studio/settings', key: 'settings' },
+];
+
 export default function StudioLayout({ children }: AdminLayoutProps) {
   const navigate = useNavigate();
+  const location = useLocation();
   const { user } = useAuthStore();
   const { theme, toggleTheme } = useAdminTheme();
   const locale = getBrowserLocale();
   const t = getLocaleData(locale);
+
+  const moduleKey = MODULE_ROUTES.find((m) => location.pathname.startsWith(m.prefix))?.key ?? 'dashboard';
+  const moduleName = t.admin.nav[moduleKey];
 
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme);
@@ -39,7 +58,7 @@ export default function StudioLayout({ children }: AdminLayoutProps) {
         flexDirection: 'column',
         gap: '16px',
       }}>
-        <div style={{ fontSize: '64px' }}>🚫</div>
+        <div style={{ display: 'inline-flex', color: 'var(--error)', opacity: 0.8 }}><ShieldAlert size={40} /></div>
         <h1 style={{ fontSize: '24px', fontWeight: '400' }}>{t.admin.access.denied}</h1>
         <p style={{ color: 'var(--text-secondary)' }}>{t.admin.access.noPermission}</p>
         <button
@@ -61,7 +80,7 @@ export default function StudioLayout({ children }: AdminLayoutProps) {
       color: 'var(--text-primary)',
     }}>
       <StudioHeader
-        moduleName=""
+        moduleName={moduleName}
         theme={theme}
         onToggleTheme={toggleTheme}
       />

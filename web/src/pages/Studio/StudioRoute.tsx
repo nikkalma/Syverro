@@ -1,4 +1,5 @@
 import { useEffect } from 'react';
+import { ShieldAlert } from 'lucide-react';
 import { Navigate, Outlet, useLocation } from 'react-router-dom';
 import { useAuthStore } from '../../store/authStore';
 import { getLocaleData, getBrowserLocale } from '../../locales';
@@ -29,8 +30,8 @@ export default function StudioRoute({ requiredRole = 'moderator' }: AdminRoutePr
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        background: '#0B1220',
-        color: '#E6EDF3',
+        background: 'var(--bg)',
+        color: 'var(--text-primary)',
       }}>
         <div style={{ textAlign: 'center' }}>
           <div style={{ fontSize: '24px', marginBottom: '16px' }}>⏳</div>
@@ -58,19 +59,19 @@ export default function StudioRoute({ requiredRole = 'moderator' }: AdminRoutePr
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        background: '#0B1220',
-        color: '#E6EDF3',
+        background: 'var(--bg)',
+        color: 'var(--text-primary)',
         flexDirection: 'column',
         gap: '16px',
         textAlign: 'center',
         padding: '20px',
       }}>
-        <div style={{ fontSize: '64px' }}>🚫</div>
+        <div style={{ display: 'inline-flex', color: 'var(--error)', opacity: 0.8 }}><ShieldAlert size={40} /></div>
         <h1 style={{ fontSize: '24px', fontWeight: '400' }}>{t.admin.access.denied}</h1>
-        <p style={{ color: '#97A6BA', maxWidth: '400px' }}>
+        <p style={{ color: 'var(--text-secondary)', maxWidth: '400px' }}>
           {t.admin.access.noPermission}
           <br />
-          <span style={{ fontSize: '13px', color: '#5B86A1' }}>
+          <span style={{ fontSize: '13px', color: 'var(--primary)' }}>
             {t.admin.access.yourRole} <strong>{userRole}</strong> · {t.admin.access.required} <strong>{requiredRole}</strong>
           </span>
         </p>
@@ -78,10 +79,10 @@ export default function StudioRoute({ requiredRole = 'moderator' }: AdminRoutePr
           onClick={() => window.location.href = '/'}
           style={{
             padding: '10px 24px',
-            background: '#5B86A1',
+            background: 'var(--primary)',
             border: 'none',
             borderRadius: '8px',
-            color: '#0A1118',
+            color: '#FFFFFF',
             fontSize: '14px',
             fontWeight: '500',
             cursor: 'pointer',

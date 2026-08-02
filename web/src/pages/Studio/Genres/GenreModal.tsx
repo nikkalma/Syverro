@@ -1,8 +1,10 @@
 // src/pages/Admin/Genres/GenreModal.tsx
 
 import { useState, useEffect } from 'react';
+import { X } from 'lucide-react';
 import { apiClient } from '../../../shared/api/client';
 import type { AdminGenre } from '../../../types/admin';
+import { getLocaleData, getBrowserLocale } from '../../../locales';
 
 interface GenreTreeNode {
   id: string;
@@ -31,6 +33,7 @@ interface GenreModalProps {
 }
 
 export default function GenreModal({ isOpen, mode, genre, onClose, onSave }: GenreModalProps) {
+  const t = getLocaleData(getBrowserLocale());
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [parentId, setParentId] = useState<string | null>(null);
@@ -85,7 +88,7 @@ export default function GenreModal({ isOpen, mode, genre, onClose, onSave }: Gen
     try {
       const trimmed = name.trim();
       if (!trimmed) {
-        throw new Error('Название жанра обязательно');
+        throw new Error(t.admin.genres.nameRequired);
       }
       onSave({
         name: trimmed,
@@ -117,9 +120,9 @@ export default function GenreModal({ isOpen, mode, genre, onClose, onSave }: Gen
     >
       <div
         style={{
-          background: '#121C24',
+          background: 'var(--surface)',
           borderRadius: '16px',
-          border: '1px solid rgba(255,255,255,0.08)',
+          border: '1px solid var(--border)',
           maxWidth: '400px',
           width: '100%',
           padding: '32px',
@@ -127,28 +130,30 @@ export default function GenreModal({ isOpen, mode, genre, onClose, onSave }: Gen
         onClick={(e) => e.stopPropagation()}
       >
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
-          <h2 style={{ color: '#E6EDF3', fontSize: '22px', fontWeight: '400', margin: 0 }}>
-            {mode === 'create' ? '➕ Новый жанр' : '✏️ Редактировать жанр'}
+          <h2 style={{ color: 'var(--text-primary)', fontSize: '22px', fontWeight: '400', margin: 0 }}>
+            {mode === 'create' ? t.admin.genres.newGenre : t.admin.genres.editGenre}
           </h2>
           <button
             onClick={onClose}
             style={{
               background: 'none',
               border: 'none',
-              color: '#97A6BA',
-              fontSize: '24px',
+              color: 'var(--text-secondary)',
               cursor: 'pointer',
               padding: '4px 8px',
+              display: 'inline-flex',
+              alignItems: 'center',
+              justifyContent: 'center',
             }}
           >
-            ✕
+            <X size={20} />
           </button>
         </div>
 
         <form onSubmit={handleSubmit}>
           {/* НАЗВАНИЕ */}
           <div style={{ marginBottom: '16px' }}>
-            <label style={{ color: '#97A6BA', fontSize: '13px', display: 'block', marginBottom: '4px' }}>
+            <label style={{ color: 'var(--text-secondary)', fontSize: '13px', display: 'block', marginBottom: '4px' }}>
               Название жанра *
             </label>
             <input
@@ -161,9 +166,9 @@ export default function GenreModal({ isOpen, mode, genre, onClose, onSave }: Gen
                 width: '100%',
                 padding: '10px 14px',
                 background: 'rgba(0,0,0,0.3)',
-                border: '1px solid rgba(255,255,255,0.08)',
+                border: '1px solid var(--border)',
                 borderRadius: '8px',
-                color: '#E6EDF3',
+                color: 'var(--text-primary)',
                 fontSize: '14px',
                 fontFamily: 'Inter, sans-serif',
                 outline: 'none',
@@ -173,7 +178,7 @@ export default function GenreModal({ isOpen, mode, genre, onClose, onSave }: Gen
 
           {/* ТИП */}
           <div style={{ marginBottom: '16px' }}>
-            <label style={{ color: '#97A6BA', fontSize: '13px', display: 'block', marginBottom: '4px' }}>
+            <label style={{ color: 'var(--text-secondary)', fontSize: '13px', display: 'block', marginBottom: '4px' }}>
               Тип жанра *
             </label>
             <select
@@ -183,9 +188,9 @@ export default function GenreModal({ isOpen, mode, genre, onClose, onSave }: Gen
                 width: '100%',
                 padding: '10px 14px',
                 background: 'rgba(0,0,0,0.3)',
-                border: '1px solid rgba(255,255,255,0.08)',
+                border: '1px solid var(--border)',
                 borderRadius: '8px',
-                color: '#E6EDF3',
+                color: 'var(--text-primary)',
                 fontSize: '14px',
                 fontFamily: 'Inter, sans-serif',
                 outline: 'none',
@@ -199,7 +204,7 @@ export default function GenreModal({ isOpen, mode, genre, onClose, onSave }: Gen
 
           {/* ОПИСАНИЕ */}
           <div style={{ marginBottom: '16px' }}>
-            <label style={{ color: '#97A6BA', fontSize: '13px', display: 'block', marginBottom: '4px' }}>
+            <label style={{ color: 'var(--text-secondary)', fontSize: '13px', display: 'block', marginBottom: '4px' }}>
               Описание
             </label>
             <textarea
@@ -211,9 +216,9 @@ export default function GenreModal({ isOpen, mode, genre, onClose, onSave }: Gen
                 width: '100%',
                 padding: '10px 14px',
                 background: 'rgba(0,0,0,0.3)',
-                border: '1px solid rgba(255,255,255,0.08)',
+                border: '1px solid var(--border)',
                 borderRadius: '8px',
-                color: '#E6EDF3',
+                color: 'var(--text-primary)',
                 fontSize: '14px',
                 fontFamily: 'Inter, sans-serif',
                 outline: 'none',
@@ -224,7 +229,7 @@ export default function GenreModal({ isOpen, mode, genre, onClose, onSave }: Gen
 
           {/* РОДИТЕЛЬСКИЙ ЖАНР */}
           <div style={{ marginBottom: '24px' }}>
-            <label style={{ color: '#97A6BA', fontSize: '13px', display: 'block', marginBottom: '4px' }}>
+            <label style={{ color: 'var(--text-secondary)', fontSize: '13px', display: 'block', marginBottom: '4px' }}>
               Поджанр (родительский жанр)
             </label>
             <select
@@ -234,9 +239,9 @@ export default function GenreModal({ isOpen, mode, genre, onClose, onSave }: Gen
                 width: '100%',
                 padding: '10px 14px',
                 background: 'rgba(0,0,0,0.3)',
-                border: '1px solid rgba(255,255,255,0.08)',
+                border: '1px solid var(--border)',
                 borderRadius: '8px',
-                color: '#E6EDF3',
+                color: 'var(--text-primary)',
                 fontSize: '14px',
                 fontFamily: 'Inter, sans-serif',
                 outline: 'none',
@@ -250,7 +255,7 @@ export default function GenreModal({ isOpen, mode, genre, onClose, onSave }: Gen
           </div>
 
           {error && (
-            <div style={{ color: '#EF5350', fontSize: '13px', marginBottom: '16px' }}>
+            <div style={{ color: 'var(--error)', fontSize: '13px', marginBottom: '16px' }}>
               {error}
             </div>
           )}
@@ -262,10 +267,10 @@ export default function GenreModal({ isOpen, mode, genre, onClose, onSave }: Gen
               style={{
                 flex: 1,
                 padding: '12px',
-                background: '#5B86A1',
+                background: 'var(--primary)',
                 border: 'none',
                 borderRadius: '8px',
-                color: '#0A1118',
+                color: '#FFFFFF',
                 fontSize: '14px',
                 fontWeight: '500',
                 cursor: loading ? 'not-allowed' : 'pointer',
@@ -273,23 +278,23 @@ export default function GenreModal({ isOpen, mode, genre, onClose, onSave }: Gen
                 fontFamily: 'Inter, sans-serif',
               }}
             >
-              {loading ? 'Сохранение...' : mode === 'create' ? '➕ Создать' : '💾 Сохранить'}
+              {loading ? t.admin.common.saving : t.admin.common.save}
             </button>
             <button
               type="button"
               onClick={onClose}
               style={{
                 padding: '12px 24px',
-                background: 'rgba(255,255,255,0.05)',
-                border: '1px solid rgba(255,255,255,0.08)',
+                background: 'var(--chip)',
+                border: '1px solid var(--border)',
                 borderRadius: '8px',
-                color: '#97A6BA',
+                color: 'var(--text-secondary)',
                 fontSize: '14px',
                 cursor: 'pointer',
                 fontFamily: 'Inter, sans-serif',
               }}
             >
-              Отмена
+              {t.admin.common.cancel}
             </button>
           </div>
         </form>

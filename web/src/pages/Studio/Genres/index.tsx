@@ -8,6 +8,7 @@ import GenresFilters from './GenresFilters';
 import GenreModal from './GenreModal';
 import { canManageGenres } from '../../../types/admin';
 import { apiClient } from '../../../shared/api/client';
+import { getLocaleData, getBrowserLocale } from '../../../locales';
 
 interface GenreTreeNode {
   id: string;
@@ -22,6 +23,7 @@ interface GenreTreeNode {
 }
 
 export default function AdminGenres() {
+  const t = getLocaleData(getBrowserLocale());
   const { searchQuery, isLoading, setLoading, error, setError, clearError } = useAdminStore();
   
   const [tree, setTree] = useState<GenreTreeNode[]>([]);
@@ -52,7 +54,7 @@ export default function AdminGenres() {
       const res = await apiClient.get('/admin/genres/tree');
       setTree(res.data || []);
     } catch (err: any) {
-      setError(err.response?.data?.detail || err.message || 'Ошибка загрузки жанров');
+      setError(err.response?.data?.detail || err.message || t.admin.genres.errorLoad);
     } finally {
       setLoading(false);
     }
@@ -69,7 +71,7 @@ export default function AdminGenres() {
       setDefaultParentId(null);
       await fetchTree();
     } catch (err: any) {
-      setError(err.response?.data?.detail || err.message || 'Ошибка создания жанра');
+      setError(err.response?.data?.detail || err.message || t.admin.genres.errorCreate);
     }
   };
 
@@ -80,7 +82,7 @@ export default function AdminGenres() {
       setDefaultParentId(null);
       await fetchTree();
     } catch (err: any) {
-      setError(err.response?.data?.detail || err.message || 'Ошибка обновления жанра');
+      setError(err.response?.data?.detail || err.message || t.admin.genres.errorUpdate);
     }
   };
 
@@ -92,7 +94,7 @@ export default function AdminGenres() {
       setGenreToDelete(null);
       await fetchTree();
     } catch (err: any) {
-      setError(err.response?.data?.detail || err.message || 'Ошибка удаления жанра');
+      setError(err.response?.data?.detail || err.message || t.admin.genres.errorDelete);
     }
   };
 
@@ -123,10 +125,10 @@ export default function AdminGenres() {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <h1 style={{ fontSize: '24px', fontWeight: '400', color: '#E6EDF3', margin: 0 }}>
-          🏷 Жанры
-          <span style={{ fontSize: '14px', color: '#97A6BA', marginLeft: '12px' }}>
-            {countAll(tree)} жанров
+        <h1 style={{ fontSize: '24px', fontWeight: '400', color: 'var(--text-primary)', margin: 0 }}>
+          {t.admin.genres.title}
+          <span style={{ fontSize: '14px', color: 'var(--text-secondary)', marginLeft: '12px' }}>
+            {countAll(tree)} {t.admin.common.genresCount}
           </span>
         </h1>
         {canManage && (
@@ -134,20 +136,20 @@ export default function AdminGenres() {
             onClick={() => handleOpenCreate()}
             style={{
               padding: '10px 20px',
-              background: '#5B86A1',
+              background: 'var(--primary)',
               border: 'none',
               borderRadius: '8px',
-              color: '#0A1118',
+              color: '#FFFFFF',
               fontSize: '14px',
               fontWeight: '500',
               cursor: 'pointer',
               fontFamily: 'Inter, sans-serif',
               transition: 'background 0.2s',
             }}
-            onMouseEnter={(e) => (e.currentTarget.style.background = '#4A7590')}
-            onMouseLeave={(e) => (e.currentTarget.style.background = '#5B86A1')}
+            onMouseEnter={(e) => (e.currentTarget.style.background = 'var(--primary-hover)')}
+            onMouseLeave={(e) => (e.currentTarget.style.background = 'var(--primary)')}
           >
-            + Добавить корневой жанр
+            {t.admin.genres.addRoot}
           </button>
         )}
       </div>
@@ -200,23 +202,25 @@ export default function AdminGenres() {
         >
           <div
             style={{
-              background: '#121C24',
+              background: 'var(--surface)',
               borderRadius: '16px',
               padding: '32px',
               maxWidth: '400px',
               width: '100%',
-              border: '1px solid rgba(255,255,255,0.08)',
+              border: '1px solid var(--border)',
             }}
             onClick={(e) => e.stopPropagation()}
           >
             <div style={{ textAlign: 'center', marginBottom: '20px' }}>
               <div style={{ fontSize: '48px' }}>⚠</div>
-              <h2 style={{ color: '#E6EDF3', fontSize: '20px', marginBottom: '8px' }}>Удалить жанр?</h2>
-              <p style={{ color: '#97A6BA', fontSize: '14px' }}>
-                Жанр <strong style={{ color: '#E6EDF3' }}>{genreToDelete.name}</strong> будет удалён.
+              <h2 style={{ color: 'var(--text-primary)', fontSize: '20px', marginBottom: '8px' }}>{t.admin.genres.deleteConfirm}</h2>
+              <p style={{ color: 'var(--text-secondary)', fontSize: '14px' }}>
+                {t.admin.genres.deleteConfirmText.split('{name}')[0]}
+                <strong style={{ color: 'var(--text-primary)' }}>{genreToDelete.name}</strong>
+                {t.admin.genres.deleteConfirmText.split('{name}')[1]}
                 {genreToDelete.book_count > 0 && (
                   <span style={{ display: 'block', color: '#D4A76A', fontSize: '13px', marginTop: '4px' }}>
-                    Привязано {genreToDelete.book_count} книг — связи будут разорваны.
+                    {t.admin.genres.linkedBooksCount.replace('{count}', String(genreToDelete.book_count))}
                   </span>
                 )}
               </p>
@@ -227,7 +231,7 @@ export default function AdminGenres() {
                 style={{
                   flex: 1,
                   padding: '12px',
-                  background: '#EF5350',
+                  background: 'var(--error)',
                   border: 'none',
                   borderRadius: '8px',
                   color: '#fff',
@@ -237,23 +241,23 @@ export default function AdminGenres() {
                   fontFamily: 'Inter, sans-serif',
                 }}
               >
-                Удалить
+                {t.admin.common.delete}
               </button>
               <button
                 onClick={() => setIsDeleteModalOpen(false)}
                 style={{
                   flex: 1,
                   padding: '12px',
-                  background: 'rgba(255,255,255,0.05)',
-                  border: '1px solid rgba(255,255,255,0.08)',
+                  background: 'var(--chip)',
+                  border: '1px solid var(--border)',
                   borderRadius: '8px',
-                  color: '#97A6BA',
+                  color: 'var(--text-secondary)',
                   fontSize: '14px',
                   cursor: 'pointer',
                   fontFamily: 'Inter, sans-serif',
                 }}
               >
-                Отмена
+                {t.admin.common.cancel}
               </button>
             </div>
           </div>

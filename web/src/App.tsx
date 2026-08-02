@@ -23,6 +23,13 @@ import StudioRoute from './pages/Studio/StudioRoute';
 import StudioHome from './pages/Studio/Dashboard';
 import StudioUsers from "./pages/Studio/Users";
 import StudioBooks from "./pages/Studio/Books";
+import {
+  BookWorkspaceLayout,
+  PlaceholderSection,
+  Overview as BookOverview,
+  Identity as BookIdentity,
+  Preview as BookPreview,
+} from "./pages/Studio/Books/BookWorkspace";
 import StudioAuthorsLayout from "./pages/Studio/Authors";
 import AuthorList from "./pages/Studio/Authors/AuthorList";
 import {
@@ -42,6 +49,10 @@ import {
 import StudioGenres from "./pages/Studio/Genres";
 import StudioTaxonomy from "./pages/Studio/Taxonomy";
 import StudioEntities from "./pages/Studio/Entities";
+import EntityWorkspace from "./pages/Studio/Entities/EntityWorkspace";
+import EntityOverview from "./pages/Studio/Entities/sections/Overview";
+import EntityIdentity from "./pages/Studio/Entities/sections/Identity";
+import EntityPreview from "./pages/Studio/Entities/sections/Preview";
 import ActivityLog from "./pages/Studio/Logs";
 import StudioSettings from "./pages/Studio/Settings";
 import ModerationQueue from "./pages/Studio/Moderation/ModerationPage";
@@ -83,9 +94,26 @@ export default function App() {
           <Route index element={<StudioHome />} />
           <Route path="users" element={<StudioUsers />} />
           <Route path="books" element={<StudioBooks />} />
+          <Route path="books/:id/workspace" element={<BookWorkspaceLayout />}>
+            <Route index element={<Navigate to="overview" replace />} />
+            <Route path="overview" element={<BookOverview />} />
+            <Route path="identity" element={<BookIdentity />} />
+            <Route path="preview" element={<BookPreview />} />
+            <Route path=":section" element={<PlaceholderSection />} />
+          </Route>
           <Route path="genres" element={<StudioGenres />} />
           <Route path="taxonomy" element={<StudioTaxonomy />} />
           <Route path="entities" element={<StudioEntities />} />
+          <Route path="entities/new" element={<EntityWorkspace />}>
+            <Route index element={<Navigate to="overview" replace />} />
+            <Route path="overview" element={<EntityOverview />} />
+          </Route>
+          <Route path="entities/:id" element={<EntityWorkspace />}>
+            <Route index element={<Navigate to="overview" replace />} />
+            <Route path="overview" element={<EntityOverview />} />
+            <Route path="identity" element={<EntityIdentity />} />
+            <Route path="preview" element={<EntityPreview />} />
+          </Route>
           <Route path="moderation" element={<ModerationQueue />} />
           <Route path="metadata" element={<MetadataWorkspace />} />
           <Route path="logs" element={<ActivityLog />} />

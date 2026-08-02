@@ -1,8 +1,10 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
+import { X, RotateCw, Pencil } from 'lucide-react';
 import { AdminAuthor, AuthorAward, GENDER_OPTIONS, DISPLAY_NAME_MODE_LABELS, computeDisplayName } from '../../../types/admin';
 import type { DisplayNameMode } from '../../../types/admin';
 import ChipInput from '../../../components/ChipInput';
 import { computeSearchAliases } from '../../../shared/utils/normalizeSearch';
+import { getLocaleData, getBrowserLocale } from '../../../locales';
 
 function normalizeDate(d: string | null | undefined): string {
   if (!d) return '';
@@ -45,8 +47,8 @@ interface AuthorModalProps {
 
 const inputStyle: React.CSSProperties = {
   width: '100%', padding: '10px 14px',
-  background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.08)',
-  borderRadius: '8px', color: '#E6EDF3', fontSize: '14px',
+  background: 'var(--input-bg)', border: '1px solid var(--border)',
+  borderRadius: '8px', color: 'var(--text-primary)', fontSize: '14px',
   fontFamily: 'Inter, sans-serif', outline: 'none', boxSizing: 'border-box',
 };
 
@@ -55,7 +57,7 @@ const textareaStyle: React.CSSProperties = {
 };
 
 const labelStyle: React.CSSProperties = {
-  color: '#97A6BA', fontSize: '13px', display: 'block', marginBottom: '4px',
+  color: 'var(--text-secondary)', fontSize: '13px', display: 'block', marginBottom: '4px',
 };
 
 const selectStyle: React.CSSProperties = {
@@ -67,9 +69,9 @@ const sectionStyle: React.CSSProperties = {
 };
 
 const sectionTitleStyle: React.CSSProperties = {
-  color: '#5B86A1', fontSize: '14px', fontWeight: '500',
+  color: 'var(--primary)', fontSize: '14px', fontWeight: '500',
   margin: '0 0 12px 0', letterSpacing: '0.5px',
-  paddingBottom: '8px', borderBottom: '1px solid rgba(255,255,255,0.06)',
+  paddingBottom: '8px', borderBottom: '1px solid var(--border)',
 };
 
 const tagColors: Record<string, string> = {
@@ -106,6 +108,7 @@ const DISPLAY_NAME_OPTIONS: { value: DisplayNameMode; label: string }[] = [
 ];
 
 export default function AuthorModal({ isOpen, mode, author, onClose, onSave }: AuthorModalProps) {
+  const t = getLocaleData(getBrowserLocale());
   // --- Identity ---
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
@@ -337,19 +340,19 @@ export default function AuthorModal({ isOpen, mode, author, onClose, onSave }: A
     if (!birthDate && !deathDate) return null;
     if (birthDate) {
       const bd = toUTCDate(birthDate);
-      if (isNaN(bd.getTime())) return 'Некорректная дата рождения';
+      if (isNaN(bd.getTime())) return t.admin.authors.invalidBirthDate;
       const now = new Date();
       const today = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
-      if (bd > today) return 'Дата рождения не может быть в будущем';
+      if (bd > today) return t.admin.authors.birthDateFuture;
     }
     if (deathDate) {
       const dd = toUTCDate(deathDate);
-      if (isNaN(dd.getTime())) return 'Некорректная дата смерти';
+      if (isNaN(dd.getTime())) return t.admin.authors.invalidDeathDate;
     }
     if (birthDate && deathDate) {
       const bd = toUTCDate(birthDate);
       const dd = toUTCDate(deathDate);
-      if (dd < bd) return 'Дата смерти не может быть раньше даты рождения';
+      if (dd < bd) return t.admin.authors.deathBeforeBirth;
     }
     return null;
   };
@@ -357,7 +360,7 @@ export default function AuthorModal({ isOpen, mode, author, onClose, onSave }: A
   // ===== Close guard =====
   const handleClose = () => {
     if (saveStatus === 'saving') return;
-    if (isDirty && saveStatus !== 'success' && !window.confirm('У вас есть несохранённые изменения. Отменить?')) return;
+    if (isDirty && saveStatus !== 'success' && !window.confirm(t.admin.common.unsavedChangesConfirm)) return;
     onClose();
   };
 
@@ -368,7 +371,7 @@ export default function AuthorModal({ isOpen, mode, author, onClose, onSave }: A
 
     const displayName = computedDisplayName || [firstName, lastName].filter(Boolean).join(' ') || birthName || penNames[0] || '';
     if (!displayName) {
-      setError('Имя автора обязательно');
+      setError(t.admin.authors.nameRequired);
       return;
     }
 
@@ -432,7 +435,7 @@ export default function AuthorModal({ isOpen, mode, author, onClose, onSave }: A
       setTimeout(() => onClose(), 1200);
     } catch (err: any) {
       setSaveStatus('error');
-      setError(err.message || 'Ошибка сохранения');
+      setError(err.message || t.admin.authors.errorSave);
     }
   };
 
@@ -465,21 +468,22 @@ export default function AuthorModal({ isOpen, mode, author, onClose, onSave }: A
     >
       <div
         style={{
-          background: '#121C24', borderRadius: '16px',
-          border: '1px solid rgba(255,255,255,0.08)',
+          background: 'var(--surface)', borderRadius: '16px',
+          border: '1px solid var(--border)',
           maxWidth: '800px', width: '100%', maxHeight: '90vh',
           overflowY: 'auto', padding: '32px',
         }}
         onClick={(e) => e.stopPropagation()}
       >
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
-          <h2 style={{ color: '#E6EDF3', fontSize: '22px', fontWeight: '400', margin: 0 }}>
-            {mode === 'create' ? '➕ Новый автор' : '✏️ Редактировать автора'}
+          <h2 style={{ color: 'var(--text-primary)', fontSize: '22px', fontWeight: '400', margin: 0 }}>
+            {mode === 'create' ? t.admin.authors.newAuthor : t.admin.authors.editAuthor}
           </h2>
           <button onClick={handleClose} style={{
-            background: 'none', border: 'none', color: '#97A6BA',
-            fontSize: '24px', cursor: 'pointer', padding: '4px 8px',
-          }}>✕</button>
+            background: 'none', border: 'none', color: 'var(--text-secondary)',
+            cursor: 'pointer', padding: '4px 8px', display: 'inline-flex',
+            alignItems: 'center', justifyContent: 'center',
+          }}><X size={20} /></button>
         </div>
 
         <form onSubmit={handleSubmit} onChange={() => { if (formReady) setIsDirty(true); }}>
@@ -520,7 +524,7 @@ export default function AuthorModal({ isOpen, mode, author, onClose, onSave }: A
           {/* ===== 2. DISPLAY NAME ===== */}
           <div style={sectionStyle}>
             <h3 style={sectionTitleStyle}>ОТОБРАЖАЕМОЕ ИМЯ</h3>
-            <p style={{ color: '#6B7A8D', fontSize: '12px', margin: '0 0 12px 0', lineHeight: 1.5 }}>
+            <p style={{ color: 'var(--text-muted)', fontSize: '12px', margin: '0 0 12px 0', lineHeight: 1.5 }}>
               Определяет, какое имя показывается на платформе.
             </p>
             <div style={{ marginBottom: '12px' }}>
@@ -533,12 +537,12 @@ export default function AuthorModal({ isOpen, mode, author, onClose, onSave }: A
                     onClick={() => { setIsDirty(true); setDisplayNameMode(opt.value); }}
                     style={{
                       padding: '8px 16px',
-                      background: displayNameMode === opt.value ? '#5B86A1' : 'rgba(255,255,255,0.05)',
+                      background: displayNameMode === opt.value ? 'var(--primary)' : 'var(--chip)',
                       border: displayNameMode === opt.value
-                        ? '1px solid #5B86A1'
-                        : '1px solid rgba(255,255,255,0.08)',
+                        ? '1px solid var(--primary)'
+                        : '1px solid var(--border)',
                       borderRadius: '8px',
-                      color: displayNameMode === opt.value ? '#0A1118' : '#97A6BA',
+                      color: displayNameMode === opt.value ? '#FFFFFF' : 'var(--text-secondary)',
                       cursor: 'pointer', fontSize: '13px',
                       fontFamily: 'Inter, sans-serif',
                       fontWeight: displayNameMode === opt.value ? '500' : '400',
@@ -559,11 +563,11 @@ export default function AuthorModal({ isOpen, mode, author, onClose, onSave }: A
             )}
             {computedDisplayName && (
               <div style={{
-                padding: '10px 14px', background: 'rgba(91,134,161,0.08)',
-                border: '1px solid rgba(91,134,161,0.15)', borderRadius: '8px',
+                padding: '10px 14px', background: 'var(--primary-soft)',
+                border: '1px solid var(--primary)', borderRadius: '8px',
               }}>
-                <span style={{ color: '#5B86A1', fontSize: '12px' }}>Будет отображаться как: </span>
-                <span style={{ color: '#E6EDF3', fontSize: '14px', fontWeight: '500' }}>{computedDisplayName}</span>
+                <span style={{ color: 'var(--primary)', fontSize: '12px' }}>Будет отображаться как: </span>
+                <span style={{ color: 'var(--text-primary)', fontSize: '14px', fontWeight: '500' }}>{computedDisplayName}</span>
               </div>
             )}
           </div>
@@ -589,10 +593,11 @@ export default function AuthorModal({ isOpen, mode, author, onClose, onSave }: A
                 <input value={slug} onChange={(e) => { slugManuallyEdited.current = true; setSlug(e.target.value); }}
                   placeholder="lev-tolstoj" style={{ ...inputStyle, flex: 1 }} />
                 <button type="button" onClick={() => { slugManuallyEdited.current = false; const source = nativeName || computedDisplayName; if (source) setSlug(slugify(source)); }}
-                  style={{ padding: '8px 12px', background: 'rgba(91,134,161,0.15)',
-                    border: '1px solid rgba(91,134,161,0.3)', borderRadius: '8px',
-                    color: '#5B86A1', cursor: 'pointer', fontSize: '12px', whiteSpace: 'nowrap' }}>
-                  ↻
+                  style={{ padding: '8px 12px', background: 'var(--primary-soft)',
+                    border: '1px solid var(--primary)', borderRadius: '8px',
+                    color: 'var(--primary)', cursor: 'pointer', fontSize: '12px', whiteSpace: 'nowrap',
+                    display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <RotateCw size={14} />
                 </button>
               </div>
             </div>
@@ -710,30 +715,32 @@ export default function AuthorModal({ isOpen, mode, author, onClose, onSave }: A
                 {awards.map((award) => (
                   <div key={award.id} style={{
                     display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-                    padding: '8px 12px', background: 'rgba(255,193,7,0.06)',
-                    border: '1px solid rgba(255,193,7,0.12)', borderRadius: '8px',
+                    padding: '8px 12px', background: 'var(--chip)',
+                    border: '1px solid var(--warning)', borderRadius: '8px',
                   }}>
                     <div>
-                      <span style={{ color: '#FFD54F', fontSize: '13px', fontWeight: '500' }}>{award.name}</span>
-                      {award.year && <span style={{ color: '#97A6BA', fontSize: '12px', marginLeft: '8px' }}>({award.year})</span>}
+                      <span style={{ color: 'var(--warning)', fontSize: '13px', fontWeight: '500' }}>{award.name}</span>
+                      {award.year && <span style={{ color: 'var(--text-secondary)', fontSize: '12px', marginLeft: '8px' }}>({award.year})</span>}
                       {award.organization && (
-                        <span style={{ color: '#97A6BA', fontSize: '12px', marginLeft: '8px' }}>— {award.organization}</span>
+                        <span style={{ color: 'var(--text-secondary)', fontSize: '12px', marginLeft: '8px' }}>— {award.organization}</span>
                       )}
                       {award.work && (
-                        <span style={{ color: '#5B86A1', fontSize: '12px', display: 'block', marginTop: '2px' }}>
+                        <span style={{ color: 'var(--primary)', fontSize: '12px', display: 'block', marginTop: '2px' }}>
                           {award.work}
                         </span>
                       )}
                     </div>
                     <div style={{ display: 'flex', gap: '6px' }}>
-                      <button onClick={() => startEditAward(award)} style={{
-                        background: 'none', border: 'none', color: '#5B86A1',
+                      <button onClick={() => startEditAward(award)} title="Edit" style={{
+                        background: 'none', border: 'none', color: 'var(--primary)',
                         cursor: 'pointer', fontSize: '12px', padding: '2px 6px',
-                      }}>✎</button>
-                      <button onClick={() => handleDeleteAward(award.id)} style={{
-                        background: 'none', border: 'none', color: '#EF5350',
+                        display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                      }}><Pencil size={13} /></button>
+                      <button onClick={() => handleDeleteAward(award.id)} title="Delete" style={{
+                        background: 'none', border: 'none', color: 'var(--error)',
                         cursor: 'pointer', fontSize: '12px', padding: '2px 6px',
-                      }}>✕</button>
+                        display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                      }}><X size={13} /></button>
                     </div>
                   </div>
                 ))}
@@ -742,7 +749,7 @@ export default function AuthorModal({ isOpen, mode, author, onClose, onSave }: A
 
             {showAwardForm && (
               <div style={{
-                padding: '16px', background: 'rgba(255,255,255,0.03)',
+                padding: '16px', background: 'var(--surface-hover)',
                 borderRadius: '8px', marginBottom: '12px',
               }}>
                 <div style={grid2Style}>
@@ -771,16 +778,16 @@ export default function AuthorModal({ isOpen, mode, author, onClose, onSave }: A
                 </div>
                 <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
                   <button onClick={resetAwardForm} style={{
-                    padding: '8px 16px', background: 'rgba(255,255,255,0.05)',
-                    border: '1px solid rgba(255,255,255,0.08)', borderRadius: '8px',
-                    color: '#97A6BA', cursor: 'pointer', fontSize: '13px',
+                    padding: '8px 16px', background: 'var(--chip)',
+                    border: '1px solid var(--border)', borderRadius: '8px',
+                    color: 'var(--text-secondary)', cursor: 'pointer', fontSize: '13px',
                   }}>Отмена</button>
                   <button
                     onClick={editingAwardId ? handleUpdateAward : handleAddAward}
                     disabled={!awardName.trim()}
                     style={{
-                      padding: '8px 16px', background: '#FFD54F', border: 'none', borderRadius: '8px',
-                      color: '#0A1118', cursor: awardName.trim() ? 'pointer' : 'not-allowed',
+                      padding: '8px 16px', background: 'var(--warning)', border: 'none', borderRadius: '8px',
+                      color: '#FFFFFF', cursor: awardName.trim() ? 'pointer' : 'not-allowed',
                       fontSize: '13px', fontWeight: '500', opacity: awardName.trim() ? 1 : 0.5,
                     }}>
                     {editingAwardId ? 'Обновить' : 'Добавить'}
@@ -791,9 +798,9 @@ export default function AuthorModal({ isOpen, mode, author, onClose, onSave }: A
 
             {!showAwardForm && (
               <button onClick={() => setShowAwardForm(true)} style={{
-                padding: '8px 16px', background: 'rgba(255,193,7,0.1)',
-                border: '1px solid rgba(255,193,7,0.2)', borderRadius: '8px',
-                color: '#FFD54F', cursor: 'pointer', fontSize: '13px',
+                padding: '8px 16px', background: 'var(--chip)',
+                border: '1px solid var(--warning)', borderRadius: '8px',
+                color: 'var(--warning)', cursor: 'pointer', fontSize: '13px',
                 display: 'flex', alignItems: 'center', gap: '6px',
               }}>
                 + Добавить награду
@@ -825,7 +832,7 @@ export default function AuthorModal({ isOpen, mode, author, onClose, onSave }: A
               <label style={labelStyle}>Фон страницы автора</label>
               <input value={heroBackgroundUrl} onChange={(e) => setHeroBackgroundUrl(e.target.value)}
                 placeholder="https://example.com/hero-bg.jpg" style={inputStyle} />
-              <div style={{ fontSize: '11px', color: '#6E7C90', marginTop: '4px', fontStyle: 'italic' }}>
+              <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '4px', fontStyle: 'italic' }}>
                 Рекомендуемый размер: 1920×600px, соотношение 16:5
               </div>
             </div>
@@ -834,7 +841,7 @@ export default function AuthorModal({ isOpen, mode, author, onClose, onSave }: A
               <textarea value={authorIntroQuote} onChange={(e) => setAuthorIntroQuote(e.target.value)}
                 placeholder="One of the most influential voices of Russian literature..."
                 style={{ ...inputStyle, minHeight: '60px', resize: 'vertical', fontStyle: 'italic' }} />
-              <div style={{ fontSize: '11px', color: '#6E7C90', marginTop: '4px', fontStyle: 'italic' }}>
+              <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '4px', fontStyle: 'italic' }}>
                 Короткая цитата или описание автора, отображаемая в шапке страницы
               </div>
             </div>
@@ -844,9 +851,9 @@ export default function AuthorModal({ isOpen, mode, author, onClose, onSave }: A
                 {gallery.map((url, i) => (
                   <span key={i} onClick={() => removeGalleryItem(url)}
                     style={{
-                      padding: '3px 10px', background: '#5B86A112', borderRadius: '12px',
-                      fontSize: '12px', color: '#5B86A1', cursor: 'pointer',
-                      border: '1px solid #5B86A125', display: 'inline-flex', alignItems: 'center', gap: '4px',
+                      padding: '3px 10px', background: 'var(--primary-soft)', borderRadius: '12px',
+                      fontSize: '12px', color: 'var(--primary)', cursor: 'pointer',
+                      border: '1px solid var(--primary)', display: 'inline-flex', alignItems: 'center', gap: '4px',
                     }}>
                     {url.substring(0, 30)}… <span style={{ marginLeft: '2px' }}>×</span>
                   </span>
@@ -859,9 +866,9 @@ export default function AuthorModal({ isOpen, mode, author, onClose, onSave }: A
                   }}
                   placeholder="https://example.com/image.jpg" style={{ ...inputStyle, flex: 1 }} />
                 <button onClick={addGalleryItem}
-                  style={{ padding: '8px 12px', background: 'rgba(91,134,161,0.15)',
-                    border: '1px solid rgba(91,134,161,0.3)', borderRadius: '8px',
-                    color: '#5B86A1', cursor: 'pointer', fontSize: '13px' }}>+
+                  style={{ padding: '8px 12px', background: 'var(--primary-soft)',
+                    border: '1px solid var(--primary)', borderRadius: '8px',
+                    color: 'var(--primary)', cursor: 'pointer', fontSize: '13px' }}>+
                 </button>
               </div>
             </div>
@@ -872,51 +879,51 @@ export default function AuthorModal({ isOpen, mode, author, onClose, onSave }: A
             <div style={{
               ...sectionStyle,
               padding: '20px',
-              background: 'rgba(255,255,255,0.02)',
+              background: 'var(--surface-alt)',
               borderRadius: '8px',
-              border: '1px solid rgba(255,255,255,0.04)',
+              border: '1px solid var(--border)',
             }}>
               <h3 style={{
                 ...sectionTitleStyle,
-                color: '#6B7A8D',
+                color: 'var(--text-muted)',
                 fontSize: '12px',
-                borderBottomColor: 'rgba(255,255,255,0.04)',
+                borderBottomColor: 'var(--border)',
               }}>
                 СИСТЕМНАЯ ИНФОРМАЦИЯ
               </h3>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
                 <div>
-                  <label style={{ ...labelStyle, fontSize: '11px', color: '#6B7A8D' }}>ID</label>
-                  <div style={{ color: '#97A6BA', fontSize: '12px', fontFamily: 'monospace' }}>{author.id}</div>
+                  <label style={{ ...labelStyle, fontSize: '11px', color: 'var(--text-muted)' }}>ID</label>
+                  <div style={{ color: 'var(--text-secondary)', fontSize: '12px', fontFamily: 'monospace' }}>{author.id}</div>
                 </div>
                 <div>
-                  <label style={{ ...labelStyle, fontSize: '11px', color: '#6B7A8D' }}>Тип создания</label>
-                  <div style={{ color: '#97A6BA', fontSize: '12px' }}>{author.creation_type}</div>
+                  <label style={{ ...labelStyle, fontSize: '11px', color: 'var(--text-muted)' }}>Тип создания</label>
+                  <div style={{ color: 'var(--text-secondary)', fontSize: '12px' }}>{author.creation_type}</div>
                 </div>
                 <div>
-                  <label style={{ ...labelStyle, fontSize: '11px', color: '#6B7A8D' }}>Создан</label>
-                  <div style={{ color: '#97A6BA', fontSize: '12px' }}>{new Date(author.created_at).toLocaleString()}</div>
+                  <label style={{ ...labelStyle, fontSize: '11px', color: 'var(--text-muted)' }}>Создан</label>
+                  <div style={{ color: 'var(--text-secondary)', fontSize: '12px' }}>{new Date(author.created_at).toLocaleString()}</div>
                 </div>
                 <div>
-                  <label style={{ ...labelStyle, fontSize: '11px', color: '#6B7A8D' }}>Обновлён</label>
-                  <div style={{ color: '#97A6BA', fontSize: '12px' }}>{new Date(author.updated_at).toLocaleString()}</div>
+                  <label style={{ ...labelStyle, fontSize: '11px', color: 'var(--text-muted)' }}>Обновлён</label>
+                  <div style={{ color: 'var(--text-secondary)', fontSize: '12px' }}>{new Date(author.updated_at).toLocaleString()}</div>
                 </div>
                 <div style={{ gridColumn: '1 / -1' }}>
-                  <label style={{ ...labelStyle, fontSize: '11px', color: '#6B7A8D' }}>Книг в каталоге</label>
-                  <div style={{ color: '#97A6BA', fontSize: '12px' }}>{author.book_count || 0}</div>
+                  <label style={{ ...labelStyle, fontSize: '11px', color: 'var(--text-muted)' }}>Книг в каталоге</label>
+                  <div style={{ color: 'var(--text-secondary)', fontSize: '12px' }}>{author.book_count || 0}</div>
                 </div>
               </div>
             </div>
           )}
 
           {error && saveStatus !== 'saving' && (
-            <div style={{ color: '#EF5350', fontSize: '13px', marginBottom: '16px', padding: '10px 14px', background: 'rgba(239,83,80,0.08)', borderRadius: '8px', border: '1px solid rgba(239,83,80,0.15)' }}>
+            <div style={{ color: 'var(--error)', fontSize: '13px', marginBottom: '16px', padding: '10px 14px', background: 'var(--chip)', borderRadius: '8px', border: '1px solid var(--error)' }}>
               {error}
             </div>
           )}
 
           {saveStatus === 'success' && (
-            <div style={{ color: '#4CAF50', fontSize: '13px', marginBottom: '16px', padding: '10px 14px', background: 'rgba(76,175,80,0.08)', borderRadius: '8px', border: '1px solid rgba(76,175,80,0.15)', textAlign: 'center' }}>
+            <div style={{ color: 'var(--success)', fontSize: '13px', marginBottom: '16px', padding: '10px 14px', background: 'var(--chip)', borderRadius: '8px', border: '1px solid var(--success)', textAlign: 'center' }}>
               ✓ Сохранено
             </div>
           )}
@@ -926,31 +933,31 @@ export default function AuthorModal({ isOpen, mode, author, onClose, onSave }: A
               type="submit"
               disabled={saveStatus === 'saving' || saveStatus === 'success'}
               style={{
-                flex: 1, padding: '12px', background: saveStatus === 'success' ? '#4CAF50' : saveStatus === 'error' ? '#EF5350' : '#5B86A1',
+                flex: 1, padding: '12px', background: saveStatus === 'success' ? 'var(--success)' : saveStatus === 'error' ? 'var(--error)' : 'var(--primary)',
                 border: 'none', borderRadius: '8px',
-                color: '#0A1118', fontSize: '14px',
+                color: '#FFFFFF', fontSize: '14px',
                 fontWeight: '500',
                 cursor: saveStatus === 'saving' || saveStatus === 'success' ? 'not-allowed' : 'pointer',
                 opacity: saveStatus === 'saving' ? 0.6 : 1,
                 fontFamily: 'Inter, sans-serif', transition: 'background 0.2s',
               }}
             >
-              {saveStatus === 'saving' ? '⏳ Сохранение...' : saveStatus === 'success' ? '✓ Сохранено' : mode === 'create' ? '➕ Создать' : '💾 Сохранить'}
+              {saveStatus === 'saving' ? t.admin.common.saving : saveStatus === 'success' ? t.admin.common.save : t.admin.common.save}
             </button>
             <button
               type="button"
               onClick={handleClose}
               disabled={saveStatus === 'saving'}
               style={{
-                padding: '12px 24px', background: 'rgba(255,255,255,0.05)',
-                border: '1px solid rgba(255,255,255,0.08)', borderRadius: '8px',
-                color: '#97A6BA', fontSize: '14px',
+                padding: '12px 24px', background: 'var(--chip)',
+                border: '1px solid var(--border)', borderRadius: '8px',
+                color: 'var(--text-secondary)', fontSize: '14px',
                 cursor: saveStatus === 'saving' ? 'not-allowed' : 'pointer',
                 opacity: saveStatus === 'saving' ? 0.5 : 1,
                 fontFamily: 'Inter, sans-serif',
               }}
             >
-              Отмена
+              {t.admin.common.cancel}
             </button>
           </div>
         </form>

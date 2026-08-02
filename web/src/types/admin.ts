@@ -129,6 +129,7 @@ export interface AdminBookCreate {
   description?: string | null;
   publication_format?: string | null;
   publication_type?: 'official' | 'unofficial';
+  total_pages?: number | null;
 }
 
 export interface AdminBookUpdate extends Partial<AdminBookCreate> {
@@ -1001,6 +1002,19 @@ export interface KnowledgeEntity {
   created_at: string;
   updated_at: string;
 }
+
+export interface KnowledgeEntityCreate {
+  name: string;
+  slug?: string | null;
+  node_type: string;
+  parent_id?: string | null;
+  description?: string | null;
+  status?: 'draft' | 'published';
+  is_sapphire?: boolean;
+  explorer_visible?: boolean;
+}
+
+export interface KnowledgeEntityUpdate extends Partial<KnowledgeEntityCreate> {}
 
 export const CREATION_TYPE_LABELS: Record<string, string> = {
   individual_author: 'Индивидуальный автор',

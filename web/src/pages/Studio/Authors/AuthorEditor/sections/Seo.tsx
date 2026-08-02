@@ -1,4 +1,5 @@
 import { useAuthorEditor } from '../AuthorEditorContext';
+import { BookOpen } from 'lucide-react';
 import EditorSectionCard from '../../../../../components/Studio/shared/EditorSectionCard';
 import Field from '../../../../../components/Studio/shared/Field';
 import DetailGrid from '../../../../../components/Studio/shared/DetailGrid';
@@ -38,7 +39,7 @@ export default function Seo() {
             display: 'flex', alignItems: 'center', gap: '12px',
             padding: '12px 16px', background: 'var(--surface-hover)', borderRadius: '8px',
           }}>
-            <span style={{ fontSize: '18px' }}>📖</span>
+            <span style={{ display: 'inline-flex', color: 'var(--primary)', opacity: 0.7 }}><BookOpen size={18} /></span>
             <div style={{ flex: 1 }}>
               <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>{t.admin.authors.editor.seo.wikipedia}</div>
               <div style={{ fontSize: '14px', color: author.wikipedia_url ? 'var(--primary)' : 'var(--text-muted)' }}>

@@ -8,13 +8,13 @@ import { apiClient } from '../../../shared/api/client';
 
 const inputStyle: React.CSSProperties = {
   width: '100%', padding: '10px 14px',
-  background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.08)',
-  borderRadius: '8px', color: '#E6EDF3', fontSize: '14px',
+  background: 'rgba(0,0,0,0.3)', border: '1px solid var(--border)',
+  borderRadius: '8px', color: 'var(--text-primary)', fontSize: '14px',
   fontFamily: 'Inter, sans-serif', outline: 'none', boxSizing: 'border-box',
 };
 
 const labelStyle: React.CSSProperties = {
-  color: '#97A6BA', fontSize: '13px', display: 'block', marginBottom: '4px',
+  color: 'var(--text-secondary)', fontSize: '13px', display: 'block', marginBottom: '4px',
 };
 
 const sectionStyle: React.CSSProperties = {
@@ -22,8 +22,8 @@ const sectionStyle: React.CSSProperties = {
 };
 
 const sectionTitleStyle: React.CSSProperties = {
-  fontSize: '16px', fontWeight: '500', color: '#E6EDF3', margin: '0 0 16px 0',
-  paddingBottom: '8px', borderBottom: '1px solid rgba(255,255,255,0.06)',
+  fontSize: '16px', fontWeight: '500', color: 'var(--text-primary)', margin: '0 0 16px 0',
+  paddingBottom: '8px', borderBottom: '1px solid var(--border)',
 };
 
 export default function BookEnrichmentPage() {
@@ -278,7 +278,7 @@ export default function BookEnrichmentPage() {
 
   if (loading) {
     return (
-      <div style={{ padding: '40px', textAlign: 'center', color: '#97A6BA' }}>
+      <div style={{ padding: '40px', textAlign: 'center', color: 'var(--text-secondary)' }}>
         <RefreshCw size={24} className="spinner" />
       </div>
     );
@@ -286,13 +286,13 @@ export default function BookEnrichmentPage() {
 
   if (!book) {
     return (
-      <div style={{ padding: '40px', textAlign: 'center', color: '#EF5350' }}>
+      <div style={{ padding: '40px', textAlign: 'center', color: 'var(--error)' }}>
         {t.admin.enrichment.bookNotFound}
       </div>
     );
   }
 
-  const mc = METADATA_STATUS_COLORS[book.metadata_status] || '#97A6BA';
+  const mc = METADATA_STATUS_COLORS[book.metadata_status] || 'var(--text-secondary)';
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', maxWidth: '900px' }}>
@@ -300,18 +300,18 @@ export default function BookEnrichmentPage() {
         <button
           onClick={() => navigate('/admin/metadata')}
           style={{
-            padding: '8px', background: 'rgba(255,255,255,0.05)',
-            border: '1px solid rgba(255,255,255,0.08)', borderRadius: '8px',
-            color: '#97A6BA', cursor: 'pointer', display: 'flex', alignItems: 'center',
+            padding: '8px', background: 'var(--chip)',
+            border: '1px solid var(--border)', borderRadius: '8px',
+            color: 'var(--text-secondary)', cursor: 'pointer', display: 'flex', alignItems: 'center',
           }}
         >
           <ArrowLeft size={18} />
         </button>
         <div>
-          <h1 style={{ fontSize: '22px', fontWeight: '400', color: '#E6EDF3', margin: 0 }}>
+          <h1 style={{ fontSize: '22px', fontWeight: '400', color: 'var(--text-primary)', margin: 0 }}>
             {t.admin.enrichment.title}: {book.title}
           </h1>
-          <div style={{ fontSize: '13px', color: '#97A6BA', marginTop: '4px' }}>
+          <div style={{ fontSize: '13px', color: 'var(--text-secondary)', marginTop: '4px' }}>
             {book.author}
             <span style={{
               marginLeft: '10px', padding: '2px 10px', borderRadius: '10px', fontSize: '11px',
@@ -325,8 +325,8 @@ export default function BookEnrichmentPage() {
 
       {isModerator && (
         <div style={{
-          padding: '12px 16px', background: 'rgba(91,134,161,0.08)', borderRadius: '8px',
-          border: '1px solid rgba(91,134,161,0.15)', fontSize: '13px', color: '#5B86A1',
+          padding: '12px 16px', background: 'var(--primary-soft)', borderRadius: '8px',
+          border: '1px solid var(--primary)', fontSize: '13px', color: 'var(--primary)',
         }}>
           {t.admin.enrichment.moderatorNotice}
         </div>
@@ -334,8 +334,8 @@ export default function BookEnrichmentPage() {
 
       {book.missing_fields && book.missing_fields.length > 0 && (
         <div style={{
-          padding: '12px 16px', background: 'rgba(255,167,38,0.08)', borderRadius: '8px',
-          border: '1px solid rgba(255,167,38,0.15)', fontSize: '13px', color: '#FFA726',
+          padding: '12px 16px', background: 'var(--chip)', borderRadius: '8px',
+          border: '1px solid var(--warning)', fontSize: '13px', color: 'var(--warning)',
         }}>
           <strong>{t.admin.enrichment.missing}</strong> {book.missing_fields.map((f) => ENRICHMENT_FIELD_LABELS[f] || f).join(', ')}
         </div>
@@ -426,8 +426,8 @@ export default function BookEnrichmentPage() {
             <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', marginBottom: '6px' }}>
               {genres.map((g) => (
                 <span key={g} onClick={() => handleRemoveFromList(g, genres, setGenres)} style={{
-                  padding: '3px 10px', background: 'rgba(91,134,161,0.15)', borderRadius: '12px',
-                  fontSize: '12px', color: '#5B86A1', cursor: 'pointer', border: '1px solid rgba(91,134,161,0.3)',
+                  padding: '3px 10px', background: 'var(--primary-soft)', borderRadius: '12px',
+                  fontSize: '12px', color: 'var(--primary)', cursor: 'pointer', border: '1px solid var(--primary)',
                 }}>
                   {g} ×
                 </span>
@@ -443,7 +443,7 @@ export default function BookEnrichmentPage() {
               />
               <button
                 onClick={() => handleAddToList(genreInput, genres, setGenres, setGenreInput)}
-                style={{ padding: '8px 12px', background: 'rgba(91,134,161,0.15)', border: '1px solid rgba(91,134,161,0.3)', borderRadius: '8px', color: '#5B86A1', cursor: 'pointer', fontSize: '13px' }}
+                style={{ padding: '8px 12px', background: 'var(--primary-soft)', border: '1px solid var(--primary)', borderRadius: '8px', color: 'var(--primary)', cursor: 'pointer', fontSize: '13px' }}
               >
                 +
               </button>
@@ -459,24 +459,24 @@ export default function BookEnrichmentPage() {
         {/* Linked authors list */}
         <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginBottom: '12px' }}>
           {linkedAuthors.length === 0 && (
-            <span style={{ color: '#97A6BA', fontSize: '13px', fontStyle: 'italic' }}>{t.admin.enrichment.noAuthors}</span>
+            <span style={{ color: 'var(--text-secondary)', fontSize: '13px', fontStyle: 'italic' }}>{t.admin.enrichment.noAuthors}</span>
           )}
           {linkedAuthors.map((a) => (
             <span key={a.id} style={{
               display: 'inline-flex', alignItems: 'center', gap: '6px',
-              padding: '4px 10px 4px 14px', background: 'rgba(91,134,161,0.15)', borderRadius: '16px',
-              fontSize: '13px', color: '#5B86A1', border: '1px solid rgba(91,134,161,0.3)',
+              padding: '4px 10px 4px 14px', background: 'var(--primary-soft)', borderRadius: '16px',
+              fontSize: '13px', color: 'var(--primary)', border: '1px solid var(--primary)',
             }}>
               <Link2 size={12} />
               {getAuthorDisplayName(a)}
-              {a.country && <span style={{ color: '#97A6BA', fontSize: '11px' }}>({a.country})</span>}
+              {a.country && <span style={{ color: 'var(--text-secondary)', fontSize: '11px' }}>({a.country})</span>}
               {canEdit && (
                 <button
                   onClick={async () => {
                     await apiClient.delete(`/admin/books/${id}/authors/${a.id}`);
                     setLinkedAuthors((prev) => prev.filter((x) => x.id !== a.id));
                   }}
-                  style={{ background: 'none', border: 'none', color: '#EF5350', cursor: 'pointer', padding: 0, display: 'flex' }}
+                  style={{ background: 'none', border: 'none', color: 'var(--error)', cursor: 'pointer', padding: 0, display: 'flex' }}
                   title={t.admin.enrichment.removeAuthor}
                 >
                   <X size={14} />
@@ -503,8 +503,8 @@ export default function BookEnrichmentPage() {
                   <button
                     onClick={() => { setShowCreateAuthor(true); setCreateAuthorName(authorSearchQuery); }}
                     style={{
-                      padding: '8px 12px', background: 'rgba(91,134,161,0.15)', border: '1px solid rgba(91,134,161,0.3)',
-                      borderRadius: '8px', color: '#5B86A1', cursor: 'pointer', fontSize: '13px',
+                      padding: '8px 12px', background: 'var(--primary-soft)', border: '1px solid var(--primary)',
+                      borderRadius: '8px', color: 'var(--primary)', cursor: 'pointer', fontSize: '13px',
                       display: 'flex', alignItems: 'center', gap: '4px', whiteSpace: 'nowrap',
                     }}
                     title={t.admin.enrichment.createAuthor}
@@ -515,7 +515,7 @@ export default function BookEnrichmentPage() {
                 {showAuthorSearch && authorSearchResults.length > 0 && (
                   <div style={{
                     position: 'absolute', top: '100%', left: 0, right: 0,
-                    background: '#1A2832', border: '1px solid rgba(255,255,255,0.1)',
+                    background: '#1A2832', border: '1px solid var(--surface-hover)',
                     borderRadius: '8px', marginTop: '4px', maxHeight: '200px', overflowY: 'auto', zIndex: 10,
                   }}>
                     {authorSearchResults.map((a: any) => (
@@ -529,13 +529,13 @@ export default function BookEnrichmentPage() {
                           setShowAuthorSearch(false);
                         }}
                         style={{
-                          padding: '10px 14px', cursor: 'pointer', borderBottom: '1px solid rgba(255,255,255,0.04)',
-                          color: '#E6EDF3', fontSize: '14px', display: 'flex', alignItems: 'center', gap: '8px',
+                          padding: '10px 14px', cursor: 'pointer', borderBottom: '1px solid var(--border-soft)',
+                          color: 'var(--text-primary)', fontSize: '14px', display: 'flex', alignItems: 'center', gap: '8px',
                         }}
                       >
-                        <Plus size={14} color="#5B86A1" />
+                        <Plus size={14} color="var(--primary)" />
                         {getAuthorDisplayName(a)}
-                        {a.country && <span style={{ color: '#5B86A1', fontSize: '12px' }}>{a.country}</span>}
+                        {a.country && <span style={{ color: 'var(--primary)', fontSize: '12px' }}>{a.country}</span>}
                       </div>
                     ))}
                   </div>
@@ -564,8 +564,8 @@ export default function BookEnrichmentPage() {
                     setShowCreateAuthor(false);
                   }}
                   style={{
-                    padding: '8px 16px', background: '#5B86A1', border: 'none', borderRadius: '8px',
-                    color: '#0A1118', cursor: 'pointer', fontSize: '13px', fontWeight: '500',
+                    padding: '8px 16px', background: 'var(--primary)', border: 'none', borderRadius: '8px',
+                    color: '#FFFFFF', cursor: 'pointer', fontSize: '13px', fontWeight: '500',
                   }}
                 >
                   {t.admin.common.save}
@@ -573,8 +573,8 @@ export default function BookEnrichmentPage() {
                 <button
                   onClick={() => { setShowCreateAuthor(false); setCreateAuthorName(''); }}
                   style={{
-                    padding: '8px 12px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)',
-                    borderRadius: '8px', color: '#97A6BA', cursor: 'pointer', fontSize: '13px',
+                    padding: '8px 12px', background: 'var(--chip)', border: '1px solid var(--border)',
+                    borderRadius: '8px', color: 'var(--text-secondary)', cursor: 'pointer', fontSize: '13px',
                   }}
                 >
                   {t.admin.common.cancel}
@@ -614,7 +614,7 @@ export default function BookEnrichmentPage() {
             <label style={labelStyle}>{t.admin.enrichment.themes}</label>
             <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', marginBottom: '6px' }}>
               {themeRelations.length === 0 && (
-                <span style={{ color: '#97A6BA', fontSize: '13px', fontStyle: 'italic' }}>{t.admin.enrichment.noThemes}</span>
+                <span style={{ color: 'var(--text-secondary)', fontSize: '13px', fontStyle: 'italic' }}>{t.admin.enrichment.noThemes}</span>
               )}
               {themeRelations.map((r) => (
                 <span key={r.id} style={{
@@ -644,14 +644,14 @@ export default function BookEnrichmentPage() {
                 {showThemeSearch && (
                   <div style={{
                     position: 'absolute', top: '100%', left: 0, right: 0,
-                    background: '#1A2832', border: '1px solid rgba(255,255,255,0.1)',
+                    background: '#1A2832', border: '1px solid var(--surface-hover)',
                     borderRadius: '8px', marginTop: '4px', maxHeight: '200px', overflowY: 'auto', zIndex: 10,
                   }}>
                     {themeSearchResults.length === 0 && themeSearchQuery.length >= 1 && (
                       <div
                         onClick={() => handleCreateTaxonomyNode(themeSearchQuery.trim(), 'theme')}
                         style={{
-                          padding: '10px 14px', cursor: 'pointer', color: '#5B86A1',
+                          padding: '10px 14px', cursor: 'pointer', color: 'var(--primary)',
                           fontSize: '13px', display: 'flex', alignItems: 'center', gap: '8px',
                         }}
                       >
@@ -663,8 +663,8 @@ export default function BookEnrichmentPage() {
                         key={node.id}
                         onClick={() => handleAddTaxonomyRelation(node.id, 'theme')}
                         style={{
-                          padding: '10px 14px', cursor: 'pointer', borderBottom: '1px solid rgba(255,255,255,0.04)',
-                          color: '#E6EDF3', fontSize: '14px', display: 'flex', alignItems: 'center', gap: '8px',
+                          padding: '10px 14px', cursor: 'pointer', borderBottom: '1px solid var(--border-soft)',
+                          color: 'var(--text-primary)', fontSize: '14px', display: 'flex', alignItems: 'center', gap: '8px',
                         }}
                       >
                         <Plus size={14} color="#A855F7" />
@@ -682,13 +682,13 @@ export default function BookEnrichmentPage() {
             <label style={labelStyle}>{t.admin.enrichment.motifs}</label>
             <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', marginBottom: '6px' }}>
               {motifRelations.length === 0 && (
-                <span style={{ color: '#97A6BA', fontSize: '13px', fontStyle: 'italic' }}>{t.admin.enrichment.noMotifs}</span>
+                <span style={{ color: 'var(--text-secondary)', fontSize: '13px', fontStyle: 'italic' }}>{t.admin.enrichment.noMotifs}</span>
               )}
               {motifRelations.map((r) => (
                 <span key={r.id} style={{
-                  padding: '3px 10px', background: 'rgba(255,167,38,0.12)', borderRadius: '12px',
-                  fontSize: '12px', color: '#FFA726', cursor: canEdit ? 'pointer' : 'default',
-                  border: '1px solid rgba(255,167,38,0.25)', display: 'inline-flex', alignItems: 'center', gap: '4px',
+                  padding: '3px 10px', background: 'var(--chip)', borderRadius: '12px',
+                  fontSize: '12px', color: 'var(--warning)', cursor: canEdit ? 'pointer' : 'default',
+                  border: '1px solid var(--warning)', display: 'inline-flex', alignItems: 'center', gap: '4px',
                 }}>
                   {r.name}
                   {canEdit && (
@@ -712,14 +712,14 @@ export default function BookEnrichmentPage() {
                 {showMotifSearch && (
                   <div style={{
                     position: 'absolute', top: '100%', left: 0, right: 0,
-                    background: '#1A2832', border: '1px solid rgba(255,255,255,0.1)',
+                    background: '#1A2832', border: '1px solid var(--surface-hover)',
                     borderRadius: '8px', marginTop: '4px', maxHeight: '200px', overflowY: 'auto', zIndex: 10,
                   }}>
                     {motifSearchResults.length === 0 && motifSearchQuery.length >= 1 && (
                       <div
                         onClick={() => handleCreateTaxonomyNode(motifSearchQuery.trim(), 'motif')}
                         style={{
-                          padding: '10px 14px', cursor: 'pointer', color: '#FFA726',
+                          padding: '10px 14px', cursor: 'pointer', color: 'var(--warning)',
                           fontSize: '13px', display: 'flex', alignItems: 'center', gap: '8px',
                         }}
                       >
@@ -731,11 +731,11 @@ export default function BookEnrichmentPage() {
                         key={node.id}
                         onClick={() => handleAddTaxonomyRelation(node.id, 'motif')}
                         style={{
-                          padding: '10px 14px', cursor: 'pointer', borderBottom: '1px solid rgba(255,255,255,0.04)',
-                          color: '#E6EDF3', fontSize: '14px', display: 'flex', alignItems: 'center', gap: '8px',
+                          padding: '10px 14px', cursor: 'pointer', borderBottom: '1px solid var(--border-soft)',
+                          color: 'var(--text-primary)', fontSize: '14px', display: 'flex', alignItems: 'center', gap: '8px',
                         }}
                       >
-                        <Plus size={14} color="#FFA726" />
+                        <Plus size={14} color="var(--warning)" />
                         {node.name}
                       </div>
                     ))}
@@ -753,8 +753,8 @@ export default function BookEnrichmentPage() {
           onClick={handleSave}
           disabled={saving}
           style={{
-            padding: '12px 24px', background: '#5B86A1', border: 'none', borderRadius: '8px',
-            color: '#0A1118', fontSize: '14px', fontWeight: '500', cursor: saving ? 'not-allowed' : 'pointer',
+            padding: '12px 24px', background: 'var(--primary)', border: 'none', borderRadius: '8px',
+            color: '#FFFFFF', fontSize: '14px', fontWeight: '500', cursor: saving ? 'not-allowed' : 'pointer',
             opacity: saving ? 0.6 : 1, fontFamily: 'Inter, sans-serif',
             display: 'flex', alignItems: 'center', gap: '8px',
           }}
@@ -763,12 +763,12 @@ export default function BookEnrichmentPage() {
           {saving ? t.admin.common.saving : t.admin.common.save}
         </button>
         {success && (
-          <span style={{ color: '#4CAF50', fontSize: '13px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+          <span style={{ color: 'var(--success)', fontSize: '13px', display: 'flex', alignItems: 'center', gap: '6px' }}>
             <CheckCircle size={14} /> {t.admin.enrichment.saved}
           </span>
         )}
         {error && (
-          <span style={{ color: '#EF5350', fontSize: '13px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+          <span style={{ color: 'var(--error)', fontSize: '13px', display: 'flex', alignItems: 'center', gap: '6px' }}>
             <AlertCircle size={14} /> {error}
           </span>
         )}

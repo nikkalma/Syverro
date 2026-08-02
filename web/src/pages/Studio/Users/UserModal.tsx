@@ -1,8 +1,10 @@
 // src/pages/Studio/Users/UserModal.tsx
 
 import { useState } from 'react';
+import { X, Pencil } from 'lucide-react';
 import { AdminUser, ROLE_LABELS, ROLE_COLORS, getDisplayRole } from '../../../types/admin';
 import { apiClient } from '../../../shared/api/client';
+import { getLocaleData, getBrowserLocale } from '../../../locales';
 
 interface UserModalProps {
   isOpen: boolean;
@@ -14,6 +16,7 @@ interface UserModalProps {
 
 
 export default function UserModal({ isOpen, user, onClose, onUpdate }: UserModalProps) {
+  const t = getLocaleData(getBrowserLocale());
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState({
     first_name: user.first_name || '',
@@ -35,7 +38,7 @@ export default function UserModal({ isOpen, user, onClose, onUpdate }: UserModal
       setIsEditing(false);
       onUpdate();
     } catch (err: any) {
-      setError(err.response?.data?.detail || err.message || 'Ошибка обновления');
+      setError(err.response?.data?.detail || err.message || t.admin.users.errorSave);
     } finally {
       setLoading(false);
     }
@@ -69,9 +72,9 @@ export default function UserModal({ isOpen, user, onClose, onUpdate }: UserModal
     >
       <div
         style={{
-          background: '#121C24',
+          background: 'var(--surface)',
           borderRadius: '16px',
-          border: '1px solid rgba(255,255,255,0.08)',
+          border: '1px solid var(--border)',
           maxWidth: '600px',
           width: '100%',
           maxHeight: '90vh',
@@ -87,21 +90,21 @@ export default function UserModal({ isOpen, user, onClose, onUpdate }: UserModal
               width: '48px',
               height: '48px',
               borderRadius: '50%',
-              background: '#5B86A1',
+              background: 'var(--primary)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              color: '#0A1118',
+              color: '#FFFFFF',
               fontSize: '20px',
               fontWeight: '600',
             }}>
               {(user.first_name?.charAt(0) || user.email?.charAt(0) || 'U').toUpperCase()}
             </div>
             <div>
-              <div style={{ color: '#E6EDF3', fontSize: '18px', fontWeight: '500' }}>
-                {user.first_name || user.last_name ? `${user.first_name || ''} ${user.last_name || ''}`.trim() : 'Без имени'}
+              <div style={{ color: 'var(--text-primary)', fontSize: '18px', fontWeight: '500' }}>
+                {user.first_name || user.last_name ? `${user.first_name || ''} ${user.last_name || ''}`.trim() : t.admin.users.noName}
               </div>
-              <div style={{ color: '#97A6BA', fontSize: '14px' }}>{user.email || '—'}</div>
+              <div style={{ color: 'var(--text-secondary)', fontSize: '14px' }}>{user.email || '—'}</div>
             </div>
           </div>
           <button
@@ -109,86 +112,88 @@ export default function UserModal({ isOpen, user, onClose, onUpdate }: UserModal
             style={{
               background: 'none',
               border: 'none',
-              color: '#97A6BA',
-              fontSize: '24px',
+              color: 'var(--text-secondary)',
               cursor: 'pointer',
               padding: '4px 8px',
+              display: 'inline-flex',
+              alignItems: 'center',
+              justifyContent: 'center',
             }}
           >
-            ✕
+            <X size={20} />
           </button>
         </div>
 
         {/* ===== ИНФОРМАЦИЯ ===== */}
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '24px' }}>
           <div>
-            <div style={{ color: '#5B86A1', fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-              Роль
+            <div style={{ color: 'var(--primary)', fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+              {t.admin.users.role}
             </div>
             <div style={{
               display: 'inline-block',
               padding: '4px 14px',
               borderRadius: '12px',
               fontSize: '14px',
-              color: ROLE_COLORS[getDisplayRole(user)] || '#97A6BA',
-              background: 'rgba(255,255,255,0.05)',
-              border: `1px solid ${ROLE_COLORS[getDisplayRole(user)] || '#2A4B60'}40`,
+              color: ROLE_COLORS[getDisplayRole(user)] || 'var(--primary)',
+              background: 'var(--primary-soft)',
+              border: '1px solid var(--primary)',
               marginTop: '4px',
             }}>
               {ROLE_LABELS[getDisplayRole(user)] || getDisplayRole(user)}
             </div>
           </div>
           <div>
-            <div style={{ color: '#5B86A1', fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-              Статус
+            <div style={{ color: 'var(--primary)', fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+              {t.admin.users.status}
             </div>
             <div style={{
               display: 'inline-block',
               padding: '4px 14px',
               borderRadius: '12px',
               fontSize: '14px',
-              color: user.is_active ? '#4CAF50' : '#EF5350',
-              background: user.is_active ? 'rgba(76,175,80,0.1)' : 'rgba(239,83,80,0.1)',
-              border: `1px solid ${user.is_active ? 'rgba(76,175,80,0.2)' : 'rgba(239,83,80,0.2)'}`,
+              color: user.is_active ? 'var(--success)' : 'var(--error)',
+              background: user.is_active ? 'var(--chip)' : 'var(--chip)',
+              border: `1px solid ${user.is_active ? 'var(--success)' : 'var(--error)'}`,
               marginTop: '4px',
             }}>
-              {user.is_active ? '🟢 Активен' : '🔴 Заблокирован'}
+              {user.is_active ? t.admin.users.active : t.admin.users.blocked}
             </div>
           </div>
           <div>
-            <div style={{ color: '#5B86A1', fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-              Дата регистрации
+            <div style={{ color: 'var(--primary)', fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+              {t.admin.users.registered}
             </div>
-            <div style={{ color: '#E6EDF3', fontSize: '14px', marginTop: '4px' }}>
+            <div style={{ color: 'var(--text-primary)', fontSize: '14px', marginTop: '4px' }}>
               {formatDate(user.created_at)}
             </div>
           </div>
           {user.last_active && (
             <div>
-              <div style={{ color: '#5B86A1', fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-                Последняя активность
+              <div style={{ color: 'var(--primary)', fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                {t.admin.users.lastActive}
               </div>
-              <div style={{ color: '#E6EDF3', fontSize: '14px', marginTop: '4px' }}>
+              <div style={{ color: 'var(--text-primary)', fontSize: '14px', marginTop: '4px' }}>
                 {formatDate(user.last_active)}
               </div>
             </div>
           )}
           {user.phone && (
             <div>
-              <div style={{ color: '#5B86A1', fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-                Телефон
+              <div style={{ color: 'var(--primary)', fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                {t.admin.users.phone}
               </div>
-              <div style={{ color: '#E6EDF3', fontSize: '14px', marginTop: '4px' }}>
+              <div style={{ color: 'var(--text-primary)', fontSize: '14px', marginTop: '4px' }}>
                 {user.phone}
               </div>
             </div>
           )}
           {user.telegram_id && (
             <div>
-              <div style={{ color: '#5B86A1', fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-                Telegram ID
+              <div style={{ color: 'var(--primary)', fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                {t.admin.users.telegramId}
               </div>
-              <div style={{ color: '#E6EDF3', fontSize: '14px', marginTop: '4px' }}>
+              <div style={{ color: 'var(--text-primary)', fontSize: '14px', marginTop: '4px' }}>
                 {user.telegram_id}
               </div>
             </div>
@@ -197,12 +202,12 @@ export default function UserModal({ isOpen, user, onClose, onUpdate }: UserModal
 
         {/* ===== РЕДАКТИРОВАНИЕ ===== */}
         {isEditing ? (
-          <div style={{ borderTop: '1px solid rgba(255,255,255,0.06)', paddingTop: '20px' }}>
-            <h4 style={{ color: '#E6EDF3', fontSize: '14px', marginBottom: '12px' }}>✏️ Редактировать профиль</h4>
+          <div style={{ borderTop: '1px solid var(--border)', paddingTop: '20px' }}>
+            <h4 style={{ color: 'var(--text-primary)', fontSize: '14px', marginBottom: '12px' }}>{t.admin.users.editProfile}</h4>
             
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '12px' }}>
               <div>
-                <label style={{ color: '#97A6BA', fontSize: '12px', display: 'block', marginBottom: '4px' }}>Имя</label>
+                <label style={{ color: 'var(--text-secondary)', fontSize: '12px', display: 'block', marginBottom: '4px' }}>{t.admin.users.firstName}</label>
                 <input
                   type="text"
                   value={formData.first_name}
@@ -211,9 +216,9 @@ export default function UserModal({ isOpen, user, onClose, onUpdate }: UserModal
                     width: '100%',
                     padding: '8px 12px',
                     background: 'rgba(0,0,0,0.3)',
-                    border: '1px solid rgba(255,255,255,0.08)',
+                    border: '1px solid var(--border)',
                     borderRadius: '8px',
-                    color: '#E6EDF3',
+                    color: 'var(--text-primary)',
                     fontSize: '14px',
                     fontFamily: 'Inter, sans-serif',
                     outline: 'none',
@@ -221,7 +226,7 @@ export default function UserModal({ isOpen, user, onClose, onUpdate }: UserModal
                 />
               </div>
               <div>
-                <label style={{ color: '#97A6BA', fontSize: '12px', display: 'block', marginBottom: '4px' }}>Фамилия</label>
+                <label style={{ color: 'var(--text-secondary)', fontSize: '12px', display: 'block', marginBottom: '4px' }}>{t.admin.users.lastName}</label>
                 <input
                   type="text"
                   value={formData.last_name}
@@ -230,9 +235,9 @@ export default function UserModal({ isOpen, user, onClose, onUpdate }: UserModal
                     width: '100%',
                     padding: '8px 12px',
                     background: 'rgba(0,0,0,0.3)',
-                    border: '1px solid rgba(255,255,255,0.08)',
+                    border: '1px solid var(--border)',
                     borderRadius: '8px',
-                    color: '#E6EDF3',
+                    color: 'var(--text-primary)',
                     fontSize: '14px',
                     fontFamily: 'Inter, sans-serif',
                     outline: 'none',
@@ -241,7 +246,7 @@ export default function UserModal({ isOpen, user, onClose, onUpdate }: UserModal
               </div>
             </div>
             <div style={{ marginBottom: '12px' }}>
-              <label style={{ color: '#97A6BA', fontSize: '12px', display: 'block', marginBottom: '4px' }}>Username</label>
+              <label style={{ color: 'var(--text-secondary)', fontSize: '12px', display: 'block', marginBottom: '4px' }}>{t.admin.users.username}</label>
               <input
                 type="text"
                 value={formData.username}
@@ -250,9 +255,9 @@ export default function UserModal({ isOpen, user, onClose, onUpdate }: UserModal
                   width: '100%',
                   padding: '8px 12px',
                   background: 'rgba(0,0,0,0.3)',
-                  border: '1px solid rgba(255,255,255,0.08)',
+                  border: '1px solid var(--border)',
                   borderRadius: '8px',
-                  color: '#E6EDF3',
+                  color: 'var(--text-primary)',
                   fontSize: '14px',
                   fontFamily: 'Inter, sans-serif',
                   outline: 'none',
@@ -261,8 +266,8 @@ export default function UserModal({ isOpen, user, onClose, onUpdate }: UserModal
             </div>
 
             {error && (
-              <div style={{ color: '#EF5350', fontSize: '13px', marginBottom: '12px' }}>
-                ❌ {error}
+              <div style={{ color: 'var(--error)', fontSize: '13px', marginBottom: '12px' }}>
+                {error}
               </div>
             )}
 
@@ -273,10 +278,10 @@ export default function UserModal({ isOpen, user, onClose, onUpdate }: UserModal
                 style={{
                   flex: 1,
                   padding: '10px',
-                  background: '#5B86A1',
+                  background: 'var(--primary)',
                   border: 'none',
                   borderRadius: '8px',
-                  color: '#0A1118',
+                  color: '#FFFFFF',
                   fontSize: '14px',
                   fontWeight: '500',
                   cursor: loading ? 'not-allowed' : 'pointer',
@@ -284,7 +289,7 @@ export default function UserModal({ isOpen, user, onClose, onUpdate }: UserModal
                   fontFamily: 'Inter, sans-serif',
                 }}
               >
-                {loading ? 'Сохранение...' : '💾 Сохранить'}
+                {loading ? t.admin.common.saving : t.admin.common.save}
               </button>
               <button
                 onClick={() => {
@@ -293,52 +298,56 @@ export default function UserModal({ isOpen, user, onClose, onUpdate }: UserModal
                 }}
                 style={{
                   padding: '10px 20px',
-                  background: 'rgba(255,255,255,0.05)',
-                  border: '1px solid rgba(255,255,255,0.08)',
+                  background: 'var(--chip)',
+                  border: '1px solid var(--border)',
                   borderRadius: '8px',
-                  color: '#97A6BA',
+                  color: 'var(--text-secondary)',
                   fontSize: '14px',
                   cursor: 'pointer',
                   fontFamily: 'Inter, sans-serif',
                 }}
               >
-                Отмена
+                {t.admin.common.cancel}
               </button>
             </div>
           </div>
         ) : (
-          <div style={{ borderTop: '1px solid rgba(255,255,255,0.06)', paddingTop: '20px', display: 'flex', gap: '12px' }}>
+          <div style={{ borderTop: '1px solid var(--border)', paddingTop: '20px', display: 'flex', gap: '12px' }}>
             <button
               onClick={() => setIsEditing(true)}
               style={{
                 flex: 1,
                 padding: '10px',
-                background: 'rgba(91, 134, 161, 0.15)',
-                border: '1px solid rgba(91, 134, 161, 0.2)',
+                background: 'var(--primary-soft)',
+                border: '1px solid var(--primary)',
                 borderRadius: '8px',
-                color: '#5B86A1',
+                color: 'var(--primary)',
                 fontSize: '14px',
                 cursor: 'pointer',
                 fontFamily: 'Inter, sans-serif',
+                display: 'inline-flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '4px',
               }}
             >
-              ✏️ Редактировать
+              <> <Pencil size={14} /> {t.admin.common.edit} </>
             </button>
             <button
               onClick={onClose}
               style={{
                 flex: 1,
                 padding: '10px',
-                background: 'rgba(255,255,255,0.05)',
-                border: '1px solid rgba(255,255,255,0.08)',
+                background: 'var(--chip)',
+                border: '1px solid var(--border)',
                 borderRadius: '8px',
-                color: '#97A6BA',
+                color: 'var(--text-secondary)',
                 fontSize: '14px',
                 cursor: 'pointer',
                 fontFamily: 'Inter, sans-serif',
               }}
             >
-              Закрыть
+              {t.admin.common.close}
             </button>
           </div>
         )}

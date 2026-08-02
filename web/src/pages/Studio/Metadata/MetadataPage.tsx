@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { AdminBook } from '../../../types/admin';
 import { useAdminStore } from '../../../store/adminStore';
 import { METADATA_STATUS_LABELS, METADATA_STATUS_COLORS } from '../../../types/admin';
-import { RefreshCw, BookOpen, ArrowRight, Search } from 'lucide-react';
+import { RefreshCw, BookOpen, ArrowRight, Search, ScanSearch, ChevronLeft, ChevronRight } from 'lucide-react';
 import { getLocaleData, getBrowserLocale } from '../../../locales';
 import { apiClient } from '../../../shared/api/client';
 
@@ -55,9 +55,10 @@ export default function MetadataPage() {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
-        <h1 style={{ fontSize: '24px', fontWeight: '400', color: '#E6EDF3', margin: 0 }}>
-          📋 {t.admin.metadata.title}
-          <span style={{ fontSize: '14px', color: '#97A6BA', marginLeft: '12px' }}>
+        <h1 style={{ fontSize: '24px', fontWeight: '400', color: 'var(--text-primary)', margin: 0, display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <span style={{ display: 'inline-flex', color: 'var(--primary)' }}><ScanSearch size={20} /></span>
+          {t.admin.metadata.title}
+          <span style={{ fontSize: '14px', color: 'var(--text-secondary)', marginLeft: '12px' }}>
             {total} {t.admin.common.records}
           </span>
         </h1>
@@ -65,9 +66,9 @@ export default function MetadataPage() {
           onClick={fetchBooks}
           disabled={isLoading}
           style={{
-            padding: '8px 16px', background: 'rgba(255,255,255,0.05)',
-            border: '1px solid rgba(255,255,255,0.08)', borderRadius: '8px',
-            color: '#97A6BA', fontSize: '13px', cursor: 'pointer',
+            padding: '8px 16px', background: 'var(--chip)',
+            border: '1px solid var(--border)', borderRadius: '8px',
+            color: 'var(--text-secondary)', fontSize: '13px', cursor: 'pointer',
             display: 'flex', alignItems: 'center', gap: '6px', fontFamily: 'Inter, sans-serif',
           }}
         >
@@ -76,16 +77,16 @@ export default function MetadataPage() {
         </button>
       </div>
 
-      <div style={{ display: 'flex', gap: '4px', borderBottom: '1px solid rgba(255,255,255,0.06)', paddingBottom: '4px', flexWrap: 'wrap' }}>
+      <div style={{ display: 'flex', gap: '4px', borderBottom: '1px solid var(--border)', paddingBottom: '4px', flexWrap: 'wrap' }}>
         {tabs.map((tab) => (
           <button
             key={tab.key}
             onClick={() => setActiveTab(tab.key)}
             style={{
               padding: '8px 16px',
-              background: activeTab === tab.key ? '#5B86A1' : 'transparent',
+              background: activeTab === tab.key ? 'var(--primary)' : 'transparent',
               border: 'none', borderRadius: '8px 8px 0 0',
-              color: activeTab === tab.key ? '#0A1118' : '#97A6BA',
+              color: activeTab === tab.key ? '#FFFFFF' : 'var(--text-secondary)',
               cursor: 'pointer', fontSize: '13px', fontFamily: 'Inter, sans-serif',
               transition: 'all 0.2s', fontWeight: activeTab === tab.key ? '500' : '400',
             }}
@@ -97,7 +98,7 @@ export default function MetadataPage() {
 
       <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
         <div style={{ position: 'relative', flex: 1 }}>
-          <Search size={16} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: '#5B86A1' }} />
+          <Search size={16} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--primary)' }} />
           <input
             type="text"
             placeholder={t.admin.metadata.searchPlaceholder}
@@ -105,8 +106,8 @@ export default function MetadataPage() {
             onChange={(e) => setSearchQuery(e.target.value)}
             style={{
               width: '100%', padding: '10px 16px 10px 36px',
-              background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)',
-              borderRadius: '8px', color: '#E6EDF3', fontSize: '14px',
+              background: 'var(--chip)', border: '1px solid var(--border)',
+              borderRadius: '8px', color: 'var(--text-primary)', fontSize: '14px',
               fontFamily: 'Inter, sans-serif', outline: 'none', boxSizing: 'border-box',
             }}
           />
@@ -115,24 +116,24 @@ export default function MetadataPage() {
 
       <div style={{ overflowX: 'auto' }}>
         {isLoading ? (
-          <div style={{ padding: '40px', textAlign: 'center', color: '#97A6BA' }}>
+          <div style={{ padding: '40px', textAlign: 'center', color: 'var(--text-secondary)' }}>
             <RefreshCw size={24} className="spinner" />
           </div>
         ) : books.length === 0 ? (
           <div style={{
-            padding: '60px 20px', textAlign: 'center', color: '#97A6BA',
-            background: 'rgba(18, 28, 36, 0.6)', borderRadius: '12px',
-            border: '1px solid rgba(255,255,255,0.06)',
+            padding: '60px 20px', textAlign: 'center', color: 'var(--text-secondary)',
+            background: 'var(--glass-bg)', borderRadius: '12px',
+            border: '1px solid var(--border)',
           }}>
             <BookOpen size={48} style={{ opacity: 0.3, marginBottom: '12px' }} />
             <p>{t.admin.metadata.noBooksToEnrich}</p>
           </div>
         ) : (
-          <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+          <table className="studio-table">
             <thead>
-              <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+              <tr style={{ borderBottom: '1px solid var(--border)' }}>
                 {[t.admin.books.cover, t.admin.books.name, t.admin.books.author, t.admin.genres.type, t.admin.metadata.title, t.admin.enrichment.missing, t.admin.books.actions].map((h) => (
-                  <th key={h} style={{ padding: '12px 16px', textAlign: 'left', color: '#97A6BA', fontSize: '12px', fontWeight: '500' }}>
+                  <th key={h}>
                     {h}
                   </th>
                 ))}
@@ -140,44 +141,44 @@ export default function MetadataPage() {
             </thead>
             <tbody>
               {books.map((book) => {
-                const mc = METADATA_STATUS_COLORS[book.metadata_status] || '#97A6BA';
+                const mc = METADATA_STATUS_COLORS[book.metadata_status] || 'var(--text-secondary)';
                 const missingCount = book.missing_fields?.length || 0;
                 return (
                   <tr
                     key={book.id}
-                    style={{ borderBottom: '1px solid rgba(255,255,255,0.04)', transition: 'background 0.2s' }}
-                    onMouseEnter={(e) => (e.currentTarget.style.background = 'rgba(255,255,255,0.03)')}
+                    style={{ borderBottom: '1px solid var(--border-soft)', transition: 'background 0.2s' }}
+                    onMouseEnter={(e) => (e.currentTarget.style.background = 'var(--surface-hover)')}
                     onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
                   >
-                    <td style={{ padding: '12px 16px' }}>
+                    <td>
                       <div style={{
-                        width: '40px', height: '56px', borderRadius: '4px', background: '#0A1118',
-                        border: '1px solid rgba(255,255,255,0.06)', display: 'flex',
+                        width: '40px', height: '56px', borderRadius: '4px', background: 'var(--bg)',
+                        border: '1px solid var(--border)', display: 'flex',
                         alignItems: 'center', justifyContent: 'center', fontSize: '20px',
-                        color: '#5B86A1', overflow: 'hidden',
+                        color: 'var(--primary)', overflow: 'hidden',
                       }}>
                         {book.cover ? (
                           <img src={book.cover} alt={book.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                         ) : '📖'}
                       </div>
                     </td>
-                    <td style={{ padding: '12px 16px', color: '#E6EDF3', fontSize: '14px', fontWeight: '500', maxWidth: '200px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    <td style={{ padding: '12px 16px', color: 'var(--text-primary)', fontSize: '14px', fontWeight: '500', maxWidth: '200px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                       {book.title}
                     </td>
-                    <td style={{ padding: '12px 16px', color: '#97A6BA', fontSize: '13px', maxWidth: '160px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    <td style={{ padding: '12px 16px', color: 'var(--text-secondary)', fontSize: '13px', maxWidth: '160px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                       {book.author}
                     </td>
-                    <td style={{ padding: '12px 16px' }}>
+                    <td>
                       <span style={{
                         padding: '3px 10px', borderRadius: '10px', fontSize: '11px', fontWeight: '500',
-                        background: book.publication_type === 'unofficial' ? 'rgba(168,85,247,0.12)' : 'rgba(91,134,161,0.12)',
-                        color: book.publication_type === 'unofficial' ? '#A855F7' : '#5B86A1',
-                        border: `1px solid ${book.publication_type === 'unofficial' ? 'rgba(168,85,247,0.3)' : 'rgba(91,134,161,0.3)'}`,
+                        background: book.publication_type === 'unofficial' ? 'rgba(168,85,247,0.12)' : 'var(--primary-soft)',
+                        color: book.publication_type === 'unofficial' ? '#A855F7' : 'var(--primary)',
+                        border: `1px solid ${book.publication_type === 'unofficial' ? 'rgba(168,85,247,0.3)' : 'var(--primary)'}`,
                       }}>
-                        {book.publication_type === 'unofficial' ? '✏️ Неоф.' : '📚 Оф.'}
+                        {book.publication_type === 'unofficial' ? t.admin.metadata.unofficialShort : t.admin.metadata.officialShort}
                       </span>
                     </td>
-                    <td style={{ padding: '12px 16px' }}>
+                    <td>
                       <span style={{
                         padding: '4px 12px', borderRadius: '12px', fontSize: '12px', fontWeight: '500',
                         background: `${mc}18`, color: mc, border: `1px solid ${mc}30`,
@@ -185,7 +186,7 @@ export default function MetadataPage() {
                         {METADATA_STATUS_LABELS[book.metadata_status as keyof typeof METADATA_STATUS_LABELS] || book.metadata_status}
                       </span>
                     </td>
-                    <td style={{ padding: '12px 16px', fontSize: '12px', color: missingCount > 0 ? '#FFA726' : '#4CAF50' }}>
+                    <td style={{ padding: '12px 16px', fontSize: '12px', color: missingCount > 0 ? 'var(--warning)' : 'var(--success)' }}>
                       {missingCount > 0 ? (
                         <span title={book.missing_fields?.join(', ')}>
                           {missingCount} {t.admin.metadata.missingFields}
@@ -194,17 +195,17 @@ export default function MetadataPage() {
                         <span>{t.admin.metadata.allComplete}</span>
                       )}
                     </td>
-                    <td style={{ padding: '12px 16px' }}>
+                    <td>
                       <button
                         onClick={() => navigate(`/admin/books/${book.id}/enrichment`)}
                         style={{
-                          padding: '6px 14px', background: 'rgba(91,134,161,0.15)',
-                          border: '1px solid rgba(91,134,161,0.3)', borderRadius: '6px',
-                          color: '#5B86A1', fontSize: '12px', cursor: 'pointer',
+                          padding: '6px 14px', background: 'var(--primary-soft)',
+                          border: '1px solid var(--primary)', borderRadius: '6px',
+                          color: 'var(--primary)', fontSize: '12px', cursor: 'pointer',
                           fontFamily: 'Inter, sans-serif', display: 'flex', alignItems: 'center', gap: '6px',
                         }}
                       >
-                        Обогатить <ArrowRight size={12} />
+                        {t.admin.metadata.enrich} <ArrowRight size={12} />
                       </button>
                     </td>
                   </tr>
@@ -217,38 +218,38 @@ export default function MetadataPage() {
         {totalPages > 1 && (
           <div style={{
             display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-            padding: '16px 0', borderTop: '1px solid rgba(255,255,255,0.06)', marginTop: '8px',
+            padding: '16px 0', borderTop: '1px solid var(--border)', marginTop: '8px',
           }}>
-            <div style={{ color: '#97A6BA', fontSize: '13px' }}>
-              Показано {books.length} из {total}
+            <div style={{ color: 'var(--text-secondary)', fontSize: '13px' }}>
+              {t.admin.common.showing} {books.length} {t.admin.common.of} {total}
             </div>
             <div style={{ display: 'flex', gap: '8px' }}>
               <button
                 onClick={() => setPage(Math.max(1, page - 1))}
                 disabled={page <= 1}
                 style={{
-                  padding: '6px 14px', background: 'rgba(255,255,255,0.05)',
-                  border: '1px solid rgba(255,255,255,0.08)', borderRadius: '6px',
-                  color: page <= 1 ? '#2A4B60' : '#97A6BA', cursor: page <= 1 ? 'not-allowed' : 'pointer',
+                  padding: '6px 14px', background: 'var(--chip)',
+                  border: '1px solid var(--border)', borderRadius: '6px',
+                  color: page <= 1 ? 'var(--text-muted)' : 'var(--text-secondary)', cursor: page <= 1 ? 'not-allowed' : 'pointer',
                   fontFamily: 'Inter, sans-serif', fontSize: '13px',
                 }}
               >
-                ←
+                <ChevronLeft size={16} />
               </button>
-              <span style={{ padding: '6px 14px', color: '#E6EDF3', fontSize: '13px' }}>
+              <span style={{ padding: '6px 14px', color: 'var(--text-primary)', fontSize: '13px' }}>
                 {page} / {totalPages}
               </span>
               <button
                 onClick={() => setPage(Math.min(totalPages, page + 1))}
                 disabled={page >= totalPages}
                 style={{
-                  padding: '6px 14px', background: 'rgba(255,255,255,0.05)',
-                  border: '1px solid rgba(255,255,255,0.08)', borderRadius: '6px',
-                  color: page >= totalPages ? '#2A4B60' : '#97A6BA', cursor: page >= totalPages ? 'not-allowed' : 'pointer',
+                  padding: '6px 14px', background: 'var(--chip)',
+                  border: '1px solid var(--border)', borderRadius: '6px',
+                  color: page >= totalPages ? 'var(--text-muted)' : 'var(--text-secondary)', cursor: page >= totalPages ? 'not-allowed' : 'pointer',
                   fontFamily: 'Inter, sans-serif', fontSize: '13px',
                 }}
               >
-                →
+                <ChevronRight size={16} />
               </button>
             </div>
           </div>

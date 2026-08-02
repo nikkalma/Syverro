@@ -1,6 +1,8 @@
 import { useState, useMemo } from 'react';
+import { Pencil, X, Ban } from 'lucide-react';
 import type { TaxonomyNode, TaxonomyNodeType } from '../../../types/admin';
 import { TAXONOMY_NODE_COLORS } from '../../../types/admin';
+import { getLocaleData, getBrowserLocale } from '../../../locales';
 
 
 interface TaxonomyTreeProps {
@@ -26,6 +28,7 @@ function TreeNode({
   onDelete: (n: TaxonomyNode) => void; onAddChild: (id: string) => void;
   accentColor: string;
 }) {
+  const t = getLocaleData(getBrowserLocale());
   const hasChildren = node.children && node.children.length > 0;
   const isExpanded = expanded.has(node.id);
   const matchesSearch = searchQuery && node.name.toLowerCase().includes(searchQuery.toLowerCase());
@@ -46,14 +49,14 @@ function TreeNode({
         display: 'flex', alignItems: 'center', gap: '8px',
         padding: '8px 12px', paddingLeft: `${depth * 24 + 12}px`,
         borderRadius: '8px', cursor: 'default', transition: 'background 0.15s',
-        background: matchesSearch ? 'rgba(91,134,161,0.1)' : 'transparent',
+        background: matchesSearch ? 'var(--primary-soft)' : 'transparent',
       }}
-        onMouseEnter={(e) => { if (!matchesSearch) e.currentTarget.style.background = 'rgba(255,255,255,0.03)'; }}
+        onMouseEnter={(e) => { if (!matchesSearch) e.currentTarget.style.background = 'var(--surface-hover)'; }}
         onMouseLeave={(e) => { if (!matchesSearch) e.currentTarget.style.background = 'transparent'; }}
       >
         {hasChildren ? (
           <button onClick={() => toggle(node.id)} style={{
-            background: 'none', border: 'none', color: '#97A6BA', cursor: 'pointer',
+            background: 'none', border: 'none', color: 'var(--text-secondary)', cursor: 'pointer',
             padding: '2px', fontSize: '12px', lineHeight: 1, width: '20px',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             flexShrink: 0, transition: 'transform 0.2s',
@@ -62,12 +65,12 @@ function TreeNode({
         ) : <div style={{ width: '20px', flexShrink: 0 }} />}
 
         {!node.is_active && (
-          <span style={{ fontSize: '12px', color: '#EF5350' }}>🚫</span>
+          <span style={{ display: 'inline-flex', color: 'var(--error)' }}><Ban size={12} /></span>
         )}
 
         <span style={{
           fontSize: '14px', fontWeight: depth === 0 ? '500' : '400',
-          color: '#E6EDF3', flex: 1, minWidth: 0,
+          color: 'var(--text-primary)', flex: 1, minWidth: 0,
           overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
           textDecoration: !node.is_active ? 'line-through' : 'none',
           opacity: node.is_published ? 1 : 0.6,
@@ -80,13 +83,13 @@ function TreeNode({
             fontSize: '10px', padding: '2px 6px', borderRadius: '6px',
             background: `${accentColor}20`, color: accentColor,
             border: `1px solid ${accentColor}30`,
-          }}>Черновик</span>
+          }}>{t.admin.taxonomy.statusDraft}</span>
         )}
 
         {node.book_count > 0 && (
           <span style={{
-            fontSize: '11px', color: '#97A6BA',
-            background: 'rgba(255,255,255,0.04)',
+            fontSize: '11px', color: 'var(--text-secondary)',
+            background: 'var(--chip)',
             padding: '2px 8px', borderRadius: '10px', flexShrink: 0,
           }}>
             {node.book_count}
@@ -98,24 +101,26 @@ function TreeNode({
             onMouseEnter={(e) => (e.currentTarget.style.opacity = '1')}
             onMouseLeave={(e) => (e.currentTarget.style.opacity = '0.6')}
           >
-            <button onClick={() => onAddChild(node.id)} title="Добавить подузел" style={{
+            <button onClick={() => onAddChild(node.id)} title={t.admin.taxonomy.addChild} style={{
               padding: '3px 8px', background: 'none',
-              border: '1px solid rgba(255,255,255,0.08)', borderRadius: '4px',
-              color: '#97A6BA', fontSize: '12px', cursor: 'pointer',
+              border: '1px solid var(--border)', borderRadius: '4px',
+              color: 'var(--text-secondary)', fontSize: '12px', cursor: 'pointer',
               fontFamily: 'Inter, sans-serif',
             }}>+</button>
-            <button onClick={() => onEdit(node)} style={{
+            <button onClick={() => onEdit(node)} title={t.admin.common.edit} style={{
               padding: '3px 8px', background: 'none',
-              border: '1px solid rgba(255,255,255,0.08)', borderRadius: '4px',
-              color: '#5B86A1', fontSize: '12px', cursor: 'pointer',
+              border: '1px solid var(--border)', borderRadius: '4px',
+              color: 'var(--primary)', fontSize: '12px', cursor: 'pointer',
               fontFamily: 'Inter, sans-serif',
-            }}>✏️</button>
-            <button onClick={() => onDelete(node)} style={{
+              display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+            }}><Pencil size={14} /></button>
+            <button onClick={() => onDelete(node)} title={t.admin.common.delete} style={{
               padding: '3px 8px', background: 'none',
-              border: '1px solid rgba(239,83,80,0.2)', borderRadius: '4px',
-              color: '#EF5350', fontSize: '12px', cursor: 'pointer',
+              border: '1px solid var(--error)', borderRadius: '4px',
+              color: 'var(--error)', fontSize: '12px', cursor: 'pointer',
               fontFamily: 'Inter, sans-serif',
-            }}>✕</button>
+              display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+            }}><X size={14} /></button>
           </div>
         )}
       </div>
@@ -137,8 +142,9 @@ export default function TaxonomyTree({
   nodes, loading, error, searchQuery, canManage,
   nodeType, onEdit, onDelete, onAddChild, onRefresh,
 }: TaxonomyTreeProps) {
+  const t = getLocaleData(getBrowserLocale());
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
-  const accentColor = TAXONOMY_NODE_COLORS[nodeType] || '#5B86A1';
+  const accentColor = TAXONOMY_NODE_COLORS[nodeType] || 'var(--primary)';
 
   const toggle = (id: string) => {
     setExpanded((prev) => {
@@ -160,22 +166,22 @@ export default function TaxonomyTree({
   const collapseAll = () => setExpanded(new Set());
 
   if (loading) {
-    return <div style={{ padding: '20px', color: '#97A6BA', textAlign: 'center' }}>Загрузка...</div>;
+    return <div style={{ padding: '20px', color: 'var(--text-secondary)', textAlign: 'center' }}>{t.admin.common.loading}</div>;
   }
 
   if (error) {
     return (
       <div style={{
-        padding: '40px', textAlign: 'center', color: '#EF5350',
-        background: 'rgba(18, 28, 36, 0.6)', borderRadius: '12px',
-        border: '1px solid rgba(239,83,80,0.2)',
+        padding: '40px', textAlign: 'center', color: 'var(--error)',
+        background: 'var(--glass-bg)', borderRadius: '12px',
+        border: '1px solid var(--error)',
       }}>
         <p>{error}</p>
         <button onClick={onRefresh} style={{
-          marginTop: '12px', padding: '8px 20px', background: '#5B86A1',
-          border: 'none', borderRadius: '8px', color: '#0A1118', cursor: 'pointer',
+          marginTop: '12px', padding: '8px 20px', background: 'var(--primary)',
+          border: 'none', borderRadius: '8px', color: '#FFFFFF', cursor: 'pointer',
           fontFamily: 'Inter, sans-serif',
-        }}>Повторить</button>
+        }}>{t.admin.common.retry}</button>
       </div>
     );
   }
@@ -183,11 +189,11 @@ export default function TaxonomyTree({
   if (nodes.length === 0) {
     return (
       <div style={{
-        padding: '40px', textAlign: 'center', color: '#97A6BA',
-        background: 'rgba(18, 28, 36, 0.6)', borderRadius: '12px',
-        border: '1px solid rgba(255,255,255,0.06)',
+        padding: '40px', textAlign: 'center', color: 'var(--text-secondary)',
+        background: 'var(--glass-bg)', borderRadius: '12px',
+        border: '1px solid var(--border)',
       }}>
-        <p>Узлы не найдены</p>
+        <p>{t.admin.taxonomy.noNodes}</p>
       </div>
     );
   }
@@ -196,21 +202,21 @@ export default function TaxonomyTree({
     <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
       <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
         <button onClick={expandAll} style={{
-          padding: '6px 12px', background: 'rgba(255,255,255,0.04)',
-          border: '1px solid rgba(255,255,255,0.08)', borderRadius: '6px',
-          color: '#97A6BA', fontSize: '12px', cursor: 'pointer',
+          padding: '6px 12px', background: 'var(--chip)',
+          border: '1px solid var(--border)', borderRadius: '6px',
+          color: 'var(--text-secondary)', fontSize: '12px', cursor: 'pointer',
           fontFamily: 'Inter, sans-serif',
-        }}>Развернуть всё</button>
+        }}>{t.admin.taxonomy.expandAll}</button>
         <button onClick={collapseAll} style={{
-          padding: '6px 12px', background: 'rgba(255,255,255,0.04)',
-          border: '1px solid rgba(255,255,255,0.08)', borderRadius: '6px',
-          color: '#97A6BA', fontSize: '12px', cursor: 'pointer',
+          padding: '6px 12px', background: 'var(--chip)',
+          border: '1px solid var(--border)', borderRadius: '6px',
+          color: 'var(--text-secondary)', fontSize: '12px', cursor: 'pointer',
           fontFamily: 'Inter, sans-serif',
-        }}>Свернуть всё</button>
+        }}>{t.admin.taxonomy.collapseAll}</button>
       </div>
       <div style={{
-        background: 'rgba(18, 28, 36, 0.5)', borderRadius: '12px',
-        border: '1px solid rgba(255,255,255,0.06)', padding: '8px 0',
+        background: 'var(--glass-bg)', borderRadius: '12px',
+        border: '1px solid var(--border)', padding: '8px 0',
       }}>
         {nodes.map((node) => (
           <TreeNode key={node.id} node={node} depth={0}

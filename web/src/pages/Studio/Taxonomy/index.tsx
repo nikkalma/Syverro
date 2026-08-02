@@ -1,4 +1,5 @@
 import { useEffect, useState, useCallback } from 'react';
+import { AlertTriangle } from 'lucide-react';
 import { useAdminStore } from '../../../store/adminStore';
 import {
   TaxonomyNodeType, TAXONOMY_NODE_TYPES, TAXONOMY_NODE_TYPE_LABELS,
@@ -43,7 +44,7 @@ export default function AdminTaxonomy() {
       const res = await apiClient.get(`/admin/taxonomy/tree?node_type=${activeType}`);
       setTree(res.data || []);
     } catch (err: any) {
-      setError(err.response?.data?.detail || err.message || 'Ошибка загрузки таксономии');
+      setError(err.response?.data?.detail || err.message || t.admin.taxonomy.errorLoad);
     } finally {
       setLoading(false);
     }
@@ -60,7 +61,7 @@ export default function AdminTaxonomy() {
       setDefaultParentId(null);
       await fetchTree();
     } catch (err: any) {
-      setError(err.response?.data?.detail || err.message || 'Ошибка создания узла');
+      setError(err.response?.data?.detail || err.message || t.admin.taxonomy.errorCreate);
     }
   };
 
@@ -71,7 +72,7 @@ export default function AdminTaxonomy() {
       setDefaultParentId(null);
       await fetchTree();
     } catch (err: any) {
-      setError(err.response?.data?.detail || err.message || 'Ошибка обновления узла');
+      setError(err.response?.data?.detail || err.message || t.admin.taxonomy.errorUpdate);
     }
   };
 
@@ -83,7 +84,7 @@ export default function AdminTaxonomy() {
       setNodeToDelete(null);
       await fetchTree();
     } catch (err: any) {
-      setError(err.response?.data?.detail || err.message || 'Ошибка удаления узла');
+      setError(err.response?.data?.detail || err.message || t.admin.taxonomy.errorDelete);
     }
   };
 
@@ -110,14 +111,14 @@ export default function AdminTaxonomy() {
     ? ({ ...selectedNode, parent_id: defaultParentId, node_type: activeType } as TaxonomyNode)
     : selectedNode;
 
-  const typeColor = TAXONOMY_NODE_COLORS[activeType] || '#5B86A1';
+  const typeColor = TAXONOMY_NODE_COLORS[activeType] || 'var(--primary)';
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <h1 style={{ fontSize: '24px', fontWeight: '400', color: '#E6EDF3', margin: 0 }}>
+        <h1 style={{ fontSize: '24px', fontWeight: '400', color: 'var(--text-primary)', margin: 0 }}>
           🏛️ {(t.admin.nav as any).taxonomy || 'Таксономия'}
-          <span style={{ fontSize: '14px', color: '#97A6BA', marginLeft: '12px' }}>
+          <span style={{ fontSize: '14px', color: 'var(--text-secondary)', marginLeft: '12px' }}>
             {countAll(tree)} {t.admin.common.records}
           </span>
         </h1>
@@ -126,17 +127,17 @@ export default function AdminTaxonomy() {
             onClick={() => handleOpenCreate()}
             style={{
               padding: '10px 20px', background: typeColor, border: 'none',
-              borderRadius: '8px', color: '#0A1118', fontSize: '14px', fontWeight: '500',
+              borderRadius: '8px', color: '#FFFFFF', fontSize: '14px', fontWeight: '500',
               cursor: 'pointer', fontFamily: 'Inter, sans-serif',
             }}
           >
-            + Добавить
+            {t.admin.taxonomy.addNode}
           </button>
         )}
       </div>
 
       {/* Type tabs */}
-      <div style={{ display: 'flex', gap: '4px', borderBottom: '1px solid rgba(255,255,255,0.06)', paddingBottom: '4px', flexWrap: 'wrap' }}>
+      <div style={{ display: 'flex', gap: '4px', borderBottom: '1px solid var(--border)', paddingBottom: '4px', flexWrap: 'wrap' }}>
         {TAXONOMY_NODE_TYPES.map((nt) => (
           <button
             key={nt}
@@ -145,7 +146,7 @@ export default function AdminTaxonomy() {
               padding: '8px 16px',
               background: activeType === nt ? TAXONOMY_NODE_COLORS[nt] : 'transparent',
               border: 'none', borderRadius: '8px 8px 0 0',
-              color: activeType === nt ? '#0A1118' : '#97A6BA',
+              color: activeType === nt ? '#FFFFFF' : 'var(--text-secondary)',
               cursor: 'pointer', fontSize: '13px',
               display: 'flex', alignItems: 'center', gap: '6px',
               fontFamily: 'Inter, sans-serif',
@@ -163,13 +164,13 @@ export default function AdminTaxonomy() {
       <div style={{ display: 'flex', gap: '12px' }}>
         <input
           type="text"
-          placeholder="🔍 Поиск по названию..."
+          placeholder={t.admin.taxonomy.searchPlaceholder}
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
           style={{
             flex: 1, padding: '10px 16px',
-            background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)',
-            borderRadius: '8px', color: '#E6EDF3', fontSize: '14px',
+            background: 'var(--chip)', border: '1px solid var(--border)',
+            borderRadius: '8px', color: 'var(--text-primary)', fontSize: '14px',
             fontFamily: 'Inter, sans-serif', outline: 'none',
           }}
         />
@@ -207,33 +208,33 @@ export default function AdminTaxonomy() {
           justifyContent: 'center', zIndex: 1000,
         }} onClick={() => setIsDeleteModalOpen(false)}>
           <div style={{
-            background: '#121C24', borderRadius: '16px', padding: '32px',
-            maxWidth: '400px', width: '100%', border: '1px solid rgba(255,255,255,0.08)',
+            background: 'var(--surface)', borderRadius: '16px', padding: '32px',
+            maxWidth: '400px', width: '100%', border: '1px solid var(--border)',
           }} onClick={(e) => e.stopPropagation()}>
             <div style={{ textAlign: 'center', marginBottom: '20px' }}>
-              <div style={{ fontSize: '48px' }}>⚠️</div>
-              <h2 style={{ color: '#E6EDF3', fontSize: '20px', margin: '0 0 8px 0' }}>Удалить узел?</h2>
-              <p style={{ color: '#97A6BA', fontSize: '14px' }}>
-                <strong style={{ color: '#E6EDF3' }}>{nodeToDelete.name}</strong> будет удалён.
+              <div style={{ display: 'inline-flex', color: 'var(--error)', marginBottom: '12px' }}><AlertTriangle size={40} /></div>
+              <h2 style={{ color: 'var(--text-primary)', fontSize: '20px', margin: '0 0 8px 0' }}>{t.admin.taxonomy.deleteConfirm}</h2>
+              <p style={{ color: 'var(--text-secondary)', fontSize: '14px' }}>
+                <strong style={{ color: 'var(--text-primary)' }}>{nodeToDelete.name}</strong> {t.admin.taxonomy.deleteConfirmText}
                 {nodeToDelete.book_count > 0 && (
                   <span style={{ display: 'block', color: '#D4A76A', fontSize: '13px', marginTop: '4px' }}>
-                    Привязано {nodeToDelete.book_count} объектов.
+                    {t.admin.taxonomy.linkedObjects.replace('{count}', String(nodeToDelete.book_count))}
                   </span>
                 )}
               </p>
             </div>
             <div style={{ display: 'flex', gap: '12px' }}>
               <button onClick={handleDelete} style={{
-                flex: 1, padding: '12px', background: '#EF5350', border: 'none',
+                flex: 1, padding: '12px', background: 'var(--error)', border: 'none',
                 borderRadius: '8px', color: '#fff', fontSize: '14px', fontWeight: '500',
                 cursor: 'pointer', fontFamily: 'Inter, sans-serif',
-              }}>Удалить</button>
+              }}>{t.admin.common.delete}</button>
               <button onClick={() => setIsDeleteModalOpen(false)} style={{
-                flex: 1, padding: '12px', background: 'rgba(255,255,255,0.05)',
-                border: '1px solid rgba(255,255,255,0.08)', borderRadius: '8px',
-                color: '#97A6BA', fontSize: '14px', cursor: 'pointer',
+                flex: 1, padding: '12px', background: 'var(--chip)',
+                border: '1px solid var(--border)', borderRadius: '8px',
+                color: 'var(--text-secondary)', fontSize: '14px', cursor: 'pointer',
                 fontFamily: 'Inter, sans-serif',
-              }}>Отмена</button>
+              }}>{t.admin.common.cancel}</button>
             </div>
           </div>
         </div>

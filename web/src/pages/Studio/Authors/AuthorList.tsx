@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { AlertTriangle } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAdminStore } from '../../../store/adminStore';
 import { AdminAuthor, AdminAuthorCreate, getAuthorDisplayName } from '../../../types/admin';
@@ -43,7 +44,7 @@ export default function AuthorList() {
       setAuthors(res.data.data || []);
       setTotal(res.data.total || 0);
     } catch (err: any) {
-      setError(err.response?.data?.detail || err.message || 'Ошибка загрузки авторов');
+      setError(err.response?.data?.detail || err.message || t.admin.authors.errorLoad);
     } finally {
       setLoading(false);
     }
@@ -57,7 +58,7 @@ export default function AuthorList() {
     try {
       await apiClient.post('/admin/authors', data);
     } catch (err: any) {
-      throw new Error(err.response?.data?.detail || 'Ошибка создания автора');
+      throw new Error(err.response?.data?.detail || t.admin.authors.errorCreate);
     }
     try { await fetchAuthors(); } catch { /* non-critical */ }
   };
@@ -66,7 +67,7 @@ export default function AuthorList() {
     try {
       await apiClient.put(`/admin/authors/${id}`, data);
     } catch (err: any) {
-      throw new Error(err.response?.data?.detail || 'Ошибка обновления автора');
+      throw new Error(err.response?.data?.detail || t.admin.authors.errorUpdate);
     }
     try { await fetchAuthors(); } catch { /* non-critical */ }
   };
@@ -79,7 +80,7 @@ export default function AuthorList() {
       setAuthorToDelete(null);
       await fetchAuthors();
     } catch (err: any) {
-      setError(err.response?.data?.detail || err.message || 'Ошибка удаления автора');
+      setError(err.response?.data?.detail || err.message || t.admin.authors.errorDelete);
     }
   };
 
@@ -112,18 +113,18 @@ export default function AuthorList() {
             onClick={handleOpenCreate}
             style={{
               padding: '10px 20px',
-              background: '#5B86A1',
+              background: 'var(--primary)',
               border: 'none',
               borderRadius: '8px',
-              color: '#0A1118',
+              color: '#FFFFFF',
               fontSize: '14px',
               fontWeight: '500',
               cursor: 'pointer',
               fontFamily: 'Inter, sans-serif',
               transition: 'background 0.2s',
             }}
-            onMouseEnter={(e) => (e.currentTarget.style.background = '#4A7590')}
-            onMouseLeave={(e) => (e.currentTarget.style.background = '#5B86A1')}
+            onMouseEnter={(e) => (e.currentTarget.style.background = 'var(--primary-hover)')}
+            onMouseLeave={(e) => (e.currentTarget.style.background = 'var(--primary)')}
           >
             + {t.admin.authors.addAuthor}
           </button>
@@ -178,21 +179,21 @@ export default function AuthorList() {
         >
           <div
             style={{
-              background: '#121C24',
+              background: 'var(--surface)',
               borderRadius: '16px',
               padding: '32px',
               maxWidth: '400px',
               width: '100%',
-              border: '1px solid rgba(255,255,255,0.08)',
+              border: '1px solid var(--border)',
             }}
           >
             <div style={{ textAlign: 'center', marginBottom: '20px' }}>
-              <div style={{ fontSize: '48px' }}>⚠️</div>
-              <h2 style={{ color: '#E6EDF3', fontSize: '20px', marginBottom: '8px' }}>{t.admin.authors.deleteConfirm}</h2>
-              <p style={{ color: '#97A6BA', fontSize: '14px' }}>
-                {t.admin.authors.deleteConfirmText} <strong style={{ color: '#E6EDF3' }}>{getAuthorDisplayName(authorToDelete)}</strong>?
+              <div style={{ display: 'inline-flex', color: 'var(--error)', marginBottom: '12px' }}><AlertTriangle size={40} /></div>
+              <h2 style={{ color: 'var(--text-primary)', fontSize: '20px', marginBottom: '8px' }}>{t.admin.authors.deleteConfirm}</h2>
+              <p style={{ color: 'var(--text-secondary)', fontSize: '14px' }}>
+                {t.admin.authors.deleteConfirmText} <strong style={{ color: 'var(--text-primary)' }}>{getAuthorDisplayName(authorToDelete)}</strong>?
                 <br />
-                <span style={{ color: '#EF5350', fontSize: '13px' }}>{t.admin.authors.irreversible}</span>
+                <span style={{ color: 'var(--error)', fontSize: '13px' }}>{t.admin.authors.irreversible}</span>
               </p>
             </div>
             <div style={{ display: 'flex', gap: '12px' }}>
@@ -201,7 +202,7 @@ export default function AuthorList() {
                 style={{
                   flex: 1,
                   padding: '12px',
-                  background: '#EF5350',
+                  background: 'var(--error)',
                   border: 'none',
                   borderRadius: '8px',
                   color: '#fff',
@@ -218,10 +219,10 @@ export default function AuthorList() {
                 style={{
                   flex: 1,
                   padding: '12px',
-                  background: 'rgba(255,255,255,0.05)',
-                  border: '1px solid rgba(255,255,255,0.08)',
+                  background: 'var(--chip)',
+                  border: '1px solid var(--border)',
                   borderRadius: '8px',
-                  color: '#97A6BA',
+                  color: 'var(--text-secondary)',
                   fontSize: '14px',
                   cursor: 'pointer',
                   fontFamily: 'Inter, sans-serif',

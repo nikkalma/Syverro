@@ -1,8 +1,10 @@
 // src/pages/Admin/Books/index.tsx
 
 import { useEffect, useState } from 'react';
+import { AlertTriangle } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { useAdminStore } from '../../../store/adminStore';
-import { AdminBook, AdminBookCreate, AdminBookUpdate } from '../../../types/admin';
+import { AdminBook, AdminBookCreate } from '../../../types/admin';
 import BooksTable from './BooksTable';
 import BooksFilters from './BooksFilters';
 import BookModal from './BookModal';
@@ -13,6 +15,7 @@ import { apiClient } from '../../../shared/api/client';
 export default function AdminBooks() {
   const locale = getBrowserLocale();
   const t = getLocaleData(locale);
+  const navigate = useNavigate();
   const { searchQuery, filters, page, limit, setLoading, isLoading, error, setError, clearError } = useAdminStore();
   
   const [books, setBooks] = useState<AdminBook[]>([]);
@@ -44,7 +47,7 @@ export default function AdminBooks() {
       setBooks(response.data.data || []);
       setTotal(response.data.total || 0);
     } catch (err: any) {
-      setError(err.response?.data?.detail || err.message || 'Ошибка загрузки книг');
+      setError(err.response?.data?.detail || err.message || t.admin.books.errorLoad);
     } finally {
       setLoading(false);
     }
@@ -61,18 +64,7 @@ export default function AdminBooks() {
       setIsModalOpen(false);
       await fetchBooks();
     } catch (err: any) {
-      setError(err.response?.data?.detail || err.message || 'Ошибка создания книги');
-    }
-  };
-
-  // ===== ОБНОВЛЕНИЕ КНИГИ =====
-  const handleUpdate = async (id: string, data: AdminBookUpdate) => {
-    try {
-      await apiClient.put(`/admin/books/${id}`, data);
-      setIsModalOpen(false);
-      await fetchBooks();
-    } catch (err: any) {
-      setError(err.response?.data?.detail || err.message || 'Ошибка обновления книги');
+      setError(err.response?.data?.detail || err.message || t.admin.books.errorCreate);
     }
   };
 
@@ -92,7 +84,7 @@ export default function AdminBooks() {
       await apiClient.put(`/admin/books/${id}/publish`, { moderation_status: nextStatus });
       await fetchBooks();
     } catch (err: any) {
-      setError(err.response?.data?.detail || err.message || 'Ошибка изменения статуса');
+      setError(err.response?.data?.detail || err.message || t.admin.books.errorStatus);
     }
   };
 
@@ -106,7 +98,7 @@ export default function AdminBooks() {
       setBookToDelete(null);
       await fetchBooks();
     } catch (err: any) {
-      setError(err.response?.data?.detail || err.message || 'Ошибка удаления книги');
+      setError(err.response?.data?.detail || err.message || t.admin.books.errorDelete);
     }
   };
 
@@ -118,9 +110,7 @@ export default function AdminBooks() {
   };
 
   const handleOpenEdit = (book: AdminBook) => {
-    setSelectedBook(book);
-    setModalMode('edit');
-    setIsModalOpen(true);
+    navigate(`/studio/books/${book.id}/workspace`);
   };
 
   const handleOpenDelete = (book: AdminBook) => {
@@ -131,9 +121,9 @@ export default function AdminBooks() {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <h1 style={{ fontSize: '24px', fontWeight: '400', color: '#E6EDF3', margin: 0 }}>
+        <h1 style={{ fontSize: '24px', fontWeight: '400', color: 'var(--text-primary)', margin: 0 }}>
           {t.admin.books.title}
-          <span style={{ fontSize: '14px', color: '#97A6BA', marginLeft: '12px' }}>
+          <span style={{ fontSize: '14px', color: 'var(--text-secondary)', marginLeft: '12px' }}>
             {total} {t.admin.common.records}
           </span>
         </h1>
@@ -142,18 +132,18 @@ export default function AdminBooks() {
             onClick={handleOpenCreate}
             style={{
               padding: '10px 20px',
-              background: '#5B86A1',
+              background: 'var(--primary)',
               border: 'none',
               borderRadius: '8px',
-              color: '#0A1118',
+              color: '#FFFFFF',
               fontSize: '14px',
               fontWeight: '500',
               cursor: 'pointer',
               fontFamily: 'Inter, sans-serif',
               transition: 'background 0.2s',
             }}
-            onMouseEnter={(e) => (e.currentTarget.style.background = '#4A7590')}
-            onMouseLeave={(e) => (e.currentTarget.style.background = '#5B86A1')}
+            onMouseEnter={(e) => (e.currentTarget.style.background = 'var(--primary-hover)')}
+            onMouseLeave={(e) => (e.currentTarget.style.background = 'var(--primary)')}
           >
             + {t.admin.books.addBook}
           </button>
@@ -188,8 +178,6 @@ export default function AdminBooks() {
         onSave={(data) => {
           if (modalMode === 'create') {
             handleCreate(data as AdminBookCreate);
-          } else if (selectedBook) {
-            handleUpdate(selectedBook.id, data);
           }
         }}
       />
@@ -211,22 +199,22 @@ export default function AdminBooks() {
         >
           <div
             style={{
-              background: '#121C24',
+              background: 'var(--surface)',
               borderRadius: '16px',
               padding: '32px',
               maxWidth: '400px',
               width: '100%',
-              border: '1px solid rgba(255,255,255,0.08)',
+              border: '1px solid var(--border)',
             }}
             onClick={(e) => e.stopPropagation()}
           >
             <div style={{ textAlign: 'center', marginBottom: '20px' }}>
-              <div style={{ fontSize: '48px' }}>⚠️</div>
-              <h2 style={{ color: '#E6EDF3', fontSize: '20px', marginBottom: '8px' }}>{t.admin.books.deleteConfirm}</h2>
-              <p style={{ color: '#97A6BA', fontSize: '14px' }}>
-                {t.admin.books.deleteConfirmText} <strong style={{ color: '#E6EDF3' }}>{bookToDelete.title}</strong>?
+              <div style={{ display: 'inline-flex', color: 'var(--error)', marginBottom: '16px' }}><AlertTriangle size={48} /></div>
+              <h2 style={{ color: 'var(--text-primary)', fontSize: '20px', marginBottom: '8px' }}>{t.admin.books.deleteConfirm}</h2>
+              <p style={{ color: 'var(--text-secondary)', fontSize: '14px' }}>
+                {t.admin.books.deleteConfirmText} <strong style={{ color: 'var(--text-primary)' }}>{bookToDelete.title}</strong>?
                 <br />
-                <span style={{ color: '#EF5350', fontSize: '13px' }}>{t.admin.books.irreversible}</span>
+                <span style={{ color: 'var(--error)', fontSize: '13px' }}>{t.admin.books.irreversible}</span>
               </p>
             </div>
             <div style={{ display: 'flex', gap: '12px' }}>
@@ -235,7 +223,7 @@ export default function AdminBooks() {
                 style={{
                   flex: 1,
                   padding: '12px',
-                  background: '#EF5350',
+                  background: 'var(--error)',
                   border: 'none',
                   borderRadius: '8px',
                   color: '#fff',
@@ -252,10 +240,10 @@ export default function AdminBooks() {
                 style={{
                   flex: 1,
                   padding: '12px',
-                  background: 'rgba(255,255,255,0.05)',
-                  border: '1px solid rgba(255,255,255,0.08)',
+                  background: 'var(--chip)',
+                  border: '1px solid var(--border)',
                   borderRadius: '8px',
-                  color: '#97A6BA',
+                  color: 'var(--text-secondary)',
                   fontSize: '14px',
                   cursor: 'pointer',
                   fontFamily: 'Inter, sans-serif',

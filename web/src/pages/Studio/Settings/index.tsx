@@ -1,6 +1,7 @@
 // src/pages/Admin/Settings/index.tsx
 
 import { useEffect, useState } from 'react';
+import { ShieldAlert, AlertCircle } from 'lucide-react';
 import { useAdminStore } from '../../../store/adminStore';
 import { type AdminSettings } from '../../../types/admin';
 import { canManageSettings } from '../../../types/admin';
@@ -29,7 +30,7 @@ export default function AdminSettings() {
       setSettings(response.data);
       setFormData(response.data);
     } catch (err: any) {
-      setError(err.response?.data?.detail || err.message || 'Ошибка загрузки настроек');
+      setError(err.response?.data?.detail || err.message || t.admin.settings.errorLoad);
     } finally {
       setLoading(false);
     }
@@ -47,10 +48,10 @@ export default function AdminSettings() {
     try {
       const response = await apiClient.put('/admin/settings', formData);
       setSettings(response.data);
-      setSaveMessage({ type: 'success', text: '✅ Настройки успешно сохранены' });
+      setSaveMessage({ type: 'success', text: t.admin.settings.saved });
       setTimeout(() => setSaveMessage(null), 3000);
     } catch (err: any) {
-      setSaveMessage({ type: 'error', text: `❌ ${err.response?.data?.detail || err.message || 'Ошибка сохранения настроек'}` });
+      setSaveMessage({ type: 'error', text: `❌ ${err.response?.data?.detail || err.message || t.admin.settings.errorSave}` });
     } finally {
       setLoading(false);
     }
@@ -67,13 +68,13 @@ export default function AdminSettings() {
       <div style={{
         padding: '40px',
         textAlign: 'center',
-        color: '#EF5350',
-        background: 'rgba(18, 28, 36, 0.6)',
+        color: 'var(--error)',
+        background: 'var(--glass-bg)',
         borderRadius: '12px',
-        border: '1px solid rgba(239,83,80,0.2)',
+        border: '1px solid var(--error)',
       }}>
-        <div style={{ fontSize: '48px', marginBottom: '12px' }}>🚫</div>
-        <h2 style={{ color: '#E6EDF3', marginBottom: '8px' }}>{t.admin.settings.accessDenied}</h2>
+        <div style={{ display: 'inline-flex', color: 'var(--error)', marginBottom: '12px' }}><ShieldAlert size={40} /></div>
+        <h2 style={{ color: 'var(--text-primary)', marginBottom: '8px' }}>{t.admin.settings.accessDenied}</h2>
         <p>{t.admin.settings.accessDeniedDescription}</p>
       </div>
     );
@@ -82,7 +83,7 @@ export default function AdminSettings() {
   if (isLoading && !settings) {
     return (
       <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '200px' }}>
-        <div style={{ color: '#97A6BA' }}>{t.admin.common.loading}</div>
+        <div style={{ color: 'var(--text-secondary)' }}>{t.admin.common.loading}</div>
       </div>
     );
   }
@@ -92,22 +93,22 @@ export default function AdminSettings() {
       <div style={{
         padding: '40px',
         textAlign: 'center',
-        color: '#EF5350',
-        background: 'rgba(18, 28, 36, 0.6)',
+        color: 'var(--error)',
+        background: 'var(--glass-bg)',
         borderRadius: '12px',
-        border: '1px solid rgba(239,83,80,0.2)',
+        border: '1px solid var(--error)',
       }}>
-        <div style={{ fontSize: '32px', marginBottom: '12px' }}>⚠️</div>
+        <div style={{ display: 'inline-flex', color: 'var(--error)', marginBottom: '12px' }}><AlertCircle size={32} /></div>
         <p>{error}</p>
         <button
           onClick={fetchSettings}
           style={{
             marginTop: '12px',
             padding: '8px 20px',
-            background: '#5B86A1',
+            background: 'var(--primary)',
             border: 'none',
             borderRadius: '8px',
-            color: '#0A1118',
+            color: '#FFFFFF',
             cursor: 'pointer',
             fontFamily: 'Inter, sans-serif',
           }}
@@ -123,7 +124,7 @@ export default function AdminSettings() {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <h1 style={{ fontSize: '24px', fontWeight: '400', color: '#E6EDF3', margin: 0 }}>
+        <h1 style={{ fontSize: '24px', fontWeight: '400', color: 'var(--text-primary)', margin: 0 }}>
           {t.admin.settings.title}
         </h1>
       </div>
@@ -136,19 +137,19 @@ export default function AdminSettings() {
       }}>
         {/* ===== ОБЩИЕ НАСТРОЙКИ ===== */}
         <div style={{
-          background: 'rgba(18, 28, 36, 0.6)',
+          background: 'var(--glass-bg)',
           backdropFilter: 'blur(12px)',
           borderRadius: '16px',
-          border: '1px solid rgba(255,255,255,0.08)',
+          border: '1px solid var(--border)',
           padding: '24px',
         }}>
-          <h2 style={{ fontSize: '16px', color: '#E6EDF3', marginBottom: '20px' }}>
+          <h2 style={{ fontSize: '16px', color: 'var(--text-primary)', marginBottom: '20px' }}>
             {t.admin.settings.generalSettings}
           </h2>
 
           {/* Регистрация */}
           <div style={{ marginBottom: '16px' }}>
-            <label style={{ display: 'flex', alignItems: 'center', gap: '12px', color: '#E6EDF3', fontSize: '14px', cursor: 'pointer' }}>
+            <label style={{ display: 'flex', alignItems: 'center', gap: '12px', color: 'var(--text-primary)', fontSize: '14px', cursor: 'pointer' }}>
               <input
                 type="checkbox"
                 checked={formData.registration_enabled ?? settings.registration_enabled}
@@ -156,20 +157,20 @@ export default function AdminSettings() {
                 style={{
                   width: '18px',
                   height: '18px',
-                  accentColor: '#5B86A1',
+                  accentColor: 'var(--primary)',
                   cursor: 'pointer',
                 }}
               />
               {t.admin.settings.registrationEnabled}
             </label>
-            <p style={{ color: '#97A6BA', fontSize: '12px', marginTop: '4px', marginLeft: '30px' }}>
+            <p style={{ color: 'var(--text-secondary)', fontSize: '12px', marginTop: '4px', marginLeft: '30px' }}>
               {t.admin.settings.registrationDescription}
             </p>
           </div>
 
           {/* Режим обслуживания */}
           <div style={{ marginBottom: '16px' }}>
-            <label style={{ display: 'flex', alignItems: 'center', gap: '12px', color: '#E6EDF3', fontSize: '14px', cursor: 'pointer' }}>
+            <label style={{ display: 'flex', alignItems: 'center', gap: '12px', color: 'var(--text-primary)', fontSize: '14px', cursor: 'pointer' }}>
               <input
                 type="checkbox"
                 checked={formData.maintenance_mode ?? settings.maintenance_mode}
@@ -177,20 +178,20 @@ export default function AdminSettings() {
                 style={{
                   width: '18px',
                   height: '18px',
-                  accentColor: '#5B86A1',
+                  accentColor: 'var(--primary)',
                   cursor: 'pointer',
                 }}
               />
               {t.admin.settings.maintenanceMode}
             </label>
-            <p style={{ color: '#97A6BA', fontSize: '12px', marginTop: '4px', marginLeft: '30px' }}>
+            <p style={{ color: 'var(--text-secondary)', fontSize: '12px', marginTop: '4px', marginLeft: '30px' }}>
               {t.admin.settings.maintenanceDescription}
             </p>
           </div>
 
           {/* Подтверждение email */}
           <div>
-            <label style={{ display: 'flex', alignItems: 'center', gap: '12px', color: '#E6EDF3', fontSize: '14px', cursor: 'pointer' }}>
+            <label style={{ display: 'flex', alignItems: 'center', gap: '12px', color: 'var(--text-primary)', fontSize: '14px', cursor: 'pointer' }}>
               <input
                 type="checkbox"
                 checked={formData.require_email_verification ?? settings.require_email_verification}
@@ -198,13 +199,13 @@ export default function AdminSettings() {
                 style={{
                   width: '18px',
                   height: '18px',
-                  accentColor: '#5B86A1',
+                  accentColor: 'var(--primary)',
                   cursor: 'pointer',
                 }}
               />
               {t.admin.settings.emailVerification}
             </label>
-            <p style={{ color: '#97A6BA', fontSize: '12px', marginTop: '4px', marginLeft: '30px' }}>
+            <p style={{ color: 'var(--text-secondary)', fontSize: '12px', marginTop: '4px', marginLeft: '30px' }}>
               {t.admin.settings.emailVerificationDescription}
             </p>
           </div>
@@ -212,19 +213,19 @@ export default function AdminSettings() {
 
         {/* ===== СИСТЕМНЫЕ НАСТРОЙКИ ===== */}
         <div style={{
-          background: 'rgba(18, 28, 36, 0.6)',
+          background: 'var(--glass-bg)',
           backdropFilter: 'blur(12px)',
           borderRadius: '16px',
-          border: '1px solid rgba(255,255,255,0.08)',
+          border: '1px solid var(--border)',
           padding: '24px',
         }}>
-          <h2 style={{ fontSize: '16px', color: '#E6EDF3', marginBottom: '20px' }}>
+          <h2 style={{ fontSize: '16px', color: 'var(--text-primary)', marginBottom: '20px' }}>
             {t.admin.settings.systemParameters}
           </h2>
 
           {/* Максимальный размер файла */}
           <div style={{ marginBottom: '16px' }}>
-            <label style={{ color: '#97A6BA', fontSize: '13px', display: 'block', marginBottom: '4px' }}>
+            <label style={{ color: 'var(--text-secondary)', fontSize: '13px', display: 'block', marginBottom: '4px' }}>
               {t.admin.settings.maxFileSize}
             </label>
             <input
@@ -237,9 +238,9 @@ export default function AdminSettings() {
                 width: '100%',
                 padding: '10px 14px',
                 background: 'rgba(0,0,0,0.3)',
-                border: '1px solid rgba(255,255,255,0.08)',
+                border: '1px solid var(--border)',
                 borderRadius: '8px',
-                color: '#E6EDF3',
+                color: 'var(--text-primary)',
                 fontSize: '14px',
                 fontFamily: 'Inter, sans-serif',
                 outline: 'none',
@@ -249,7 +250,7 @@ export default function AdminSettings() {
 
           {/* Название сайта */}
           <div style={{ marginBottom: '16px' }}>
-            <label style={{ color: '#97A6BA', fontSize: '13px', display: 'block', marginBottom: '4px' }}>
+            <label style={{ color: 'var(--text-secondary)', fontSize: '13px', display: 'block', marginBottom: '4px' }}>
               {t.admin.settings.siteName}
             </label>
             <input
@@ -260,9 +261,9 @@ export default function AdminSettings() {
                 width: '100%',
                 padding: '10px 14px',
                 background: 'rgba(0,0,0,0.3)',
-                border: '1px solid rgba(255,255,255,0.08)',
+                border: '1px solid var(--border)',
                 borderRadius: '8px',
-                color: '#E6EDF3',
+                color: 'var(--text-primary)',
                 fontSize: '14px',
                 fontFamily: 'Inter, sans-serif',
                 outline: 'none',
@@ -272,7 +273,7 @@ export default function AdminSettings() {
 
           {/* Описание сайта */}
           <div style={{ marginBottom: '16px' }}>
-            <label style={{ color: '#97A6BA', fontSize: '13px', display: 'block', marginBottom: '4px' }}>
+            <label style={{ color: 'var(--text-secondary)', fontSize: '13px', display: 'block', marginBottom: '4px' }}>
               {t.admin.settings.siteDescription}
             </label>
             <input
@@ -283,9 +284,9 @@ export default function AdminSettings() {
                 width: '100%',
                 padding: '10px 14px',
                 background: 'rgba(0,0,0,0.3)',
-                border: '1px solid rgba(255,255,255,0.08)',
+                border: '1px solid var(--border)',
                 borderRadius: '8px',
-                color: '#E6EDF3',
+                color: 'var(--text-primary)',
                 fontSize: '14px',
                 fontFamily: 'Inter, sans-serif',
                 outline: 'none',
@@ -295,7 +296,7 @@ export default function AdminSettings() {
 
           {/* Роль по умолчанию */}
           <div>
-            <label style={{ color: '#97A6BA', fontSize: '13px', display: 'block', marginBottom: '4px' }}>
+            <label style={{ color: 'var(--text-secondary)', fontSize: '13px', display: 'block', marginBottom: '4px' }}>
               {t.admin.settings.defaultRole}
             </label>
             <select
@@ -305,9 +306,9 @@ export default function AdminSettings() {
                 width: '100%',
                 padding: '10px 14px',
                 background: 'rgba(0,0,0,0.3)',
-                border: '1px solid rgba(255,255,255,0.08)',
+                border: '1px solid var(--border)',
                 borderRadius: '8px',
-                color: '#E6EDF3',
+                color: 'var(--text-primary)',
                 fontSize: '14px',
                 fontFamily: 'Inter, sans-serif',
                 outline: 'none',
@@ -324,10 +325,10 @@ export default function AdminSettings() {
 
       {/* ===== КНОПКА СОХРАНЕНИЯ ===== */}
       <div style={{
-        background: 'rgba(18, 28, 36, 0.6)',
+        background: 'var(--glass-bg)',
         backdropFilter: 'blur(12px)',
         borderRadius: '16px',
-        border: '1px solid rgba(255,255,255,0.08)',
+        border: '1px solid var(--border)',
         padding: '24px',
       }}>
         {saveMessage && (
@@ -335,9 +336,9 @@ export default function AdminSettings() {
             padding: '12px 16px',
             borderRadius: '8px',
             marginBottom: '16px',
-            background: saveMessage.type === 'success' ? 'rgba(76,175,80,0.1)' : 'rgba(239,83,80,0.1)',
-            border: `1px solid ${saveMessage.type === 'success' ? 'rgba(76,175,80,0.2)' : 'rgba(239,83,80,0.2)'}`,
-            color: saveMessage.type === 'success' ? '#4CAF50' : '#EF5350',
+            background: saveMessage.type === 'success' ? 'var(--chip)' : 'var(--chip)',
+            border: `1px solid ${saveMessage.type === 'success' ? 'var(--success)' : 'var(--error)'}`,
+            color: saveMessage.type === 'success' ? 'var(--success)' : 'var(--error)',
           }}>
             {saveMessage.text}
           </div>
@@ -349,10 +350,10 @@ export default function AdminSettings() {
           style={{
             width: '100%',
             padding: '12px',
-            background: '#5B86A1',
+            background: 'var(--primary)',
             border: 'none',
             borderRadius: '8px',
-            color: '#0A1118',
+            color: '#FFFFFF',
             fontSize: '16px',
             fontWeight: '500',
             cursor: isLoading ? 'not-allowed' : 'pointer',
@@ -361,16 +362,16 @@ export default function AdminSettings() {
             transition: 'background 0.2s',
           }}
           onMouseEnter={(e) => {
-            if (!isLoading) e.currentTarget.style.background = '#4A7590';
+            if (!isLoading) e.currentTarget.style.background = 'var(--primary-hover)';
           }}
           onMouseLeave={(e) => {
-            if (!isLoading) e.currentTarget.style.background = '#5B86A1';
+            if (!isLoading) e.currentTarget.style.background = 'var(--primary)';
           }}
         >
           {isLoading ? t.admin.common.saving : t.admin.common.save}
         </button>
 
-        <p style={{ color: '#5B86A1', fontSize: '12px', textAlign: 'center', marginTop: '12px' }}>
+        <p style={{ color: 'var(--primary)', fontSize: '12px', textAlign: 'center', marginTop: '12px' }}>
           {t.admin.settings.ownerOnly}
         </p>
       </div>

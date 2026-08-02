@@ -1,7 +1,7 @@
 // src/pages/Admin/Moderation/Suggestions.tsx
 
 import { useState, useEffect } from 'react';
-import { CheckCircle, XCircle, Clock, User, BookOpen, RefreshCw, FileText, Library, Archive, Trash2 } from 'lucide-react';
+import { CheckCircle, XCircle, Clock, User, BookOpen, RefreshCw, FileText, Library, Archive, Trash2, Inbox } from 'lucide-react';
 
 type SuggestionType = 'book' | 'fanfiction';
 
@@ -78,8 +78,9 @@ export default function Suggestions() {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
-        <h1 style={{ fontSize: '24px', fontWeight: '400', color: 'var(--text-primary)', margin: 0 }}>
-          📝 Модерация
+        <h1 style={{ fontSize: '24px', fontWeight: '400', color: 'var(--text-primary)', margin: 0, display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <span style={{ display: 'inline-flex', color: 'var(--primary)' }}><Inbox size={20} /></span>
+          Модерация
           <span style={{ fontSize: '14px', color: 'var(--text-muted)', marginLeft: '12px' }}>
             {pendingBooks.length} на модерации · {internalItems.length} в архиве
           </span>
@@ -224,9 +225,9 @@ export default function Suggestions() {
                           borderRadius: '12px',
                           fontSize: '12px',
                           fontWeight: '500',
-                          background: s.status === 'approved' ? 'rgba(76, 175, 80, 0.15)' : 'rgba(239, 83, 80, 0.15)',
+                          background: s.status === 'approved' ? 'var(--chip)' : 'var(--chip)',
                           color: s.status === 'approved' ? 'var(--success)' : 'var(--error)',
-                          border: `1px solid ${s.status === 'approved' ? 'rgba(76, 175, 80, 0.2)' : 'rgba(239, 83, 80, 0.2)'}`,
+                          border: `1px solid ${s.status === 'approved' ? 'var(--success)' : 'var(--error)'}`,
                         }}
                       >
                         {s.status === 'approved' ? '✅ Одобрено' : '❌ Отклонено'}
@@ -278,9 +279,9 @@ export default function Suggestions() {
                           borderRadius: '12px',
                           fontSize: '12px',
                           fontWeight: '500',
-                          background: 'rgba(91, 134, 161, 0.15)',
+                          background: 'var(--primary-soft)',
                           color: 'var(--primary)',
-                          border: '1px solid rgba(91, 134, 161, 0.2)',
+                          border: '1px solid var(--primary)',
                         }}
                       >
                         {s.status === 'internal' ? '📂 В архиве' : s.status}
@@ -292,7 +293,7 @@ export default function Suggestions() {
                           padding: '4px 10px',
                           fontSize: '12px',
                           color: 'var(--error)',
-                          borderColor: 'rgba(239, 83, 80, 0.2)',
+                          borderColor: 'var(--error)',
                         }}
                       >
                         <Trash2 size={14} />

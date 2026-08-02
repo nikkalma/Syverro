@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react';
+import { X } from 'lucide-react';
 import { useAdminStore } from '../../../store/adminStore';
+import { getLocaleData, getBrowserLocale } from '../../../locales';
 
 
 interface BooksFiltersProps {
@@ -8,6 +10,8 @@ interface BooksFiltersProps {
 
 
 export default function BooksFilters({ onFilterChange }: BooksFiltersProps) {
+  const locale = getBrowserLocale();
+  const t = getLocaleData(locale);
   const {
     searchQuery,
     setSearchQuery,
@@ -103,10 +107,10 @@ export default function BooksFilters({ onFilterChange }: BooksFiltersProps) {
       flexWrap: 'wrap',
       gap: '12px',
       padding: '16px',
-      background: 'rgba(18, 28, 36, 0.4)',
+      background: 'var(--glass-bg)',
       backdropFilter: 'blur(8px)',
       borderRadius: '12px',
-      border: '1px solid rgba(255,255,255,0.06)',
+      border: '1px solid var(--border)',
       alignItems: 'center',
     }}>
 
@@ -115,14 +119,14 @@ export default function BooksFilters({ onFilterChange }: BooksFiltersProps) {
           type="text"
           value={localSearch}
           onChange={(e) => setLocalSearch(e.target.value)}
-          placeholder="🔍 Поиск по названию, автору..."
+          placeholder={t.admin.books.searchPlaceholder}
           style={{
             width: '100%',
             padding: '8px 14px',
-            background: 'rgba(255,255,255,0.05)',
-            border: '1px solid rgba(255,255,255,0.08)',
+            background: 'var(--chip)',
+            border: '1px solid var(--border)',
             borderRadius: '8px',
-            color: '#E6EDF3',
+            color: 'var(--text-primary)',
             fontSize: '14px',
             fontFamily: 'Inter, sans-serif',
             outline: 'none',
@@ -136,9 +140,9 @@ export default function BooksFilters({ onFilterChange }: BooksFiltersProps) {
           value={statusFilter}
           onChange={(e) => setStatusFilter(e.target.value)}
         >
-          <option value="all">Все статусы</option>
-          <option value="published">📗 Опубликованные</option>
-          <option value="draft">📕 Черновики</option>
+          <option value="all">{t.admin.books.allStatuses}</option>
+          <option value="published">{t.admin.books.publishedFilter}</option>
+          <option value="draft">{t.admin.books.draftFilter}</option>
         </select>
       </div>
 
@@ -148,14 +152,14 @@ export default function BooksFilters({ onFilterChange }: BooksFiltersProps) {
           type="text"
           value={genreFilter}
           onChange={(e) => setGenreFilter(e.target.value)}
-          placeholder="🏷️ Фильтр по жанру"
+          placeholder={t.admin.books.genreFilterPlaceholder}
           style={{
             width: '100%',
             padding: '8px 14px',
-            background: 'rgba(255,255,255,0.05)',
-            border: '1px solid rgba(255,255,255,0.08)',
+            background: 'var(--chip)',
+            border: '1px solid var(--border)',
             borderRadius: '8px',
-            color: '#E6EDF3',
+            color: 'var(--text-primary)',
             fontSize: '14px',
             fontFamily: 'Inter, sans-serif',
             outline: 'none',
@@ -164,13 +168,28 @@ export default function BooksFilters({ onFilterChange }: BooksFiltersProps) {
       </div>
 
 
-      <button onClick={handleClear}>
-        ✕ Очистить
+      <button
+        onClick={handleClear}
+        style={{
+          padding: '8px 16px',
+          background: 'var(--chip)',
+          border: '1px solid var(--border)',
+          borderRadius: '8px',
+          color: 'var(--text-secondary)',
+          fontSize: '13px',
+          cursor: 'pointer',
+          fontFamily: 'Inter, sans-serif',
+          display: 'inline-flex',
+          alignItems: 'center',
+          gap: '6px',
+        }}
+      >
+        <> <X size={12} /> {t.admin.common.clear} </>
       </button>
 
 
       <div style={{
-        color: '#5B86A1',
+        color: 'var(--primary)',
         fontSize: '13px',
         marginLeft: 'auto',
       }}>
@@ -178,8 +197,8 @@ export default function BooksFilters({ onFilterChange }: BooksFiltersProps) {
           statusFilter !== 'all' ||
           genreFilter ||
           localSearch
-            ? '🔍 Фильтры активны'
-            : '📋 Все книги'
+            ? t.admin.common.filtersActive
+            : t.admin.books.allBooks
         }
       </div>
 

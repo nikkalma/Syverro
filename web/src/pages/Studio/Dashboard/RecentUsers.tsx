@@ -72,8 +72,8 @@ export default function RecentUsers({ users }: RecentUsersProps) {
                 fontSize: '11px',
                 padding: '2px 10px',
                 borderRadius: '12px',
-                background: 'rgba(91, 134, 161, 0.15)',
-                color: '#5B86A1',
+                background: 'var(--primary-soft)',
+                color: 'var(--primary)',
               }}>
                 {user.visible_role || user.role || t.admin.settings.roleUser}
               </div>

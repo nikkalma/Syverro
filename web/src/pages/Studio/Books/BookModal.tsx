@@ -1,10 +1,12 @@
 // src/pages/Admin/Books/BookModal.tsx
 
 import { useState, useEffect, useRef } from 'react';
+import { X } from 'lucide-react';
 import { apiClient } from '../../../shared/api/client';
 import type { AdminBook, AdminAuthor, AdminGenre } from '../../../types/admin';
 import { getAuthorDisplayName } from '../../../types/admin';
 import { useAuthStore } from '../../../store/authStore';
+import { getLocaleData, getBrowserLocale } from '../../../locales';
 
 interface BookModalProps {
   isOpen: boolean;
@@ -18,15 +20,16 @@ const inputStyle: React.CSSProperties = {
   width: '100%',
   padding: '10px 14px',
   background: 'rgba(0,0,0,0.3)',
-  border: '1px solid rgba(255,255,255,0.08)',
+  border: '1px solid var(--border)',
   borderRadius: '8px',
-  color: '#E6EDF3',
+  color: 'var(--text-primary)',
   fontSize: '14px',
   fontFamily: 'Inter, sans-serif',
   outline: 'none',
 };
 
 export default function BookModal({ isOpen, mode, book, onClose, onSave }: BookModalProps) {
+  const t = getLocaleData(getBrowserLocale());
   const user = useAuthStore((s) => s.user);
   const isModerator = user?.role === 'moderator';
 
@@ -171,10 +174,10 @@ export default function BookModal({ isOpen, mode, book, onClose, onSave }: BookM
       }
 
       if (!submitData.title) {
-        throw new Error('Название обязательно');
+        throw new Error(t.admin.books.titleRequired);
       }
       if (!submitData.author) {
-        throw new Error('Автор обязателен');
+        throw new Error(t.admin.books.authorRequired);
       }
 
       onSave(submitData);
@@ -202,9 +205,9 @@ export default function BookModal({ isOpen, mode, book, onClose, onSave }: BookM
     >
       <div
         style={{
-          background: '#121C24',
+          background: 'var(--surface)',
           borderRadius: '16px',
-          border: '1px solid rgba(255,255,255,0.08)',
+          border: '1px solid var(--border)',
           maxWidth: '600px',
           width: '100%',
           maxHeight: '90vh',
@@ -214,28 +217,30 @@ export default function BookModal({ isOpen, mode, book, onClose, onSave }: BookM
         onClick={(e) => e.stopPropagation()}
       >
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
-          <h2 style={{ color: '#E6EDF3', fontSize: '22px', fontWeight: '400', margin: 0 }}>
-            {mode === 'create' ? '➕ Новая книга' : '✏️ Редактировать книгу'}
+          <h2 style={{ color: 'var(--text-primary)', fontSize: '22px', fontWeight: '400', margin: 0 }}>
+            {mode === 'create' ? t.admin.books.newBook : t.admin.books.editBook}
           </h2>
           <button
             onClick={onClose}
             style={{
               background: 'none',
               border: 'none',
-              color: '#97A6BA',
-              fontSize: '24px',
+              color: 'var(--text-secondary)',
               cursor: 'pointer',
               padding: '4px 8px',
+              display: 'inline-flex',
+              alignItems: 'center',
+              justifyContent: 'center',
             }}
           >
-            ✕
+            <X size={20} />
           </button>
         </div>
 
         <form onSubmit={handleSubmit}>
           {/* НАЗВАНИЕ */}
           <div style={{ marginBottom: '16px' }}>
-            <label style={{ color: '#97A6BA', fontSize: '13px', display: 'block', marginBottom: '4px' }}>
+            <label style={{ color: 'var(--text-secondary)', fontSize: '13px', display: 'block', marginBottom: '4px' }}>
               Название *
             </label>
             <input
@@ -250,8 +255,8 @@ export default function BookModal({ isOpen, mode, book, onClose, onSave }: BookM
 
           {/* АВТОР с автокомплитом */}
           <div style={{ marginBottom: '16px' }} ref={authorRef}>
-            <label style={{ color: '#97A6BA', fontSize: '13px', display: 'block', marginBottom: '4px' }}>
-              Автор * {formData.author_id && <span style={{ color: '#4CAF50', fontSize: '11px' }}>✓ из базы</span>}
+            <label style={{ color: 'var(--text-secondary)', fontSize: '13px', display: 'block', marginBottom: '4px' }}>
+              Автор * {formData.author_id && <span style={{ color: 'var(--success)', fontSize: '11px' }}>✓ из базы</span>}
             </label>
             <div style={{ position: 'relative' }}>
               <input
@@ -269,8 +274,8 @@ export default function BookModal({ isOpen, mode, book, onClose, onSave }: BookM
                   top: '100%',
                   left: 0,
                   right: 0,
-                  background: '#1A2832',
-                  border: '1px solid rgba(255,255,255,0.1)',
+                  background: 'var(--surface-hover)',
+                  border: '1px solid var(--surface-hover)',
                   borderRadius: '8px',
                   marginTop: '4px',
                   maxHeight: '200px',
@@ -284,15 +289,15 @@ export default function BookModal({ isOpen, mode, book, onClose, onSave }: BookM
                       style={{
                         padding: '10px 14px',
                         cursor: 'pointer',
-                        borderBottom: '1px solid rgba(255,255,255,0.04)',
-                        color: '#E6EDF3',
+                        borderBottom: '1px solid var(--border-soft)',
+                        color: 'var(--text-primary)',
                         fontSize: '14px',
                       }}
-                      onMouseEnter={(e) => (e.currentTarget.style.background = 'rgba(255,255,255,0.05)')}
+                      onMouseEnter={(e) => (e.currentTarget.style.background = 'var(--chip)')}
                       onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
                     >
                       {getAuthorDisplayName(a)}
-                      {a.country && <span style={{ color: '#5B86A1', fontSize: '12px', marginLeft: '8px' }}>{a.country}</span>}
+                      {a.country && <span style={{ color: 'var(--primary)', fontSize: '12px', marginLeft: '8px' }}>{a.country}</span>}
                     </div>
                   ))}
                 </div>
@@ -302,7 +307,7 @@ export default function BookModal({ isOpen, mode, book, onClose, onSave }: BookM
 
           {/* ТИП ПУБЛИКАЦИИ */}
           <div style={{ marginBottom: '16px' }}>
-            <label style={{ color: '#97A6BA', fontSize: '13px', display: 'block', marginBottom: '4px' }}>
+            <label style={{ color: 'var(--text-secondary)', fontSize: '13px', display: 'block', marginBottom: '4px' }}>
               Тип публикации
             </label>
             <select
@@ -311,7 +316,7 @@ export default function BookModal({ isOpen, mode, book, onClose, onSave }: BookM
               disabled={isModerator && mode === 'edit'}
               style={{
                 ...inputStyle,
-                background: isModerator && mode === 'edit' ? 'rgba(255,255,255,0.02)' : 'rgba(0,0,0,0.3)',
+                background: isModerator && mode === 'edit' ? 'var(--surface-alt)' : 'rgba(0,0,0,0.3)',
                 cursor: isModerator && mode === 'edit' ? 'not-allowed' : 'pointer',
               }}
             >
@@ -322,7 +327,7 @@ export default function BookModal({ isOpen, mode, book, onClose, onSave }: BookM
 
           {/* ОБЛОЖКА */}
           <div style={{ marginBottom: '16px' }}>
-            <label style={{ color: '#97A6BA', fontSize: '13px', display: 'block', marginBottom: '4px' }}>
+            <label style={{ color: 'var(--text-secondary)', fontSize: '13px', display: 'block', marginBottom: '4px' }}>
               Обложка (URL)
             </label>
             <input
@@ -337,7 +342,7 @@ export default function BookModal({ isOpen, mode, book, onClose, onSave }: BookM
           {/* ФОРМАТ ПУБЛИКАЦИИ */}
           {!(isModerator && mode === 'edit') && (
             <div style={{ marginBottom: '16px' }}>
-              <label style={{ color: '#97A6BA', fontSize: '13px', display: 'block', marginBottom: '4px' }}>
+              <label style={{ color: 'var(--text-secondary)', fontSize: '13px', display: 'block', marginBottom: '4px' }}>
                 Формат публикации
               </label>
               <select
@@ -364,7 +369,7 @@ export default function BookModal({ isOpen, mode, book, onClose, onSave }: BookM
 
           {/* ОПИСАНИЕ */}
           <div style={{ marginBottom: '16px' }}>
-            <label style={{ color: '#97A6BA', fontSize: '13px', display: 'block', marginBottom: '4px' }}>
+            <label style={{ color: 'var(--text-secondary)', fontSize: '13px', display: 'block', marginBottom: '4px' }}>
               Описание
             </label>
             <textarea
@@ -381,7 +386,7 @@ export default function BookModal({ isOpen, mode, book, onClose, onSave }: BookM
 
           {/* ЖАНРЫ — выбор из существующих */}
           <div style={{ marginBottom: '16px' }}>
-            <label style={{ color: '#97A6BA', fontSize: '13px', display: 'block', marginBottom: '4px' }}>
+            <label style={{ color: 'var(--text-secondary)', fontSize: '13px', display: 'block', marginBottom: '4px' }}>
               Жанры
             </label>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
@@ -398,9 +403,9 @@ export default function BookModal({ isOpen, mode, book, onClose, onSave }: BookM
                       fontSize: '13px',
                       cursor: 'pointer',
                       fontFamily: 'Inter, sans-serif',
-                      background: selected ? 'rgba(91, 134, 161, 0.25)' : 'rgba(255,255,255,0.05)',
-                      border: `1px solid ${selected ? 'rgba(91, 134, 161, 0.4)' : 'rgba(255,255,255,0.08)'}`,
-                      color: selected ? '#5B86A1' : '#97A6BA',
+                      background: selected ? 'var(--primary-soft)' : 'var(--chip)',
+                      border: `1px solid ${selected ? 'var(--primary)' : 'var(--border)'}`,
+                      color: selected ? 'var(--primary)' : 'var(--text-secondary)',
                     }}
                   >
                     {selected ? '✓ ' : ''}{genre.name}
@@ -418,11 +423,11 @@ export default function BookModal({ isOpen, mode, book, onClose, onSave }: BookM
                       alignItems: 'center',
                       gap: '6px',
                       padding: '4px 10px',
-                      background: 'rgba(91, 134, 161, 0.1)',
+                      background: 'var(--primary-soft)',
                       borderRadius: '12px',
                       fontSize: '13px',
-                      color: '#5B86A1',
-                      border: '1px solid rgba(91, 134, 161, 0.1)',
+                      color: 'var(--primary)',
+                      border: '1px solid var(--primary)',
                     }}
                   >
                     {genre}
@@ -432,7 +437,7 @@ export default function BookModal({ isOpen, mode, book, onClose, onSave }: BookM
                       style={{
                         background: 'none',
                         border: 'none',
-                        color: '#5B86A1',
+                        color: 'var(--primary)',
                         cursor: 'pointer',
                         fontSize: '14px',
                         padding: '0 2px',
@@ -449,7 +454,7 @@ export default function BookModal({ isOpen, mode, book, onClose, onSave }: BookM
           {/* СТАТУС ПУБЛИКАЦИИ */}
           {!(isModerator && mode === 'edit') && (
             <div style={{ marginBottom: '24px' }}>
-              <label style={{ display: 'flex', alignItems: 'center', gap: '10px', color: '#97A6BA', fontSize: '13px', cursor: 'pointer' }}>
+              <label style={{ display: 'flex', alignItems: 'center', gap: '10px', color: 'var(--text-secondary)', fontSize: '13px', cursor: 'pointer' }}>
                 <input
                   type="checkbox"
                   checked={formData.is_published}
@@ -457,7 +462,7 @@ export default function BookModal({ isOpen, mode, book, onClose, onSave }: BookM
                   style={{
                     width: '18px',
                     height: '18px',
-                    accentColor: '#5B86A1',
+                    accentColor: 'var(--primary)',
                     cursor: 'pointer',
                   }}
                 />
@@ -468,7 +473,7 @@ export default function BookModal({ isOpen, mode, book, onClose, onSave }: BookM
 
           {/* ОШИБКИ */}
           {error && (
-            <div style={{ color: '#EF5350', fontSize: '13px', marginBottom: '16px' }}>
+            <div style={{ color: 'var(--error)', fontSize: '13px', marginBottom: '16px' }}>
               {error}
             </div>
           )}
@@ -481,10 +486,10 @@ export default function BookModal({ isOpen, mode, book, onClose, onSave }: BookM
               style={{
                 flex: 1,
                 padding: '12px',
-                background: '#5B86A1',
+                background: 'var(--primary)',
                 border: 'none',
                 borderRadius: '8px',
-                color: '#0A1118',
+                color: '#FFFFFF',
                 fontSize: '14px',
                 fontWeight: '500',
                 cursor: loading ? 'not-allowed' : 'pointer',
@@ -492,23 +497,23 @@ export default function BookModal({ isOpen, mode, book, onClose, onSave }: BookM
                 fontFamily: 'Inter, sans-serif',
               }}
             >
-              {loading ? 'Сохранение...' : mode === 'create' ? '➕ Создать' : '💾 Сохранить'}
+              {loading ? t.admin.common.saving : t.admin.common.save}
             </button>
             <button
               type="button"
               onClick={onClose}
               style={{
                 padding: '12px 24px',
-                background: 'rgba(255,255,255,0.05)',
-                border: '1px solid rgba(255,255,255,0.08)',
+                background: 'var(--chip)',
+                border: '1px solid var(--border)',
                 borderRadius: '8px',
-                color: '#97A6BA',
+                color: 'var(--text-secondary)',
                 fontSize: '14px',
                 cursor: 'pointer',
                 fontFamily: 'Inter, sans-serif',
               }}
             >
-              Отмена
+              {t.admin.common.cancel}
             </button>
           </div>
         </form>

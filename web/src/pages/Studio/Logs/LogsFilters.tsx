@@ -1,14 +1,17 @@
 // src/pages/Admin/Logs/LogsFilters.tsx
 
 import { useState, useEffect } from 'react';
+import { X } from 'lucide-react';
 import { useAdminStore } from '../../../store/adminStore';
 import { AdminLogType, LOG_TYPE_LABELS } from '../../../types/admin';
+import { getLocaleData, getBrowserLocale } from '../../../locales';
 
 interface LogsFiltersProps {
   onFilterChange: () => void;
 }
 
 export default function LogsFilters({ onFilterChange }: LogsFiltersProps) {
+  const t = getLocaleData(getBrowserLocale());
   const { searchQuery, setSearchQuery, filters, setFilters, clearFilters } = useAdminStore();
   
   const [localSearch, setLocalSearch] = useState(searchQuery);
@@ -63,10 +66,10 @@ export default function LogsFilters({ onFilterChange }: LogsFiltersProps) {
       flexWrap: 'wrap',
       gap: '12px',
       padding: '16px',
-      background: 'rgba(18, 28, 36, 0.4)',
+      background: 'var(--glass-bg)',
       backdropFilter: 'blur(8px)',
       borderRadius: '12px',
-      border: '1px solid rgba(255,255,255,0.06)',
+      border: '1px solid var(--border)',
       alignItems: 'center',
     }}>
       {/* ===== ПОИСК ===== */}
@@ -75,14 +78,14 @@ export default function LogsFilters({ onFilterChange }: LogsFiltersProps) {
           type="text"
           value={localSearch}
           onChange={(e) => setLocalSearch(e.target.value)}
-          placeholder="🔍 Поиск по email, endpoint..."
+          placeholder={t.admin.logs.searchPlaceholder}
           style={{
             width: '100%',
             padding: '8px 14px',
-            background: 'rgba(255,255,255,0.05)',
-            border: '1px solid rgba(255,255,255,0.08)',
+            background: 'var(--chip)',
+            border: '1px solid var(--border)',
             borderRadius: '8px',
-            color: '#E6EDF3',
+            color: 'var(--text-primary)',
             fontSize: '14px',
             fontFamily: 'Inter, sans-serif',
             outline: 'none',
@@ -98,17 +101,17 @@ export default function LogsFilters({ onFilterChange }: LogsFiltersProps) {
           style={{
             width: '100%',
             padding: '8px 14px',
-            background: 'rgba(255,255,255,0.05)',
-            border: '1px solid rgba(255,255,255,0.08)',
+            background: 'var(--chip)',
+            border: '1px solid var(--border)',
             borderRadius: '8px',
-            color: '#E6EDF3',
+            color: 'var(--text-primary)',
             fontSize: '14px',
             fontFamily: 'Inter, sans-serif',
             outline: 'none',
             cursor: 'pointer',
           }}
         >
-          <option value="all">Все события</option>
+          <option value="all">{t.admin.logs.allEvents}</option>
           {logTypes.map((type) => (
             <option key={type} value={type}>
               {LOG_TYPE_LABELS[type]}
@@ -126,10 +129,10 @@ export default function LogsFilters({ onFilterChange }: LogsFiltersProps) {
           style={{
             width: '100%',
             padding: '8px 14px',
-            background: 'rgba(255,255,255,0.05)',
-            border: '1px solid rgba(255,255,255,0.08)',
+            background: 'var(--chip)',
+            border: '1px solid var(--border)',
             borderRadius: '8px',
-            color: '#E6EDF3',
+            color: 'var(--text-primary)',
             fontSize: '14px',
             fontFamily: 'Inter, sans-serif',
             outline: 'none',
@@ -145,10 +148,10 @@ export default function LogsFilters({ onFilterChange }: LogsFiltersProps) {
           style={{
             width: '100%',
             padding: '8px 14px',
-            background: 'rgba(255,255,255,0.05)',
-            border: '1px solid rgba(255,255,255,0.08)',
+            background: 'var(--chip)',
+            border: '1px solid var(--border)',
             borderRadius: '8px',
-            color: '#E6EDF3',
+            color: 'var(--text-primary)',
             fontSize: '14px',
             fontFamily: 'Inter, sans-serif',
             outline: 'none',
@@ -161,20 +164,23 @@ export default function LogsFilters({ onFilterChange }: LogsFiltersProps) {
         onClick={handleClear}
         style={{
           padding: '8px 16px',
-          background: 'rgba(255,255,255,0.05)',
-          border: '1px solid rgba(255,255,255,0.08)',
+          background: 'var(--chip)',
+          border: '1px solid var(--border)',
           borderRadius: '8px',
-          color: '#97A6BA',
+          color: 'var(--text-secondary)',
           fontSize: '13px',
           cursor: 'pointer',
           fontFamily: 'Inter, sans-serif',
+          display: 'inline-flex',
+          alignItems: 'center',
+          gap: '6px',
         }}
       >
-        ✕ Очистить
+        <> <X size={12} /> {t.admin.common.clear} </>
       </button>
 
-      <div style={{ color: '#5B86A1', fontSize: '13px', marginLeft: 'auto' }}>
-        {typeFilter !== 'all' || dateFrom || dateTo || localSearch ? '🔍 Фильтры активны' : '📋 Все логи'}
+      <div style={{ color: 'var(--primary)', fontSize: '13px', marginLeft: 'auto' }}>
+        {typeFilter !== 'all' || dateFrom || dateTo || localSearch ? t.admin.common.filtersActive : t.admin.logs.allLogs}
       </div>
     </div>
   );

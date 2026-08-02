@@ -11,6 +11,115 @@ from app.models.book_author import book_authors
 from app.models.book_genre import book_genres
 from app.models.book_knowledge_relation import BookKnowledgeRelation
 from app.models.knowledge_node import KnowledgeNode
+from app.models.author_publication import AuthorPublication
+from app.graph.serializer import serialize_knowledge_node
+
+
+PUBLIC_BOOK_KNOWLEDGE_TYPES = {
+    "theme",
+    "motif",
+    "concept",
+    "atmosphere",
+    "literary_direction",
+    "place",
+    "language",
+    "timeline_event",
+}
+
+
+async def compose_public_book_detail(db: AsyncSession, book: Book) -> dict:
+    """Compose the public, non-personal read model for one book."""
+    author_result = await db.execute(
+        select(Author)
+        .join(book_authors, book_authors.c.author_id == Author.id)
+        .where(book_authors.c.book_id == book.id)
+    )
+    authors = list(author_result.scalars().all())
+
+    genre_result = await db.execute(
+        select(Genre)
+        .join(book_genres, book_genres.c.genre_id == Genre.id)
+        .where(book_genres.c.book_id == book.id)
+    )
+    genres = list(genre_result.scalars().all())
+
+    publication = None
+    if book.publication_id:
+        publication_result = await db.execute(
+            select(AuthorPublication).where(AuthorPublication.id == book.publication_id)
+        )
+        publication = publication_result.scalar_one_or_none()
+
+    knowledge_result = await db.execute(
+        select(BookKnowledgeRelation, KnowledgeNode)
+        .join(KnowledgeNode, KnowledgeNode.id == BookKnowledgeRelation.node_id)
+        .where(BookKnowledgeRelation.book_id == book.id)
+        .where(BookKnowledgeRelation.status == "approved")
+        .where(KnowledgeNode.node_type.in_(PUBLIC_BOOK_KNOWLEDGE_TYPES))
+    )
+    knowledge = []
+    for relation_row, node in knowledge_result.all():
+        serialized = serialize_knowledge_node(node)
+        knowledge.append({
+            "node_id": node.id,
+            "name": node.name,
+            "slug": node.slug,
+            "node_type": node.node_type,
+            "relation_type": relation_row.relation_type,
+            "confidence": relation_row.confidence,
+            "source": relation_row.source,
+            "metadata": serialized.get("metadata"),
+        })
+
+    return {
+        "id": book.id,
+        "title": book.title,
+        "subtitle": book.subtitle,
+        "original_title": book.original_title,
+        "description": book.description,
+        "cover": book.cover,
+        "publication_id": book.publication_id,
+        "publication_year": (
+            book.original_publication_year
+            if book.original_publication_year is not None
+            else publication.publication_year if publication else None
+        ),
+        "original_language": book.original_language,
+        "country_of_origin": book.country_of_origin,
+        "total_pages": book.total_pages,
+        "publication_type": book.publication_type or "official",
+        "series_name": book.series_name,
+        "series_position": book.series_position,
+        "authors": [
+            {
+                "id": author.id,
+                "name": author.name,
+                "display_name": author.display_name,
+                "slug": author.slug,
+                "role": None,
+                "is_primary": None,
+            }
+            for author in authors
+        ],
+        "publication": {
+            "id": publication.id,
+            "author_id": publication.author_id,
+            "title": publication.title,
+            "original_title": publication.original_title,
+            "publication_year": publication.publication_year,
+            "publication_date": publication.publication_date,
+            "publication_type": publication.publication_type,
+            "description": publication.description,
+            "pen_name": publication.pen_name,
+            "wikipedia_url": publication.wikipedia_url,
+            "source_id": publication.source_id,
+        } if publication else None,
+        "genres": [
+            {"id": genre.id, "name": genre.name, "slug": genre.slug, "type": genre.type}
+            for genre in genres
+        ],
+        "knowledge": knowledge,
+    }
 
 
 async def get_primary_author(db: AsyncSession, book: Book) -> Optional[Author]:

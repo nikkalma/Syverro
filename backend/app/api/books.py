@@ -5,6 +5,7 @@ from sqlalchemy.orm import selectinload
 from app.core.deps import get_current_user, get_db
 from app.core.author_service import find_or_create_author
 from app.services.book_service import (
+    compose_public_book_detail,
     get_book_authors_data, get_book_genre_ids, get_book_genre_objects,
     get_book_taxonomy_items, get_primary_author, link_author,
 )
@@ -15,7 +16,7 @@ from app.models.author import Author
 from app.models.user_book import UserBook
 from app.models.genre import Genre
 from app.models.book_genre import book_genres
-from app.schemas.book import BookCreate, BookResponse, UserBookResponse
+from app.schemas.book import BookCreate, BookResponse, PublicBookDetailResponse, UserBookResponse
 from uuid import UUID
 import logging
 
@@ -88,6 +89,7 @@ async def get_catalog(
     except Exception as e:
         print(f"Error: {e}")
         return []
+
 
 # ========== МОИ КНИГИ (ТОЛЬКО ДОБАВЛЕННЫЕ ПОЛЬЗОВАТЕЛЕМ) ==========
 @router.get("/", response_model=list[BookResponse])
@@ -198,6 +200,24 @@ async def get_user_books_with_status(
     except Exception as e:
         print(f"Error: {e}")
         return []
+
+
+@router.get("/{book_id}", response_model=PublicBookDetailResponse)
+async def get_public_book_detail(
+    book_id: UUID,
+    db: AsyncSession = Depends(get_db),
+):
+    result = await db.execute(
+        select(Book).where(
+            Book.id == book_id,
+            Book.is_published == True,
+            Book.moderation_status == "approved",
+        )
+    )
+    book = result.scalar_one_or_none()
+    if book is None:
+        raise HTTPException(status_code=404, detail="Book not found")
+    return await compose_public_book_detail(db, book)
 
 # ========== ОБНОВИТЬ СТАТУС КНИГИ ==========
 @router.put("/{book_id}/status")

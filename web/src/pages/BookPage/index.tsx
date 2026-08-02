@@ -1,10 +1,14 @@
-import { useState } from 'react';
+import axios from 'axios';
+import { useCallback, useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { useLibrary } from '../../hooks/useLibrary';
 import { AddToLibraryModal } from './AddToLibraryModal';
 import type { PersonalBookStatus } from '../../types/personalBook';
+import type { PersonalBook } from '../../types/personalBook';
+import type { PublicBookDetail } from '../../types/bookDetail';
 import { formatAuthorName } from '../../shared/utils/formatAuthorName';
 import { authorPath } from '../../shared/utils/authorUrl';
+import { bookDetailApi } from '../../shared/api/bookDetailApi';
+import { bookApi } from '../../shared/api/bookApi';
 import { useOffline } from '@/lib/offline';
 
 const labelStyle: React.CSSProperties = {
@@ -29,16 +33,51 @@ const tagPillStyle = (color: string): React.CSSProperties => ({
 export default function BookPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { books, addToMyLibrary, removeFromMyLibrary } = useLibrary();
+  const [book, setBook] = useState<PublicBookDetail | null>(null);
+  const [loadState, setLoadState] = useState<'loading' | 'ready' | 'not-found' | 'error'>('loading');
+  const [personalBook, setPersonalBook] = useState<PersonalBook | null>(null);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const { trackReadingStart, trackReadingFinish, trackNote } = useOffline();
 
-  const book = books.find((b) => b.id === id);
-  const personalBook = book?.personal ?? null;
-  const isInLibrary = !!personalBook;
-  const displayAuthor = book ? formatAuthorName(book.author) : '';
+  const loadBook = useCallback(async () => {
+    if (!id) {
+      setLoadState('not-found');
+      return;
+    }
+    setLoadState('loading');
+    try {
+      const detail = await bookDetailApi.getById(id);
+      setBook(detail);
+      setLoadState('ready');
+    } catch (error) {
+      setBook(null);
+      setLoadState(axios.isAxiosError(error) && error.response?.status === 404 ? 'not-found' : 'error');
+    }
+  }, [id]);
 
-  if (!book) {
+  useEffect(() => {
+    void loadBook();
+  }, [loadBook]);
+
+  useEffect(() => {
+    if (!id) return;
+    void bookApi.getUserBooks()
+      .then((items) => setPersonalBook(items.find((item) => item.bookId === id) ?? null))
+      .catch(() => setPersonalBook(null));
+  }, [id]);
+
+  const isInLibrary = !!personalBook;
+  const primaryAuthor = book?.authors.find((author) => author.isPrimary) ?? book?.authors[0] ?? null;
+  const themes = book?.knowledge.filter((item) => item.nodeType === 'theme') ?? [];
+  const motifs = book?.knowledge.filter((item) => item.nodeType === 'motif') ?? [];
+  const concepts = book?.knowledge.filter((item) => item.nodeType === 'concept') ?? [];
+  const atmospheres = book?.knowledge.filter((item) => item.nodeType === 'atmosphere') ?? [];
+
+  if (loadState === 'loading') {
+    return <div style={{ padding: '40px', textAlign: 'center', color: '#97A6BA' }}>Загрузка книги…</div>;
+  }
+
+  if (loadState === 'not-found') {
     return (
       <div style={{ padding: '40px', textAlign: 'center' }}>
         <h2 style={{ color: '#E6EDF3' }}>Книга не найдена</h2>
@@ -51,17 +90,31 @@ export default function BookPage() {
     );
   }
 
-  const handleAddToLibrary = (status: PersonalBookStatus) => {
-    addToMyLibrary(book.id, status);
+  if (loadState === 'error' || !book) {
+    return (
+      <div style={{ padding: '40px', textAlign: 'center' }}>
+        <h2 style={{ color: '#E6EDF3' }}>Не удалось загрузить книгу</h2>
+        <button onClick={() => void loadBook()} style={{
+          marginTop: '16px', padding: '8px 16px', background: '#2A4B60',
+          border: 'none', borderRadius: '8px', color: '#E6EDF3', cursor: 'pointer',
+          fontFamily: 'Inter, sans-serif',
+        }}>Повторить</button>
+      </div>
+    );
+  }
+
+  const handleAddToLibrary = async (status: PersonalBookStatus) => {
+    await bookApi.addToLibrary(book.title, primaryAuthor?.name ?? '', status);
+    const personalBooks = await bookApi.getUserBooks();
+    setPersonalBook(personalBooks.find((item) => item.bookId === book.id) ?? null);
     setIsAddModalOpen(false);
     if (status === 'reading') {
-      trackReadingStart(book.id, { title: book.title, author: book.author });
+      trackReadingStart(book.id, { title: book.title, author: primaryAuthor?.name ?? '' });
     }
   };
 
   const handleRemoveFromLibrary = () => {
     if (personalBook?.status === 'reading') trackReadingFinish(book.id, 0);
-    removeFromMyLibrary(book.id);
   };
 
   const handleTagClick = (type: 'genre' | 'theme', value: string) => {
@@ -102,17 +155,14 @@ export default function BookPage() {
                 {book.subtitle}
               </h2>
             )}
-            <div style={{ fontSize: '16px', color: '#97A6BA' }}>
-              {book.authorId ? (
-                <span onClick={() => navigate(authorPath({ id: book.authorId!, slug: book.authorSlug }))}
-                  style={{ color: '#5B86A1', cursor: 'pointer', textDecoration: 'none' }}
-                  onMouseEnter={(e) => e.currentTarget.style.color = '#7BA5C1'}
-                  onMouseLeave={(e) => e.currentTarget.style.color = '#5B86A1'}>
-                  ✍️ {displayAuthor}
+            <div style={{ fontSize: '16px', color: '#97A6BA', display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+              {book.authors.map((author) => (
+                <span key={author.id}
+                  onClick={() => author.slug && navigate(authorPath({ id: author.id, slug: author.slug }))}
+                  style={{ color: '#5B86A1', cursor: author.slug ? 'pointer' : 'default', textDecoration: 'none' }}>
+                  ✍️ {formatAuthorName(author.displayName || author.name)}
                 </span>
-              ) : (
-                <span>✍️ {displayAuthor}</span>
-              )}
+              ))}
             </div>
           </div>
 
@@ -120,20 +170,20 @@ export default function BookPage() {
           <div style={{ ...sectionBoxStyle, marginBottom: '16px' }}>
             <div style={{ ...labelStyle, marginBottom: '8px' }}>Публикация</div>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(120px, 1fr))', gap: '8px' }}>
-              {book.originalYear && <MetaBlock label="Год">{book.originalYear}</MetaBlock>}
-              {book.authorCountry && <MetaBlock label="Страна">{book.authorCountry}</MetaBlock>}
-              {book.totalPages > 0 && <MetaBlock label="Страниц">{book.totalPages}</MetaBlock>}
+              {book.publicationYear !== null && <MetaBlock label="Год">{book.publicationYear}</MetaBlock>}
+              {book.countryOfOrigin && <MetaBlock label="Страна">{book.countryOfOrigin}</MetaBlock>}
+              {book.totalPages !== null && <MetaBlock label="Страниц">{book.totalPages}</MetaBlock>}
               {book.originalLanguage && <MetaBlock label="Язык">{book.originalLanguage}</MetaBlock>}
               <MetaBlock label="Обложка">{book.cover ? '✓ Есть' : '—'}</MetaBlock>
             </div>
           </div>
 
           {/* Series */}
-          {book.series && (
+          {book.seriesName && (
             <div style={{ ...sectionBoxStyle, marginBottom: '16px' }}>
               <div style={{ ...labelStyle, marginBottom: '4px' }}>Серия</div>
               <div style={valueStyle}>
-                📚 {book.series} {book.seriesPosition ? `• Книга ${book.seriesPosition}` : ''}
+                📚 {book.seriesName} {book.seriesPosition ? `• Книга ${book.seriesPosition}` : ''}
               </div>
             </div>
           )}
@@ -152,24 +202,24 @@ export default function BookPage() {
           {/* Taxonomy section */}
           <div style={{ marginBottom: '20px' }}>
             {/* Genres */}
-            {book.genres && book.genres.length > 0 && (
+            {book.genres.length > 0 && (
               <div style={{ marginBottom: '12px' }}>
                 <div style={{ ...labelStyle, marginBottom: '6px' }}>Жанры</div>
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
-                  {book.genres.map((g) => (
-                    <span key={g} style={tagPillStyle('#5B86A1')} onClick={() => handleTagClick('genre', g)}>{g}</span>
+                  {book.genres.map((genre) => (
+                    <span key={genre.id} style={tagPillStyle('#5B86A1')} onClick={() => handleTagClick('genre', genre.name)}>{genre.name}</span>
                   ))}
                 </div>
               </div>
             )}
 
             {/* Themes */}
-            {book.themes && book.themes.length > 0 && (
+            {themes.length > 0 && (
               <div style={{ marginBottom: '12px' }}>
                 <div style={{ ...labelStyle, marginBottom: '6px' }}>Темы</div>
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
-                  {book.themes.map((t) => (
-                    <span key={t} style={tagPillStyle('#FBBF24')} onClick={() => handleTagClick('theme', t)}>{t}</span>
+                  {themes.map((theme) => (
+                    <span key={theme.nodeId} style={tagPillStyle('#FBBF24')} onClick={() => handleTagClick('theme', theme.name)}>{theme.name}</span>
                   ))}
                 </div>
               </div>
@@ -177,32 +227,32 @@ export default function BookPage() {
 
             {/* Motifs/Vibe/Mood grouped */}
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '16px' }}>
-              {book.motifs && book.motifs.length > 0 && (
+              {motifs.length > 0 && (
                 <div>
                   <div style={{ ...labelStyle, marginBottom: '6px' }}>Мотивы</div>
                   <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
-                    {book.motifs.map((m) => (
-                      <span key={m} style={tagPillStyle('#EC4899')}>{m}</span>
+                    {motifs.map((motif) => (
+                      <span key={motif.nodeId} style={tagPillStyle('#EC4899')}>{motif.name}</span>
                     ))}
                   </div>
                 </div>
               )}
-              {book.vibe && book.vibe.length > 0 && (
+              {atmospheres.length > 0 && (
                 <div>
-                  <div style={{ ...labelStyle, marginBottom: '6px' }}>Вайб</div>
+                  <div style={{ ...labelStyle, marginBottom: '6px' }}>Атмосфера</div>
                   <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
-                    {book.vibe.map((v) => (
-                      <span key={v} style={tagPillStyle('#5B86A1')}>{v}</span>
+                    {atmospheres.map((atmosphere) => (
+                      <span key={atmosphere.nodeId} style={tagPillStyle('#5B86A1')}>{atmosphere.name}</span>
                     ))}
                   </div>
                 </div>
               )}
-              {book.mood && book.mood.length > 0 && (
+              {concepts.length > 0 && (
                 <div>
-                  <div style={{ ...labelStyle, marginBottom: '6px' }}>Настроение</div>
+                  <div style={{ ...labelStyle, marginBottom: '6px' }}>Концепты</div>
                   <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
-                    {book.mood.map((m) => (
-                      <span key={m} style={tagPillStyle('#A855F7')}>{m}</span>
+                    {concepts.map((concept) => (
+                      <span key={concept.nodeId} style={tagPillStyle('#A855F7')}>{concept.name}</span>
                     ))}
                   </div>
                 </div>

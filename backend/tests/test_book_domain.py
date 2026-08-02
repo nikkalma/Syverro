@@ -23,6 +23,7 @@ from app.models.book_author import book_authors
 from app.models.book_genre import book_genres
 from app.models.knowledge_node import KnowledgeNode
 from app.models.book_knowledge_relation import BookKnowledgeRelation
+from app.models.author_publication import AuthorPublication
 from app.services.book_service import (
     get_primary_author, get_book_authors, get_book_author_count,
     get_author_book_count, get_book_genre_ids, get_book_genre_objects,
@@ -31,6 +32,7 @@ from app.services.book_service import (
 )
 from app.core.metadata import calculate_missing_fields, get_metadata_status
 from app.services.metadata_service import recalculate_metadata_status
+from app.services.book_service import compose_public_book_detail
 
 TEST_DATABASE_URL = os.environ.get(
     "TEST_DATABASE_URL",
@@ -380,6 +382,159 @@ async def test_public_book_response_returns_taxonomy_from_graph(session: AsyncSe
     assert "motifs" in result, "motifs key missing from response"
     assert result["themes"] == ["Redemption"], f"Expected ['Redemption'], got {result['themes']}"
     assert result["motifs"] == ["Journey"], f"Expected ['Journey'], got {result['motifs']}"
+
+
+# ============================================================
+# Public Book detail read model
+# ============================================================
+
+
+@pytest.mark.asyncio
+async def test_public_book_detail_success(session: AsyncSession):
+    from app.api.books import get_public_book_detail
+
+    book = Book(
+        id=uuid.uuid4(), title="Public Detail", author="Author",
+        publication_type="official", is_published=True, moderation_status="approved",
+    )
+    session.add(book)
+    await session.commit()
+
+    detail = await get_public_book_detail(book.id, session)
+
+    assert detail["id"] == book.id
+    assert detail["title"] == "Public Detail"
+    assert detail["publication_type"] == "official"
+    assert detail["authors"] == []
+    assert detail["genres"] == []
+    assert detail["knowledge"] == []
+
+
+@pytest.mark.asyncio
+async def test_public_book_detail_404_for_unknown_book(session: AsyncSession):
+    from fastapi import HTTPException
+    from app.api.books import get_public_book_detail
+
+    with pytest.raises(HTTPException) as error:
+        await get_public_book_detail(uuid.uuid4(), session)
+
+    assert error.value.status_code == 404
+    assert error.value.detail == "Book not found"
+
+
+@pytest.mark.asyncio
+async def test_public_book_detail_preserves_multiple_authors(session: AsyncSession):
+    authors = [
+        Author(name="First Author", display_name="First", slug="first-author"),
+        Author(name="Second Author", display_name="Second", slug="second-author"),
+    ]
+    session.add_all(authors)
+    await session.flush()
+    book = Book(id=uuid.uuid4(), title="Coauthored", author="First Author")
+    session.add(book)
+    await session.flush()
+    for author in authors:
+        await session.execute(book_authors.insert().values(book_id=book.id, author_id=author.id))
+    await session.commit()
+
+    detail = await compose_public_book_detail(session, book)
+
+    assert {item["id"] for item in detail["authors"]} == {author.id for author in authors}
+    assert {item["display_name"] for item in detail["authors"]} == {"First", "Second"}
+
+
+@pytest.mark.asyncio
+async def test_public_book_detail_preserves_structured_genres(session: AsyncSession):
+    genre = Genre(name="Gothic Novel", slug="gothic-novel", type="literary")
+    session.add(genre)
+    await session.flush()
+    book = Book(id=uuid.uuid4(), title="Genre Detail", author="Author")
+    session.add(book)
+    await session.flush()
+    await session.execute(book_genres.insert().values(book_id=book.id, genre_id=genre.id))
+    await session.commit()
+
+    detail = await compose_public_book_detail(session, book)
+
+    assert detail["genres"] == [{
+        "id": genre.id,
+        "name": "Gothic Novel",
+        "slug": "gothic-novel",
+        "type": "literary",
+    }]
+
+
+@pytest.mark.asyncio
+async def test_public_book_detail_returns_only_approved_supported_knowledge(session: AsyncSession):
+    approved = KnowledgeNode(name="Identity", slug="identity-detail", node_type="concept")
+    proposed = KnowledgeNode(name="Secret", slug="secret-detail", node_type="theme")
+    unsupported = KnowledgeNode(name="Person", slug="person-detail", node_type="person")
+    session.add_all([approved, proposed, unsupported])
+    await session.flush()
+    book = Book(id=uuid.uuid4(), title="Knowledge Detail", author="Author")
+    session.add(book)
+    await session.flush()
+    session.add_all([
+        BookKnowledgeRelation(book_id=book.id, node_id=approved.id, relation_type="explores", source="curator", status="approved", confidence=0.9),
+        BookKnowledgeRelation(book_id=book.id, node_id=proposed.id, relation_type="explores", source="curator", status="proposed", confidence=0.8),
+        BookKnowledgeRelation(book_id=book.id, node_id=unsupported.id, relation_type="mentions", source="curator", status="approved", confidence=1.0),
+    ])
+    await session.commit()
+
+    detail = await compose_public_book_detail(session, book)
+
+    assert len(detail["knowledge"]) == 1
+    assert detail["knowledge"][0]["node_id"] == approved.id
+    assert detail["knowledge"][0]["node_type"] == "concept"
+    assert detail["knowledge"][0]["relation_type"] == "explores"
+    assert detail["knowledge"][0]["confidence"] == 0.9
+
+
+@pytest.mark.asyncio
+async def test_public_book_detail_preserves_existing_identity_and_series_fields(session: AsyncSession):
+    book = Book(
+        id=uuid.uuid4(), title="Field Detail", author="Author",
+        subtitle="A Subtitle", original_title="Original Title",
+        country_of_origin="United Kingdom", original_publication_year=1847,
+        series_name="A Series", series_position=2, total_pages=None,
+    )
+    session.add(book)
+    await session.commit()
+
+    detail = await compose_public_book_detail(session, book)
+
+    assert detail["subtitle"] == "A Subtitle"
+    assert detail["original_title"] == "Original Title"
+    assert detail["country_of_origin"] == "United Kingdom"
+    assert detail["publication_year"] == 1847
+    assert detail["series_name"] == "A Series"
+    assert detail["series_position"] == 2
+    assert detail["total_pages"] is None
+
+
+@pytest.mark.asyncio
+async def test_public_book_detail_exposes_linked_publication(session: AsyncSession):
+    author = Author(name="Publication Author")
+    session.add(author)
+    await session.flush()
+    publication = AuthorPublication(
+        author_id=author.id, title="Canonical Work", original_title="Canonical Original",
+        publication_year=1853, publication_type="novel", pen_name="A Pen Name",
+    )
+    session.add(publication)
+    await session.flush()
+    book = Book(id=uuid.uuid4(), title="Catalog Book", author=author.name, publication_id=publication.id)
+    session.add(book)
+    await session.commit()
+
+    detail = await compose_public_book_detail(session, book)
+
+    assert detail["publication_id"] == publication.id
+    assert detail["publication"]["id"] == publication.id
+    assert detail["publication"]["title"] == "Canonical Work"
+    assert detail["publication"]["original_title"] == "Canonical Original"
+    assert detail["publication"]["publication_year"] == 1853
+    assert detail["publication_year"] == 1853
 
 
 # ============================================================

@@ -944,6 +944,8 @@ export interface LocaleData {
 
   // ===== AUTHOR PAGE =====
   author: {
+    localNavLabel: string;
+    retry: string;
     aboutAuthor: string;
     timeline: string;
     atmosphere: string;

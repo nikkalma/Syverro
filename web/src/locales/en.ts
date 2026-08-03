@@ -505,6 +505,8 @@ export const en: LocaleData = {
   },
 
   author: {
+    localNavLabel: 'Author page sections',
+    retry: 'Try again',
     aboutAuthor: 'About Author',
     timeline: 'Timeline',
     atmosphere: 'Atmosphere',

@@ -505,6 +505,8 @@ export const sr: LocaleData = {
   },
 
   author: {
+    localNavLabel: 'Одељци странице аутора',
+    retry: 'Покушај поново',
     aboutAuthor: 'O autoru',
     timeline: 'Hronologija',
     atmosphere: 'Atmosfera',

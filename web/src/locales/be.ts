@@ -505,6 +505,8 @@ export const be: LocaleData = {
   },
 
   author: {
+    localNavLabel: 'Раздзелы старонкі аўтара',
+    retry: 'Паўтарыць',
     aboutAuthor: 'Пра аўтара',
     timeline: 'Храналогія',
     atmosphere: 'Атмасфера',

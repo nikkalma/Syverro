@@ -505,6 +505,8 @@ export const ru: LocaleData = {
   },
 
   author: {
+    localNavLabel: 'Разделы страницы автора',
+    retry: 'Повторить',
     aboutAuthor: 'Об авторе',
     timeline: 'Хронология',
     atmosphere: 'Атмосфера',

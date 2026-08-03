@@ -505,6 +505,8 @@ export const kk: LocaleData = {
   },
 
   author: {
+    localNavLabel: 'Автор бетінің бөлімдері',
+    retry: 'Қайталау',
     aboutAuthor: 'Автор туралы',
     timeline: 'Өмірбаян',
     atmosphere: 'Атмосфера',

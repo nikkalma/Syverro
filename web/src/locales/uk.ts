@@ -505,6 +505,8 @@ export const uk: LocaleData = {
   },
 
   author: {
+    localNavLabel: 'Розділи сторінки автора',
+    retry: 'Повторити',
     aboutAuthor: 'Про автора',
     timeline: 'Хронологія',
     atmosphere: 'Атмосфера',

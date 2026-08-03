@@ -34,6 +34,7 @@ export default function Overview() {
     <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
       <EditorialIntelligence report={buildBookReport(book, labels)} />
       <EditorSectionCard title={t.admin.bookWorkspace.readiness}>
+        <p style={{ margin: '0 0 10px', color: 'var(--text-muted)', fontSize: '13px' }}>{t.admin.bookWorkspace.readinessDescription}</p>
         {missing.length === 0 ? (
           <p style={{ margin: 0, color: 'var(--success)', fontSize: '13px' }}>{t.admin.bookWorkspace.allReady}</p>
         ) : (
@@ -46,6 +47,7 @@ export default function Overview() {
             ))}
           </div>
         )}
+        <p style={{ margin: '12px 0 0', color: 'var(--text-muted)', fontSize: '12px' }}>{t.admin.bookWorkspace.lifecycleSeparate}</p>
       </EditorSectionCard>
     </div>
   );

@@ -92,8 +92,18 @@ class BookKnowledgeRelationBase(BaseModel):
     confidence: float = 0.5
 
 
-class BookKnowledgeRelationCreate(BookKnowledgeRelationBase):
-    pass
+class BookKnowledgeRelationCreate(BaseModel):
+    """Payload supplied by editors when linking an existing node to a book.
+
+    The route owns the book id and derives the relation source from the
+    authenticated editor.  Requiring either value in the request body made
+    the canonical Studio form fail validation before the route could apply
+    those permission and provenance rules.
+    """
+    node_id: UUID
+    relation_type: str
+    status: str = "proposed"
+    confidence: float = 0.5
 
 
 class BookKnowledgeRelationUpdate(BaseModel):

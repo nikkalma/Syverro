@@ -500,6 +500,7 @@ export const uk: LocaleData = {
     personalEmpty: 'Додайте книгу, щоб зберігати статус і нотатки.', status: 'Статус', started: 'Розпочато', completed: 'Завершено', reads: 'Прочитань',
     notes: 'Мої нотатки', notesPlaceholder: 'Запишіть думку про книгу…', notesHint: 'Нотатка зберігається у вашому просторі читання.',
     metadata: { year: 'Рік', country: 'Країна', pages: 'Сторінок', language: 'Мова', publicationType: 'Тип публікації', series: 'Серія', seriesPosition: 'Книга в серії' },
+    publicationTypes: { official: 'Офіційна публікація', unofficial: 'Неофіційна публікація' },
     statuses: { reading: 'Читаю', rereading: 'Перечитую', completed: 'Прочитано', planned: 'У планах', postponed: 'Відкладено', abandoned: 'Залишено' },
     modal: { title: 'Додати до бібліотеки', subtitle: 'Оберіть початковий статус для «{title}»', status: 'Статус читання', add: 'Додати', cancel: 'Скасувати' },
   },
@@ -642,7 +643,7 @@ export const uk: LocaleData = {
       author: 'Author',
       book: 'Book / Work',
       status: 'Status',
-      complete: 'Complete',
+      complete: 'Доступні поля',
       updated: 'Updated',
       metadata: 'Metadata',
       moderation: 'Moderation',
@@ -667,7 +668,7 @@ export const uk: LocaleData = {
       },
     },
     bookWorkspace: {
-      identityBibliography: 'Ідентичність і бібліографія', editorial: 'Редакційний текст', previewPublishing: 'Попередній перегляд і публікація', readiness: 'Готовність до публікації', allReady: 'Усі обов’язкові публічні дані заповнено.', missingSummary: 'Заповніть доступні поля:', contributors: 'Автори й учасники', bibliography: 'Бібліографія', publicationLink: 'Канонічна публікація', noPublication: 'Не пов’язано', noRelations: 'Зв’язків поки немає', searchRelations: 'Знайти наявну сутність знань…', publicPreview: 'Попередній перегляд публічної сторінки',
+      identityBibliography: 'Ідентичність і бібліографія', editorial: 'Редакційний текст', previewPublishing: 'Попередній перегляд і публікація', readiness: 'Готовність контенту', allReady: 'Усі обов’язкові редаговані поля заповнено.', missingSummary: 'Заповніть доступні поля:', contributors: 'Автори й учасники', bibliography: 'Бібліографія', publicationLink: 'Канонічна публікація', noPublication: 'Не пов’язано', noRelations: 'Зв’язків поки немає', searchRelations: 'Знайти наявну сутність знань…', publicPreview: 'Попередній перегляд публічної сторінки', relationSaveError: 'Не вдалося зберегти зв’язок. Перевірте доступ або повторіть спробу.', readinessDescription: 'Готовність враховує лише обов’язкові поля, які зараз можна редагувати в цьому просторі.', lifecycleSeparate: 'Редакційний і публікаційний статуси керуються окремо та не змінюються автоматично.',
     },
     studioCleanup: {
       metadataStatus: 'Статус метаданих', demote: 'Знизити статус', promoteTo: 'Підвищити до', missing: 'Не заповнено',

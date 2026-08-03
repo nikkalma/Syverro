@@ -20,6 +20,7 @@ export default function Knowledge() {
   const [relations, setRelations] = useState<Relation[]>([]);
   const [queries, setQueries] = useState<Record<string, string>>({});
   const [results, setResults] = useState<Record<string, NodeResult[]>>({});
+  const [relationError, setRelationError] = useState<string | null>(null);
 
   const loadRelations = async () => {
     if (!book) return;
@@ -51,8 +52,15 @@ export default function Knowledge() {
   if (!book) return null;
   const toggleGenre = (id: string) => setGenreIds((current) => current.includes(id) ? current.filter((item) => item !== id) : [...current, id]);
   const addRelation = async (node: NodeResult, type: string) => {
-    await apiClient.post(`/admin/books/${book.id}/taxonomy`, { node_id: node.id, relation_type: type, status: 'approved' });
-    setQueries((current) => ({ ...current, [type]: '' })); await loadRelations(); await refresh();
+    setRelationError(null);
+    try {
+      await apiClient.post(`/admin/books/${book.id}/taxonomy`, { node_id: node.id, relation_type: type, status: 'approved' });
+      setQueries((current) => ({ ...current, [type]: '' }));
+      await loadRelations();
+      await refresh();
+    } catch {
+      setRelationError(t.admin.bookWorkspace.relationSaveError);
+    }
   };
   const removeRelation = async (id: string) => { await apiClient.delete(`/admin/books/${book.id}/taxonomy/${id}`); await loadRelations(); await refresh(); };
   const taxonomyLabels: Record<string, string> = {
@@ -68,6 +76,7 @@ export default function Knowledge() {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+      {relationError ? <div role="alert" style={{ color: 'var(--error)', fontSize: '13px' }}>{relationError}</div> : null}
       <EditorSectionCard title={t.admin.books.genres}>
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>{genres.map((genre) => <button key={genre.id} type="button" onClick={() => toggleGenre(genre.id)} style={{ padding: '6px 10px', borderRadius: '14px', cursor: 'pointer', border: '1px solid var(--border-soft)', background: genreIds.includes(genre.id) ? 'var(--primary-soft)' : 'var(--surface-hover)', color: genreIds.includes(genre.id) ? 'var(--primary)' : 'var(--text-secondary)' }}>{genre.name}</button>)}</div>
         <div style={{ marginTop: '16px' }}><ActionBar onSave={async () => { await saveEnrichment({ genre_ids: genreIds }); await refresh(); }} onCancel={() => setGenreIds(book.genre_ids || [])} saving={saving} dirty={genreIds.join(',') !== (book.genre_ids || []).join(',')} saveLabel={t.admin.common.save} savingLabel={t.admin.common.saving} cancelLabel={t.admin.common.cancel} /></div>

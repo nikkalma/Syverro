@@ -500,6 +500,7 @@ export const kk: LocaleData = {
     personalEmpty: 'Оқу күйі мен жазбаларды сақтау үшін кітапты қосыңыз.', status: 'Күйі', started: 'Басталды', completed: 'Аяқталды', reads: 'Оқылым',
     notes: 'Менің жазбаларым', notesPlaceholder: 'Кітап туралы ойыңызды жазыңыз…', notesHint: 'Жазба оқу кеңістігіңізде сақталады.',
     metadata: { year: 'Жыл', country: 'Ел', pages: 'Бет', language: 'Тіл', publicationType: 'Жарияланым түрі', series: 'Серия', seriesPosition: 'Сериядағы кітап' },
+    publicationTypes: { official: 'Ресми жарияланым', unofficial: 'Бейресми жарияланым' },
     statuses: { reading: 'Оқып жатырмын', rereading: 'Қайта оқып жатырмын', completed: 'Оқылды', planned: 'Жоспарда', postponed: 'Кейінге қалды', abandoned: 'Тоқтатылды' },
     modal: { title: 'Кітапханаға қосу', subtitle: '«{title}» үшін бастапқы күйді таңдаңыз', status: 'Оқу күйі', add: 'Қосу', cancel: 'Болдырмау' },
   },
@@ -642,7 +643,7 @@ export const kk: LocaleData = {
       author: 'Author',
       book: 'Book / Work',
       status: 'Status',
-      complete: 'Complete',
+      complete: 'Қолжетімді өрістер',
       updated: 'Updated',
       metadata: 'Metadata',
       moderation: 'Moderation',
@@ -667,7 +668,7 @@ export const kk: LocaleData = {
       },
     },
     bookWorkspace: {
-      identityBibliography: 'Сәйкестік және библиография', editorial: 'Редакциялық мәтін', previewPublishing: 'Алдын ала қарау және жариялау', readiness: 'Жариялауға дайындық', allReady: 'Барлық міндетті ашық деректер толтырылған.', missingSummary: 'Қолжетімді өрістерді толтырыңыз:', contributors: 'Авторлар мен қатысушылар', bibliography: 'Библиография', publicationLink: 'Канондық жарияланым', noPublication: 'Байланыстырылмаған', noRelations: 'Байланыстар жоқ', searchRelations: 'Бар білім нысанын іздеу…', publicPreview: 'Ашық бетті алдын ала қарау',
+      identityBibliography: 'Сәйкестік және библиография', editorial: 'Редакциялық мәтін', previewPublishing: 'Алдын ала қарау және жариялау', readiness: 'Контент дайындығы', allReady: 'Барлық міндетті өңделетін өрістер толтырылған.', missingSummary: 'Қолжетімді өрістерді толтырыңыз:', contributors: 'Авторлар мен қатысушылар', bibliography: 'Библиография', publicationLink: 'Канондық жарияланым', noPublication: 'Байланыстырылмаған', noRelations: 'Байланыстар жоқ', searchRelations: 'Бар білім нысанын іздеу…', publicPreview: 'Ашық бетті алдын ала қарау', relationSaveError: 'Байланысты сақтау мүмкін болмады. Қолжетімділікті тексеріңіз немесе қайталап көріңіз.', readinessDescription: 'Дайындық тек осы кеңістікте қазір өңдеуге болатын міндетті өрістерді есептейді.', lifecycleSeparate: 'Редакциялық және жариялау мәртебелері бөлек басқарылады және автоматты өзгермейді.',
     },
     studioCleanup: {
       metadataStatus: 'Метадеректер күйі', demote: 'Күйді төмендету', promoteTo: 'Көтеру', missing: 'Толтырылмаған',

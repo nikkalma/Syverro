@@ -18,6 +18,9 @@ export type BookPageCopy = LocaleData['bookPage'];
 
 const KNOWLEDGE_TYPES = ['theme', 'motif', 'concept', 'atmosphere'] as const;
 
+const publicationTypeLabel = (copy: BookPageCopy, value: string) =>
+  copy.publicationTypes[value as keyof BookPageCopy['publicationTypes']] ?? value;
+
 function knowledgeLabel(copy: BookPageCopy, nodeType: string) {
   const labels: Record<string, string> = {
     genre: copy.genres,
@@ -73,12 +76,14 @@ export function BookIdentity({ book, copy, onAuthor, onTag }: {
 }) {
   const facts = [book.publicationYear, book.totalPages ? `${book.totalPages} ${copy.metadata.pages}` : null, book.seriesName]
     .filter((value): value is string | number => value !== null && value !== '');
-  const knowledge = [
-    ...book.genres.map((item) => ({ id: item.id, name: item.name, type: 'genre' })),
-    ...book.knowledge
-      .filter((item) => KNOWLEDGE_TYPES.includes(item.nodeType as typeof KNOWLEDGE_TYPES[number]))
-      .map((item) => ({ id: item.nodeId, name: item.name, type: item.nodeType })),
-  ].slice(0, 8);
+  const knowledgeGroups = [
+    { type: 'genre', label: copy.genres, items: book.genres.map((item) => ({ id: item.id, name: item.name })) },
+    ...KNOWLEDGE_TYPES.map((type) => ({
+      type,
+      label: knowledgeLabel(copy, type),
+      items: book.knowledge.filter((item) => item.nodeType === type).map((item) => ({ id: item.nodeId, name: item.name })),
+    })),
+  ].filter((group) => group.items.length > 0);
 
   return (
     <section className="book-page__identity" id="book-overview">
@@ -101,16 +106,14 @@ export function BookIdentity({ book, copy, onAuthor, onTag }: {
         <a href="#book-map">{copy.mapTitle}</a>
         <a href="#book-personal">{copy.personalTitle}</a>
       </nav>
-      {knowledge.length > 0 ? (
-        <div className="book-page__knowledge-row">
-          <span>{copy.themes}</span>
-          <div>
-            {knowledge.map((item) => (
-              <button type="button" key={`${item.type}-${item.id}`} onClick={() => onTag(item.type, item.name)}>{item.name}</button>
-            ))}
-          </div>
+      {knowledgeGroups.map((group) => (
+        <div className="book-page__knowledge-row" key={group.type}>
+          <span>{group.label}</span>
+          <div>{group.items.map((item) => (
+            <button type="button" key={`${group.type}-${item.id}`} onClick={() => onTag(group.type, item.name)}>{item.name}</button>
+          ))}</div>
         </div>
-      ) : null}
+      ))}
     </section>
   );
 }
@@ -126,7 +129,7 @@ export function Bibliography({ book, copy, onTag }: {
     [copy.metadata.language, book.originalLanguage],
     [copy.metadata.country, book.countryOfOrigin],
     [copy.metadata.pages, book.totalPages],
-    [copy.metadata.publicationType, book.publicationType],
+    [copy.metadata.publicationType, publicationTypeLabel(copy, book.publicationType)],
     [copy.metadata.series, book.seriesName],
     [copy.metadata.seriesPosition, book.seriesPosition],
   ].filter((item): item is [string, string | number] => item[1] !== null && item[1] !== '');

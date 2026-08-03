@@ -4,6 +4,7 @@ import EditorSectionCard from '../../../../../components/Studio/shared/EditorSec
 import { apiClient } from '../../../../../shared/api/client';
 import { getLocaleData, getBrowserLocale } from '../../../../../locales';
 import type { AuthorQuote, AuthorQuoteCreate } from '../../../../../types/admin';
+import SourcePicker from '../../../../../components/Studio/shared/SourcePicker';
 
 const inputStyle: React.CSSProperties = {
   width: '100%', padding: '8px 12px', fontSize: '14px',
@@ -30,6 +31,7 @@ export default function Quotes() {
   const [formSpeaker, setFormSpeaker] = useState('');
   const [formDate, setFormDate] = useState('');
   const [formQuoteType, setFormQuoteType] = useState('author');
+  const [formSourceId, setFormSourceId] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [activeTab, setActiveTab] = useState<'author' | 'about_author'>('author');
 
@@ -55,6 +57,7 @@ export default function Quotes() {
     setFormSpeaker('');
     setFormDate('');
     setFormQuoteType(type);
+    setFormSourceId(null);
     setEditingId(null);
     setShowForm(true);
     setError(null);
@@ -65,6 +68,7 @@ export default function Quotes() {
     setFormSpeaker(q.speaker || '');
     setFormDate(q.date_value || '');
     setFormQuoteType(q.quote_type || 'author');
+    setFormSourceId(q.source_id || null);
     setEditingId(q.id);
     setShowForm(true);
     setError(null);
@@ -77,6 +81,7 @@ export default function Quotes() {
     setFormSpeaker('');
     setFormDate('');
     setFormQuoteType('author');
+    setFormSourceId(null);
     setError(null);
   };
 
@@ -89,6 +94,7 @@ export default function Quotes() {
         text: formText.trim(),
         speaker: formSpeaker.trim() || null,
         quote_type: formQuoteType || 'author',
+        source_id: formSourceId,
         date_value: formDate.trim() || null,
         status: 'verified',
         confidence: 1.0,
@@ -230,6 +236,11 @@ export default function Quotes() {
                   placeholder={qLocale.datePlaceholder} style={inputStyle} />
               </div>
             </div>
+            <SourcePicker
+              label={locale.admin.authors.editor.timeline.eventSource}
+              sourceId={formSourceId}
+              onChange={setFormSourceId}
+            />
             {error && <div style={{ fontSize: '13px', color: 'var(--error)' }}>{error}</div>}
             <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
               <button type="button" onClick={cancelForm} disabled={saving}

@@ -89,6 +89,10 @@ export interface LocaleData {
       series: string;
       seriesPosition: string;
     };
+    publicationTypes: {
+      official: string;
+      unofficial: string;
+    };
     statuses: {
       reading: string;
       rereading: string;
@@ -205,6 +209,9 @@ export interface LocaleData {
       noRelations: string;
       searchRelations: string;
       publicPreview: string;
+      relationSaveError: string;
+      readinessDescription: string;
+      lifecycleSeparate: string;
     };
     studioCleanup: {
       metadataStatus: string;

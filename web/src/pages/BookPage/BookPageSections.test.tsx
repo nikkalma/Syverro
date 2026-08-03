@@ -2,7 +2,7 @@ import { render, screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 import { en } from '../../locales';
 import type { PublicBookDetail } from '../../types/bookDetail';
-import { BookIdentity, BookMapPreview, Chronology, NarrativeForm, ReaderFit } from './BookPageSections';
+import { Bibliography, BookIdentity, BookMapPreview, Chronology, NarrativeForm, ReaderFit } from './BookPageSections';
 
 const book: PublicBookDetail = {
   id: 'book-1', title: 'Jane Eyre', subtitle: null, originalTitle: 'Jane Eyre',
@@ -28,6 +28,17 @@ describe('BookPage editorial sections', () => {
     expect(screen.getByRole('button', { name: 'Gothic Novel' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Identity' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Fire' })).toBeInTheDocument();
+    expect(screen.getByText(en.bookPage.genres)).toBeInTheDocument();
+    expect(screen.getByText(en.bookPage.themes)).toBeInTheDocument();
+    expect(screen.getByText(en.bookPage.motifs)).toBeInTheDocument();
+    expect(screen.queryByText(en.bookPage.concepts)).not.toBeInTheDocument();
+    expect(screen.queryByText(en.bookPage.atmospheres)).not.toBeInTheDocument();
+  });
+
+  it('localizes the stored publication type without changing its value', () => {
+    render(<Bibliography book={book} copy={en.bookPage} onTag={vi.fn()} />);
+    expect(screen.getByText(en.bookPage.publicationTypes.official)).toBeInTheDocument();
+    expect(screen.queryByText('official')).not.toBeInTheDocument();
   });
 
   it('keeps Sapphire transition visible but inactive', () => {

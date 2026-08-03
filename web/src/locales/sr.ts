@@ -500,6 +500,7 @@ export const sr: LocaleData = {
     personalEmpty: 'Dodajte knjigu da biste sačuvali status i beleške.', status: 'Status', started: 'Početo', completed: 'Završeno', reads: 'Čitanja',
     notes: 'Moje beleške', notesPlaceholder: 'Zapišite misao o knjizi…', notesHint: 'Beleška se čuva u vašem prostoru čitanja.',
     metadata: { year: 'Godina', country: 'Zemlja', pages: 'Stranice', language: 'Jezik', publicationType: 'Vrsta publikacije', series: 'Serijal', seriesPosition: 'Knjiga u serijalu' },
+    publicationTypes: { official: 'Званична публикација', unofficial: 'Незванична публикација' },
     statuses: { reading: 'Čitam', rereading: 'Čitam ponovo', completed: 'Pročitano', planned: 'U planu', postponed: 'Odloženo', abandoned: 'Napušteno' },
     modal: { title: 'Dodaj u biblioteku', subtitle: 'Izaberite početni status za „{title}“', status: 'Status čitanja', add: 'Dodaj', cancel: 'Otkaži' },
   },
@@ -642,7 +643,7 @@ export const sr: LocaleData = {
       author: 'Author',
       book: 'Book / Work',
       status: 'Status',
-      complete: 'Complete',
+      complete: 'Доступна поља',
       updated: 'Updated',
       metadata: 'Metadata',
       moderation: 'Moderation',
@@ -667,7 +668,7 @@ export const sr: LocaleData = {
       },
     },
     bookWorkspace: {
-      identityBibliography: 'Идентитет и библиографија', editorial: 'Уреднички текст', previewPublishing: 'Преглед и објављивање', readiness: 'Спремност за објављивање', allReady: 'Сви обавезни јавни подаци су попуњени.', missingSummary: 'Попуните доступна поља:', contributors: 'Аутори и сарадници', bibliography: 'Библиографија', publicationLink: 'Канонска публикација', noPublication: 'Није повезано', noRelations: 'Још нема веза', searchRelations: 'Пронађи постојећи ентитет знања…', publicPreview: 'Преглед јавне странице',
+      identityBibliography: 'Идентитет и библиографија', editorial: 'Уреднички текст', previewPublishing: 'Преглед и објављивање', readiness: 'Спремност садржаја', allReady: 'Сва обавезна поља која се могу уређивати су попуњена.', missingSummary: 'Попуните доступна поља:', contributors: 'Аутори и сарадници', bibliography: 'Библиографија', publicationLink: 'Канонска публикација', noPublication: 'Није повезано', noRelations: 'Још нема веза', searchRelations: 'Пронађи постојећи ентитет знања…', publicPreview: 'Преглед јавне странице', relationSaveError: 'Веза није сачувана. Проверите приступ или покушајте поново.', readinessDescription: 'Спремност мери само обавезна поља која се тренутно могу уређивати.', lifecycleSeparate: 'Уреднички и статус објављивања воде се одвојено и не мењају се аутоматски.',
     },
     studioCleanup: {
       metadataStatus: 'Статус метаподатака', demote: 'Смањи статус', promoteTo: 'Унапреди на', missing: 'Није попуњено',

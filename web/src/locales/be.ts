@@ -500,6 +500,7 @@ export const be: LocaleData = {
     personalEmpty: 'Дадайце кнігу, каб захоўваць статус і нататкі.', status: 'Статус', started: 'Пачата', completed: 'Завершана', reads: 'Прачытанняў',
     notes: 'Мае нататкі', notesPlaceholder: 'Запішыце думку пра кнігу…', notesHint: 'Нататка захоўваецца ў вашай прасторы чытання.',
     metadata: { year: 'Год', country: 'Краіна', pages: 'Старонак', language: 'Мова', publicationType: 'Тып публікацыі', series: 'Серыя', seriesPosition: 'Кніга ў серыі' },
+    publicationTypes: { official: 'Афіцыйная публікацыя', unofficial: 'Неафіцыйная публікацыя' },
     statuses: { reading: 'Чытаю', rereading: 'Перачытваю', completed: 'Прачытана', planned: 'У планах', postponed: 'Адкладзена', abandoned: 'Пакінута' },
     modal: { title: 'Дадаць у бібліятэку', subtitle: 'Абярыце пачатковы статус для «{title}»', status: 'Статус чытання', add: 'Дадаць', cancel: 'Скасаваць' },
   },
@@ -642,7 +643,7 @@ export const be: LocaleData = {
       author: 'Author',
       book: 'Book / Work',
       status: 'Status',
-      complete: 'Complete',
+      complete: 'Даступныя палі',
       updated: 'Updated',
       metadata: 'Metadata',
       moderation: 'Moderation',
@@ -667,7 +668,7 @@ export const be: LocaleData = {
       },
     },
     bookWorkspace: {
-      identityBibliography: 'Ідэнтычнасць і бібліяграфія', editorial: 'Рэдакцыйны тэкст', previewPublishing: 'Папярэдні прагляд і публікацыя', readiness: 'Гатоўнасць да публікацыі', allReady: 'Усе абавязковыя публічныя даныя запоўнены.', missingSummary: 'Запоўніце даступныя палі:', contributors: 'Аўтары і ўдзельнікі', bibliography: 'Бібліяграфія', publicationLink: 'Кананічная публікацыя', noPublication: 'Не звязана', noRelations: 'Сувязяў пакуль няма', searchRelations: 'Знайсці існуючую сутнасць ведаў…', publicPreview: 'Папярэдні прагляд публічнай старонкі',
+      identityBibliography: 'Ідэнтычнасць і бібліяграфія', editorial: 'Рэдакцыйны тэкст', previewPublishing: 'Папярэдні прагляд і публікацыя', readiness: 'Гатоўнасць кантэнту', allReady: 'Усе абавязковыя рэдагуемыя палі запоўнены.', missingSummary: 'Запоўніце даступныя палі:', contributors: 'Аўтары і ўдзельнікі', bibliography: 'Бібліяграфія', publicationLink: 'Кананічная публікацыя', noPublication: 'Не звязана', noRelations: 'Сувязяў пакуль няма', searchRelations: 'Знайсці існуючую сутнасць ведаў…', publicPreview: 'Папярэдні прагляд публічнай старонкі', relationSaveError: 'Не ўдалося захаваць сувязь. Праверце доступ або паўтарыце спробу.', readinessDescription: 'Гатоўнасць улічвае толькі абавязковыя палі, якія зараз можна рэдагаваць.', lifecycleSeparate: 'Рэдакцыйны і публікацыйны статусы кіруюцца асобна і не змяняюцца аўтаматычна.',
     },
     studioCleanup: {
       metadataStatus: 'Статус метаданых', demote: 'Панізіць статус', promoteTo: 'Павысіць да', missing: 'Не запоўнена',

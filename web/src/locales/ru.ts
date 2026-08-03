@@ -500,6 +500,7 @@ export const ru: LocaleData = {
     personalEmpty: 'Добавьте книгу, чтобы сохранить статус чтения и заметки.', status: 'Статус', started: 'Начато', completed: 'Завершено', reads: 'Прочтений',
     notes: 'Мои заметки', notesPlaceholder: 'Запишите мысль о книге…', notesHint: 'Заметка сохраняется в вашем пространстве чтения.',
     metadata: { year: 'Год', country: 'Страна', pages: 'Страниц', language: 'Язык', publicationType: 'Тип публикации', series: 'Серия', seriesPosition: 'Книга в серии' },
+    publicationTypes: { official: 'Официальная публикация', unofficial: 'Неофициальная публикация' },
     statuses: { reading: 'Читаю', rereading: 'Перечитываю', completed: 'Прочитано', planned: 'В планах', postponed: 'Отложено', abandoned: 'Оставлено' },
     modal: { title: 'Добавить в библиотеку', subtitle: 'Выберите начальный статус для «{title}»', status: 'Статус чтения', add: 'Добавить', cancel: 'Отмена' },
   },
@@ -643,7 +644,7 @@ export const ru: LocaleData = {
       author: 'Автор',
       book: 'Книга / Произведение',
       status: 'Статус',
-      complete: 'Заполнено',
+      complete: 'Доступные поля',
       updated: 'Обновлено',
       metadata: 'Метаданные',
       moderation: 'Модерация',
@@ -668,7 +669,7 @@ export const ru: LocaleData = {
       },
     },
     bookWorkspace: {
-      identityBibliography: 'Идентичность и библиография', editorial: 'Редакционный текст', previewPublishing: 'Предпросмотр и публикация', readiness: 'Готовность к публикации', allReady: 'Все обязательные публичные данные заполнены.', missingSummary: 'Заполните доступные поля:', contributors: 'Авторы и участники', bibliography: 'Библиография', publicationLink: 'Каноническая публикация', noPublication: 'Не связана', noRelations: 'Связей пока нет', searchRelations: 'Найти существующую сущность знаний…', publicPreview: 'Предпросмотр публичной страницы',
+      identityBibliography: 'Идентичность и библиография', editorial: 'Редакционный текст', previewPublishing: 'Предпросмотр и публикация', readiness: 'Готовность контента', allReady: 'Все обязательные редактируемые поля заполнены.', missingSummary: 'Заполните доступные поля:', contributors: 'Авторы и участники', bibliography: 'Библиография', publicationLink: 'Каноническая публикация', noPublication: 'Не связана', noRelations: 'Связей пока нет', searchRelations: 'Найти существующую сущность знаний…', publicPreview: 'Предпросмотр публичной страницы', relationSaveError: 'Не удалось сохранить связь. Проверьте права доступа или повторите попытку.', readinessDescription: 'Готовность учитывает только обязательные поля, которые сейчас можно редактировать в этом рабочем пространстве.', lifecycleSeparate: 'Редакционный и публикационный статусы управляются отдельно и не повышаются автоматически.',
     },
     studioCleanup: {
       metadataStatus: 'Статус метаданных', demote: 'Понизить статус', promoteTo: 'Повысить до', missing: 'Не заполнено',

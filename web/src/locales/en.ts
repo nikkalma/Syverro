@@ -500,6 +500,7 @@ export const en: LocaleData = {
     personalEmpty: 'Add the book to keep a reading status and notes.', status: 'Status', started: 'Started', completed: 'Completed', reads: 'Reads',
     notes: 'My notes', notesPlaceholder: 'Write down a thought about the book…', notesHint: 'The note is saved in your reading space.',
     metadata: { year: 'Year', country: 'Country', pages: 'Pages', language: 'Language', publicationType: 'Publication type', series: 'Series', seriesPosition: 'Book in series' },
+    publicationTypes: { official: 'Official publication', unofficial: 'Unofficial publication' },
     statuses: { reading: 'Reading', rereading: 'Rereading', completed: 'Read', planned: 'Planning', postponed: 'Postponed', abandoned: 'Abandoned' },
     modal: { title: 'Add to library', subtitle: 'Choose an initial status for “{title}”', status: 'Reading status', add: 'Add', cancel: 'Cancel' },
   },
@@ -642,7 +643,7 @@ export const en: LocaleData = {
       author: 'Author',
       book: 'Book / Work',
       status: 'Status',
-      complete: 'Complete',
+      complete: 'Editable fields',
       updated: 'Updated',
       metadata: 'Metadata',
       moderation: 'Moderation',
@@ -667,7 +668,7 @@ export const en: LocaleData = {
       },
     },
     bookWorkspace: {
-      identityBibliography: 'Identity & bibliography', editorial: 'Editorial', previewPublishing: 'Preview & publishing', readiness: 'Publication readiness', allReady: 'All required public data is ready.', missingSummary: 'Complete these editable fields:', contributors: 'Contributors', bibliography: 'Bibliography', publicationLink: 'Canonical publication', noPublication: 'Not linked', noRelations: 'No relations', searchRelations: 'Search existing knowledge entities…', publicPreview: 'Public BookPage preview',
+      identityBibliography: 'Identity & bibliography', editorial: 'Editorial', previewPublishing: 'Preview & publishing', readiness: 'Content readiness', allReady: 'All currently required editable fields are complete.', missingSummary: 'Complete these editable fields:', contributors: 'Contributors', bibliography: 'Bibliography', publicationLink: 'Canonical publication', noPublication: 'Not linked', noRelations: 'No relations', searchRelations: 'Search existing knowledge entities…', publicPreview: 'Public BookPage preview', relationSaveError: 'The relation could not be saved. Check your access or try again.', readinessDescription: 'Readiness measures only the required fields that can currently be edited in this workspace.', lifecycleSeparate: 'Editorial and publication status are managed separately and are not changed automatically.',
     },
     studioCleanup: {
       metadataStatus: 'Metadata status', demote: 'Demote', promoteTo: 'Promote to', missing: 'Missing',

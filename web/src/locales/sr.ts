@@ -664,6 +664,9 @@ export const sr: LocaleData = {
         preview: 'Preview',
       },
     },
+    bookWorkspace: {
+      identityBibliography: 'Идентитет и библиографија', editorial: 'Уреднички текст', previewPublishing: 'Преглед и објављивање', readiness: 'Спремност за објављивање', allReady: 'Сви обавезни јавни подаци су попуњени.', missingSummary: 'Попуните доступна поља:', contributors: 'Аутори и сарадници', bibliography: 'Библиографија', publicationLink: 'Канонска публикација', noPublication: 'Није повезано', noRelations: 'Још нема веза', searchRelations: 'Пронађи постојећи ентитет знања…', publicPreview: 'Преглед јавне странице',
+    },
     studioCleanup: {
       metadataStatus: 'Статус метаподатака', demote: 'Смањи статус', promoteTo: 'Унапреди на', missing: 'Није попуњено',
       statuses: { draft: 'Нацрт', identity_complete: 'Идентитет је попуњен', editorial_complete: 'Уреднички подаци су попуњени', knowledge_complete: 'Знање је попуњено', review_ready: 'Спремно за проверу', golden: 'Референтни запис' },

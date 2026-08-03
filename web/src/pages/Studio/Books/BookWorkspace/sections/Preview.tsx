@@ -1,87 +1,60 @@
+import { useEffect, useState } from 'react';
 import { useBookWorkspace } from '../BookWorkspaceContext';
 import EditorSectionCard from '../../../../../components/Studio/shared/EditorSectionCard';
+import DetailGrid from '../../../../../components/Studio/shared/DetailGrid';
+import ActionBar from '../../../../../components/Studio/shared/ActionBar';
 import { getLocaleData, getBrowserLocale } from '../../../../../locales';
+import type { AdminBook } from '../../../../../types/admin';
+
+const inputStyle: React.CSSProperties = { width: '100%', padding: '8px 12px', background: 'var(--input-bg)', border: '1px solid var(--border-soft)', borderRadius: '8px', color: 'var(--text-primary)' };
+const labelStyle: React.CSSProperties = { fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--text-muted)', marginBottom: '4px' };
 
 export default function Preview() {
   const t = getLocaleData(getBrowserLocale());
-  const { book } = useBookWorkspace();
-  const bLocale = t.admin.books;
-  const pageCopy = t.bookPage;
-
+  const { book, publicDetail, saving, saveError, saveBook } = useBookWorkspace();
+  const [isPublished, setIsPublished] = useState(false);
+  const [metadataStatus, setMetadataStatus] = useState<AdminBook['metadata_status']>('draft');
+  const [moderationStatus, setModerationStatus] = useState<AdminBook['moderation_status']>('draft');
+  useEffect(() => { if (book) { setIsPublished(book.is_published); setMetadataStatus(book.metadata_status); setModerationStatus(book.moderation_status); } }, [book]);
   if (!book) return null;
 
-  const statusColor = book.is_published ? '#4CAF50' : '#61A6A1';
-  const statusBg = book.is_published ? 'rgba(76,175,80,0.15)' : 'rgba(97,166,161,0.15)';
-
+  const authors = publicDetail?.authors.map((author) => author.displayName || author.name) || (book.authors || []).map((author) => author.name);
+  const genres = publicDetail?.genres || book.genre_objects || [];
+  const knowledge = publicDetail?.knowledge || [];
   const bibliography = [
-    { label: bLocale.originalTitle, value: book.original_title || '—' },
-    { label: bLocale.originalLanguage, value: book.original_language || '—' },
-    { label: bLocale.countryOfOrigin, value: book.country_of_origin || '—' },
-    { label: bLocale.originalYear, value: book.original_publication_year != null ? String(book.original_publication_year) : '—' },
-    { label: bLocale.pages, value: book.total_pages != null ? String(book.total_pages) : '—' },
-  ];
+    [t.bookPage.originalTitle, publicDetail?.originalTitle ?? book.original_title],
+    [t.bookPage.metadata.year, publicDetail?.publicationYear ?? book.original_publication_year],
+    [t.bookPage.metadata.language, publicDetail?.originalLanguage ?? book.original_language],
+    [t.bookPage.metadata.country, publicDetail?.countryOfOrigin ?? book.country_of_origin],
+    [t.bookPage.metadata.pages, publicDetail?.totalPages ?? book.total_pages],
+    [t.bookPage.metadata.publicationType, publicDetail?.publicationType ?? book.publication_type],
+    [t.bookPage.metadata.series, publicDetail?.seriesName ?? book.series_name],
+    [t.bookPage.metadata.seriesPosition, publicDetail?.seriesPosition ?? book.series_position],
+  ].filter(([, value]) => value !== null && value !== undefined && value !== '');
+  const dirty = isPublished !== book.is_published || metadataStatus !== book.metadata_status || moderationStatus !== book.moderation_status;
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-      {/* 1 · Hero / identity */}
-      <EditorSectionCard title={t.admin.workspace.sections.identity}>
-        <div style={{
-          maxWidth: '420px',
-          background: 'var(--surface-hover)',
-          border: '1px solid var(--border-soft)',
-          borderRadius: '14px',
-          padding: '28px',
-          display: 'flex',
-          flexDirection: 'column',
-          gap: '12px',
-        }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
-            <span style={{ fontSize: '20px', fontWeight: '500', color: 'var(--text-primary)' }}>
-              {book.title}
-            </span>
-            <span style={{
-              display: 'inline-block', padding: '2px 10px', borderRadius: '20px',
-              fontSize: '12px', fontWeight: '500', color: statusColor, background: statusBg,
-            }}>
-{book.is_published ? bLocale.publishedBadge : bLocale.draftBadge}
-            </span>
-          </div>
-
-          {book.cover && (
-            <img src={book.cover} alt={book.title}
-              style={{ width: '100%', borderRadius: '10px', border: '1px solid var(--border-soft)', maxHeight: '220px', objectFit: 'cover' }} />
-          )}
-
-          <div style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>
-            {book.author}
-            {book.original_publication_year ? ` · ${book.original_publication_year}` : ''}
-          </div>
+      <EditorSectionCard title={t.admin.bookWorkspace.publicPreview}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'minmax(100px, 150px) 1fr', gap: '20px', alignItems: 'start' }}>
+          {book.cover ? <img src={book.cover} alt={book.title} style={{ width: '100%', borderRadius: '8px' }} /> : <div style={{ aspectRatio: '2/3', background: 'var(--surface-hover)', borderRadius: '8px' }} />}
+          <div><h2 style={{ margin: 0, color: 'var(--text-primary)' }}>{book.title}</h2>{book.subtitle && <p style={{ color: 'var(--text-secondary)' }}>{book.subtitle}</p>}<p style={{ color: 'var(--accent)' }}>{authors.join(', ')}</p><div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>{genres.map((genre) => <span key={genre.id} style={{ padding: '4px 8px', borderRadius: '12px', background: 'var(--primary-soft)', color: 'var(--primary)', fontSize: '12px' }}>{genre.name}</span>)}</div></div>
         </div>
       </EditorSectionCard>
+      <EditorSectionCard title={t.bookPage.aboutTitle}><dl style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: '12px', margin: 0 }}>{bibliography.map(([label, value]) => <div key={String(label)}><dt style={labelStyle}>{label}</dt><dd style={{ margin: 0, color: 'var(--text-secondary)' }}>{String(value)}</dd></div>)}</dl></EditorSectionCard>
+      <EditorSectionCard title={t.bookPage.descriptionTitle}><p style={{ margin: 0, lineHeight: 1.6, color: book.description ? 'var(--text-secondary)' : 'var(--text-muted)' }}>{book.description || t.bookPage.noDescription}</p></EditorSectionCard>
+      {knowledge.length > 0 && <EditorSectionCard title={t.bookPage.knowledgeTitle}><div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>{knowledge.map((item) => <span key={item.nodeId} style={{ padding: '5px 9px', borderRadius: '12px', background: 'var(--surface-hover)', color: 'var(--text-secondary)', fontSize: '12px' }}>{item.name}</span>)}</div></EditorSectionCard>}
+      {knowledge.length > 0 && <EditorSectionCard title={t.bookPage.mapTitle}><div style={{ padding: '18px', textAlign: 'center', border: '1px solid var(--border-soft)', borderRadius: '10px', color: 'var(--text-secondary)' }}><strong>{book.title}</strong><div style={{ marginTop: '12px', display: 'flex', justifyContent: 'center', flexWrap: 'wrap', gap: '8px' }}>{knowledge.slice(0, 8).map((item) => <span key={item.nodeId}>{item.name}</span>)}</div></div></EditorSectionCard>}
 
-      {/* 2. About the book */}
-      <EditorSectionCard title={pageCopy.aboutTitle}>
-        {book.description ? (
-          <p style={{ margin: 0, fontSize: '14px', color: 'var(--text-secondary)', lineHeight: 1.5 }}>
-            {book.description}
-          </p>
-        ) : (
-          <p style={{ margin: 0, fontSize: '13px', color: 'var(--text-muted)', fontStyle: 'italic' }}>
-            {pageCopy.noDescription}
-          </p>
-        )}
+      <EditorSectionCard title={t.admin.workspace.status}>
+        <DetailGrid columns={2}>
+          <div><div style={labelStyle}>{t.admin.workspace.moderation}</div><select value={moderationStatus} onChange={(e) => setModerationStatus(e.target.value as AdminBook['moderation_status'])} style={inputStyle}>{Object.entries(t.admin.workspace.moderationStatuses).map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select></div>
+          <div><div style={labelStyle}>{t.admin.workspace.metadata}</div><select value={metadataStatus} onChange={(e) => setMetadataStatus(e.target.value as AdminBook['metadata_status'])} style={inputStyle}><option value="draft">{t.admin.workspace.metadataStatuses.draft}</option><option value="incomplete">{t.admin.workspace.metadataStatuses.incomplete}</option><option value="review_ready">{t.admin.workspace.metadataStatuses.reviewReady}</option><option value="complete">{t.admin.workspace.metadataStatuses.complete}</option></select></div>
+        </DetailGrid>
+        <label style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '16px', color: 'var(--text-secondary)' }}><input type="checkbox" checked={isPublished} onChange={(e) => setIsPublished(e.target.checked)} />{t.admin.books.publishBook}</label>
       </EditorSectionCard>
-
-      <EditorSectionCard title={t.admin.workspace.metadata}>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: '12px' }}>
-          {bibliography.map((item) => (
-            <div key={item.label}>
-              <div style={{ fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--text-muted)', marginBottom: '4px' }}>{item.label}</div>
-              <div style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>{item.value}</div>
-            </div>
-          ))}
-        </div>
-      </EditorSectionCard>
+      {saveError && <div style={{ color: 'var(--error)' }}>{saveError}</div>}
+      <ActionBar onSave={() => saveBook({ is_published: isPublished, metadata_status: metadataStatus, moderation_status: moderationStatus })} onCancel={() => { setIsPublished(book.is_published); setMetadataStatus(book.metadata_status); setModerationStatus(book.moderation_status); }} saving={saving} dirty={dirty} saveLabel={t.admin.common.save} savingLabel={t.admin.common.saving} cancelLabel={t.admin.common.cancel} />
     </div>
   );
 }

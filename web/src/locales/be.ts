@@ -664,6 +664,9 @@ export const be: LocaleData = {
         preview: 'Preview',
       },
     },
+    bookWorkspace: {
+      identityBibliography: 'Ідэнтычнасць і бібліяграфія', editorial: 'Рэдакцыйны тэкст', previewPublishing: 'Папярэдні прагляд і публікацыя', readiness: 'Гатоўнасць да публікацыі', allReady: 'Усе абавязковыя публічныя даныя запоўнены.', missingSummary: 'Запоўніце даступныя палі:', contributors: 'Аўтары і ўдзельнікі', bibliography: 'Бібліяграфія', publicationLink: 'Кананічная публікацыя', noPublication: 'Не звязана', noRelations: 'Сувязяў пакуль няма', searchRelations: 'Знайсці існуючую сутнасць ведаў…', publicPreview: 'Папярэдні прагляд публічнай старонкі',
+    },
     studioCleanup: {
       metadataStatus: 'Статус метаданых', demote: 'Панізіць статус', promoteTo: 'Павысіць да', missing: 'Не запоўнена',
       statuses: { draft: 'Чарнавік', identity_complete: 'Ідэнтычнасць запоўнена', editorial_complete: 'Рэдакцыйныя даныя запоўнены', knowledge_complete: 'Веды запоўнены', review_ready: 'Гатова да праверкі', golden: 'Эталонны запіс' },

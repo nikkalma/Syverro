@@ -665,6 +665,9 @@ export const ru: LocaleData = {
         preview: 'Предпросмотр',
       },
     },
+    bookWorkspace: {
+      identityBibliography: 'Идентичность и библиография', editorial: 'Редакционный текст', previewPublishing: 'Предпросмотр и публикация', readiness: 'Готовность к публикации', allReady: 'Все обязательные публичные данные заполнены.', missingSummary: 'Заполните доступные поля:', contributors: 'Авторы и участники', bibliography: 'Библиография', publicationLink: 'Каноническая публикация', noPublication: 'Не связана', noRelations: 'Связей пока нет', searchRelations: 'Найти существующую сущность знаний…', publicPreview: 'Предпросмотр публичной страницы',
+    },
     studioCleanup: {
       metadataStatus: 'Статус метаданных', demote: 'Понизить статус', promoteTo: 'Повысить до', missing: 'Не заполнено',
       statuses: { draft: 'Черновик', identity_complete: 'Идентичность заполнена', editorial_complete: 'Редакционные данные заполнены', knowledge_complete: 'Знания заполнены', review_ready: 'Готово к проверке', golden: 'Эталонная запись' },

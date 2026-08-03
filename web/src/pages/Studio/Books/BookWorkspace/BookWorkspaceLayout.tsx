@@ -1,20 +1,9 @@
 import { getLocaleData, getBrowserLocale } from '../../../../locales';
 import EntityWorkspaceLayout from '../../../../components/Studio/shared/EntityWorkspaceLayout';
-import type { AdminBook } from '../../../../types/admin';
 import { BookWorkspaceProvider, useBookWorkspace } from './BookWorkspaceContext';
+import { getBookCompletion } from './bookWorkspaceModel';
 
-const SECTION_PATHS = ['overview', 'identity', 'preview'] as const;
-
-function computeCompletion(book: AdminBook): number {
-  const fields = [
-    book.title, book.author, book.cover, book.description,
-    book.original_title, book.original_language, book.country_of_origin,
-    book.original_publication_year,
-    book.genres?.length, book.themes?.length, book.total_pages,
-  ];
-  const filled = fields.filter((f) => f !== null && f !== undefined && f !== '' && f !== 0);
-  return Math.round((filled.length / fields.length) * 100);
-}
+const SECTION_PATHS = ['overview', 'identity', 'editorial', 'knowledge', 'preview'] as const;
 
 function WorkspaceContent() {
   const t = getLocaleData(getBrowserLocale());
@@ -29,7 +18,7 @@ function WorkspaceContent() {
     : undefined;
 
   const identityParts: string[] = [];
-  if (book?.author) identityParts.push(book.author);
+  if (book?.authors?.length) identityParts.push(book.authors.map((author) => author.name).join(', '));
   if (book?.publication_format) identityParts.push(book.publication_format);
   if (book?.original_publication_year) identityParts.push(String(book.original_publication_year));
   if (book?.country_of_origin) identityParts.push(book.country_of_origin);
@@ -38,7 +27,7 @@ function WorkspaceContent() {
     <EntityWorkspaceLayout
       name={book?.title || ''}
       photoUrl={book?.cover}
-      completionPercent={book ? computeCompletion(book) : undefined}
+      completionPercent={book ? getBookCompletion(book) : undefined}
       lastUpdated={lastUpdated}
       statusLabel={book?.is_published ? t.admin.books.publishedBadge : t.admin.books.draftBadge}
       identitySummary={identityParts.join(' · ') || undefined}
@@ -46,8 +35,9 @@ function WorkspaceContent() {
       entityTypeLabel={t.admin.workspace.book}
       sections={SECTION_PATHS.map((p) => ({
         path: p,
-        label: p === 'identity'
-          ? t.admin.workspace.status
+        label: p === 'identity' ? t.admin.bookWorkspace.identityBibliography
+          : p === 'editorial' ? t.admin.bookWorkspace.editorial
+          : p === 'preview' ? t.admin.bookWorkspace.previewPublishing
           : (t.admin.workspace.sections as Record<string, string>)[p],
       }))}
       basePath={book?.id ? `/studio/books/${book.id}/workspace` : ''}

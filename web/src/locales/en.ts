@@ -664,6 +664,9 @@ export const en: LocaleData = {
         preview: 'Preview',
       },
     },
+    bookWorkspace: {
+      identityBibliography: 'Identity & bibliography', editorial: 'Editorial', previewPublishing: 'Preview & publishing', readiness: 'Publication readiness', allReady: 'All required public data is ready.', missingSummary: 'Complete these editable fields:', contributors: 'Contributors', bibliography: 'Bibliography', publicationLink: 'Canonical publication', noPublication: 'Not linked', noRelations: 'No relations', searchRelations: 'Search existing knowledge entities…', publicPreview: 'Public BookPage preview',
+    },
     studioCleanup: {
       metadataStatus: 'Metadata status', demote: 'Demote', promoteTo: 'Promote to', missing: 'Missing',
       statuses: { draft: 'Draft', identity_complete: 'Identity complete', editorial_complete: 'Editorial complete', knowledge_complete: 'Knowledge complete', review_ready: 'Review ready', golden: 'Golden' },

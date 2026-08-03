@@ -27,6 +27,8 @@ import {
   BookWorkspaceLayout,
   Overview as BookOverview,
   Identity as BookIdentity,
+  Editorial as BookEditorial,
+  Knowledge as BookKnowledge,
   Preview as BookPreview,
 } from "./pages/Studio/Books/BookWorkspace";
 import StudioAuthorsLayout from "./pages/Studio/Authors";
@@ -95,6 +97,8 @@ export default function App() {
             <Route index element={<Navigate to="overview" replace />} />
             <Route path="overview" element={<BookOverview />} />
             <Route path="identity" element={<BookIdentity />} />
+            <Route path="editorial" element={<BookEditorial />} />
+            <Route path="knowledge" element={<BookKnowledge />} />
             <Route path="preview" element={<BookPreview />} />
             <Route path="*" element={<Navigate to="overview" replace />} />
           </Route>

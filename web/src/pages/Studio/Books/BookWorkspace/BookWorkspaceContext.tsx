@@ -6,9 +6,12 @@ import type {
   AdminBookUpdate,
 } from '../../../../types/admin';
 import { apiClient } from '../../../../shared/api/client';
+import { bookDetailApi } from '../../../../shared/api/bookDetailApi';
+import type { PublicBookDetail } from '../../../../types/bookDetail';
 
 interface BookWorkspaceContextType {
   book: AdminBook | null;
+  publicDetail: PublicBookDetail | null;
   loading: boolean;
   saving: boolean;
   error: string | null;
@@ -20,6 +23,7 @@ interface BookWorkspaceContextType {
 
 const BookWorkspaceContext = createContext<BookWorkspaceContextType>({
   book: null,
+  publicDetail: null,
   loading: true,
   saving: false,
   error: null,
@@ -32,6 +36,7 @@ const BookWorkspaceContext = createContext<BookWorkspaceContextType>({
 export function BookWorkspaceProvider({ children }: { children: ReactNode }) {
   const { id } = useParams<{ id: string }>();
   const [book, setBook] = useState<AdminBook | null>(null);
+  const [publicDetail, setPublicDetail] = useState<PublicBookDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -46,8 +51,12 @@ export function BookWorkspaceProvider({ children }: { children: ReactNode }) {
     setLoading(true);
     setError(null);
     try {
-      const res = await apiClient.get(`/admin/books/${id}`);
-      setBook(res.data);
+      const [adminResult, publicResult] = await Promise.all([
+        apiClient.get(`/admin/books/${id}`),
+        bookDetailApi.getById(id).catch(() => null),
+      ]);
+      setBook(adminResult.data);
+      setPublicDetail(publicResult);
     } catch (err: any) {
       setError(err?.response?.data?.detail || err.message || 'Failed to load book');
     } finally {
@@ -65,8 +74,7 @@ export function BookWorkspaceProvider({ children }: { children: ReactNode }) {
     setSaveError(null);
     try {
       await apiClient.put(`/admin/books/${id}`, data);
-      const res = await apiClient.get(`/admin/books/${id}`);
-      setBook(res.data);
+      await fetchBook();
     } catch (err: any) {
       const msg = err?.response?.data?.detail || err.message || 'Failed to save';
       setSaveError(msg);
@@ -74,7 +82,7 @@ export function BookWorkspaceProvider({ children }: { children: ReactNode }) {
     } finally {
       setSaving(false);
     }
-  }, [id]);
+  }, [id, fetchBook]);
 
   const saveEnrichment = useCallback(async (data: Record<string, unknown>) => {
     if (!id) return;
@@ -82,8 +90,7 @@ export function BookWorkspaceProvider({ children }: { children: ReactNode }) {
     setSaveError(null);
     try {
       await apiClient.put(`/admin/metadata/books/${id}`, data);
-      const res = await apiClient.get(`/admin/books/${id}`);
-      setBook(res.data);
+      await fetchBook();
     } catch (err: any) {
       const msg = err?.response?.data?.detail || err.message || 'Failed to save';
       setSaveError(msg);
@@ -91,11 +98,11 @@ export function BookWorkspaceProvider({ children }: { children: ReactNode }) {
     } finally {
       setSaving(false);
     }
-  }, [id]);
+  }, [id, fetchBook]);
 
   return (
     <BookWorkspaceContext.Provider
-      value={{ book, loading, saving, error, saveError, refresh: fetchBook, saveBook, saveEnrichment }}
+      value={{ book, publicDetail, loading, saving, error, saveError, refresh: fetchBook, saveBook, saveEnrichment }}
     >
       {children}
     </BookWorkspaceContext.Provider>

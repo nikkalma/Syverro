@@ -664,6 +664,9 @@ export const kk: LocaleData = {
         preview: 'Preview',
       },
     },
+    bookWorkspace: {
+      identityBibliography: 'Сәйкестік және библиография', editorial: 'Редакциялық мәтін', previewPublishing: 'Алдын ала қарау және жариялау', readiness: 'Жариялауға дайындық', allReady: 'Барлық міндетті ашық деректер толтырылған.', missingSummary: 'Қолжетімді өрістерді толтырыңыз:', contributors: 'Авторлар мен қатысушылар', bibliography: 'Библиография', publicationLink: 'Канондық жарияланым', noPublication: 'Байланыстырылмаған', noRelations: 'Байланыстар жоқ', searchRelations: 'Бар білім нысанын іздеу…', publicPreview: 'Ашық бетті алдын ала қарау',
+    },
     studioCleanup: {
       metadataStatus: 'Метадеректер күйі', demote: 'Күйді төмендету', promoteTo: 'Көтеру', missing: 'Толтырылмаған',
       statuses: { draft: 'Жоба', identity_complete: 'Сәйкестік толтырылған', editorial_complete: 'Редакциялық деректер толтырылған', knowledge_complete: 'Білім толтырылған', review_ready: 'Тексеруге дайын', golden: 'Эталон жазба' },

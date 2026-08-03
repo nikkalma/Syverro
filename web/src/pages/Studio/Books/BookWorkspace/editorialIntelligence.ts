@@ -12,18 +12,6 @@ export interface BookEditorialLabels {
   genres: string;
   description: string;
   pages: string;
-  status: string;
-}
-
-function metadataStatus(book: AdminBook): 'completed' | 'attention' | 'missing' {
-  switch (book.metadata_status) {
-    case 'complete':
-      return 'completed';
-    case 'review_ready':
-      return 'attention';
-    default:
-      return 'missing';
-  }
 }
 
 export function buildBookReport(book: AdminBook, l: BookEditorialLabels): EditorialReport {
@@ -31,9 +19,9 @@ export function buildBookReport(book: AdminBook, l: BookEditorialLabels): Editor
     id: 'identity',
     steps: [
       { key: 'title', label: l.name, status: deriveStatus({ present: !isEmpty(book.title) }), details: undefined },
-      { key: 'author', label: l.author, status: deriveStatus({ present: !isEmpty(book.author) }), details: undefined },
+      { key: 'author', label: l.author, status: deriveStatus({ present: !isEmpty(book.authors) }), details: undefined },
       { key: 'cover', label: l.cover, status: deriveStatus({ present: !isEmpty(book.cover) }), details: undefined },
-      { key: 'genres', label: l.genres, status: deriveStatus({ present: !isEmpty(book.genres) }), details: undefined },
+      { key: 'genres', label: l.genres, status: deriveStatus({ present: !isEmpty(book.genre_ids) }), details: undefined },
     ],
   };
 
@@ -51,15 +39,8 @@ export function buildBookReport(book: AdminBook, l: BookEditorialLabels): Editor
     ],
   };
 
-  const quality: EditorialGroup = {
-    id: 'quality',
-    steps: [
-      { key: 'metadata_status', label: l.status, status: metadataStatus(book), details: undefined },
-    ],
-  };
-
   return {
     entityTypeLabel: undefined,
-    groups: [identity, content, research, quality],
+    groups: [identity, content, research],
   };
 }

@@ -664,6 +664,9 @@ export const uk: LocaleData = {
         preview: 'Preview',
       },
     },
+    bookWorkspace: {
+      identityBibliography: 'Ідентичність і бібліографія', editorial: 'Редакційний текст', previewPublishing: 'Попередній перегляд і публікація', readiness: 'Готовність до публікації', allReady: 'Усі обов’язкові публічні дані заповнено.', missingSummary: 'Заповніть доступні поля:', contributors: 'Автори й учасники', bibliography: 'Бібліографія', publicationLink: 'Канонічна публікація', noPublication: 'Не пов’язано', noRelations: 'Зв’язків поки немає', searchRelations: 'Знайти наявну сутність знань…', publicPreview: 'Попередній перегляд публічної сторінки',
+    },
     studioCleanup: {
       metadataStatus: 'Статус метаданих', demote: 'Знизити статус', promoteTo: 'Підвищити до', missing: 'Не заповнено',
       statuses: { draft: 'Чернетка', identity_complete: 'Ідентичність заповнена', editorial_complete: 'Редакційні дані заповнені', knowledge_complete: 'Знання заповнені', review_ready: 'Готово до перевірки', golden: 'Еталонний запис' },

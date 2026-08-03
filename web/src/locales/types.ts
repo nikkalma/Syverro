@@ -191,6 +191,21 @@ export interface LocaleData {
         preview: string;
       };
     };
+    bookWorkspace: {
+      identityBibliography: string;
+      editorial: string;
+      previewPublishing: string;
+      readiness: string;
+      allReady: string;
+      missingSummary: string;
+      contributors: string;
+      bibliography: string;
+      publicationLink: string;
+      noPublication: string;
+      noRelations: string;
+      searchRelations: string;
+      publicPreview: string;
+    };
     studioCleanup: {
       metadataStatus: string;
       demote: string;

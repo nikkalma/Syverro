@@ -84,17 +84,23 @@ export default function BookPage() {
         onAdd={openAddModal}
         onAuthor={(authorId, slug) => navigate(authorPath({ id: authorId, slug }))}
       />
-      <AboutBook book={book} copy={copy} />
-      <NarrativeForm copy={copy} />
-      <KnowledgeAround book={book} copy={copy} onTag={(type, value) => navigate(`/?${type}=${encodeURIComponent(value)}`)} />
-      <BookMapPreview book={book} copy={copy} />
-      <PersonalLibraryArea
-        personalBook={personalBook}
-        copy={copy}
-        locale={DATE_LOCALES[locale] ?? 'ru-RU'}
-        onAdd={openAddModal}
-        onSaveNote={(text) => trackNote(book.id, text)}
-      />
+      <div className="book-page__editorial-body">
+        <div className="book-page__opening-spread">
+          <AboutBook book={book} copy={copy} />
+          <NarrativeForm copy={copy} />
+        </div>
+        <div className="book-page__semantic-spread">
+          <KnowledgeAround book={book} copy={copy} onTag={(type, value) => navigate(`/?${type}=${encodeURIComponent(value)}`)} />
+          <BookMapPreview book={book} copy={copy} />
+        </div>
+        <PersonalLibraryArea
+          personalBook={personalBook}
+          copy={copy}
+          locale={DATE_LOCALES[locale] ?? 'ru-RU'}
+          onAdd={openAddModal}
+          onSaveNote={(text) => trackNote(book.id, text)}
+        />
+      </div>
       <AddToLibraryModal
         isOpen={isAddModalOpen}
         bookTitle={book.title}

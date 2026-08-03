@@ -53,14 +53,19 @@ export function AuthorAbout({ author, t }: { author: PublicAuthorDetail; t: Auth
   </section>;
 }
 
-export function AuthorTimeline({ author, t }: { author: PublicAuthorDetail; t: AuthorLocale }) {
+export function AuthorTimeline({ author, t, expanded, onToggle }: { author: PublicAuthorDetail; t: AuthorLocale; expanded: boolean; onToggle: () => void }) {
+  const hasMore = author.timeline_events.length > 3;
+  const events = expanded ? author.timeline_events : author.timeline_events.slice(0, 3);
   return <section className="author-panel author-timeline" id="chronology">
     <h2>{t.timeline}</h2>
-    <ol>
-      {author.timeline_events.map((event) => <li key={event.id}>
+    <ol id="author-timeline-events">
+      {events.map((event) => <li key={event.id}>
         <time>{event.date_value}</time><div><h3>{event.label}</h3>{event.place_name && <p className="author-timeline__place">{event.place_name}</p>}{event.description && <p>{event.description}</p>}{event.source_title && <cite>{event.source_title}</cite>}</div>
       </li>)}
     </ol>
+    {hasMore && <button className="author-timeline__toggle" type="button" aria-expanded={expanded} aria-controls="author-timeline-events" onClick={onToggle}>
+      {expanded ? t.showLess : `${t.readMore} (${author.timeline_events.length})`}
+    </button>}
   </section>;
 }
 

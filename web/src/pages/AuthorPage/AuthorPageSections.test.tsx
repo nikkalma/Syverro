@@ -1,9 +1,9 @@
-import { render, screen } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { en } from '../../locales';
 import { authorSectionVisibility, getApprovedAtmospheres, mapPublicAuthorDetail, splitAuthorQuotes } from './authorPageModel';
-import { AuthorAbout, AuthorAtmosphere, AuthorHero, AuthorQuotes, AuthorSources, AuthorWorks } from './AuthorPageSections';
+import { AuthorAbout, AuthorAtmosphere, AuthorHero, AuthorQuotes, AuthorSources, AuthorTimeline, AuthorWorks } from './AuthorPageSections';
 
 const author = mapPublicAuthorDetail({
   id: 'author-1', name: 'Virginia Woolf', display_name: 'Virginia Woolf', native_name: 'Adeline Virginia Woolf',
@@ -17,6 +17,12 @@ const author = mapPublicAuthorDetail({
     { id: 'theme-1', node_name: 'Identity', node_type: 'theme', relation_type: 'theme', source: 'editorial', status: 'approved' },
     { id: 'person-1', node_name: 'Leonard Woolf', node_type: 'person', relation_type: 'relative_of', source: 'editorial', status: 'approved' },
     { id: 'draft-atmosphere', node_name: 'Unreviewed', node_type: 'atmosphere', relation_type: 'atmosphere', source: 'editorial', status: 'draft' },
+  ],
+  timeline_events: [
+    { id: 'event-1', event_type: 'birth', date_value: '1882', date_precision: 'year', label: 'Born', description: null, place_name: 'London', source_title: null, extraction_source: 'manual', confidence: 1, status: 'approved' },
+    { id: 'event-2', event_type: 'milestone', date_value: '1905', date_precision: 'year', label: 'Began writing', description: null, place_name: null, source_title: null, extraction_source: 'manual', confidence: 1, status: 'approved' },
+    { id: 'event-3', event_type: 'publication', date_value: '1915', date_precision: 'year', label: 'First novel', description: null, place_name: null, source_title: null, extraction_source: 'manual', confidence: 1, status: 'approved' },
+    { id: 'event-4', event_type: 'publication', date_value: '1925', date_precision: 'year', label: 'Mrs Dalloway', description: null, place_name: null, source_title: null, extraction_source: 'manual', confidence: 1, status: 'approved' },
   ],
   quotes: [
     { id: 'q1', text: 'Arrange whatever pieces come your way.', speaker: 'Virginia Woolf', quote_type: 'by_author', source_title: null, date_value: null, confidence: 1, status: 'approved' },
@@ -72,5 +78,18 @@ describe('AuthorPage reference sections', () => {
     render(<AuthorSources author={author} t={en.author} />);
     expect(screen.getByText(en.author.sources).closest('summary')).toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'The Virginia Woolf Society' })).toBeInTheDocument();
+  });
+
+  it('keeps chronology under a three-event disclosure', () => {
+    const onToggle = vi.fn();
+    const { rerender } = render(<AuthorTimeline author={author} t={en.author} expanded={false} onToggle={onToggle} />);
+    expect(screen.getByText('Born')).toBeInTheDocument();
+    expect(screen.getByText('First novel')).toBeInTheDocument();
+    expect(screen.queryByText('Mrs Dalloway')).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: `${en.author.readMore} (4)` }));
+    expect(onToggle).toHaveBeenCalledOnce();
+    rerender(<AuthorTimeline author={author} t={en.author} expanded onToggle={onToggle} />);
+    expect(screen.getByText('Mrs Dalloway')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: en.author.showLess })).toHaveAttribute('aria-expanded', 'true');
   });
 });

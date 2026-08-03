@@ -14,6 +14,7 @@ export default function AuthorPage() {
   const [author, setAuthor] = useState<PublicAuthorDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
+  const [timelineExpanded, setTimelineExpanded] = useState(false);
   const t = getLocaleData(getBrowserLocale()).author;
 
   const loadAuthor = useCallback(async () => {
@@ -23,6 +24,7 @@ export default function AuthorPage() {
     try {
       const response = await apiClient.get<PublicAuthorDetail>(`/authors/${slug}`);
       setAuthor(mapPublicAuthorDetail(response.data));
+      setTimelineExpanded(false);
     } catch {
       setAuthor(null);
       setError(true);
@@ -50,15 +52,27 @@ export default function AuthorPage() {
   return <main className="author-page">
     <AuthorHero author={author} t={t} />
     {navItems.length > 0 && <AuthorLocalNav items={navItems} label={t.localNavLabel} />}
-    <div className={`author-page__first-row author-page__first-row--${firstRowCount}`}>
-      {visibility.about && <AuthorAbout author={author} t={t} />}
-      {visibility.chronology && <AuthorTimeline author={author} t={t} />}
-      {visibility.atmosphere && <AuthorAtmosphere author={author} t={t} />}
-    </div>
-    <div className="author-page__main">
-      {visibility.works && <AuthorWorks author={author} t={t} />}
-      {visibility.quotes && <AuthorQuotes author={author} t={t} />}
-    </div>
+    {timelineExpanded ? <div className="author-page__expanded-layout">
+      <div className="author-page__primary-flow">
+        {visibility.about && <AuthorAbout author={author} t={t} />}
+        {visibility.works && <AuthorWorks author={author} t={t} />}
+        {visibility.quotes && <AuthorQuotes author={author} t={t} />}
+      </div>
+      <aside className="author-page__secondary-flow">
+        {visibility.chronology && <AuthorTimeline author={author} t={t} expanded onToggle={() => setTimelineExpanded(false)} />}
+        {visibility.atmosphere && <AuthorAtmosphere author={author} t={t} />}
+      </aside>
+    </div> : <>
+      <div className={`author-page__first-row author-page__first-row--${firstRowCount}`}>
+        {visibility.about && <AuthorAbout author={author} t={t} />}
+        {visibility.chronology && <AuthorTimeline author={author} t={t} expanded={false} onToggle={() => setTimelineExpanded(true)} />}
+        {visibility.atmosphere && <AuthorAtmosphere author={author} t={t} />}
+      </div>
+      <div className="author-page__main">
+        {visibility.works && <AuthorWorks author={author} t={t} />}
+        {visibility.quotes && <AuthorQuotes author={author} t={t} />}
+      </div>
+    </>}
     {visibility.sources && <AuthorSources author={author} t={t} />}
   </main>;
 }

@@ -124,7 +124,7 @@ export default function Overview() {
             <FormField label={eLocale.name + ' *'} value={name} onChange={setName} />
           </DetailGrid>
           <div style={{ marginTop: '12px' }}>
-            <FormField label={eLocale.slug} value={slug} onChange={(v) => { setSlug(v); setSlugLocked(Boolean(v)); }} placeholder={makeSlug(name) || 'auto-generated'} />
+            <FormField label={eLocale.slug} value={slug} onChange={(v) => { setSlug(v); setSlugLocked(Boolean(v)); }} placeholder={makeSlug(name) || t.admin.authors.editor.overview.slugAuto} />
           </div>
           <div style={{ marginTop: '12px' }}>
             <div style={{ fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--text-muted)', marginBottom: '4px' }}>
@@ -168,12 +168,9 @@ export default function Overview() {
         />
       )}
       <EditorSectionCard title={eLocale.name}>
-        <DetailGrid columns={2}>
-          <FormField label={eLocale.name} value={name} onChange={setName} />
-          <FormField label={eLocale.type} value={entityTypeLabel(nodeType)} onChange={() => {}} />
-        </DetailGrid>
+        <FormField label={eLocale.name} value={name} onChange={setName} />
         <div style={{ marginTop: '12px' }}>
-          <FormField label={eLocale.slug} value={slug} onChange={(v) => { setSlug(v); setSlugLocked(true); }} placeholder="auto-generated" />
+          <FormField label={eLocale.slug} value={slug} onChange={(v) => { setSlug(v); setSlugLocked(true); }} placeholder={t.admin.authors.editor.overview.slugAuto} />
         </div>
         <div style={{ marginTop: '12px' }}>
           <div style={{ fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--text-muted)', marginBottom: '4px' }}>

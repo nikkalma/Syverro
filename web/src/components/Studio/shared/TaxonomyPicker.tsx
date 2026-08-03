@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { apiClient } from '../../../shared/api/client';
+import { getLocaleData, getBrowserLocale } from '../../../locales';
 
 interface TaxonomyPickerProps {
   nodeType: string;
@@ -16,6 +17,7 @@ const inputStyle: React.CSSProperties = {
 };
 
 export default function TaxonomyPicker({ nodeType, value, onChange, placeholder }: TaxonomyPickerProps) {
+  const t = getLocaleData(getBrowserLocale());
   const [query, setQuery] = useState('');
   const [suggestions, setSuggestions] = useState<{ id: string; name: string; existing?: boolean; authorCount?: number }[]>([]);
   const [isOpen, setIsOpen] = useState(false);
@@ -167,7 +169,7 @@ export default function TaxonomyPicker({ nodeType, value, onChange, placeholder 
           onChange={(e) => { setQuery(e.target.value); setIsOpen(true); setActiveIndex(-1); }}
           onFocus={() => { if (suggestions.length > 0) setIsOpen(true); }}
           onKeyDown={handleKeyDown}
-          placeholder={placeholder || 'Search...'}
+          placeholder={placeholder || t.admin.studioCleanup.searchOrCreateTaxonomy}
           style={inputStyle}
         />
         {isOpen && suggestions.length > 0 && (
@@ -192,7 +194,7 @@ export default function TaxonomyPicker({ nodeType, value, onChange, placeholder 
               >
                 {s.existing && <span style={{ color: '#4CAF50', fontSize: '12px' }}>✓</span>}
                 <span style={{ flex: 1 }}>{s.name}</span>
-                {s.existing && <span style={{ fontSize: '10px', color: 'var(--text-muted)' }}>exists</span>}
+                {s.existing && <span style={{ fontSize: '10px', color: 'var(--text-muted)' }}>{t.admin.studioCleanup.exists}</span>}
               </div>
             ))}
           </div>
@@ -205,25 +207,25 @@ export default function TaxonomyPicker({ nodeType, value, onChange, placeholder 
           border: '1px solid var(--border-soft)', background: 'var(--surface-hover)',
         }}>
           <p style={{ margin: '0 0 8px 0', fontSize: '13px', color: 'var(--text-primary)' }}>
-            Create new taxonomy entity?
+            {t.admin.studioCleanup.createEntityQuestion}
           </p>
           <p style={{ margin: '0 0 4px 0', fontSize: '12px', color: 'var(--text-muted)' }}>
-            Name: <strong>{query.trim()}</strong>
+            {t.admin.studioCleanup.nameLabel}: <strong>{query.trim()}</strong>
           </p>
           <p style={{ margin: '0 0 12px 0', fontSize: '12px', color: 'var(--text-muted)' }}>
-            Type: <strong>{nodeType}</strong>
+            {t.admin.studioCleanup.typeLabel}: <strong>{nodeType}</strong>
           </p>
           <p style={{ fontSize: '11px', color: 'var(--text-muted)', marginBottom: '8px' }}>
-            This entity will become available globally.
+            {t.admin.studioCleanup.globalEntityNotice}
           </p>
           <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
             <button type="button" onClick={() => setShowConfirm(false)}
               style={{ padding: '6px 12px', background: 'transparent', border: '1px solid var(--border-soft)', borderRadius: '6px', color: 'var(--text-primary)', cursor: 'pointer', fontSize: '12px' }}>
-              Cancel
+              {t.admin.common.cancel}
             </button>
             <button type="button" onClick={createAndAdd}
               style={{ padding: '6px 12px', background: 'var(--accent)', border: 'none', borderRadius: '6px', color: '#fff', cursor: 'pointer', fontSize: '12px' }}>
-              Create
+              {t.admin.studioCleanup.create}
             </button>
           </div>
         </div>

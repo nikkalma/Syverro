@@ -664,6 +664,13 @@ export const be: LocaleData = {
         preview: 'Preview',
       },
     },
+    studioCleanup: {
+      metadataStatus: 'Статус метаданых', demote: 'Панізіць статус', promoteTo: 'Павысіць да', missing: 'Не запоўнена',
+      statuses: { draft: 'Чарнавік', identity_complete: 'Ідэнтычнасць запоўнена', editorial_complete: 'Рэдакцыйныя даныя запоўнены', knowledge_complete: 'Веды запоўнены', review_ready: 'Гатова да праверкі', golden: 'Эталонны запіс' },
+      present: 'Да цяперашняга часу', verified: 'Праверана', unverified: 'Не праверана', searchBooks: 'Знайсці кнігу для сувязі…', searching: 'Пошук…', link: 'Звязаць', unlink: 'Адвязаць', timelineLabelPlaceholder: 'Напрыклад, публікацыя твора', timelineDescriptionPlaceholder: 'Неабавязковае апісанне або кантэкст', url: 'Спасылка', mediaCaptionPlaceholder: 'Крыніца фатаграфіі або подпіс', addImageUrl: 'Дадаць спасылку на выяву…',
+      aiTitle: 'Прапановы ШІ', aiDescription: 'Прапановы ШІ для ўзбагачэння даных. Кожная змена патрабуе ўхвалення куратара.', proposed: 'Прапанавана', accepted: 'Прынята', rejected: 'Адхілена', loadingSuggestions: 'Загрузка прапаноў…', noFilteredSuggestions: 'Прапаноў з такім статусам няма.', noSuggestions: 'Прапаноў ШІ пакуль няма.', confidence: 'упэўненасць', currentValue: 'Бягучае значэнне', suggestedValue: 'Прапанаванае значэнне', empty: 'Не запоўнена', reject: 'Адхіліць', accept: 'Прыняць', failedUpdate: 'Не ўдалося абнавіць прапанову',
+      searchOrCreatePlace: 'Знайсці або стварыць месца…', searchOrCreateSource: 'Знайсці або стварыць крыніцу…', searchOrCreateTaxonomy: 'Пошук у таксаноміі…', exists: 'Існуе', createEntityQuestion: 'Стварыць новую сутнасць таксаноміі?', nameLabel: 'Назва', typeLabel: 'Тып', globalEntityNotice: 'Гэта сутнасць стане даступнай ва ўсёй сістэме.', create: 'Стварыць',
+    },
     access: {
       denied: 'Access denied',
       noPermission: 'You do not have permission to access Studio.',

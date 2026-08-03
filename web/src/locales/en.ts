@@ -664,6 +664,15 @@ export const en: LocaleData = {
         preview: 'Preview',
       },
     },
+    studioCleanup: {
+      metadataStatus: 'Metadata status', demote: 'Demote', promoteTo: 'Promote to', missing: 'Missing',
+      statuses: { draft: 'Draft', identity_complete: 'Identity complete', editorial_complete: 'Editorial complete', knowledge_complete: 'Knowledge complete', review_ready: 'Review ready', golden: 'Golden' },
+      present: 'Present', verified: 'Verified', unverified: 'Unverified', searchBooks: 'Search books to link…', searching: 'Searching…', link: 'Link', unlink: 'Unlink',
+      timelineLabelPlaceholder: 'For example, publication of War and Peace', timelineDescriptionPlaceholder: 'Optional description or context',
+      url: 'URL', mediaCaptionPlaceholder: 'Photo credit or caption', addImageUrl: 'Add image URL…',
+      aiTitle: 'AI suggestions', aiDescription: 'AI-generated enrichment suggestions. Every change requires curator approval.', proposed: 'Proposed', accepted: 'Accepted', rejected: 'Rejected', loadingSuggestions: 'Loading suggestions…', noFilteredSuggestions: 'No suggestions with this status.', noSuggestions: 'No AI suggestions yet.', confidence: 'confidence', currentValue: 'Current value', suggestedValue: 'Suggested value', empty: 'Empty', reject: 'Reject', accept: 'Accept', failedUpdate: 'Failed to update proposal',
+      searchOrCreatePlace: 'Search or create a place…', searchOrCreateSource: 'Search or create a source…', searchOrCreateTaxonomy: 'Search taxonomy…', exists: 'Exists', createEntityQuestion: 'Create a new taxonomy entity?', nameLabel: 'Name', typeLabel: 'Type', globalEntityNotice: 'This entity will be available globally.', create: 'Create',
+    },
     access: {
       denied: 'Access denied',
       noPermission: 'You do not have permission to access Studio.',

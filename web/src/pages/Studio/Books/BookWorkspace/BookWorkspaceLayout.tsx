@@ -1,7 +1,5 @@
-import { BookOpen } from 'lucide-react';
 import { getLocaleData, getBrowserLocale } from '../../../../locales';
 import EntityWorkspaceLayout from '../../../../components/Studio/shared/EntityWorkspaceLayout';
-import EmptyWorkspace from '../../../../components/Studio/shared/EmptyWorkspace';
 import type { AdminBook } from '../../../../types/admin';
 import { BookWorkspaceProvider, useBookWorkspace } from './BookWorkspaceContext';
 
@@ -11,7 +9,7 @@ function computeCompletion(book: AdminBook): number {
   const fields = [
     book.title, book.author, book.cover, book.description,
     book.original_title, book.original_language, book.country_of_origin,
-    book.original_publication_year, book.series_name,
+    book.original_publication_year,
     book.genres?.length, book.themes?.length, book.total_pages,
   ];
   const filled = fields.filter((f) => f !== null && f !== undefined && f !== '' && f !== 0);
@@ -48,19 +46,14 @@ function WorkspaceContent() {
       entityTypeLabel={t.admin.workspace.book}
       sections={SECTION_PATHS.map((p) => ({
         path: p,
-        label: (t.admin.workspace.sections as Record<string, string>)[p],
+        label: p === 'identity'
+          ? t.admin.workspace.status
+          : (t.admin.workspace.sections as Record<string, string>)[p],
       }))}
       basePath={book?.id ? `/studio/books/${book.id}/workspace` : ''}
       loading={loading}
       error={error}
       notFoundLabel={t.admin.workspace.book}
-      preview={
-        <EmptyWorkspace
-          icon={<BookOpen size={20} />}
-          title={t.admin.workspace.preview}
-          description={t.admin.workspace.previewDesc}
-        />
-      }
     />
   );
 }

@@ -2,7 +2,6 @@ import { useState } from 'react';
 import { useAuthorEditor } from './AuthorEditorContext';
 import {
   AUTHOR_STATUS_PIPELINE,
-  AUTHOR_STATUS_LABELS,
   AUTHOR_STATUS_COLORS,
   AUTHOR_STATUS_BG,
   validateStatusPromotion,
@@ -10,9 +9,28 @@ import {
   getPrevStatus,
 } from './metadataStatus';
 import type { AdminAuthorUpdate } from '../../../../types/admin';
+import { getLocaleData, getBrowserLocale } from '../../../../locales';
 
 export default function MetadataStatusControl() {
   const { author, updateAuthor } = useAuthorEditor();
+  const t = getLocaleData(getBrowserLocale());
+  const copy = t.admin.studioCleanup;
+  const fieldLabels: Record<string, string> = {
+    birth_name: t.admin.authors.editor.identity.birthName,
+    sort_name: t.admin.authors.editor.identity.sortName,
+    birth_date: t.admin.authors.editor.identity.birthDate,
+    birth_place_id: t.admin.authors.editor.identity.birthPlace,
+    death_date: t.admin.authors.editor.identity.deathDate,
+    death_place_id: t.admin.authors.editor.identity.deathPlace,
+    nationality: t.admin.authors.editor.identity.nationality,
+    occupations: t.admin.authors.editor.identity.occupations,
+    languages: t.admin.authors.editor.identity.languages,
+    publications: t.admin.authors.editor.publications.title,
+    photo: t.admin.authors.photo,
+    wikipedia_url: t.admin.authors.editor.seo.wikipedia,
+    portrait_caption: t.admin.authors.editor.media.caption,
+    author_intro_quote: t.admin.authors.editor.overview.heroQuote,
+  };
   const [promoting, setPromoting] = useState(false);
   const [validationErrors, setValidationErrors] = useState<string[]>([]);
 
@@ -26,7 +44,7 @@ export default function MetadataStatusControl() {
     if (!nextStatus) return;
     const { valid, errors } = validateStatusPromotion(author, nextStatus);
     if (!valid) {
-      setValidationErrors(errors.map((e) => `Missing: ${e.label}`));
+      setValidationErrors(errors.map((e) => `${copy.missing}: ${fieldLabels[e.field] || e.label}`));
       return;
     }
     setValidationErrors([]);
@@ -51,7 +69,8 @@ export default function MetadataStatusControl() {
     }
   };
 
-  const badge = AUTHOR_STATUS_LABELS[currentStatus as keyof typeof AUTHOR_STATUS_LABELS] || currentStatus;
+  const statusLabels = copy.statuses as Record<string, string>;
+  const badge = statusLabels[currentStatus] || currentStatus;
   const color = AUTHOR_STATUS_COLORS[currentStatus as keyof typeof AUTHOR_STATUS_COLORS] || '#97A6BA';
   const bg = AUTHOR_STATUS_BG[currentStatus as keyof typeof AUTHOR_STATUS_BG] || 'rgba(151,166,186,0.12)';
 
@@ -66,7 +85,7 @@ export default function MetadataStatusControl() {
       borderRadius: '12px',
     }}>
       <div style={{ fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--text-muted)' }}>
-        Metadata Status
+        {copy.metadataStatus}
       </div>
 
       <div style={{
@@ -96,7 +115,7 @@ export default function MetadataStatusControl() {
               background: 'transparent', border: '1px solid var(--border-soft)',
               borderRadius: '8px', color: 'var(--text-muted)', cursor: 'pointer',
             }}>
-            Demote
+            {copy.demote}
           </button>
         )}
         {nextStatus && (
@@ -107,7 +126,7 @@ export default function MetadataStatusControl() {
               borderRadius: '8px', color: '#fff', cursor: 'pointer',
               opacity: promoting ? 0.6 : 1,
             }}>
-            {promoting ? 'Saving...' : `Promote to ${AUTHOR_STATUS_LABELS[nextStatus]}`}
+            {promoting ? t.admin.common.saving : `${copy.promoteTo} ${statusLabels[nextStatus]}`}
           </button>
         )}
       </div>

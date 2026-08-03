@@ -194,9 +194,7 @@ export default function Overview() {
     birthDate: ei.identity.birthDate,
     birthPlace: ei.identity.birthPlace,
     deathPlace: ei.identity.deathPlace,
-    genres: ei.identity.genres,
     occupations: ei.identity.occupations,
-    movements: ei.identity.literaryMovements,
   };
   const editorialReport = buildAuthorReport(author, editorialLabels);
 

@@ -101,7 +101,7 @@ export default function Media() {
                   style={{ width: '140px', height: '140px', borderRadius: '50%', objectFit: 'cover', border: '2px solid var(--border-soft)' }} />
               </div>
             )}
-            <FormField label="URL" value={photo} onChange={setPhoto} placeholder="https://..." />
+            <FormField label={t.admin.studioCleanup.url} value={photo} onChange={setPhoto} placeholder="https://..." />
           </EditorSectionCard>
         </div>
 
@@ -113,7 +113,7 @@ export default function Media() {
                   style={{ maxWidth: '200px', maxHeight: '60px', objectFit: 'contain' }} />
               </div>
             )}
-            <FormField label="URL" value={signature} onChange={setSignature} placeholder="https://..." />
+            <FormField label={t.admin.studioCleanup.url} value={signature} onChange={setSignature} placeholder="https://..." />
           </EditorSectionCard>
         </div>
       </div>
@@ -129,11 +129,11 @@ export default function Media() {
               style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
           </div>
         )}
-        <FormField label="URL" value={heroBg} onChange={setHeroBg} placeholder="https://..." />
+        <FormField label={t.admin.studioCleanup.url} value={heroBg} onChange={setHeroBg} placeholder="https://..." />
       </EditorSectionCard>
 
       <EditorSectionCard title={t.admin.authors.editor.media.portraitCaption}>
-        <FormField label={t.admin.authors.editor.media.caption} value={caption} onChange={setCaption} placeholder="Photo credit or caption..." />
+        <FormField label={t.admin.authors.editor.media.caption} value={caption} onChange={setCaption} placeholder={t.admin.studioCleanup.mediaCaptionPlaceholder} />
       </EditorSectionCard>
 
       <EditorSectionCard title={t.admin.authors.editor.media.gallery}>
@@ -163,7 +163,7 @@ export default function Media() {
             value={newGalleryUrl}
             onChange={(e) => setNewGalleryUrl(e.target.value)}
             onKeyDown={(e) => { if (e.key === 'Enter') addGalleryItem(); }}
-            placeholder="Add image URL..."
+            placeholder={t.admin.studioCleanup.addImageUrl}
             style={{
               flex: 1, padding: '8px 12px', fontSize: '14px',
               background: 'var(--input-bg)', border: '1px solid var(--border-soft)',
@@ -176,7 +176,7 @@ export default function Media() {
               padding: '8px 16px', background: 'var(--accent)', border: 'none',
               borderRadius: '8px', color: '#fff', cursor: 'pointer',
             }}>
-            Add
+            {t.admin.authors.editor.add}
           </button>
         </div>
       </EditorSectionCard>

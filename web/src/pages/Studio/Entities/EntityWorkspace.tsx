@@ -1,11 +1,9 @@
-import { Tag } from 'lucide-react';
 import { getLocaleData, getBrowserLocale } from '../../../locales';
 import { EntityWorkspaceProvider, useEntityWorkspace } from './EntityWorkspaceContext';
 import EntityWorkspaceLayout from '../../../components/Studio/shared/EntityWorkspaceLayout';
-import EmptyWorkspace from '../../../components/Studio/shared/EmptyWorkspace';
 import { entityTypeLabel } from './entityType';
 
-export const SECTION_PATHS = ['overview', 'identity', 'preview'] as const;
+export const SECTION_PATHS = ['overview', 'identity'] as const;
 
 function WorkspaceContent() {
   const { entity, isNew, loading, error } = useEntityWorkspace();
@@ -16,7 +14,9 @@ function WorkspaceContent() {
     ? [{ path: 'overview', label: (t.admin.workspace.sections as Record<string, string>).overview }]
     : SECTION_PATHS.map((p) => ({
         path: p,
-        label: (t.admin.workspace.sections as Record<string, string>)[p],
+        label: p === 'identity'
+          ? t.admin.workspace.status
+          : (t.admin.workspace.sections as Record<string, string>)[p],
       }));
 
   const name = isNew ? t.admin.entities.newEntity : (entity?.name || '');
@@ -37,13 +37,6 @@ function WorkspaceContent() {
       loading={loading}
       error={error}
       notFoundLabel={t.admin.entities.title}
-      preview={
-        <EmptyWorkspace
-          icon={<Tag size={20} />}
-          title={t.admin.workspace.preview}
-          description={t.admin.workspace.previewDesc}
-        />
-      }
     />
   );
 }

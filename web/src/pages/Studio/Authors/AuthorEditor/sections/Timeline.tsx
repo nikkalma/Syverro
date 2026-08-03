@@ -265,12 +265,12 @@ export default function Timeline() {
             />
             <Field label={tl.label}>
               <input type="text" value={draft.label} onChange={(e) => setDraft({ ...draft, label: e.target.value })}
-                style={inputStyle} placeholder="e.g. Publication of War and Peace" />
+                style={inputStyle} placeholder={t.admin.studioCleanup.timelineLabelPlaceholder} />
             </Field>
             <Field label={tl.description}>
               <textarea value={draft.description || ''} onChange={(e) => setDraft({ ...draft, description: e.target.value || null })}
                 style={{ ...inputStyle, minHeight: '60px', resize: 'vertical' }}
-                placeholder="Optional description or context..." />
+                placeholder={t.admin.studioCleanup.timelineDescriptionPlaceholder} />
             </Field>
             <PlaceSelector
               label={tl.eventPlace}

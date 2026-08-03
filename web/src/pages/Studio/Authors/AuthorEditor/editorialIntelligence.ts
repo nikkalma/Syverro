@@ -16,9 +16,7 @@ export interface AuthorEditorialLabels {
   birthDate: string;
   birthPlace: string;
   deathPlace: string;
-  genres: string;
   occupations: string;
-  movements: string;
 }
 
 export function buildAuthorReport(author: AdminAuthor, l: AuthorEditorialLabels): EditorialReport {
@@ -46,9 +44,7 @@ export function buildAuthorReport(author: AdminAuthor, l: AuthorEditorialLabels)
       { key: 'birth_date', label: l.birthDate, status: deriveStatus({ present: !isEmpty(author.birth_date) }), details: undefined },
       { key: 'birth_place', label: l.birthPlace, status: deriveStatus({ present: !isEmpty(author.birth_place) }), details: undefined },
       { key: 'death_place', label: l.deathPlace, status: deriveStatus({ present: !isEmpty(author.death_place) }), details: undefined },
-      { key: 'genres', label: l.genres, status: deriveStatus({ present: !isEmpty(author.genres) }), details: undefined },
       { key: 'occupations', label: l.occupations, status: deriveStatus({ present: !isEmpty(author.occupations) }), details: undefined },
-      { key: 'movements', label: l.movements, status: deriveStatus({ present: !isEmpty(author.literary_movements) }), details: undefined },
     ],
   };
 

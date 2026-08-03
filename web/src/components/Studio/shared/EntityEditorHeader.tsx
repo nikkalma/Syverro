@@ -13,13 +13,13 @@ interface Props {
   explorerVisible?: boolean;
 }
 
-const METADATA_STATUS_STYLES: Record<string, { label: string; color: string; bg: string }> = {
-  draft:              { label: 'Draft',               color: '#97A6BA', bg: 'rgba(151,166,186,0.12)' },
-  identity_complete:  { label: 'Identity Complete',   color: '#5B86A1', bg: 'rgba(91,134,161,0.12)' },
-  editorial_complete: { label: 'Editorial Complete',  color: '#4CAF50', bg: 'rgba(76,175,80,0.12)' },
-  knowledge_complete: { label: 'Knowledge Complete',  color: '#A855F7', bg: 'rgba(168,85,247,0.12)' },
-  review_ready:       { label: 'Review Ready',        color: '#FFA726', bg: 'rgba(255,167,38,0.12)' },
-  golden:             { label: 'Golden',              color: '#FFD700', bg: 'rgba(255,215,0,0.15)' },
+const METADATA_STATUS_STYLES: Record<string, { color: string; bg: string }> = {
+  draft:              { color: '#97A6BA', bg: 'rgba(151,166,186,0.12)' },
+  identity_complete:  { color: '#5B86A1', bg: 'rgba(91,134,161,0.12)' },
+  editorial_complete: { color: '#4CAF50', bg: 'rgba(76,175,80,0.12)' },
+  knowledge_complete: { color: '#A855F7', bg: 'rgba(168,85,247,0.12)' },
+  review_ready:       { color: '#FFA726', bg: 'rgba(255,167,38,0.12)' },
+  golden:             { color: '#FFD700', bg: 'rgba(255,215,0,0.15)' },
 };
 
 const pillStyle = (color: string, bg: string): React.CSSProperties => ({
@@ -103,7 +103,7 @@ export default function EntityEditorHeader({
           <div style={{ textAlign: 'right' }}>
             <div style={captionStyle}>{ws.metadata}</div>
             <span style={pillStyle(METADATA_STATUS_STYLES[metadataStatus].color, METADATA_STATUS_STYLES[metadataStatus].bg)}>
-              {METADATA_STATUS_STYLES[metadataStatus].label}
+              {(t.admin.studioCleanup.statuses as Record<string, string>)[metadataStatus] || metadataStatus}
             </span>
           </div>
         )}

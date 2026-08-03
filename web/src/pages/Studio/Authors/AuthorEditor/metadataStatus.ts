@@ -11,15 +11,6 @@ export const AUTHOR_STATUS_PIPELINE = [
 
 export type AuthorMetadataStatus = (typeof AUTHOR_STATUS_PIPELINE)[number];
 
-export const AUTHOR_STATUS_LABELS: Record<AuthorMetadataStatus, string> = {
-  draft: 'Draft',
-  identity_complete: 'Identity Complete',
-  editorial_complete: 'Editorial Complete',
-  knowledge_complete: 'Knowledge Complete',
-  review_ready: 'Review Ready',
-  golden: 'Golden',
-};
-
 export const AUTHOR_STATUS_COLORS: Record<AuthorMetadataStatus, string> = {
   draft: '#97A6BA',
   identity_complete: '#5B86A1',
@@ -51,12 +42,9 @@ const FIELD_LABELS: Record<string, string> = {
   death_date: 'Death Date',
   death_place_id: 'Death Place',
   nationality: 'Nationality',
-  bio: 'Biography',
   occupations: 'Occupations',
-  literary_movements: 'Literary Movements',
   languages: 'Languages',
   notable_works: 'Notable Works',
-  genres: 'Genres',
   photo: 'Photo',
   wikipedia_url: 'Wikipedia URL',
   official_website: 'Official Website',
@@ -80,7 +68,7 @@ export function validateStatusPromotion(
   const checks: Record<AuthorMetadataStatus, string[]> = {
     draft: [],
     identity_complete: ['birth_name', 'sort_name', 'birth_date', 'nationality'],
-    editorial_complete: ['bio'],
+    editorial_complete: [],
     knowledge_complete: ['languages'],
     review_ready: ['photo'],
     golden: ['portrait_caption', 'author_intro_quote'],
@@ -95,13 +83,11 @@ export function validateStatusPromotion(
 
   if (targetStatus === 'editorial_complete' || canPromoteTo(targetStatus, 'editorial_complete')) {
     if (missing(author, 'occupations')) errors.push({ field: 'occupations', label: FIELD_LABELS.occupations });
-    if (missing(author, 'literary_movements')) errors.push({ field: 'literary_movements', label: FIELD_LABELS.literary_movements });
   }
 
   if (targetStatus === 'knowledge_complete' || canPromoteTo(targetStatus, 'knowledge_complete')) {
     const pubCount = (author as any).publications_count ?? 0;
     if (pubCount <= 0) errors.push({ field: 'publications', label: 'Publications' });
-    if (missing(author, 'genres')) errors.push({ field: 'genres', label: FIELD_LABELS.genres });
   }
 
   if (targetStatus === 'review_ready' || canPromoteTo(targetStatus, 'review_ready')) {

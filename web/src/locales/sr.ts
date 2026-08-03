@@ -664,6 +664,13 @@ export const sr: LocaleData = {
         preview: 'Preview',
       },
     },
+    studioCleanup: {
+      metadataStatus: 'Статус метаподатака', demote: 'Смањи статус', promoteTo: 'Унапреди на', missing: 'Није попуњено',
+      statuses: { draft: 'Нацрт', identity_complete: 'Идентитет је попуњен', editorial_complete: 'Уреднички подаци су попуњени', knowledge_complete: 'Знање је попуњено', review_ready: 'Спремно за проверу', golden: 'Референтни запис' },
+      present: 'До данас', verified: 'Проверено', unverified: 'Није проверено', searchBooks: 'Пронађи књигу за повезивање…', searching: 'Претрага…', link: 'Повежи', unlink: 'Прекини везу', timelineLabelPlaceholder: 'На пример, објављивање дела', timelineDescriptionPlaceholder: 'Опциони опис или контекст', url: 'Веза', mediaCaptionPlaceholder: 'Извор фотографије или потпис', addImageUrl: 'Додај везу слике…',
+      aiTitle: 'Предлози ВИ', aiDescription: 'Предлози ВИ за обогаћивање података. Сваку измену одобрава кустос.', proposed: 'Предложено', accepted: 'Прихваћено', rejected: 'Одбијено', loadingSuggestions: 'Учитавање предлога…', noFilteredSuggestions: 'Нема предлога са овим статусом.', noSuggestions: 'Још нема предлога ВИ.', confidence: 'поузданост', currentValue: 'Тренутна вредност', suggestedValue: 'Предложена вредност', empty: 'Није попуњено', reject: 'Одбиј', accept: 'Прихвати', failedUpdate: 'Предлог није могуће ажурирати',
+      searchOrCreatePlace: 'Пронађи или направи место…', searchOrCreateSource: 'Пронађи или направи извор…', searchOrCreateTaxonomy: 'Претрага таксономије…', exists: 'Постоји', createEntityQuestion: 'Направити нови таксономски ентитет?', nameLabel: 'Назив', typeLabel: 'Тип', globalEntityNotice: 'Овај ентитет ће бити доступан у целом систему.', create: 'Направи',
+    },
     access: {
       denied: 'Access denied',
       noPermission: 'You do not have permission to access Studio.',

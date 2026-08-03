@@ -8,6 +8,7 @@ import TaxonomyPicker from '../../../../../components/Studio/shared/TaxonomyPick
 import { apiClient } from '../../../../../shared/api/client';
 import { getLocaleData, getBrowserLocale } from '../../../../../locales';
 import type { AdminAuthorUpdate, AuthorCitizenship, AuthorCitizenshipCreate } from '../../../../../types/admin';
+import { normalizePseudonyms } from '../pseudonyms';
 
 const inputStyle: React.CSSProperties = {
   width: '100%', padding: '8px 12px', fontSize: '14px',
@@ -94,33 +95,6 @@ const FIELD_STYLES = {
   }),
 };
 
-// Pseudonym canonicalization.
-//
-// The editor-facing concept is a single list of "Pseudonyms" (alternative names
-// an author publishes under). The backend persists two legacy ARRAY columns —
-// `pseudonyms` (canonical) and `pen_names` (older alias used by the auto-import
-// path). They have identical semantics and no value should be lost or duplicated.
-//
-// This helper merges both columns, drops placeholder junk ("Pen Name 1",
-// "Pseudonym 2"), trims whitespace, and deduplicates case-sensitively.
-// On save the merged list is written back to BOTH columns so the API contract
-// stays satisfied and no previously persisted value is silently dropped.
-function normalizePseudonyms(...lists: (string[] | undefined)[]): string[] {
-  const seen = new Set<string>();
-  const out: string[] = [];
-  for (const list of lists) {
-    for (const raw of list || []) {
-      const v = (raw || '').trim();
-      if (!v) continue;
-      if (/^(pen name|pseudonym)\s*\d+$/i.test(v)) continue;
-      if (seen.has(v)) continue;
-      seen.add(v);
-      out.push(v);
-    }
-  }
-  return out;
-}
-
 function CitizenshipForm({ values, onChange, onCancel, onSave, saving, locale }: {
   values: { state_name: string; from_date: string; to_date: string; notes: string; source_id: string };
   onChange: (f: string, v: string) => void;
@@ -139,15 +113,15 @@ function CitizenshipForm({ values, onChange, onCancel, onSave, saving, locale }:
           </div>
           <input type="text" value={values.state_name}
             onChange={(e) => onChange('state_name', e.target.value)}
-            placeholder="e.g. USSR, Russian Federation"
+            placeholder={locale.citizenshipState}
             style={{ ...inputStyle, borderColor: hasError && values.state_name ? undefined : hasError ? 'var(--error)' : undefined }} />
         </div>
         <div></div>
         <FormField label={locale.citizenshipFrom} value={values.from_date} onChange={(v) => onChange('from_date', v)} placeholder="1924" />
         <FormField label={locale.citizenshipTo} value={values.to_date} onChange={(v) => onChange('to_date', v)} placeholder="1991" />
       </div>
-      <TextAreaField label={locale.citizenshipNotes} value={values.notes} onChange={(v) => onChange('notes', v)} placeholder="Optional notes" />
-      <FormField label={locale.citizenshipSource} value={values.source_id} onChange={(v) => onChange('source_id', v)} placeholder="Source ID (optional)" />
+      <TextAreaField label={locale.citizenshipNotes} value={values.notes} onChange={(v) => onChange('notes', v)} />
+      <FormField label={locale.citizenshipSource} value={values.source_id} onChange={(v) => onChange('source_id', v)} />
       <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
         <button type="button" onClick={onCancel}
           style={{ padding: '6px 12px', background: 'transparent', border: '1px solid var(--border-soft)', borderRadius: '6px', color: 'var(--text-primary)', cursor: 'pointer', fontSize: '12px' }}>
@@ -326,11 +300,11 @@ export default function Identity() {
     <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
       <EditorSectionCard title={idLocale.nationalityStates}>
         <DetailGrid columns={2}>
-          <FormField label={idLocale.nationality} value={nationality} onChange={setNationality} placeholder="e.g. Russian" />
-          <FormField label={idLocale.ethnicOrigin} value={ethnicOrigin} onChange={setEthnicOrigin} placeholder="e.g. Jewish" />
+          <FormField label={idLocale.nationality} value={nationality} onChange={setNationality} />
+          <FormField label={idLocale.ethnicOrigin} value={ethnicOrigin} onChange={setEthnicOrigin} />
         </DetailGrid>
         <div style={{ marginTop: '12px' }}>
-          <FormField label={idLocale.culturalIdentity} value={culturalIdentity} onChange={setCulturalIdentity} placeholder="e.g. Russian literature" />
+          <FormField label={idLocale.culturalIdentity} value={culturalIdentity} onChange={setCulturalIdentity} />
         </div>
       </EditorSectionCard>
 
@@ -356,7 +330,7 @@ export default function Identity() {
                   <div style={{ color: 'var(--text-primary)' }}>
                     {c.state_name}
                     <span style={{ color: 'var(--text-muted)', marginLeft: '8px' }}>
-                      {c.from_date || '?'} — {c.to_date || 'present'}
+                      {c.from_date || '?'} — {c.to_date || t.admin.studioCleanup.present}
                     </span>
                   </div>
                   {c.notes && (
@@ -365,7 +339,7 @@ export default function Identity() {
                     </div>
                   )}
                 </div>
-                <span style={FIELD_STYLES.status(c.status)}>{c.status}</span>
+                <span style={FIELD_STYLES.status(c.status)}>{c.status === 'verified' ? t.admin.studioCleanup.verified : t.admin.studioCleanup.unverified}</span>
                 <button type="button" onClick={() => openEditCitizen(c)}
                   style={{ background: 'none', border: 'none', color: 'var(--text-secondary)', cursor: 'pointer', fontSize: '13px', padding: '0 4px' }}>
                   ✎
@@ -398,8 +372,8 @@ export default function Identity() {
 
       <EditorSectionCard title={idLocale.languagesBirthDeath}>
         <DetailGrid columns={2}>
-          <FormField label={idLocale.spokenLanguages} value={languages} onChange={setLanguages} placeholder="English, Russian..." />
-          <FormField label={idLocale.writingLanguages} value={writingLanguages} onChange={setWritingLanguages} placeholder="Russian, French..." />
+          <FormField label={idLocale.spokenLanguages} value={languages} onChange={setLanguages} />
+          <FormField label={idLocale.writingLanguages} value={writingLanguages} onChange={setWritingLanguages} />
         </DetailGrid>
         <div style={{ marginTop: '16px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
           <div>
@@ -423,7 +397,7 @@ export default function Identity() {
           <FormField label={idLocale.sortName} value={sortName} onChange={setSortName} />
         </DetailGrid>
         <div style={{ marginTop: '12px' }}>
-          <ChipInput label={idLocale.pseudonyms} values={pseudonyms} onChange={setPseudonyms} placeholder="e.g. Currer Bell" />
+          <ChipInput label={idLocale.pseudonyms} values={pseudonyms} onChange={setPseudonyms} />
         </div>
       </EditorSectionCard>
 
@@ -432,7 +406,7 @@ export default function Identity() {
           nodeType="occupation"
           value={occupations}
           onChange={setOccupations}
-          placeholder="Search or create occupations..."
+          placeholder={t.admin.studioCleanup.searchOrCreateTaxonomy}
         />
       </EditorSectionCard>
 

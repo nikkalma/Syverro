@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { apiClient } from '../../../shared/api/client';
 import type { Source, SourceCreate } from '../../../types/admin';
+import { getLocaleData, getBrowserLocale } from '../../../locales';
 
 interface SourcePickerProps {
   label: string;
@@ -16,6 +17,7 @@ const inputStyle: React.CSSProperties = {
 };
 
 export default function SourcePicker({ label, sourceId, onChange }: SourcePickerProps) {
+  const t = getLocaleData(getBrowserLocale());
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<{ id: string; label: string; isNew?: boolean }[]>([]);
   const [isOpen, setIsOpen] = useState(false);
@@ -59,12 +61,12 @@ export default function SourcePicker({ label, sourceId, onChange }: SourcePicker
       const filtered: ({ id: string; label: string; isNew?: boolean })[] = sources
         .filter((s) => s.title.toLowerCase().includes(q.toLowerCase()))
         .map((s) => ({ id: s.id, label: s.title }));
-      filtered.push({ id: '__new__', label: `+ Create "${q}"`, isNew: true });
+      filtered.push({ id: '__new__', label: `+ ${t.admin.studioCleanup.create} "${q}"`, isNew: true });
       setResults(filtered);
       setIsOpen(true);
       setActiveIndex(-1);
     } catch {
-      setResults([{ id: '__new__', label: `+ Create "${query}"`, isNew: true }]);
+      setResults([{ id: '__new__', label: `+ ${t.admin.studioCleanup.create} "${query}"`, isNew: true }]);
       setIsOpen(true);
     }
   };
@@ -144,7 +146,7 @@ export default function SourcePicker({ label, sourceId, onChange }: SourcePicker
             onChange={(e) => setQuery(e.target.value)}
             onFocus={() => { if (results.length > 0) setIsOpen(true); }}
             onKeyDown={handleKeyDown}
-            placeholder="Search or create source..."
+            placeholder={t.admin.studioCleanup.searchOrCreateSource}
             style={inputStyle}
           />
           {isOpen && results.length > 0 && (

@@ -108,7 +108,7 @@ export default function Works() {
                   </div>
                   <button type="button" onClick={() => handleUnlink(book.id)}
                     style={{ padding: '4px 10px', fontSize: '11px', borderRadius: '6px', border: 'none', cursor: 'pointer', background: 'rgba(220,38,38,0.1)', color: 'var(--error)' }}>
-                    Unlink
+                    {t.admin.studioCleanup.unlink}
                   </button>
                 </div>
               );
@@ -118,9 +118,9 @@ export default function Works() {
 
         <div style={{ marginBottom: '12px' }}>
           <input type="text" value={bookQuery} onChange={(e) => setBookQuery(e.target.value)}
-            placeholder="Search books to link..." style={inputStyle} />
+            placeholder={t.admin.studioCleanup.searchBooks} style={inputStyle} />
         </div>
-        {searching && <div style={{ fontSize: '13px', color: 'var(--text-muted)' }}>Searching...</div>}
+        {searching && <div style={{ fontSize: '13px', color: 'var(--text-muted)' }}>{t.admin.studioCleanup.searching}</div>}
         {bookResults.map((book: any) => {
           const isLinked = linkedBookIds.has(book.id);
           const bookAuthors: Array<any> = book.authors || [];
@@ -147,7 +147,7 @@ export default function Works() {
                   background: isLinked ? 'rgba(220,38,38,0.1)' : 'rgba(76,175,80,0.1)',
                   color: isLinked ? 'var(--error)' : 'var(--success)',
                 }}>
-                {isLinked ? 'Unlink' : 'Link'}
+                {isLinked ? t.admin.studioCleanup.unlink : t.admin.studioCleanup.link}
               </button>
             </div>
           );

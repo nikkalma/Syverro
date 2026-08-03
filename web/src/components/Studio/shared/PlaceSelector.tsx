@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { apiClient } from '../../../shared/api/client';
-import { getBrowserLocale } from '../../../locales';
+import { getBrowserLocale, getLocaleData } from '../../../locales';
 import { resolveEditorialValue } from './editorialValue';
 import type { Place, PlaceCreate } from '../../../types/admin';
 
@@ -30,6 +30,7 @@ interface Suggestion {
 }
 
 export default function PlaceSelector({ label, placeId, placeName, onChange }: PlaceSelectorProps) {
+  const t = getLocaleData(getBrowserLocale());
   const [query, setQuery] = useState(placeName || '');
   const [results, setResults] = useState<Suggestion[]>([]);
   const [isOpen, setIsOpen] = useState(false);
@@ -151,7 +152,7 @@ export default function PlaceSelector({ label, placeId, placeName, onChange }: P
             onChange={(e) => setQuery(e.target.value)}
             onFocus={() => { if (results.length > 0) setIsOpen(true); }}
             onKeyDown={handleKeyDown}
-            placeholder="Search or create place..."
+            placeholder={t.admin.studioCleanup.searchOrCreatePlace}
             style={{ ...inputStyle, flex: 1 }}
           />
           {placeId && (
@@ -187,7 +188,7 @@ export default function PlaceSelector({ label, placeId, placeName, onChange }: P
         )}
         {loading && (
           <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, zIndex: 20, marginTop: '4px', padding: '8px 12px', fontSize: '12px', color: 'var(--text-muted)' }}>
-            Searching...
+            {t.admin.studioCleanup.searching}
           </div>
         )}
       </div>

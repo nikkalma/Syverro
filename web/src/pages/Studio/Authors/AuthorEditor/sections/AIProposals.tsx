@@ -3,9 +3,17 @@ import { useAuthorEditor } from '../AuthorEditorContext';
 import EditorSectionCard from '../../../../../components/Studio/shared/EditorSectionCard';
 import { apiClient } from '../../../../../shared/api/client';
 import type { AIProposal } from '../../../../../types/admin';
+import { getLocaleData, getBrowserLocale } from '../../../../../locales';
 
 export default function AIProposals() {
   const { author } = useAuthorEditor();
+  const t = getLocaleData(getBrowserLocale());
+  const copy = t.admin.studioCleanup;
+  const proposalStatusLabels: Record<string, string> = {
+    proposed: copy.proposed,
+    accepted: copy.accepted,
+    rejected: copy.rejected,
+  };
   const [proposals, setProposals] = useState<AIProposal[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -35,7 +43,7 @@ export default function AIProposals() {
       await apiClient.put(`/admin/authors/${author.id}/proposals/${proposalId}`, { status });
       await fetchProposals();
     } catch (e: any) {
-      setError(e?.response?.data?.detail || e.message || 'Failed to update proposal');
+      setError(e?.response?.data?.detail || e.message || copy.failedUpdate);
     }
   };
 
@@ -54,10 +62,9 @@ export default function AIProposals() {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-      <EditorSectionCard title="AI Suggestions">
+      <EditorSectionCard title={copy.aiTitle}>
         <p style={{ fontSize: '13px', color: 'var(--text-muted)', margin: '0 0 16px 0', lineHeight: 1.5 }}>
-          AI-generated suggestions for enrichment. Review and accept or reject each suggestion.
-          AI never writes directly to the author model — all changes require curator approval.
+          {copy.aiDescription}
         </p>
 
         {proposals.length > 0 && (
@@ -69,7 +76,7 @@ export default function AIProposals() {
                 border: '1px solid var(--border-soft)',
                 color: !filter ? '#fff' : 'var(--text-secondary)',
               }}>
-              All ({proposals.length})
+              {t.admin.common.all} ({proposals.length})
             </button>
             {filters.map((f) => (
               <button key={f} type="button" onClick={() => setFilter(f)}
@@ -79,19 +86,19 @@ export default function AIProposals() {
                   border: '1px solid var(--border-soft)',
                   color: filter === f ? '#fff' : 'var(--text-secondary)',
                 }}>
-                {f} ({statusCounts[f] || 0})
+                {proposalStatusLabels[f]} ({statusCounts[f] || 0})
               </button>
             ))}
           </div>
         )}
 
-        {loading && <div style={{ fontSize: '13px', color: 'var(--text-muted)' }}>Loading suggestions...</div>}
+        {loading && <div style={{ fontSize: '13px', color: 'var(--text-muted)' }}>{copy.loadingSuggestions}</div>}
 
         {!loading && filtered.length === 0 && (
           <p style={{ fontSize: '13px', color: 'var(--text-muted)', fontStyle: 'italic', margin: 0 }}>
             {filter
-              ? `No ${filter} suggestions.`
-              : 'No AI suggestions yet. Use the AI analysis endpoint to generate suggestions.'}
+              ? copy.noFilteredSuggestions
+              : copy.noSuggestions}
           </p>
         )}
 
@@ -109,7 +116,7 @@ export default function AIProposals() {
                 background: p.source_type === 'ai' ? 'rgba(91,134,161,0.15)' : 'rgba(76,175,80,0.15)',
                 color: p.source_type === 'ai' ? '#5B86A1' : '#4CAF50',
               }}>
-                {p.source_type}
+                {p.source_type === 'ai' ? copy.aiTitle : p.source_type}
               </span>
               <span style={{
                 padding: '2px 8px', borderRadius: '4px', fontSize: '10px',
@@ -119,10 +126,10 @@ export default function AIProposals() {
                 color: p.status === 'proposed' ? '#FFA726' :
                   p.status === 'accepted' ? '#4CAF50' : '#EF5350',
               }}>
-                {p.status}
+                {proposalStatusLabels[p.status] || p.status}
               </span>
               <span style={{ fontSize: '11px', color: 'var(--text-muted)', marginLeft: 'auto' }}>
-                {(p.confidence * 100).toFixed(0)}% confidence
+                {(p.confidence * 100).toFixed(0)}% {copy.confidence}
               </span>
             </div>
 
@@ -136,10 +143,10 @@ export default function AIProposals() {
                 background: 'var(--surface)', border: '1px solid var(--border-soft)',
               }}>
                 <div style={{ fontSize: '10px', textTransform: 'uppercase', color: 'var(--text-muted)', marginBottom: '2px' }}>
-                  Current Value
+                  {copy.currentValue}
                 </div>
                 <div style={{ fontSize: '13px', color: p.current_value ? 'var(--text-primary)' : 'var(--text-muted)', fontStyle: p.current_value ? 'normal' : 'italic' }}>
-                  {p.current_value || 'empty'}
+                  {p.current_value || copy.empty}
                 </div>
               </div>
               <div style={{
@@ -147,7 +154,7 @@ export default function AIProposals() {
                 background: 'rgba(76,175,80,0.08)', border: '1px solid rgba(76,175,80,0.2)',
               }}>
                 <div style={{ fontSize: '10px', textTransform: 'uppercase', color: '#4CAF50', marginBottom: '2px' }}>
-                  Suggested Value
+                  {copy.suggestedValue}
                 </div>
                 <div style={{ fontSize: '13px', color: 'var(--text-primary)' }}>
                   {p.suggested_value}
@@ -163,14 +170,14 @@ export default function AIProposals() {
                     background: 'transparent', border: '1px solid var(--border-soft)',
                     color: 'var(--error)',
                   }}>
-                  Reject
+                  {copy.reject}
                 </button>
                 <button type="button" onClick={() => updateStatus(p.id, 'accepted')}
                   style={{
                     padding: '6px 14px', borderRadius: '6px', fontSize: '12px', cursor: 'pointer',
                     background: '#4CAF50', border: 'none', color: '#fff',
                   }}>
-                  Accept
+                  {copy.accept}
                 </button>
               </div>
             )}

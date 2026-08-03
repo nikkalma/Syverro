@@ -664,6 +664,13 @@ export const uk: LocaleData = {
         preview: 'Preview',
       },
     },
+    studioCleanup: {
+      metadataStatus: 'Статус метаданих', demote: 'Знизити статус', promoteTo: 'Підвищити до', missing: 'Не заповнено',
+      statuses: { draft: 'Чернетка', identity_complete: 'Ідентичність заповнена', editorial_complete: 'Редакційні дані заповнені', knowledge_complete: 'Знання заповнені', review_ready: 'Готово до перевірки', golden: 'Еталонний запис' },
+      present: 'Дотепер', verified: 'Перевірено', unverified: 'Не перевірено', searchBooks: 'Знайти книгу для зв’язку…', searching: 'Пошук…', link: 'Пов’язати', unlink: 'Відв’язати', timelineLabelPlaceholder: 'Наприклад, публікація твору', timelineDescriptionPlaceholder: 'Необов’язковий опис або контекст', url: 'Посилання', mediaCaptionPlaceholder: 'Джерело фотографії або підпис', addImageUrl: 'Додати посилання на зображення…',
+      aiTitle: 'Пропозиції ШІ', aiDescription: 'Пропозиції ШІ для збагачення даних. Кожна зміна потребує схвалення куратора.', proposed: 'Запропоновано', accepted: 'Прийнято', rejected: 'Відхилено', loadingSuggestions: 'Завантаження пропозицій…', noFilteredSuggestions: 'Пропозицій із таким статусом немає.', noSuggestions: 'Пропозицій ШІ поки немає.', confidence: 'впевненість', currentValue: 'Поточне значення', suggestedValue: 'Запропоноване значення', empty: 'Не заповнено', reject: 'Відхилити', accept: 'Прийняти', failedUpdate: 'Не вдалося оновити пропозицію',
+      searchOrCreatePlace: 'Знайти або створити місце…', searchOrCreateSource: 'Знайти або створити джерело…', searchOrCreateTaxonomy: 'Пошук у таксономії…', exists: 'Існує', createEntityQuestion: 'Створити нову сутність таксономії?', nameLabel: 'Назва', typeLabel: 'Тип', globalEntityNotice: 'Ця сутність стане доступною в усій системі.', create: 'Створити',
+    },
     access: {
       denied: 'Access denied',
       noPermission: 'You do not have permission to access Studio.',

@@ -253,7 +253,6 @@ export default function HistoricalDateField({ label, value, precision, onChange,
         type="text"
         value={textInput}
         onChange={(e) => handleTextChange(e.target.value)}
-        placeholder={activeLocale === 'ru' ? 'например 1816, апрель 1816, 15 апреля 1816, ~550 до н.э.' : 'e.g. 1816, April 1816, 15 April 1816, ~550 BCE'}
         style={inputStyle}
       />
       <div style={{ display: 'flex', gap: '6px', marginTop: '6px', flexWrap: 'wrap', alignItems: 'center' }}>

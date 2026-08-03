@@ -4,7 +4,6 @@ import EditorSectionCard from '../../../../components/Studio/shared/EditorSectio
 import DetailGrid from '../../../../components/Studio/shared/DetailGrid';
 import ActionBar from '../../../../components/Studio/shared/ActionBar';
 import { getLocaleData, getBrowserLocale } from '../../../../locales';
-import { entityTypeLabel } from '../entityType';
 
 const inputStyle: React.CSSProperties = {
   width: '100%', padding: '8px 12px', fontSize: '14px',
@@ -61,23 +60,6 @@ export default function Identity() {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-      <EditorSectionCard title={eLocale.type}>
-        <DetailGrid columns={2}>
-          <div>
-            {fieldLabel(eLocale.type)}
-            <div style={{ fontSize: '14px', color: 'var(--text-primary)' }}>
-              {entityTypeLabel(entity.node_type)}
-            </div>
-          </div>
-          <div>
-            {fieldLabel(eLocale.parent)}
-            <div style={{ fontSize: '14px', color: 'var(--text-secondary)' }}>
-              {entity.parent_id || eLocale.noParent}
-            </div>
-          </div>
-        </DetailGrid>
-      </EditorSectionCard>
-
       <EditorSectionCard title={eLocale.status}>
         <DetailGrid columns={2}>
           <div>

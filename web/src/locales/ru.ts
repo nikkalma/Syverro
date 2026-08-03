@@ -665,6 +665,15 @@ export const ru: LocaleData = {
         preview: 'Предпросмотр',
       },
     },
+    studioCleanup: {
+      metadataStatus: 'Статус метаданных', demote: 'Понизить статус', promoteTo: 'Повысить до', missing: 'Не заполнено',
+      statuses: { draft: 'Черновик', identity_complete: 'Идентичность заполнена', editorial_complete: 'Редакционные данные заполнены', knowledge_complete: 'Знания заполнены', review_ready: 'Готово к проверке', golden: 'Эталонная запись' },
+      present: 'По настоящее время', verified: 'Проверено', unverified: 'Не проверено', searchBooks: 'Найти книгу для связи…', searching: 'Поиск…', link: 'Связать', unlink: 'Отвязать',
+      timelineLabelPlaceholder: 'Например, публикация романа «Война и мир»', timelineDescriptionPlaceholder: 'Необязательное описание или контекст',
+      url: 'Ссылка', mediaCaptionPlaceholder: 'Источник фотографии или подпись', addImageUrl: 'Добавить ссылку на изображение…',
+      aiTitle: 'Предложения ИИ', aiDescription: 'Предложения ИИ для обогащения данных. Каждое изменение требует одобрения куратора.', proposed: 'Предложено', accepted: 'Принято', rejected: 'Отклонено', loadingSuggestions: 'Загрузка предложений…', noFilteredSuggestions: 'Предложений с таким статусом нет.', noSuggestions: 'Предложений ИИ пока нет.', confidence: 'уверенность', currentValue: 'Текущее значение', suggestedValue: 'Предложенное значение', empty: 'Не заполнено', reject: 'Отклонить', accept: 'Принять', failedUpdate: 'Не удалось обновить предложение',
+      searchOrCreatePlace: 'Найти или создать место…', searchOrCreateSource: 'Найти или создать источник…', searchOrCreateTaxonomy: 'Поиск по таксономии…', exists: 'Существует', createEntityQuestion: 'Создать новую сущность таксономии?', nameLabel: 'Название', typeLabel: 'Тип', globalEntityNotice: 'Эта сущность станет доступна во всей системе.', create: 'Создать',
+    },
     access: {
       denied: 'Доступ запрещён',
       noPermission: 'У вас нет прав для доступа к Студии.',

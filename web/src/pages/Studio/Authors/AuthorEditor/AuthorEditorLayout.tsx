@@ -7,7 +7,7 @@ import MetadataStatusControl from './MetadataStatusControl';
 function computeCompletion(author: AdminAuthor): number {
   const fields = [
     author.name, author.slug, author.display_name, author.nationality,
-    author.bio, author.birth_date, author.photo,
+    author.birth_date, author.photo, author.about_summary,
     author.occupations?.length, author.languages?.length,
   ];
   const filled = fields.filter((f) => f !== null && f !== undefined && f !== '' && f !== 0);

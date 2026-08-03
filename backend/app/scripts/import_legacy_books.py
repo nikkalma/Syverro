@@ -62,6 +62,7 @@ async def run_import(file_path: str) -> None:
     from app.models.user_book import UserBook  # noqa: F401 — registers UserBook class for relationship resolution
     from app.models.book_author import book_authors
     from app.models.book_genre import book_genres  # noqa: F401 — registers book_genres secondary table
+    from app.services.book_slug import generate_unique_book_slug
 
     # ---- Load JSON ----
     json_path = Path(file_path)
@@ -191,6 +192,11 @@ async def run_import(file_path: str) -> None:
                 publication_type="official",
                 metadata_status="incomplete",
                 moderation_status="pending",
+            )
+            book.slug = await generate_unique_book_slug(
+                db,
+                title,
+                publication_year=orig_year,
             )
             db.add(book)
             await db.flush()

@@ -6,7 +6,7 @@ import type { PersonalBook } from '../types/personalBook';
 interface BookGridProps {
   books: EnrichedBook[];
   personalBooks?: PersonalBook[];
-  onBookClick?: (bookId: string) => void;
+  onBookClick?: (book: EnrichedBook) => void;
 }
 
 export default function BookGrid({ books, personalBooks = [], onBookClick }: BookGridProps) {
@@ -34,7 +34,7 @@ export default function BookGrid({ books, personalBooks = [], onBookClick }: Boo
           key={book.id}
           book={book}
           personalBook={personalBookMap.get(book.id)}
-          onClick={() => onBookClick?.(book.id)}
+          onClick={() => onBookClick?.(book)}
         />
       ))}
     </div>

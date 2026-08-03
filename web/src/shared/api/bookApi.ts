@@ -19,6 +19,7 @@ import type {
 
 interface BookResponse {
   id: string;
+  slug: string;
   title: string;
   author: string;
   author_id: string | null;
@@ -74,6 +75,7 @@ interface UserBookResponse {
 function mapBookResponseToGlobalBook(data: BookResponse): GlobalBook {
   return {
     id: data.id,
+    slug: data.slug,
     title: data.title,
     author: data.author,
     authorId: data.author_id ?? null,

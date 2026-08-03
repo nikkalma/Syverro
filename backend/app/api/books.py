@@ -9,6 +9,7 @@ from app.services.book_service import (
     get_book_authors_data, get_book_genre_ids, get_book_genre_objects,
     get_book_taxonomy_items, get_primary_author, link_author,
 )
+from app.services.book_slug import generate_unique_book_slug
 from app.models.book_author import book_authors
 from app.models.user import User
 from app.models.book import Book
@@ -17,7 +18,7 @@ from app.models.user_book import UserBook
 from app.models.genre import Genre
 from app.models.book_genre import book_genres
 from app.schemas.book import BookCreate, BookResponse, PublicBookDetailResponse, UserBookResponse
-from uuid import UUID
+from uuid import UUID, uuid4
 import logging
 
 logger = logging.getLogger(__name__)
@@ -42,6 +43,7 @@ async def _book_to_response_dict(db: AsyncSession, book: Book) -> dict:
 
     return {
         "id": book.id,
+        "slug": book.slug,
         "title": book.title,
         "author": book.author,
         "author_id": author_id,
@@ -147,6 +149,7 @@ async def create_book(
         author = await find_or_create_author(db, book_data.author)
 
         new_book = Book(
+            id=uuid4(),
             title=book_data.title,
             author=book_data.author,
             author_id=author.id,
@@ -159,6 +162,9 @@ async def create_book(
             moderation_status="pending",
             is_published=False,
             created_by=current_user.id,
+        )
+        new_book.slug = await generate_unique_book_slug(
+            db, new_book.original_title or new_book.title, book_id=new_book.id
         )
         db.add(new_book)
         await db.flush()
@@ -202,19 +208,23 @@ async def get_user_books_with_status(
         return []
 
 
-@router.get("/{book_id}", response_model=PublicBookDetailResponse)
+@router.get("/{slug_or_id}", response_model=PublicBookDetailResponse)
 async def get_public_book_detail(
-    book_id: UUID,
+    slug_or_id: str,
     db: AsyncSession = Depends(get_db),
 ):
-    result = await db.execute(
-        select(Book).where(
-            Book.id == book_id,
-            Book.is_published == True,
-            Book.moderation_status == "approved",
-        )
-    )
+    result = await db.execute(select(Book).where(Book.slug == slug_or_id))
     book = result.scalar_one_or_none()
+    if book is None:
+        try:
+            book_uuid = UUID(slug_or_id)
+        except ValueError:
+            book_uuid = None
+        if book_uuid is not None:
+            result = await db.execute(select(Book).where(Book.id == book_uuid))
+            book = result.scalar_one_or_none()
+    if book is not None and not (book.is_published and book.moderation_status == "approved"):
+        book = None
     if book is None:
         raise HTTPException(status_code=404, detail="Book not found")
     return await compose_public_book_detail(db, book)

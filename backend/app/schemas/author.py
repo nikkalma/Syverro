@@ -206,6 +206,7 @@ class AuthorBrief(BaseModel):
 
 class AuthorBookBrief(BaseModel):
     id: UUID
+    slug: str
     title: str
     cover: Optional[str] = None
 

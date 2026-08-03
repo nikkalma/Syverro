@@ -4,7 +4,7 @@ import { mapPublicBookDetail } from './bookDetailApi';
 describe('mapPublicBookDetail', () => {
   it('preserves nullable fields, multiple authors, structured genres, and knowledge', () => {
     const detail = mapPublicBookDetail({
-      id: 'book-1', title: 'Book', subtitle: 'Subtitle', original_title: 'Original',
+      id: 'book-1', slug: 'book', title: 'Book', subtitle: 'Subtitle', original_title: 'Original',
       description: null, cover: null, publication_id: 'publication-1', publication_year: 1847,
       original_language: 'English', country_of_origin: 'United Kingdom', total_pages: null,
       publication_type: 'official', series_name: 'Series', series_position: 2,
@@ -26,6 +26,7 @@ describe('mapPublicBookDetail', () => {
     });
 
     expect(detail.totalPages).toBeNull();
+    expect(detail.slug).toBe('book');
     expect(detail.authors).toHaveLength(2);
     expect(detail.authors[0].displayName).toBe('Author One');
     expect(detail.genres[0]).toEqual({ id: 'g1', name: 'Gothic Novel', slug: 'gothic-novel', type: 'literary' });

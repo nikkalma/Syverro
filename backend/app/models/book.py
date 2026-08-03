@@ -10,6 +10,7 @@ class Book(Base):
     __tablename__ = "books"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    slug = Column(String, nullable=False, unique=True, index=True)
     title = Column(String, nullable=False)
     author = Column(String, nullable=False)  # Денормализовано для быстрых запросов
     author_id = Column(UUID(as_uuid=True), ForeignKey("authors.id"), nullable=True)

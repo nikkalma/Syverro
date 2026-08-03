@@ -45,7 +45,7 @@ async def test_public_book_detail_unit_composes_existing_relations():
         original_title="Canonical Original", publication_year=1847, publication_type="novel",
     )
     book = Book(
-        id=uuid.uuid4(), title="Book", author=author.name, publication_id=publication.id,
+        id=uuid.uuid4(), slug="book", title="Book", author=author.name, publication_id=publication.id,
         subtitle="Subtitle", original_title="Original", country_of_origin="United Kingdom",
         series_name="Series", series_position=2, total_pages=None,
     )
@@ -78,9 +78,43 @@ async def test_public_book_detail_unit_composes_existing_relations():
 
 @pytest.mark.asyncio
 async def test_public_book_detail_unit_returns_true_404():
+    session = FakeSession([FakeResult([]), FakeResult([])])
+
+    with pytest.raises(HTTPException) as error:
+        await get_public_book_detail(str(uuid.uuid4()), session)
+
+    assert error.value.status_code == 404
+
+
+@pytest.mark.asyncio
+async def test_public_book_detail_returns_404_for_malformed_identifier():
     session = FakeSession([FakeResult([])])
 
     with pytest.raises(HTTPException) as error:
-        await get_public_book_detail(uuid.uuid4(), session)
+        await get_public_book_detail("not a valid slug", session)
 
     assert error.value.status_code == 404
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("lookup_by_slug", [True, False])
+async def test_public_book_detail_supports_slug_and_legacy_id(lookup_by_slug):
+    book = Book(
+        id=uuid.uuid4(),
+        slug="jane-eyre",
+        title="Jane Eyre",
+        author="Charlotte Brontë",
+        is_published=True,
+        moderation_status="approved",
+    )
+    lookup_results = [FakeResult([book])]
+    lookup_value = book.slug
+    if not lookup_by_slug:
+        lookup_results = [FakeResult([]), FakeResult([book])]
+        lookup_value = str(book.id)
+    session = FakeSession(lookup_results + [FakeResult([]), FakeResult([]), FakeResult([])])
+
+    detail = await get_public_book_detail(lookup_value, session)
+
+    assert detail["id"] == book.id
+    assert detail["slug"] == "jane-eyre"

@@ -20,8 +20,8 @@ export const bookApi = {
   },
 
 
-  getById: async (id: string): Promise<EnrichedBook> => {
-    const response = await apiClient.get(`/books/${id}`);
+  getBySlugOrId: async (slugOrId: string): Promise<EnrichedBook> => {
+    const response = await apiClient.get(`/books/${slugOrId}`);
     return response.data;
   },
 

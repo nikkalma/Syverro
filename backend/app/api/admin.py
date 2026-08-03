@@ -12,6 +12,7 @@ from app.services.book_service import (
     get_book_taxonomy_items, get_primary_author,
     link_author, sync_book_genres, unlink_author,
 )
+from app.services.book_slug import generate_unique_book_slug
 from app.services.metadata_service import recalculate_metadata_status
 from app.services.knowledge_graph import sync_author_graph_fields
 from app.models.user import User
@@ -35,7 +36,7 @@ import re
 from datetime import datetime, timedelta
 from typing import Optional, List
 from pydantic import BaseModel
-from uuid import UUID
+from uuid import UUID, uuid4
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/admin", tags=["admin"])
@@ -59,6 +60,7 @@ class AdminUserResponse(BaseModel):
 
 class AdminBookResponse(BaseModel):
     id: str
+    slug: str
     title: str
     author: str
     author_id: Optional[str] = None
@@ -509,6 +511,7 @@ async def _build_book_dict(db: AsyncSession, book: Book, include_missing: bool =
 
     return {
         "id": str(book.id),
+        "slug": book.slug,
         "title": book.title,
         "author": book.author,
         "author_id": str(book.author_id) if book.author_id else None,
@@ -562,6 +565,7 @@ async def create_book(
     author = await find_or_create_author(db, data["author"])
 
     book = Book(
+        id=uuid4(),
         title=data["title"],
         author=data["author"],
         author_id=author.id,
@@ -574,6 +578,12 @@ async def create_book(
         moderation_status="pending",
         is_published=data.get("is_published", False),
         created_by=current_user.id,
+    )
+    book.slug = await generate_unique_book_slug(
+        db,
+        data.get("original_title") or book.title,
+        publication_year=data.get("original_publication_year"),
+        book_id=book.id,
     )
     db.add(book)
     await db.flush()

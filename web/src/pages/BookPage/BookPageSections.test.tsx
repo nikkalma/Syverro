@@ -5,7 +5,7 @@ import type { PublicBookDetail } from '../../types/bookDetail';
 import { Bibliography, BookIdentity, BookMapPreview, Chronology, NarrativeForm, ReaderFit } from './BookPageSections';
 
 const book: PublicBookDetail = {
-  id: 'book-1', title: 'Jane Eyre', subtitle: null, originalTitle: 'Jane Eyre',
+  id: 'book-1', slug: 'jane-eyre', title: 'Jane Eyre', subtitle: null, originalTitle: 'Jane Eyre',
   description: 'A novel.', cover: null, publicationId: null, publicationYear: 1847,
   originalLanguage: 'English', countryOfOrigin: 'United Kingdom', totalPages: null,
   publicationType: 'official', seriesName: null, seriesPosition: null, authors: [], publication: null,

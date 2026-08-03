@@ -3,6 +3,7 @@ import type { PublicBookDetail } from '../../types/bookDetail';
 
 interface PublicBookDetailResponse {
   id: string;
+  slug: string;
   title: string;
   subtitle: string | null;
   original_title: string | null;
@@ -53,6 +54,7 @@ interface PublicBookDetailResponse {
 export function mapPublicBookDetail(data: PublicBookDetailResponse): PublicBookDetail {
   return {
     id: data.id,
+    slug: data.slug,
     title: data.title,
     subtitle: data.subtitle,
     originalTitle: data.original_title,
@@ -102,8 +104,8 @@ export function mapPublicBookDetail(data: PublicBookDetailResponse): PublicBookD
 }
 
 export const bookDetailApi = {
-  async getById(bookId: string): Promise<PublicBookDetail> {
-    const response = await apiClient.get<PublicBookDetailResponse>(`/books/${bookId}`);
+  async getBySlugOrId(slugOrId: string): Promise<PublicBookDetail> {
+    const response = await apiClient.get<PublicBookDetailResponse>(`/books/${slugOrId}`);
     return mapPublicBookDetail(response.data);
   },
 };

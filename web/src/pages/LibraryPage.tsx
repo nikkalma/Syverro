@@ -34,7 +34,7 @@ export default function LibraryPage() {
         <div style={{ flex: 1, minWidth: 0 }}>
           <Hero />
           <SuggestBook />
-          <BookGrid books={filteredBooks} onBookClick={(id) => navigate(bookPath({ id }))} />
+          <BookGrid books={filteredBooks} onBookClick={(book) => navigate(bookPath(book))} />
         </div>
       </div>
 

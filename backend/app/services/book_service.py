@@ -73,6 +73,7 @@ async def compose_public_book_detail(db: AsyncSession, book: Book) -> dict:
 
     return {
         "id": book.id,
+        "slug": book.slug,
         "title": book.title,
         "subtitle": book.subtitle,
         "original_title": book.original_title,

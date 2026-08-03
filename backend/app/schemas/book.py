@@ -57,6 +57,7 @@ class PublicBookKnowledgeItem(BaseModel):
 
 class PublicBookDetailResponse(BaseModel):
     id: UUID
+    slug: str
     title: str
     subtitle: Optional[str] = None
     original_title: Optional[str] = None
@@ -93,6 +94,7 @@ class BookCreate(BookBase):
 
 class BookResponse(BookBase):
     id: UUID
+    slug: str
     author_id: Optional[UUID] = None
     publication_id: Optional[UUID] = None
     author_name: Optional[str] = None

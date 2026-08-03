@@ -69,6 +69,7 @@ export interface AdminUserUpdate {
 
 export interface AdminBook {
   id: string;
+  slug: string;
   title: string;
   author: string;
   author_id?: string | null;

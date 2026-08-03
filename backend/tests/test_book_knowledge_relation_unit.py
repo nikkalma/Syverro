@@ -53,7 +53,7 @@ def test_studio_payload_validates_without_server_owned_fields():
 
 @pytest.mark.asyncio
 async def test_admin_relation_creation_derives_book_and_source(monkeypatch):
-    book = Book(id=uuid4(), title="Jane Eyre", author="Charlotte Bronte")
+    book = Book(id=uuid4(), slug="jane-eyre", title="Jane Eyre", author="Charlotte Bronte")
     node = KnowledgeNode(id=uuid4(), name="Love", slug="love", node_type="theme")
     session = _FakeSession(book, node)
 

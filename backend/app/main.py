@@ -3,6 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.api import auth, books, sync, admin, taxonomy, admin_taxonomy, admin_books, admin_authors_ext, admin_timeline, admin_sources, admin_places, admin_author_knowledge, authors, graph, graph_queries, user_book_experience as user_book_experience_api
 from app.database import engine, Base, AsyncSessionLocal
 from app.seeds.knowledge_graph_seed import seed_knowledge_graph
+from app.services.book_slug import generate_unique_book_slug
 from app.models import user, book, author, genre, knowledge_node, knowledge_relation, book_knowledge_relation, user_book_experience
 from app.models.book_genre import book_genres  # noqa: F401 — ensures table is registered
 from app.models.book_author import book_authors  # noqa: F401 — ensures table is registered
@@ -11,6 +12,7 @@ from app.models.quote import Quote            # ✅ НОВЫЙ
 from app.models.sync_state import SyncState   # ✅ НОВЫЙ
 from app.models.change_log import ChangeLog   # ✅ НОВЫЙ
 import logging
+from uuid import uuid4
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -432,17 +434,26 @@ async def seed_books(conn):
             )
             author_id = author_result.fetchone()[0]
 
+        book_id = uuid4()
+        book_slug = await generate_unique_book_slug(
+            conn,
+            book_data["title"],
+            publication_year=book_data.get("original_publication_year"),
+            book_id=book_id,
+        )
         book_result = await conn.execute(
             text(
-                "INSERT INTO books (id, title, author, author_id, description, cover, "
+                "INSERT INTO books (id, slug, title, author, author_id, description, cover, "
                 "total_pages, genres, themes, version, is_published, publication_type, "
                 "metadata_status, moderation_status) "
-                "VALUES (gen_random_uuid(), :title, :author, :author_id, :description, :cover, "
+                "VALUES (:id, :slug, :title, :author, :author_id, :description, :cover, "
                 ":total_pages, :genres, :themes, 1, true, 'official', "
                 "'incomplete', 'approved') RETURNING id"
             ),
             {
+                "id": book_id,
                 "title": book_data["title"],
+                "slug": book_slug,
                 "author": author_name,
                 "author_id": author_id,
                 "description": book_data["description"],

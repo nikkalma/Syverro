@@ -82,7 +82,7 @@ export default function App() {
         <Route path="/worldmap" element={<Layout><WorldMap /></Layout>} />
         <Route path="/profile" element={<Layout hideSidebar><Profile /></Layout>} />
         <Route path="/settings" element={<Layout><Settings /></Layout>} />
-        <Route path="/book/:id" element={<Layout><BookPage /></Layout>} />
+        <Route path="/book/:slugOrId" element={<Layout><BookPage /></Layout>} />
         <Route path="/author/:slug" element={<Layout><AuthorPage /></Layout>} />
         <Route path="/my-library" element={<Layout><MyLibraryPage /></Layout>} />
 

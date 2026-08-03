@@ -31,7 +31,7 @@ const DATE_LOCALES: Record<string, string> = {
 };
 
 export default function BookPage() {
-  const { id } = useParams<{ id: string }>();
+  const { slugOrId } = useParams<{ slugOrId: string }>();
   const navigate = useNavigate();
   const locale = getBrowserLocale();
   const copy = getLocaleData(locale).bookPage;
@@ -42,25 +42,25 @@ export default function BookPage() {
   const { trackReadingStart, trackNote } = useOffline();
 
   const loadBook = useCallback(async () => {
-    if (!id) { setLoadState('not-found'); return; }
+    if (!slugOrId) { setLoadState('not-found'); return; }
     setLoadState('loading');
     try {
-      setBook(await bookDetailApi.getById(id));
+      setBook(await bookDetailApi.getBySlugOrId(slugOrId));
       setLoadState('ready');
     } catch (error) {
       setBook(null);
       setLoadState(axios.isAxiosError(error) && error.response?.status === 404 ? 'not-found' : 'error');
     }
-  }, [id]);
+  }, [slugOrId]);
 
   useEffect(() => { void loadBook(); }, [loadBook]);
 
   useEffect(() => {
-    if (!id) return;
+    if (!book?.id) return;
     void bookApi.getUserBooks()
-      .then((items) => setPersonalBook(items.find((item) => item.bookId === id) ?? null))
+      .then((items) => setPersonalBook(items.find((item) => item.bookId === book.id) ?? null))
       .catch(() => setPersonalBook(null));
-  }, [id]);
+  }, [book?.id]);
 
   if (loadState === 'loading') return <BookPageState title={copy.loading} />;
   if (loadState === 'not-found') return <BookPageState title={copy.notFound} action={copy.backToLibrary} onAction={() => navigate('/')} />;

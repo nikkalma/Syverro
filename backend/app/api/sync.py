@@ -5,6 +5,7 @@ from sqlalchemy.sql import text
 from app.core.deps import get_current_user, get_db
 from app.core.author_service import find_or_create_author
 from app.services.book_service import link_author, get_primary_author, sync_author_cache
+from app.services.book_slug import generate_unique_book_slug
 from app.models.user import User
 from app.models.book import Book
 from app.models.user_book import UserBook
@@ -316,6 +317,7 @@ async def process_book_change(user_id: UUID, entity_id: str, operation: str, pay
     SYNC_BLOCKED_BOOK_FIELDS = {
         "is_published", "moderation_status", "moderation_reason",
         "moderated_by", "moderated_at", "metadata_status",
+        "slug",
     }
 
     # Проверяем существование
@@ -374,6 +376,12 @@ async def process_book_change(user_id: UUID, entity_id: str, operation: str, pay
             is_published=False,
             metadata_status="draft",
             **safe_payload,
+        )
+        book.slug = await generate_unique_book_slug(
+            db,
+            safe_payload.get("original_title") or safe_payload.get("title") or "book",
+            publication_year=safe_payload.get("original_publication_year"),
+            book_id=UUID(entity_id),
         )
         db.add(book)
         await db.flush()
@@ -564,6 +572,7 @@ def generate_cursor() -> str:
 def book_to_dict(book: Book) -> dict:
     return {
         "id": str(book.id),
+        "slug": book.slug,
         "title": book.title,
         "author": book.author,
         "author_id": str(book.author_id) if book.author_id else None,

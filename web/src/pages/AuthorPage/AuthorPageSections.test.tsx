@@ -9,7 +9,7 @@ const author = mapPublicAuthorDetail({
   id: 'author-1', name: 'Virginia Woolf', display_name: 'Virginia Woolf', native_name: 'Adeline Virginia Woolf',
   birth_date: '1882-01-25', death_date: '1941-03-28', nationality: 'English',
   about_summary: 'English writer and modernist.', hero_quote: 'A woman must have money and a room of her own.',
-  books: [{ id: 'book-1', title: 'Mrs Dalloway', cover: '/covers/mrs-dalloway.jpg' }],
+  books: [{ id: 'book-1', slug: 'mrs-dalloway', title: 'Mrs Dalloway', cover: '/covers/mrs-dalloway.jpg' }],
   publications: [{ id: 'publication-1', title: 'To the Lighthouse', original_title: null, publication_year: 1927, publication_date: null, publication_type: 'novel', description: null, pen_name: null, wikipedia_url: null }],
   sources: [{ id: 'source-1', title: 'The Virginia Woolf Society', source_type: 'website', url: 'https://example.com', citation: null }],
   knowledge_relations: [

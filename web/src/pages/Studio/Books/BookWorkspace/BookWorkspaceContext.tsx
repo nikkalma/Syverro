@@ -53,7 +53,7 @@ export function BookWorkspaceProvider({ children }: { children: ReactNode }) {
     try {
       const [adminResult, publicResult] = await Promise.all([
         apiClient.get(`/admin/books/${id}`),
-        bookDetailApi.getById(id).catch(() => null),
+        bookDetailApi.getBySlugOrId(id).catch(() => null),
       ]);
       setBook(adminResult.data);
       setPublicDetail(publicResult);

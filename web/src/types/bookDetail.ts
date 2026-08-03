@@ -41,6 +41,7 @@ export interface PublicBookKnowledgeItem {
 
 export interface PublicBookDetail {
   id: string;
+  slug: string;
   title: string;
   subtitle: string | null;
   originalTitle: string | null;

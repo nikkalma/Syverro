@@ -114,14 +114,14 @@ async def get_author(
 
     # --- Books ---
     book_rows = await db.execute(
-        select(Book.id, Book.title, Book.cover)
+        select(Book.id, Book.slug, Book.title, Book.cover)
         .select_from(book_authors)
         .join(Book, book_authors.c.book_id == Book.id)
         .where(book_authors.c.author_id == aid)
         .where(Book.is_published == True)
         .order_by(Book.title)
     )
-    books = [AuthorBookBrief(id=r[0], title=r[1], cover=r[2]) for r in book_rows]
+    books = [AuthorBookBrief(id=r[0], slug=r[1], title=r[2], cover=r[3]) for r in book_rows]
     book_ids = [b.id for b in books]
 
     genres = []

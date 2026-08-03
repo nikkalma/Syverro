@@ -1,4 +1,4 @@
-export interface AuthorBook { id: string; title: string; cover: string | null }
+export interface AuthorBook { id: string; slug: string; title: string; cover: string | null }
 export interface TimelineEvent { id: string; event_type: string; date_value: string; date_precision: string; label: string; description: string | null; place_name: string | null; source_title: string | null; extraction_source: string; confidence: number; status: string }
 export interface AuthorQuote { id: string; text: string; speaker: string | null; quote_type?: string; source_title: string | null; date_value: string | null; confidence: number; status: string }
 export interface AuthorSource { id: string; title: string; source_type: string; url: string | null; citation: string | null }

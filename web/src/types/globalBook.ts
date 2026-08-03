@@ -1,5 +1,6 @@
 export interface GlobalBook {
   id: string;
+  slug?: string | null;
 
   title: string;
 

@@ -43,6 +43,7 @@ class AdminUserUpdate(BaseModel):
 class AdminBookResponse(BaseModel):
     """Ответ с данными книги для админки"""
     id: str
+    slug: str
     title: str
     author: str
     author_id: Optional[str] = None

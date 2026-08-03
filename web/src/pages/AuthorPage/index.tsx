@@ -4,7 +4,7 @@ import { getBrowserLocale, getLocaleData } from '../../locales';
 import { apiClient } from '../../shared/api/client';
 import { authorSectionVisibility, mapPublicAuthorDetail } from './authorPageModel';
 import {
-  AuthorAbout, AuthorHero, AuthorLocalNav, AuthorQuotes, AuthorRelations, AuthorSources, AuthorTimeline, AuthorWorks,
+  AuthorAbout, AuthorAtmosphere, AuthorHero, AuthorLocalNav, AuthorQuotes, AuthorSources, AuthorTimeline, AuthorWorks,
 } from './AuthorPageSections';
 import type { PublicAuthorDetail } from './types';
 import './AuthorPage.css';
@@ -38,10 +38,11 @@ export default function AuthorPage() {
     visibility.about && { id: 'about', label: t.tabAbout },
     visibility.works && { id: 'works', label: t.tabBooks },
     visibility.chronology && { id: 'chronology', label: t.timeline },
+    visibility.atmosphere && { id: 'atmosphere', label: t.atmosphere },
     visibility.quotes && { id: 'quotes', label: t.tabQuotes },
-    visibility.relations && { id: 'relations', label: t.tabConnections },
     visibility.sources && { id: 'sources', label: t.sources },
   ].filter((item): item is { id: string; label: string } => Boolean(item)) : [];
+  const firstRowCount = visibility ? [visibility.about, visibility.chronology, visibility.atmosphere].filter(Boolean).length : 0;
 
   if (loading) return <main className="author-page-state" aria-live="polite"><span className="author-page-state__mark">✦</span><p>{t.loading}</p></main>;
   if (error || !author || !visibility) return <main className="author-page-state"><span className="author-page-state__mark">◇</span><h1>{t.authorNotFound}</h1><button type="button" onClick={() => void loadAuthor()}>{t.retry}</button></main>;
@@ -49,16 +50,14 @@ export default function AuthorPage() {
   return <main className="author-page">
     <AuthorHero author={author} t={t} />
     {navItems.length > 0 && <AuthorLocalNav items={navItems} label={t.localNavLabel} />}
-    <div className="author-page__grid">
-      <div className="author-page__main">
-        {visibility.about && <AuthorAbout author={author} t={t} />}
-        {visibility.works && <AuthorWorks author={author} t={t} />}
-        {visibility.quotes && <AuthorQuotes author={author} t={t} />}
-        {visibility.relations && <AuthorRelations author={author} t={t} />}
-      </div>
-      <aside className="author-page__rail">
-        {visibility.chronology && <AuthorTimeline author={author} t={t} />}
-      </aside>
+    <div className={`author-page__first-row author-page__first-row--${firstRowCount}`}>
+      {visibility.about && <AuthorAbout author={author} t={t} />}
+      {visibility.chronology && <AuthorTimeline author={author} t={t} />}
+      {visibility.atmosphere && <AuthorAtmosphere author={author} t={t} />}
+    </div>
+    <div className="author-page__main">
+      {visibility.works && <AuthorWorks author={author} t={t} />}
+      {visibility.quotes && <AuthorQuotes author={author} t={t} />}
     </div>
     {visibility.sources && <AuthorSources author={author} t={t} />}
   </main>;

@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom';
 import type { LocaleData } from '../../locales';
 import { bookPath, formatDate } from '../../shared/utils/routes';
-import { formatStoredPlace, splitAuthorQuotes } from './authorPageModel';
+import { formatStoredPlace, getApprovedAtmospheres, splitAuthorQuotes } from './authorPageModel';
 import type { PublicAuthorDetail } from './types';
 
 type AuthorLocale = LocaleData['author'];
@@ -23,7 +23,6 @@ export function AuthorHero({ author, t }: { author: PublicAuthorDetail; t: Autho
       {author.native_name && author.native_name !== displayName && <p className="author-hero__native">{author.native_name}</p>}
       {dates && <p className="author-hero__dates">{dates}</p>}
       {heroStatement && <blockquote>{heroStatement}</blockquote>}
-      {author.about_summary && <p className="author-hero__summary">{author.about_summary}</p>}
     </div>
     <dl className="author-hero__facts">
       {place && <><dt>{t.metaBorn}</dt><dd>{place}</dd></>}
@@ -65,6 +64,14 @@ export function AuthorTimeline({ author, t }: { author: PublicAuthorDetail; t: A
   </section>;
 }
 
+export function AuthorAtmosphere({ author, t }: { author: PublicAuthorDetail; t: AuthorLocale }) {
+  const atmospheres = getApprovedAtmospheres(author);
+  return <section className="author-panel author-atmosphere" id="atmosphere">
+    <h2>{t.atmosphere}</h2>
+    <ul>{atmospheres.map((atmosphere) => <li key={atmosphere}>{atmosphere}</li>)}</ul>
+  </section>;
+}
+
 export function AuthorWorks({ author, t }: { author: PublicAuthorDetail; t: AuthorLocale }) {
   return <section className="author-panel author-works" id="works">
     <h2>{t.authorBooks}</h2>
@@ -92,15 +99,6 @@ export function AuthorQuotes({ author, t }: { author: PublicAuthorDetail; t: Aut
       {aboutAuthor.length > 0 && <div><h3>{t.quotesAboutTitle}</h3>{aboutAuthor.map((quote) => <figure key={quote.id}><blockquote>{quote.text}</blockquote>{quote.speaker && <figcaption>— {quote.speaker}</figcaption>}</figure>)}</div>}
     </div>
   </section>;
-}
-
-export function AuthorRelations({ author, t }: { author: PublicAuthorDetail; t: AuthorLocale }) {
-  return <section className="author-panel author-relations" id="relations"><h2>{t.connections}</h2><div className="author-relations__list">
-    {author.knowledge_relations.map((relation) => {
-      const content = <strong>{relation.node_name}</strong>;
-      return relation.author_slug && relation.node_type === 'person' ? <Link key={relation.id} to={`/author/${relation.author_slug}`}>{content}</Link> : <div key={relation.id}>{content}</div>;
-    })}
-  </div></section>;
 }
 
 export function AuthorSources({ author, t }: { author: PublicAuthorDetail; t: AuthorLocale }) {

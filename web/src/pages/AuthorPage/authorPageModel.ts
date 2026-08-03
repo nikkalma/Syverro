@@ -22,9 +22,17 @@ export const authorSectionVisibility = (author: PublicAuthorDetail) => ({
   works: author.books.length > 0 || author.publications.length > 0,
   chronology: author.timeline_events.length > 0,
   quotes: author.quotes.length > 0,
-  relations: author.knowledge_relations.length > 0,
+  atmosphere: getApprovedAtmospheres(author).length > 0,
   sources: author.sources.length > 0,
 });
+
+export const getApprovedAtmospheres = (author: PublicAuthorDetail) => {
+  const names = author.knowledge_relations
+    .filter((relation) => relation.status === 'approved' && relation.node_type === 'atmosphere' && relation.relation_type === 'atmosphere')
+    .map((relation) => relation.node_name?.trim())
+    .filter((name): name is string => Boolean(name));
+  return names.filter((name, index) => names.findIndex((candidate) => candidate.toLocaleLowerCase() === name.toLocaleLowerCase()) === index);
+};
 
 export const formatStoredPlace = (...parts: Array<string | null | undefined>) =>
   parts.filter((part, index, all): part is string => Boolean(part) && all.indexOf(part) === index).join(', ');

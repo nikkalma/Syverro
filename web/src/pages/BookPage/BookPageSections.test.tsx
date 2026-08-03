@@ -2,7 +2,7 @@ import { render, screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 import { en } from '../../locales';
 import type { PublicBookDetail } from '../../types/bookDetail';
-import { BookMapPreview, KnowledgeAround, NarrativeForm } from './BookPageSections';
+import { BookIdentity, BookMapPreview, Chronology, NarrativeForm, ReaderFit } from './BookPageSections';
 
 const book: PublicBookDetail = {
   id: 'book-1', title: 'Jane Eyre', subtitle: null, originalTitle: 'Jane Eyre',
@@ -23,17 +23,22 @@ describe('BookPage editorial sections', () => {
     expect(screen.getByText(en.bookPage.howToldEmpty)).toBeInTheDocument();
   });
 
-  it('renders structured knowledge groups', () => {
-    render(<KnowledgeAround book={book} copy={en.bookPage} onTag={vi.fn()} />);
-    expect(screen.getByRole('heading', { name: en.bookPage.genres })).toBeInTheDocument();
-    expect(screen.getByRole('heading', { name: en.bookPage.themes })).toBeInTheDocument();
-    expect(screen.getByRole('heading', { name: en.bookPage.motifs })).toBeInTheDocument();
+  it('keeps existing knowledge compact in the identity area', () => {
+    render(<BookIdentity book={book} copy={en.bookPage} onAuthor={vi.fn()} onTag={vi.fn()} />);
     expect(screen.getByRole('button', { name: 'Gothic Novel' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Identity' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Fire' })).toBeInTheDocument();
   });
 
   it('keeps Sapphire transition visible but inactive', () => {
     render(<BookMapPreview book={book} copy={en.bookPage} />);
     const action = screen.getByRole('button', { name: new RegExp(en.bookPage.openSapphire) });
     expect(action).toBeDisabled();
+  });
+
+  it('renders only approved future empty states', () => {
+    render(<><ReaderFit copy={en.bookPage} /><Chronology copy={en.bookPage} /></>);
+    expect(screen.getByText(en.bookPage.readerFitEmpty)).toBeInTheDocument();
+    expect(screen.getByText(en.bookPage.chronologyEmpty)).toBeInTheDocument();
   });
 });

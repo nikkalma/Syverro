@@ -50,8 +50,13 @@ export interface LocaleData {
     inLibrary: string;
     aboutTitle: string;
     noDescription: string;
+    descriptionTitle: string;
     howToldTitle: string;
     howToldEmpty: string;
+    readerFitTitle: string;
+    readerFitEmpty: string;
+    chronologyTitle: string;
+    chronologyEmpty: string;
     knowledgeTitle: string;
     knowledgeIntro: string;
     knowledgeEmpty: string;

@@ -10,13 +10,17 @@ import type { PublicBookDetail } from '../../types/bookDetail';
 import type { PersonalBook, PersonalBookStatus } from '../../types/personalBook';
 import { AddToLibraryModal } from './AddToLibraryModal';
 import {
-  AboutBook,
-  BookHero,
+  Bibliography,
+  BookBreadcrumbs,
+  BookCoverRail,
+  BookDescription,
+  BookIdentity,
   BookMapPreview,
   BookPageState,
-  KnowledgeAround,
+  Chronology,
   NarrativeForm,
   PersonalLibraryArea,
+  ReaderFit,
 } from './BookPageSections';
 import './BookPage.css';
 
@@ -76,23 +80,23 @@ export default function BookPage() {
 
   return (
     <main className="book-page">
-      <BookHero
-        book={book}
-        copy={copy}
-        isInLibrary={personalBook !== null}
-        onBack={() => navigate('/')}
-        onAdd={openAddModal}
-        onAuthor={(authorId, slug) => navigate(authorPath({ id: authorId, slug }))}
-      />
-      <div className="book-page__editorial-body">
-        <div className="book-page__opening-spread">
-          <AboutBook book={book} copy={copy} />
-          <NarrativeForm copy={copy} />
-        </div>
-        <div className="book-page__semantic-spread">
-          <KnowledgeAround book={book} copy={copy} onTag={(type, value) => navigate(`/?${type}=${encodeURIComponent(value)}`)} />
-          <BookMapPreview book={book} copy={copy} />
-        </div>
+      <BookBreadcrumbs book={book} copy={copy} onBack={() => navigate('/')} />
+      <div className="book-page__top-grid">
+        <BookCoverRail book={book} copy={copy} isInLibrary={personalBook !== null} onAdd={openAddModal} />
+        <BookIdentity
+          book={book}
+          copy={copy}
+          onAuthor={(authorId, slug) => navigate(authorPath({ id: authorId, slug }))}
+          onTag={(type, value) => navigate(`/?${type}=${encodeURIComponent(value)}`)}
+        />
+      </div>
+      <div className="book-page__content-grid">
+        <Bibliography book={book} copy={copy} onTag={(type, value) => navigate(`/?${type}=${encodeURIComponent(value)}`)} />
+        <NarrativeForm copy={copy} />
+        <ReaderFit copy={copy} />
+        <BookDescription book={book} copy={copy} />
+        <Chronology copy={copy} />
+        <BookMapPreview book={book} copy={copy} />
         <PersonalLibraryArea
           personalBook={personalBook}
           copy={copy}

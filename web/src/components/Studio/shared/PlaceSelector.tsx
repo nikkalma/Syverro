@@ -1,5 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { apiClient } from '../../../shared/api/client';
+import { getBrowserLocale } from '../../../locales';
+import { resolveEditorialValue } from './editorialValue';
 import type { Place, PlaceCreate } from '../../../types/admin';
 
 interface PlaceSelectorProps {
@@ -60,10 +62,13 @@ export default function PlaceSelector({ label, placeId, placeName, onChange }: P
     try {
       const res = await apiClient.get('/admin/places', { params: { search: q } });
       const places: Place[] = res.data || [];
-      const suggestions: Suggestion[] = places.map((p) => ({
-        id: p.id,
-        label: p.country ? `${p.name}, ${p.country}` : p.name,
-      }));
+      const suggestions: Suggestion[] = places.map((p) => {
+        const name = resolveEditorialValue(
+          { value: p.name, localizations: (p as Place & { localizations?: Record<string, string> }).localizations },
+          getBrowserLocale(),
+        );
+        return { id: p.id, label: p.country ? `${name}, ${p.country}` : name };
+      });
       suggestions.push({ id: '__new__', label: `+ Create "${q}"`, isNew: true });
       setResults(suggestions);
       setIsOpen(true);

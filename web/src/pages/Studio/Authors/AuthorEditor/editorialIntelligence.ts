@@ -11,7 +11,6 @@ export interface AuthorEditorialLabels {
   nativeName: string;
   slug: string;
   penNames: string;
-  biography: string;
   summary: string;
   nationality: string;
   birthDate: string;
@@ -36,7 +35,6 @@ export function buildAuthorReport(author: AdminAuthor, l: AuthorEditorialLabels)
   const content: EditorialGroup = {
     id: 'content',
     steps: [
-      { key: 'bio', label: l.biography, status: deriveStatus({ present: !isEmpty(author.bio) }), details: undefined },
       { key: 'summary', label: l.summary, status: deriveStatus({ present: !isEmpty(author.about_summary) }), details: undefined },
     ],
   };

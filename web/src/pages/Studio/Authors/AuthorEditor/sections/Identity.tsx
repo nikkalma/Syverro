@@ -29,6 +29,49 @@ function FormField({ label, value, onChange, placeholder }: {
   );
 }
 
+function ChipInput({ label, values, onChange, placeholder }: {
+  label: string; values: string[]; onChange: (v: string[]) => void; placeholder?: string;
+}) {
+  const [draft, setDraft] = useState('');
+  const add = () => {
+    const v = draft.trim();
+    if (!v || values.includes(v)) return;
+    onChange(normalizePseudonyms(values, [v]));
+    setDraft('');
+  };
+  const remove = (idx: number) => onChange(values.filter((_, i) => i !== idx));
+  return (
+    <div>
+      <div style={{ fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--text-muted)', marginBottom: '4px' }}>
+        {label}
+      </div>
+      {values.length > 0 && (
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginBottom: '8px' }}>
+          {values.map((v, i) => (
+            <span key={`${v}-${i}`} style={{
+              display: 'inline-flex', alignItems: 'center', gap: '6px',
+              padding: '4px 8px', borderRadius: '14px', fontSize: '13px',
+              background: 'var(--primary-soft)', border: '1px solid var(--primary)',
+              color: 'var(--primary)',
+            }}>
+              {v}
+              <button type="button" onClick={() => remove(i)}
+                style={{ background: 'none', border: 'none', color: 'var(--primary)', cursor: 'pointer', fontSize: '14px', padding: 0, lineHeight: 1 }}>
+                ×
+              </button>
+            </span>
+          ))}
+        </div>
+      )}
+      <input type="text" value={draft}
+        onChange={(e) => setDraft(e.target.value)}
+        onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); add(); } }}
+        placeholder={placeholder}
+        style={inputStyle} />
+    </div>
+  );
+}
+
 function TextAreaField({ label, value, onChange, placeholder }: {
   label: string; value: string; onChange: (v: string) => void; placeholder?: string;
 }) {
@@ -50,6 +93,33 @@ const FIELD_STYLES = {
     color: status === 'verified' ? '#4CAF50' : '#FFA726',
   }),
 };
+
+// Pseudonym canonicalization.
+//
+// The editor-facing concept is a single list of "Pseudonyms" (alternative names
+// an author publishes under). The backend persists two legacy ARRAY columns —
+// `pseudonyms` (canonical) and `pen_names` (older alias used by the auto-import
+// path). They have identical semantics and no value should be lost or duplicated.
+//
+// This helper merges both columns, drops placeholder junk ("Pen Name 1",
+// "Pseudonym 2"), trims whitespace, and deduplicates case-sensitively.
+// On save the merged list is written back to BOTH columns so the API contract
+// stays satisfied and no previously persisted value is silently dropped.
+function normalizePseudonyms(...lists: (string[] | undefined)[]): string[] {
+  const seen = new Set<string>();
+  const out: string[] = [];
+  for (const list of lists) {
+    for (const raw of list || []) {
+      const v = (raw || '').trim();
+      if (!v) continue;
+      if (/^(pen name|pseudonym)\s*\d+$/i.test(v)) continue;
+      if (seen.has(v)) continue;
+      seen.add(v);
+      out.push(v);
+    }
+  }
+  return out;
+}
 
 function CitizenshipForm({ values, onChange, onCancel, onSave, saving, locale }: {
   values: { state_name: string; from_date: string; to_date: string; notes: string; source_id: string };
@@ -109,8 +179,7 @@ export default function Identity() {
 
   const [birthName, setBirthName] = useState('');
   const [sortName, setSortName] = useState('');
-  const [penNamesText, setPenNamesText] = useState('');
-  const [pseudonymsText, setPseudonymsText] = useState('');
+  const [pseudonyms, setPseudonyms] = useState<string[]>([]);
 
   const [birthPlaceId, setBirthPlaceId] = useState<string | null>(null);
   const [birthPlaceName, setBirthPlaceName] = useState<string | null>(null);
@@ -132,8 +201,7 @@ export default function Identity() {
     setWritingLanguages((author.writing_languages || []).join(', '));
     setBirthName(author.birth_name || '');
     setSortName(author.sort_name || '');
-    setPenNamesText((author.pen_names || []).join(', '));
-    setPseudonymsText((author.pseudonyms || []).join(', '));
+    setPseudonyms(normalizePseudonyms(author.pen_names, author.pseudonyms));
     setBirthPlaceId(author.birth_place_id || null);
     setBirthPlaceName(author.birth_place || null);
     setDeathPlaceId(author.death_place_id || null);
@@ -212,8 +280,7 @@ export default function Identity() {
     writingLanguages !== (author?.writing_languages || []).join(', ') ||
     birthName !== (author?.birth_name || '') ||
     sortName !== (author?.sort_name || '') ||
-    penNamesText !== (author?.pen_names || []).join(', ') ||
-    pseudonymsText !== (author?.pseudonyms || []).join(', ') ||
+    pseudonyms.join(',') !== normalizePseudonyms(author?.pen_names, author?.pseudonyms).join(',') ||
     birthPlaceId !== (author?.birth_place_id || null) ||
     deathPlaceId !== (author?.death_place_id || null) ||
     occupations.join(',') !== (author?.occupations || []).join(',');
@@ -227,8 +294,7 @@ export default function Identity() {
     setWritingLanguages((author.writing_languages || []).join(', '));
     setBirthName(author.birth_name || '');
     setSortName(author.sort_name || '');
-    setPenNamesText((author.pen_names || []).join(', '));
-    setPseudonymsText((author.pseudonyms || []).join(', '));
+    setPseudonyms(normalizePseudonyms(author.pen_names, author.pseudonyms));
     setBirthPlaceId(author.birth_place_id || null);
     setBirthPlaceName(author.birth_place || null);
     setDeathPlaceId(author.death_place_id || null);
@@ -245,8 +311,8 @@ export default function Identity() {
       writing_languages: writingLanguages ? writingLanguages.split(',').map((s) => s.trim()).filter(Boolean) : [],
       birth_name: birthName || null,
       sort_name: sortName || null,
-      pen_names: penNamesText ? penNamesText.split(',').map((s) => s.trim()).filter(Boolean) : [],
-      pseudonyms: pseudonymsText ? pseudonymsText.split(',').map((s) => s.trim()).filter(Boolean) : [],
+      pen_names: pseudonyms,
+      pseudonyms: pseudonyms,
       birth_place_id: birthPlaceId,
       death_place_id: deathPlaceId,
       occupations,
@@ -357,10 +423,7 @@ export default function Identity() {
           <FormField label={idLocale.sortName} value={sortName} onChange={setSortName} />
         </DetailGrid>
         <div style={{ marginTop: '12px' }}>
-          <FormField label={idLocale.penNames} value={penNamesText} onChange={setPenNamesText} placeholder="Pen name 1, Pen name 2..." />
-        </div>
-        <div style={{ marginTop: '12px' }}>
-          <FormField label={idLocale.pseudonyms} value={pseudonymsText} onChange={setPseudonymsText} placeholder="Pseudonym 1, Pseudonym 2..." />
+          <ChipInput label={idLocale.pseudonyms} values={pseudonyms} onChange={setPseudonyms} placeholder="e.g. Currer Bell" />
         </div>
       </EditorSectionCard>
 

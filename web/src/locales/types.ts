@@ -165,6 +165,9 @@ export interface LocaleData {
       complete: string;
       updated: string;
       metadata: string;
+      moderation: string;
+      moderationStatuses: { draft: string; pending: string; approved: string; published: string; archived: string };
+      metadataStatuses: { draft: string; incomplete: string; reviewReady: string; complete: string };
       sapphire: string;
       explorer: string;
       visible: string;
@@ -294,6 +297,10 @@ export interface LocaleData {
       pageCount: string;
       description: string;
       descriptionPlaceholder: string;
+      originalTitle: string;
+      originalLanguage: string;
+      countryOfOrigin: string;
+      originalYear: string;
       publishBook: string;
       searchPlaceholder: string;
       genreFilterPlaceholder: string;
@@ -366,6 +373,7 @@ export interface LocaleData {
             seo: string;
             sources: string;
             publications: string;
+            ai: string;
           };
         publications: {
           title: string;
@@ -447,6 +455,12 @@ export interface LocaleData {
           booksCount: string;
           created: string;
           updated: string;
+          url: string;
+          heroQuote: string;
+          quoteText: string;
+          quoteTextPlaceholder: string;
+          aboutAuthorSummary: string;
+          aboutAuthorSummaryPlaceholder: string;
         };
         identity: {
           nationalityStates: string;
@@ -530,6 +544,29 @@ export interface LocaleData {
           quotesAboutDesc: string;
           authorStatements: string;
           authorStatementsDesc: string;
+          byAuthor: string;
+          aboutAuthor: string;
+          loading: string;
+          noByAuthor: string;
+          noAboutAuthor: string;
+          quoteType: string;
+          quoteText: string;
+          quoteTextPlaceholder: string;
+          speaker: string;
+          speakerPlaceholder: string;
+          date: string;
+          datePlaceholder: string;
+          cancel: string;
+          saving: string;
+          updateQuote: string;
+          addQuote: string;
+          addByAuthor: string;
+          addAboutAuthor: string;
+          edit: string;
+          delete: string;
+          deleteConfirm: string;
+          errorSave: string;
+          errorDelete: string;
         };
         graph: {
           knowledgeGraph: string;
@@ -584,6 +621,9 @@ export interface LocaleData {
           deleteSource: string;
           noSources: string;
           confirmedDelete: string;
+          errorSave: string;
+          errorDelete: string;
+          sourceTypes: { website: string; book: string; interview: string; archive: string; journal: string; encyclopedia: string; other: string };
         };
       };
     };

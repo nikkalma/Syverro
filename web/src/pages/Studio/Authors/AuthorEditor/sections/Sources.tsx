@@ -93,7 +93,7 @@ export default function Sources() {
       cancelEdit();
       await fetchSources();
     } catch (e: any) {
-      setError(e?.response?.data?.detail || e.message || 'Failed to save source');
+      setError(e?.response?.data?.detail || e.message || st.errorSave);
     } finally {
       setSaving(false);
     }
@@ -107,7 +107,7 @@ export default function Sources() {
       await apiClient.delete(`/admin/sources/${s.id}`);
       await fetchSources();
     } catch (e: any) {
-      setError(e?.response?.data?.detail || e.message || 'Failed to delete source');
+      setError(e?.response?.data?.detail || e.message || st.errorDelete);
     }
   };
 
@@ -157,7 +157,7 @@ export default function Sources() {
               <select value={draft.source_type} onChange={(e) => setDraft({ ...draft, source_type: e.target.value })}
                 style={inputStyle}>
                 {SOURCE_TYPES.map((stype) => (
-                  <option key={stype} value={stype}>{stype}</option>
+                  <option key={stype} value={stype}>{st.sourceTypes[stype as keyof typeof st.sourceTypes]}</option>
                 ))}
               </select>
             </Field>

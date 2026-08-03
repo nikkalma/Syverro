@@ -40,8 +40,10 @@ import {
   Works,
   Quotes,
   Media,
+  Seo,
   Sources,
   Publications,
+  AIProposals,
 } from "./pages/Studio/Authors/AuthorEditor";
 import StudioGenres from "./pages/Studio/Genres";
 import StudioTaxonomy from "./pages/Studio/Taxonomy";
@@ -130,8 +132,10 @@ export default function App() {
               <Route path="works" element={<Works />} />
               <Route path="quotes" element={<Quotes />} />
               <Route path="media" element={<Media />} />
+              <Route path="seo" element={<Seo />} />
               <Route path="sources" element={<Sources />} />
               <Route path="publications" element={<Publications />} />
+              <Route path="ai" element={<AIProposals />} />
             </Route>
           </Route>
         </Route>

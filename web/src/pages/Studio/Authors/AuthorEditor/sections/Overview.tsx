@@ -189,7 +189,6 @@ export default function Overview() {
     nativeName: ei.overview.nativeName,
     slug: ei.overview.slugAuto,
     penNames: ei.identity.penNames,
-    biography: ei.biography.biography,
     summary: ei.overview.aboutAuthor,
     nationality: ei.identity.nationality,
     birthDate: ei.identity.birthDate,
@@ -257,16 +256,16 @@ export default function Overview() {
         ) : (
           <p style={{ fontSize: '13px', color: 'var(--text-muted)', fontStyle: 'italic', margin: '0 0 12px 0' }}>{t.admin.authors.editor.noHeroBg}</p>
         )}
-        <FormField label="URL" value={heroBg} onChange={setHeroBg} type="url" placeholder="https://..." />
+        <FormField label={t.admin.authors.editor.overview.url} value={heroBg} onChange={setHeroBg} type="url" placeholder="https://..." />
       </EditorSectionCard>
 
-      <EditorSectionCard title="Hero Quote">
+      <EditorSectionCard title={t.admin.authors.editor.overview.heroQuote}>
         <FormField
-          label="Quote Text"
+          label={t.admin.authors.editor.overview.quoteText}
           value={heroQuote}
           onChange={setHeroQuote}
           multiline
-          placeholder="A featured quote displayed near the author portrait"
+          placeholder={t.admin.authors.editor.overview.quoteTextPlaceholder}
         />
       </EditorSectionCard>
 
@@ -275,11 +274,11 @@ export default function Overview() {
           {t.admin.authors.editor.overview.aboutAuthorDesc}
         </p>
         <FormField
-          label="About Author Summary"
+          label={t.admin.authors.editor.overview.aboutAuthorSummary}
           value={aboutSummary}
           onChange={setAboutSummary}
           multiline
-          placeholder="SEO description, author card preview — one or two sentences"
+          placeholder={t.admin.authors.editor.overview.aboutAuthorSummaryPlaceholder}
         />
       </EditorSectionCard>
 

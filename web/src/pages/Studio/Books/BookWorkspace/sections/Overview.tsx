@@ -148,12 +148,12 @@ export default function Overview() {
               <option value="unofficial">{bLocale.unofficialDesc}</option>
             </select>
           </div>
-          <FormField label="Original title" value={originalTitle} onChange={setOriginalTitle} />
-          <FormField label="Original language" value={originalLanguage} onChange={setOriginalLanguage} />
-          <FormField label="Country of origin" value={countryOfOrigin} onChange={setCountryOfOrigin} />
+          <FormField label={bLocale.originalTitle} value={originalTitle} onChange={setOriginalTitle} />
+          <FormField label={bLocale.originalLanguage} value={originalLanguage} onChange={setOriginalLanguage} />
+          <FormField label={bLocale.countryOfOrigin} value={countryOfOrigin} onChange={setCountryOfOrigin} />
           <div>
             <div style={{ fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--text-muted)', marginBottom: '4px' }}>
-              Original year
+              {bLocale.originalYear}
             </div>
             <input type="number" value={year} onChange={(e) => setYear(e.target.value)} style={inputStyle} />
           </div>

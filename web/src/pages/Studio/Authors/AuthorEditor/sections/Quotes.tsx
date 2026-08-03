@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useAuthorEditor } from '../AuthorEditorContext';
 import EditorSectionCard from '../../../../../components/Studio/shared/EditorSectionCard';
 import { apiClient } from '../../../../../shared/api/client';
+import { getLocaleData, getBrowserLocale } from '../../../../../locales';
 import type { AuthorQuote, AuthorQuoteCreate } from '../../../../../types/admin';
 
 const inputStyle: React.CSSProperties = {
@@ -17,6 +18,8 @@ const textareaStyle: React.CSSProperties = {
 
 export default function Quotes() {
   const { author } = useAuthorEditor();
+  const locale = getLocaleData(getBrowserLocale());
+  const qLocale = locale.admin.authors.editor.quotes;
   const [quotes, setQuotes] = useState<AuthorQuote[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -98,7 +101,7 @@ export default function Quotes() {
       cancelForm();
       await fetchQuotes();
     } catch (e: any) {
-      setError(e?.response?.data?.detail || e.message || 'Failed to save quote');
+      setError(e?.response?.data?.detail || e.message || qLocale.errorSave);
     } finally {
       setSaving(false);
     }
@@ -106,12 +109,12 @@ export default function Quotes() {
 
   const deleteQuote = async (id: string) => {
     if (!author) return;
-    if (!window.confirm('Delete this quote?')) return;
+    if (!window.confirm(qLocale.deleteConfirm)) return;
     try {
       await apiClient.delete(`/admin/authors/${author.id}/quotes/${id}`);
       await fetchQuotes();
     } catch (e: any) {
-      setError(e?.response?.data?.detail || e.message || 'Failed to delete quote');
+      setError(e?.response?.data?.detail || e.message || qLocale.errorDelete);
     }
   };
 
@@ -129,21 +132,21 @@ export default function Quotes() {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-      <EditorSectionCard title="Quotes">
+      <EditorSectionCard title={locale.admin.authors.editor.sections.quotes}>
         <div style={{ display: 'flex', gap: '8px', marginBottom: '16px' }}>
           <button type="button" onClick={() => setActiveTab('author')} style={tabStyle(activeTab === 'author')}>
-            By author ({quotes.filter((q) => (q.quote_type || 'author') === 'author').length})
+            {qLocale.byAuthor} ({quotes.filter((qx) => (qx.quote_type || 'author') === 'author').length})
           </button>
           <button type="button" onClick={() => setActiveTab('about_author')} style={tabStyle(activeTab === 'about_author')}>
-            About author ({quotes.filter((q) => q.quote_type === 'about_author').length})
+            {qLocale.aboutAuthor} ({quotes.filter((qx) => qx.quote_type === 'about_author').length})
           </button>
         </div>
 
-        {loading && <div style={{ fontSize: '13px', color: 'var(--text-muted)' }}>Loading...</div>}
+        {loading && <div style={{ fontSize: '13px', color: 'var(--text-muted)' }}>{qLocale.loading}</div>}
 
         {!loading && filteredQuotes.length === 0 && !showForm && (
           <p style={{ fontSize: '13px', color: 'var(--text-muted)', fontStyle: 'italic', margin: 0 }}>
-            {activeTab === 'author' ? 'No quotes by author yet.' : 'No quotes about author yet.'}
+            {activeTab === 'author' ? qLocale.noByAuthor : qLocale.noAboutAuthor}
           </p>
         )}
 
@@ -181,11 +184,11 @@ export default function Quotes() {
               <div style={{ marginLeft: 'auto', display: 'flex', gap: '6px' }}>
                 <button type="button" onClick={() => openEdit(q)}
                   style={{ background: 'none', border: 'none', color: 'var(--accent)', cursor: 'pointer', fontSize: '12px' }}>
-                  Edit
+                  {qLocale.edit}
                 </button>
                 <button type="button" onClick={() => deleteQuote(q.id)}
                   style={{ background: 'none', border: 'none', color: 'var(--error)', cursor: 'pointer', fontSize: '12px' }}>
-                  Delete
+                  {qLocale.delete}
                 </button>
               </div>
             </div>
@@ -196,46 +199,46 @@ export default function Quotes() {
           <div style={{ marginTop: '16px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
             <div>
               <div style={{ fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--text-muted)', marginBottom: '4px' }}>
-                Quote Type
+                {qLocale.quoteType}
               </div>
               <select value={formQuoteType} onChange={(e) => setFormQuoteType(e.target.value)}
                 style={inputStyle}>
-                <option value="author">By author</option>
-                <option value="about_author">About author</option>
+                <option value="author">{qLocale.byAuthor}</option>
+                <option value="about_author">{qLocale.aboutAuthor}</option>
               </select>
             </div>
             <div>
               <div style={{ fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--text-muted)', marginBottom: '4px' }}>
-                Quote Text
+                {qLocale.quoteText}
               </div>
               <textarea value={formText} onChange={(e) => setFormText(e.target.value)}
-                placeholder="Quote text..." style={textareaStyle} rows={3} />
+                placeholder={qLocale.quoteTextPlaceholder} style={textareaStyle} rows={3} />
             </div>
             <div style={{ display: 'flex', gap: '12px' }}>
               <div style={{ flex: 1 }}>
                 <div style={{ fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--text-muted)', marginBottom: '4px' }}>
-                  Speaker
+                  {qLocale.speaker}
                 </div>
                 <input type="text" value={formSpeaker} onChange={(e) => setFormSpeaker(e.target.value)}
-                  placeholder="Who said it?" style={inputStyle} />
+                  placeholder={qLocale.speakerPlaceholder} style={inputStyle} />
               </div>
               <div style={{ flex: 1 }}>
                 <div style={{ fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--text-muted)', marginBottom: '4px' }}>
-                  Date
+                  {qLocale.date}
                 </div>
                 <input type="text" value={formDate} onChange={(e) => setFormDate(e.target.value)}
-                  placeholder="When?" style={inputStyle} />
+                  placeholder={qLocale.datePlaceholder} style={inputStyle} />
               </div>
             </div>
             {error && <div style={{ fontSize: '13px', color: 'var(--error)' }}>{error}</div>}
             <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
               <button type="button" onClick={cancelForm} disabled={saving}
                 style={{ padding: '8px 16px', background: 'transparent', border: '1px solid var(--border-soft)', borderRadius: '8px', color: 'var(--text-primary)', cursor: 'pointer' }}>
-                Cancel
+                {qLocale.cancel}
               </button>
               <button type="button" onClick={saveQuote} disabled={saving || !formText.trim()}
                 style={{ padding: '8px 16px', background: 'var(--accent)', border: 'none', borderRadius: '8px', color: '#fff', cursor: 'pointer' }}>
-                {saving ? 'Saving...' : editingId ? 'Update Quote' : 'Add Quote'}
+                {saving ? qLocale.saving : editingId ? qLocale.updateQuote : qLocale.addQuote}
               </button>
             </div>
           </div>
@@ -249,7 +252,7 @@ export default function Quotes() {
               border: '1px dashed var(--border-soft)',
               fontSize: '13px', color: 'var(--text-muted)', cursor: 'pointer',
             }}>
-            + Add {activeTab === 'about_author' ? 'quote about author' : 'quote by author'}
+            + {activeTab === 'about_author' ? qLocale.addAboutAuthor : qLocale.addByAuthor}
           </button>
         )}
       </EditorSectionCard>

@@ -61,22 +61,22 @@ export default function Identity() {
       <EditorSectionCard title={t.admin.workspace.status}>
         <DetailGrid columns={2}>
           <div>
-            {fieldLabel('Moderation')}
+            {fieldLabel(t.admin.workspace.moderation)}
             <select value={moderationStatus} onChange={(e) => setModerationStatus(e.target.value as AdminBook['moderation_status'])} style={inputStyle}>
-              <option value="draft">Draft</option>
-              <option value="pending">Pending</option>
-              <option value="approved">Approved</option>
-              <option value="published">Published</option>
-              <option value="archived">Archived</option>
+              <option value="draft">{t.admin.workspace.moderationStatuses.draft}</option>
+              <option value="pending">{t.admin.workspace.moderationStatuses.pending}</option>
+              <option value="approved">{t.admin.workspace.moderationStatuses.approved}</option>
+              <option value="published">{t.admin.workspace.moderationStatuses.published}</option>
+              <option value="archived">{t.admin.workspace.moderationStatuses.archived}</option>
             </select>
           </div>
           <div>
             {fieldLabel(t.admin.workspace.metadata)}
             <select value={metadataStatus} onChange={(e) => setMetadataStatus(e.target.value as AdminBook['metadata_status'])} style={inputStyle}>
-              <option value="draft">Draft</option>
-              <option value="incomplete">Incomplete</option>
-              <option value="review_ready">Review ready</option>
-              <option value="complete">Complete</option>
+              <option value="draft">{t.admin.workspace.metadataStatuses.draft}</option>
+              <option value="incomplete">{t.admin.workspace.metadataStatuses.incomplete}</option>
+              <option value="review_ready">{t.admin.workspace.metadataStatuses.reviewReady}</option>
+              <option value="complete">{t.admin.workspace.metadataStatuses.complete}</option>
             </select>
           </div>
         </DetailGrid>

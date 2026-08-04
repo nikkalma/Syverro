@@ -16,7 +16,7 @@ from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
 
 import app.models  # noqa: F401 — populate Base.metadata
 from app.database import Base
-from app.models.book import Book
+from app.models.book import Book as BookModel
 from app.models.author import Author
 from app.models.genre import Genre
 from app.models.book_author import book_authors
@@ -83,6 +83,13 @@ async def pg_engine():
 async def session(pg_engine):
     async with AsyncSession(pg_engine) as session:
         yield session
+
+
+def Book(**kwargs) -> BookModel:
+    """Build a persistable Book fixture with the required stable slug."""
+    book_id = kwargs.setdefault("id", uuid.uuid4())
+    kwargs.setdefault("slug", f"test-book-{book_id.hex}")
+    return BookModel(**kwargs)
 
 
 # ============================================================

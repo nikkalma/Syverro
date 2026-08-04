@@ -213,11 +213,12 @@ async def get_public_book_detail(
     slug_or_id: str,
     db: AsyncSession = Depends(get_db),
 ):
-    result = await db.execute(select(Book).where(Book.slug == slug_or_id))
+    lookup_value = str(slug_or_id)
+    result = await db.execute(select(Book).where(Book.slug == lookup_value))
     book = result.scalar_one_or_none()
     if book is None:
         try:
-            book_uuid = UUID(slug_or_id)
+            book_uuid = UUID(lookup_value)
         except ValueError:
             book_uuid = None
         if book_uuid is not None:

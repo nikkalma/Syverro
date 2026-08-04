@@ -7,7 +7,7 @@ import { Bibliography, BookIdentity, BookMapPreview, Chronology, NarrativeForm, 
 const book: PublicBookDetail = {
   id: 'book-1', slug: 'jane-eyre', title: 'Jane Eyre', subtitle: null, originalTitle: 'Jane Eyre',
   description: 'A novel.', cover: null, publicationId: null, publicationYear: 1847,
-  originalLanguage: 'English', countryOfOrigin: 'United Kingdom', totalPages: null,
+  originalLanguage: 'English', countryOfOrigin: 'United Kingdom', totalPages: 672,
   publicationType: 'official', seriesName: null, seriesPosition: null, authors: [], publication: null,
   genres: [{ id: 'genre-1', name: 'Gothic Novel', slug: 'gothic-novel', type: 'literary' }],
   knowledge: [
@@ -39,6 +39,19 @@ describe('BookPage editorial sections', () => {
     render(<Bibliography book={book} copy={en.bookPage} onTag={vi.fn()} />);
     expect(screen.getByText(en.bookPage.publicationTypes.official)).toBeInTheDocument();
     expect(screen.queryByText('official')).not.toBeInTheDocument();
+  });
+
+  it('does not render edition-specific page count or leave a metadata separator', () => {
+    const { container } = render(<>
+      <BookIdentity book={book} copy={en.bookPage} onAuthor={vi.fn()} onTag={vi.fn()} />
+      <Bibliography book={book} copy={en.bookPage} onTag={vi.fn()} />
+    </>);
+    expect(screen.queryByText('672')).not.toBeInTheDocument();
+    expect(screen.queryByText(en.bookPage.metadata.pages)).not.toBeInTheDocument();
+    const metadata = container.querySelector('.book-page__identity-meta');
+    expect(metadata).toHaveTextContent('1847');
+    expect(metadata?.children).toHaveLength(1);
+    expect(metadata).not.toHaveTextContent('·');
   });
 
   it('keeps Sapphire transition visible but inactive', () => {

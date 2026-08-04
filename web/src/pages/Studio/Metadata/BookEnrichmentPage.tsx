@@ -66,7 +66,6 @@ export default function BookEnrichmentPage() {
   const [motifSearchResults, setMotifSearchResults] = useState<any[]>([]);
   const [showThemeSearch, setShowThemeSearch] = useState(false);
   const [showMotifSearch, setShowMotifSearch] = useState(false);
-  const [totalPages, setTotalPages] = useState('');
   const [publicationType, setPublicationType] = useState('official');
 
   // Author management
@@ -100,7 +99,6 @@ export default function BookEnrichmentPage() {
         setSeriesName(bookData.series_name || '');
         setSeriesPosition(bookData.series_position?.toString() || '');
         setLinkedAuthors(bookData.authors || []);
-        setTotalPages(bookData.total_pages?.toString() || '');
         setPublicationType(bookData.publication_type || 'official');
         // Load taxonomy relations
         if (Array.isArray(taxonomyData)) {
@@ -241,7 +239,6 @@ export default function BookEnrichmentPage() {
       if (canEdit) {
         const basicBody: Record<string, any> = {};
         if (title !== (book?.title || '')) basicBody.title = title;
-        if (totalPages !== (book?.total_pages?.toString() || '')) basicBody.total_pages = totalPages ? parseInt(totalPages) : null;
         if (publicationType !== (book?.publication_type || 'official')) basicBody.publication_type = publicationType;
 
         if (Object.keys(basicBody).length > 0) {
@@ -398,16 +395,6 @@ export default function BookEnrichmentPage() {
           </div>
           {canEdit && (
             <>
-              <div>
-                <label style={labelStyle}>{t.admin.enrichment.pages}</label>
-                <input
-                  type="number"
-                  value={totalPages}
-                  onChange={(e) => setTotalPages(e.target.value)}
-                  placeholder={t.admin.enrichment.pagesPlaceholder}
-                  style={inputStyle}
-                />
-              </div>
               <div>
                 <label style={labelStyle}>{t.admin.enrichment.publicationType}</label>
                 <select

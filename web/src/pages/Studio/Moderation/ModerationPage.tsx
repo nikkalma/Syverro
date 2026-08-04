@@ -349,10 +349,6 @@ export default function ModerationPage() {
                 <div style={{ color: 'var(--text-primary)', fontSize: '13px' }}>{selectedBook.genres?.join(', ') || '—'}</div>
               </div>
               <div style={{ padding: '10px 14px', background: 'var(--surface-hover)', borderRadius: '8px' }}>
-                <div style={{ color: 'var(--text-secondary)', fontSize: '11px', marginBottom: '4px' }}>{t.admin.enrichment.pages}</div>
-                <div style={{ color: 'var(--text-primary)', fontSize: '13px' }}>{selectedBook.total_pages || '—'}</div>
-              </div>
-              <div style={{ padding: '10px 14px', background: 'var(--surface-hover)', borderRadius: '8px' }}>
                 <div style={{ color: 'var(--text-secondary)', fontSize: '11px', marginBottom: '4px' }}>{t.admin.metadata.title}</div>
                 <div style={{
                   color: METADATA_STATUS_COLORS[selectedBook.metadata_status as keyof typeof METADATA_STATUS_COLORS] || 'var(--warning)', fontSize: '13px',

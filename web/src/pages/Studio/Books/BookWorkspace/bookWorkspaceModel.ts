@@ -18,7 +18,6 @@ export function getBookReadiness(book: AdminBook): BookReadinessItem[] {
   requireValue('authors', 'identity', book.authors);
   requireValue('cover', 'identity', book.cover);
   requireValue('publication_year', 'identity', book.original_publication_year);
-  requireValue('pages', 'identity', book.total_pages);
   requireValue('description', 'editorial', book.description);
   requireValue('genres', 'knowledge', book.genre_ids);
 
@@ -26,6 +25,6 @@ export function getBookReadiness(book: AdminBook): BookReadinessItem[] {
 }
 
 export function getBookCompletion(book: AdminBook): number {
-  const total = 7;
+  const total = 6;
   return Math.round(((total - getBookReadiness(book).length) / total) * 100);
 }

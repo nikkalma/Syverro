@@ -26,7 +26,6 @@ export default function Preview() {
     [t.bookPage.metadata.year, publicDetail?.publicationYear ?? book.original_publication_year],
     [t.bookPage.metadata.language, publicDetail?.originalLanguage ?? book.original_language],
     [t.bookPage.metadata.country, publicDetail?.countryOfOrigin ?? book.country_of_origin],
-    [t.bookPage.metadata.pages, publicDetail?.totalPages ?? book.total_pages],
     [t.bookPage.metadata.publicationType, publicDetail?.publicationType ?? book.publication_type],
     [t.bookPage.metadata.series, publicDetail?.seriesName ?? book.series_name],
     [t.bookPage.metadata.seriesPosition, publicDetail?.seriesPosition ?? book.series_position],

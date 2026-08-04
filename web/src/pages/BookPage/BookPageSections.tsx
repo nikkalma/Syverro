@@ -74,7 +74,7 @@ export function BookIdentity({ book, copy, onAuthor, onTag }: {
   onAuthor: (id: string, slug: string | null) => void;
   onTag: (type: string, value: string) => void;
 }) {
-  const facts = [book.publicationYear, book.totalPages ? `${book.totalPages} ${copy.metadata.pages}` : null, book.seriesName]
+  const facts = [book.publicationYear, book.seriesName]
     .filter((value): value is string | number => value !== null && value !== '');
   const knowledgeGroups = [
     { type: 'genre', label: copy.genres, items: book.genres.map((item) => ({ id: item.id, name: item.name })) },
@@ -128,7 +128,6 @@ export function Bibliography({ book, copy, onTag }: {
     [copy.metadata.year, book.publicationYear],
     [copy.metadata.language, book.originalLanguage],
     [copy.metadata.country, book.countryOfOrigin],
-    [copy.metadata.pages, book.totalPages],
     [copy.metadata.publicationType, publicationTypeLabel(copy, book.publicationType)],
     [copy.metadata.series, book.seriesName],
     [copy.metadata.seriesPosition, book.seriesPosition],

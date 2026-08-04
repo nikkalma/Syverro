@@ -21,7 +21,7 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
 export default function Identity() {
   const t = getLocaleData(getBrowserLocale());
   const { book, publicDetail, saving, saveError, saveBook, saveEnrichment, refresh } = useBookWorkspace();
-  const [form, setForm] = useState({ title: '', subtitle: '', originalTitle: '', cover: '', year: '', language: '', country: '', pages: '', publicationType: 'official', series: '', seriesPosition: '' });
+  const [form, setForm] = useState({ title: '', subtitle: '', originalTitle: '', cover: '', year: '', language: '', country: '', publicationType: 'official', series: '', seriesPosition: '' });
   const [authorQuery, setAuthorQuery] = useState('');
   const [authorResults, setAuthorResults] = useState<Array<{ id: string; name: string; display_name?: string | null }>>([]);
   const [publications, setPublications] = useState<AuthorPublication[]>([]);
@@ -31,7 +31,7 @@ export default function Identity() {
     setForm({
       title: book.title || '', subtitle: book.subtitle || '', originalTitle: book.original_title || '', cover: book.cover || '',
       year: book.original_publication_year?.toString() || '', language: book.original_language || '', country: book.country_of_origin || '',
-      pages: book.total_pages?.toString() || '', publicationType: book.publication_type || 'official', series: book.series_name || '',
+      publicationType: book.publication_type || 'official', series: book.series_name || '',
       seriesPosition: book.series_position?.toString() || '',
     });
   }, [book]);
@@ -63,13 +63,13 @@ export default function Identity() {
   const original = {
     title: book.title || '', subtitle: book.subtitle || '', originalTitle: book.original_title || '', cover: book.cover || '',
     year: book.original_publication_year?.toString() || '', language: book.original_language || '', country: book.country_of_origin || '',
-    pages: book.total_pages?.toString() || '', publicationType: book.publication_type || 'official', series: book.series_name || '', seriesPosition: book.series_position?.toString() || '',
+    publicationType: book.publication_type || 'official', series: book.series_name || '', seriesPosition: book.series_position?.toString() || '',
   };
   const dirty = JSON.stringify(form) !== JSON.stringify(original);
   const reset = () => setForm(original);
 
   const save = async () => {
-    await saveBook({ title: form.title.trim(), total_pages: form.pages ? Number(form.pages) : null, publication_type: form.publicationType as 'official' | 'unofficial' });
+    await saveBook({ title: form.title.trim(), publication_type: form.publicationType as 'official' | 'unofficial' });
     await saveEnrichment({
       subtitle: form.subtitle.trim() || null, original_title: form.originalTitle.trim() || null, cover: form.cover.trim() || null,
       original_publication_year: form.year ? Number(form.year) : null, original_language: form.language.trim() || null,
@@ -119,7 +119,6 @@ export default function Identity() {
           <Field label={t.admin.books.originalYear}><input type="number" value={form.year} onChange={(e) => set('year', e.target.value)} style={inputStyle} /></Field>
           <Field label={t.admin.books.originalLanguage}><input value={form.language} onChange={(e) => set('language', e.target.value)} style={inputStyle} /></Field>
           <Field label={t.admin.books.countryOfOrigin}><input value={form.country} onChange={(e) => set('country', e.target.value)} style={inputStyle} /></Field>
-          <Field label={t.admin.books.pages}><input type="number" value={form.pages} onChange={(e) => set('pages', e.target.value)} style={inputStyle} /></Field>
           <Field label={t.admin.books.publicationType}><select value={form.publicationType} onChange={(e) => set('publicationType', e.target.value)} style={inputStyle}><option value="official">{t.admin.books.officialDesc}</option><option value="unofficial">{t.admin.books.unofficialDesc}</option></select></Field>
           <Field label={t.admin.enrichment.series}><input value={form.series} onChange={(e) => set('series', e.target.value)} style={inputStyle} /></Field>
           <Field label={t.admin.enrichment.seriesPosition}><input type="number" value={form.seriesPosition} onChange={(e) => set('seriesPosition', e.target.value)} style={inputStyle} /></Field>

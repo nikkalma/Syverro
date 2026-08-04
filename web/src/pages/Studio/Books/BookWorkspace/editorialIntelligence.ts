@@ -11,7 +11,6 @@ export interface BookEditorialLabels {
   cover: string;
   genres: string;
   description: string;
-  pages: string;
 }
 
 export function buildBookReport(book: AdminBook, l: BookEditorialLabels): EditorialReport {
@@ -32,15 +31,8 @@ export function buildBookReport(book: AdminBook, l: BookEditorialLabels): Editor
     ],
   };
 
-  const research: EditorialGroup = {
-    id: 'research',
-    steps: [
-      { key: 'pages', label: l.pages, status: deriveStatus({ present: book.total_pages != null && book.total_pages > 0 }), details: undefined },
-    ],
-  };
-
   return {
     entityTypeLabel: undefined,
-    groups: [identity, content, research],
+    groups: [identity, content],
   };
 }

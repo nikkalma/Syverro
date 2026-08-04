@@ -17,7 +17,6 @@ export default function Overview() {
     cover: t.admin.books.coverUrl,
     genres: t.admin.books.genres,
     description: t.admin.books.description,
-    pages: t.admin.books.pages,
   };
   const missing = getBookReadiness(book);
   const fieldLabels: Record<string, string> = {
@@ -25,7 +24,6 @@ export default function Overview() {
     authors: t.admin.enrichment.authorSection,
     cover: t.admin.books.coverUrl,
     publication_year: t.admin.books.originalYear,
-    pages: t.admin.books.pages,
     description: t.admin.books.description,
     genres: t.admin.books.genres,
   };

@@ -916,6 +916,7 @@ export const en: LocaleData = {
         noStatements: 'No author statements',
         addStatement: '+ Add statement',
         noConnectedBooks: 'No books connected',
+        linkedBooksLoadError: 'Could not load linked books.',
         connectedBooksDesc: 'Books linked to this author will appear here with cover previews, publication dates, and roles.',
         noRecentEdits: 'No recent edits',
         recentEditsDesc: 'Entities you edit in Studio will appear here for quick access.',

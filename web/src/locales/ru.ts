@@ -917,6 +917,7 @@ export const ru: LocaleData = {
         noStatements: 'Высказываний автора нет',
         addStatement: '+ Добавить высказывание',
         noConnectedBooks: 'Нет связанных книг',
+        linkedBooksLoadError: 'Не удалось загрузить связанные книги.',
         connectedBooksDesc: 'Книги, связанные с этим автором, появятся здесь с обложками, датами и ролями.',
         noRecentEdits: 'Нет недавних изменений',
         recentEditsDesc: 'Сущности, которые вы редактируете в Студии, появятся здесь для быстрого доступа.',

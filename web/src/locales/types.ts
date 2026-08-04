@@ -493,6 +493,7 @@ export interface LocaleData {
         noStatements: string;
         addStatement: string;
         noConnectedBooks: string;
+        linkedBooksLoadError: string;
         connectedBooksDesc: string;
         noRecentEdits: string;
         recentEditsDesc: string;

@@ -110,6 +110,7 @@ export interface AdminBookFilters {
   search?: string;
   genre?: string;
   author?: string;
+  author_id?: string;
   is_published?: boolean | 'all';
   publication_type?: string;
   date_from?: string;

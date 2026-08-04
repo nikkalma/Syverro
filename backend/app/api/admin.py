@@ -420,6 +420,7 @@ async def get_books(
     limit: int = 20,
     search: Optional[str] = None,
     genre: Optional[str] = None,
+    author_id: Optional[UUID] = None,
     is_published: Optional[bool] = None,
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db)
@@ -436,6 +437,13 @@ async def get_books(
         )
         query = query.where(search_filter)
         count_query = count_query.where(search_filter)
+
+    if author_id is not None:
+        authored_book_ids = select(book_authors.c.book_id).where(
+            book_authors.c.author_id == author_id
+        )
+        query = query.where(Book.id.in_(authored_book_ids))
+        count_query = count_query.where(Book.id.in_(authored_book_ids))
     
     if genre:
         genre_result = await db.execute(

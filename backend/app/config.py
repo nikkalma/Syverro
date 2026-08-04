@@ -20,8 +20,6 @@ class Settings:
         )
 
         if self.DATABASE_URL:
-            print(f"🔍 DATABASE_URL loaded: {self.DATABASE_URL[:60]}...")
-
             if self.DATABASE_URL.startswith("postgres://"):
                 self.DATABASE_URL = self.DATABASE_URL.replace(
                     "postgres://",
@@ -39,8 +37,6 @@ class Settings:
                     1
                 )
 
-        else:
-            print("❌ DATABASE_URL is not set in environment!")
 
 
 settings = Settings()

@@ -2,12 +2,9 @@ from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sess
 from sqlalchemy.orm import declarative_base
 from app.config import settings
 
-# Печать информации о подключении
-print(f"🔍 Creating database engine with URL: {settings.DATABASE_URL[:80]}..." if settings.DATABASE_URL else "❌ DATABASE_URL not set!")
-
 engine = create_async_engine(
     settings.DATABASE_URL,
-    echo=True,  # Временно включаем SQL-логи для отладки
+    echo=False,
     future=True
 )
 

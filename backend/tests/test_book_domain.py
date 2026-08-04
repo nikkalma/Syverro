@@ -81,7 +81,7 @@ async def pg_engine():
 
 @pytest.fixture
 async def session(pg_engine):
-    async with AsyncSession(pg_engine) as session:
+    async with AsyncSession(pg_engine, expire_on_commit=False) as session:
         yield session
 
 

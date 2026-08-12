@@ -31,7 +31,7 @@ export default function Register() {
 
     try {
       await register(email, password);
-      navigate('/');
+      navigate('/login', { state: { registrationComplete: true } });
     } catch (err: any) {
       setError(err.message || 'Ошибка регистрации');
     } finally {

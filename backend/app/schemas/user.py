@@ -19,6 +19,7 @@ class UserResponse(BaseModel):
     email: Optional[EmailStr] = None
     role: str
     created_at: datetime
+    email_verified: bool
 
     class Config:
         from_attributes = True
@@ -27,6 +28,23 @@ class TokenResponse(BaseModel):
     access_token: str
     refresh_token: str
     token_type: str = "bearer"
+
+
+class RegistrationResponse(BaseModel):
+    detail: str
+    verification_token: Optional[str] = None
+
+
+class EmailVerificationRequest(BaseModel):
+    token: str
+
+
+class EmailVerificationResponse(BaseModel):
+    detail: str
+
+
+class RefreshTokenRequest(BaseModel):
+    refresh_token: str
 
 
 # ===== TELEGRAM (оставляем для будущего) =====

@@ -13,6 +13,9 @@ class User(Base):
     email = Column(String, unique=True, nullable=False, index=True)  # ✅ email обязателен
     phone = Column(String, unique=True, nullable=True, index=True)   # ✅ телефон опционален
     password_hash = Column(String, nullable=True)
+    email_verified = Column(Boolean, nullable=False, default=False, server_default="false")
+    email_verification_token_hash = Column(String, nullable=True, unique=True)
+    email_verification_expires_at = Column(DateTime, nullable=True)
     # Profile / Telegram fields used by admin API and telegram auth
     first_name = Column(String, nullable=True)
     last_name = Column(String, nullable=True)

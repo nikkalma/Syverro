@@ -43,7 +43,9 @@ Books form a graph: authors write multiple books, books share genres, genres con
 
 ## Why authentication exists but is minimal
 
-Authentication is required for sync. It is email + password only. No OAuth, no social login, no phone verification, no magic links. The app is a personal tool, not a social platform. Authentication exists to protect the user's data on the server, not to build a user graph or enable marketing.
+Authentication is required for sync. Email/password accounts must verify mailbox ownership before receiving a normal authenticated session; registration creates an unverified account and issues no JWTs. Existing accounts are grandfathered as verified during migration to avoid an unexpected lockout. Token generation is separate from delivery because an email provider has not yet been selected.
+
+The dormant Telegram Login Widget backend is accepted only when its server-side HMAC and `auth_date` freshness checks pass. It fails closed unless a bot token is configured. No other OAuth, social login, phone verification, or magic-link system is in scope. Authentication exists to protect the user's data on the server, not to build a user graph or enable marketing.
 
 ## Why there is no EPUB reader built in
 

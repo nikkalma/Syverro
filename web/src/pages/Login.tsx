@@ -1,7 +1,7 @@
 // src/pages/Login.tsx
 
 import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../store/authStore';
 
 export default function Login() {
@@ -11,6 +11,7 @@ export default function Login() {
   const [loading, setLoading] = useState(false);
   const login = useAuthStore((state) => state.login);
   const navigate = useNavigate();
+  const location = useLocation();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -38,6 +39,11 @@ export default function Login() {
       </p>
 
       <form onSubmit={handleSubmit}>
+        {location.state?.registrationComplete && (
+          <div style={{ color: '#7FB069', marginBottom: '16px', fontSize: '14px' }}>
+            Проверьте почту и подтвердите адрес перед входом.
+          </div>
+        )}
         <div style={{ marginBottom: '16px' }}>
           <label style={{ display: 'block', color: '#97A6BA', fontSize: '14px', marginBottom: '4px' }}>
             Email

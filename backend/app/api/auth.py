@@ -1,173 +1,197 @@
-from fastapi import APIRouter, Depends, HTTPException, status
-from sqlalchemy.ext.asyncio import AsyncSession
+import logging
+from datetime import datetime
+
+from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.config import settings
 from app.core.deps import get_current_user, get_db
 from app.core.security import (
-    get_password_hash, verify_password, create_access_token,
-    create_refresh_token, decode_token, get_user_by_email
+    create_access_token,
+    create_refresh_token,
+    decode_token,
+    get_password_hash,
+    get_user_by_email,
+    get_user_by_telegram_id,
+    verify_password,
+    verify_telegram_auth,
 )
 from app.models.user import User
 from app.schemas.user import (
-    UserCreate, UserLogin, UserResponse, TokenResponse,
-    TelegramAuthData
+    EmailVerificationRequest,
+    EmailVerificationResponse,
+    RegistrationResponse,
+    RefreshTokenRequest,
+    TelegramAuthData,
+    TokenResponse,
+    UserCreate,
+    UserLogin,
+    UserResponse,
 )
-import logging
+from app.services.email_verification import (
+    generate_verification_token,
+    hash_verification_token,
+    verification_delivery,
+)
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/auth", tags=["auth"])
 
 
-# ===== REGISTER =====
-@router.post("/register", response_model=TokenResponse)
+@router.post("/register", response_model=RegistrationResponse, status_code=201)
 async def register(user_data: UserCreate, db: AsyncSession = Depends(get_db)):
-    logger.info(f"🔍 REGISTER ATTEMPT: {user_data.email}")
-
+    logger.info("Registration attempt")
     try:
         result = await db.execute(select(User).where(User.email == user_data.email))
-        existing = result.scalar_one_or_none()
-        if existing:
-            logger.warning(f"❌ Email already registered: {user_data.email}")
+        if result.scalar_one_or_none():
             raise HTTPException(status_code=400, detail="Email already registered")
 
+        token, token_hash, expires_at = generate_verification_token()
         user = User(
             email=user_data.email,
-            password_hash=get_password_hash(user_data.password)
+            password_hash=get_password_hash(user_data.password),
+            email_verified=False,
+            email_verification_token_hash=token_hash,
+            email_verification_expires_at=expires_at,
         )
         db.add(user)
         await db.commit()
         await db.refresh(user)
 
-        access_token = create_access_token({"sub": str(user.id)})
-        refresh_token = create_refresh_token({"sub": str(user.id)})
-
-        logger.info(f"✅ User created: {user.id} - {user.email}")
-
-        return TokenResponse(
-            access_token=access_token,
-            refresh_token=refresh_token,
+        await verification_delivery.send(user.email, token)
+        logger.info("Unverified user created: %s", user.id)
+        return RegistrationResponse(
+            detail="Registration successful. Verify your email before signing in.",
+            verification_token=token
+            if settings.ENVIRONMENT in {"development", "test"}
+            else None,
         )
     except HTTPException:
         raise
-    except Exception as e:
-        logger.error(f"🔥 REGISTER ERROR: {type(e).__name__} - {str(e)}")
+    except Exception:
         await db.rollback()
-        raise HTTPException(status_code=500, detail=f"Internal error: {str(e)}")
+        logger.exception("Registration failed")
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 
-# ===== LOGIN =====
+@router.post("/verify-email", response_model=EmailVerificationResponse)
+async def verify_email(
+    request: EmailVerificationRequest, db: AsyncSession = Depends(get_db)
+):
+    if not request.token or len(request.token) > 512:
+        raise HTTPException(status_code=400, detail="Invalid or expired verification token")
+    try:
+        result = await db.execute(
+            select(User).where(
+                User.email_verification_token_hash
+                == hash_verification_token(request.token)
+            )
+        )
+        user = result.scalar_one_or_none()
+        if (
+            user is None
+            or user.email_verification_expires_at is None
+            or user.email_verification_expires_at < datetime.utcnow()
+        ):
+            raise HTTPException(status_code=400, detail="Invalid or expired verification token")
+        user.email_verified = True
+        user.email_verification_token_hash = None
+        user.email_verification_expires_at = None
+        await db.commit()
+        logger.info("Email verified for user %s", user.id)
+        return EmailVerificationResponse(detail="Email verified")
+    except HTTPException:
+        raise
+    except Exception:
+        await db.rollback()
+        logger.exception("Email verification failed")
+        raise HTTPException(status_code=500, detail="Internal server error")
+
+
 @router.post("/login", response_model=TokenResponse)
 async def login(user_data: UserLogin, db: AsyncSession = Depends(get_db)):
-    logger.info(f"🔍 LOGIN ATTEMPT: {user_data.email}")
-
+    logger.info("Login attempt")
     try:
         user = await get_user_by_email(db, user_data.email)
-        if not user or not verify_password(user_data.password, user.password_hash):
-            logger.warning(f"❌ Login failed: {user_data.email}")
+        if not user or not user.password_hash or not verify_password(
+            user_data.password, user.password_hash
+        ):
             raise HTTPException(status_code=401, detail="Invalid email or password")
-
-        access_token = create_access_token({"sub": str(user.id)})
-        refresh_token = create_refresh_token({"sub": str(user.id)})
-        logger.info(f"✅ Login success: {user.id} - {user.email}")
-
+        if not user.email_verified:
+            raise HTTPException(status_code=403, detail="Email verification required")
         return TokenResponse(
-            access_token=access_token,
-            refresh_token=refresh_token,
+            access_token=create_access_token({"sub": str(user.id)}),
+            refresh_token=create_refresh_token({"sub": str(user.id)}),
         )
     except HTTPException:
         raise
-    except Exception as e:
-        logger.error(f"🔥 LOGIN ERROR: {type(e).__name__} - {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Internal error: {str(e)}")
+    except Exception:
+        logger.exception("Login failed unexpectedly")
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 
-# ===== REFRESH =====
 @router.post("/refresh", response_model=TokenResponse)
-async def refresh_token(refresh_token: str, db: AsyncSession = Depends(get_db)):
-    """Exchange a valid refresh token for new access + refresh tokens."""
-    logger.info("🔍 REFRESH TOKEN REQUEST")
-
-    payload = decode_token(refresh_token)
-    if payload is None:
-        logger.warning("❌ Refresh token invalid or expired")
+async def refresh_token(request: RefreshTokenRequest, db: AsyncSession = Depends(get_db)):
+    payload = decode_token(request.refresh_token)
+    if payload is None or payload.get("type") != "refresh":
         raise HTTPException(status_code=401, detail="Invalid or expired refresh token")
-
-    if payload.get("type") != "refresh":
-        logger.warning("❌ Token type is not refresh")
-        raise HTTPException(status_code=401, detail="Token is not a refresh token")
-
     user_id = payload.get("sub")
     if user_id is None:
         raise HTTPException(status_code=401, detail="Invalid token payload")
-
     result = await db.execute(select(User).where(User.id == user_id))
     user = result.scalar_one_or_none()
     if not user:
         raise HTTPException(status_code=401, detail="User not found")
-
     if not user.is_active:
         raise HTTPException(status_code=403, detail="User account is disabled")
-
-    new_access = create_access_token({"sub": str(user.id)})
-    new_refresh = create_refresh_token({"sub": str(user.id)})
-
-    logger.info(f"✅ Token refreshed for user {user.id}")
-
+    if user.password_hash and not user.email_verified:
+        raise HTTPException(status_code=403, detail="Email verification required")
     return TokenResponse(
-        access_token=new_access,
-        refresh_token=new_refresh,
+        access_token=create_access_token({"sub": str(user.id)}),
+        refresh_token=create_refresh_token({"sub": str(user.id)}),
     )
 
 
-# ===== ME =====
 @router.get("/me", response_model=UserResponse)
-async def get_current_user_info(
-    current_user: User = Depends(get_current_user),
-):
-    logger.info(f"🔍 ME request for user: {current_user.id}")
-    return UserResponse(
-        id=current_user.id,
-        email=current_user.email,
-        role=current_user.role,
-        created_at=current_user.created_at
-    )
+async def get_current_user_info(current_user: User = Depends(get_current_user)):
+    return UserResponse.model_validate(current_user)
 
 
-# ===== TELEGRAM LOGIN =====
 @router.post("/telegram", response_model=TokenResponse)
 async def telegram_login(
-    telegram_data: TelegramAuthData,
-    db: AsyncSession = Depends(get_db)
+    telegram_data: TelegramAuthData, db: AsyncSession = Depends(get_db)
 ):
-    logger.info(f"🔍 TELEGRAM LOGIN ATTEMPT: {telegram_data.id}")
-
+    logger.info("Telegram login attempt")
     try:
-        from app.core.security import get_user_by_telegram_id
-        
+        if not settings.TELEGRAM_BOT_TOKEN:
+            raise HTTPException(status_code=503, detail="Telegram authentication unavailable")
+        if not verify_telegram_auth(telegram_data.model_dump()):
+            raise HTTPException(
+                status_code=401, detail="Invalid or stale Telegram authentication"
+            )
         user = await get_user_by_telegram_id(db, telegram_data.id)
-
         if not user:
             user = User(
+                email=f"telegram-{telegram_data.id}@users.invalid",
                 telegram_id=telegram_data.id,
                 first_name=telegram_data.first_name,
                 last_name=telegram_data.last_name,
                 username=telegram_data.username,
                 photo_url=telegram_data.photo_url,
+                email_verified=False,
             )
             db.add(user)
             await db.commit()
             await db.refresh(user)
-            logger.info(f"✅ New user created via Telegram: {user.id} - {telegram_data.username}")
-
-        access_token = create_access_token({"sub": str(user.id)})
-        refresh_token = create_refresh_token({"sub": str(user.id)})
-        logger.info(f"✅ Telegram login success: {user.id}")
-
+            logger.info("New Telegram user created: %s", user.id)
         return TokenResponse(
-            access_token=access_token,
-            refresh_token=refresh_token,
+            access_token=create_access_token({"sub": str(user.id)}),
+            refresh_token=create_refresh_token({"sub": str(user.id)}),
         )
     except HTTPException:
         raise
-    except Exception as e:
-        logger.error(f"🔥 TELEGRAM ERROR: {type(e).__name__} - {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Internal error: {str(e)}")
+    except Exception:
+        await db.rollback()
+        logger.exception("Telegram authentication failed unexpectedly")
+        raise HTTPException(status_code=500, detail="Internal server error")

@@ -59,21 +59,16 @@ export const useAuthStore = create<AuthState>((set) => ({
       const data = await response.json();
       const token = data.access_token;
       const refreshToken = data.refresh_token;
-
       const userResponse = await fetch(`${API_URL}/auth/me`, {
         headers: { Authorization: `Bearer ${token}` },
       });
-
       if (!userResponse.ok) {
         throw new Error('Не удалось получить данные пользователя');
       }
-
       const user = await userResponse.json();
-
       set({ user, token, isAuthenticated: true });
       setAuthToken(token, refreshToken);
       localStorage.setItem('user', JSON.stringify(user));
-
       set({ isLoading: false });
     } catch (error) {
       set({ isLoading: false });
@@ -95,24 +90,6 @@ export const useAuthStore = create<AuthState>((set) => ({
         const error = await response.json();
         throw new Error(error.detail || 'Ошибка регистрации');
       }
-
-      const data = await response.json();
-      const token = data.access_token;
-      const refreshToken = data.refresh_token;
-
-      const userResponse = await fetch(`${API_URL}/auth/me`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-
-      if (!userResponse.ok) {
-        throw new Error('Не удалось получить данные пользователя');
-      }
-
-      const user = await userResponse.json();
-
-      set({ user, token, isAuthenticated: true });
-      setAuthToken(token, refreshToken);
-      localStorage.setItem('user', JSON.stringify(user));
 
       set({ isLoading: false });
     } catch (error) {

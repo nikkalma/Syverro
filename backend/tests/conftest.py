@@ -9,3 +9,4 @@ os.environ.setdefault(
     ),
 )
 os.environ.setdefault("SECRET_KEY", "test-secret-key")
+os.environ.setdefault("ENVIRONMENT", "test")

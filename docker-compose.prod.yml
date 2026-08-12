@@ -41,7 +41,9 @@ services:
         condition: service_healthy
     environment:
       DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-syverro}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-syverro}
+      ENVIRONMENT: production
       SECRET_KEY: ${SECRET_KEY:?set SECRET_KEY}
+      TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN:-}
     ports:
       - "127.0.0.1:8000:8000"
     healthcheck:

@@ -24,6 +24,11 @@ async def get_current_user(
             detail="Invalid token",
             headers={"WWW-Authenticate": "Bearer"},
         )
+    if payload.get("type") != "access":
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid token type",
+        )
     
     user_id = payload.get("sub")
     if user_id is None:
@@ -54,6 +59,11 @@ async def get_current_user(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="User account is disabled",
         )
+    if user.password_hash and not user.email_verified:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Email verification required",
+        )
     
     return user
 
@@ -72,12 +82,6 @@ async def get_current_active_user(
 async def get_current_admin_user(
     current_user: Annotated[User, Depends(get_current_user)]
 ) -> User:
-    print("========== ADMIN CHECK ==========")
-    print("EMAIL:", current_user.email)
-    print("ROLE:", current_user.role)
-    print("ACTIVE:", current_user.is_active)
-    print("=================================")
-
     if current_user.role not in ["admin", "owner"]:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,

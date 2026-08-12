@@ -1,4 +1,7 @@
 from datetime import datetime, timedelta
+import hashlib
+import hmac
+import time
 
 import bcrypt
 from jose import JWTError, jwt
@@ -64,3 +67,29 @@ async def get_user_by_email(db: AsyncSession, email: str) -> User | None:
 async def get_user_by_telegram_id(db: AsyncSession, telegram_id: str) -> User | None:
     result = await db.execute(select(User).where(User.telegram_id == telegram_id))
     return result.scalar_one_or_none()
+
+
+def verify_telegram_auth(data: dict, now: int | None = None) -> bool:
+    """Verify Telegram Login Widget data before trusting identity fields."""
+    received_hash = data.get("hash")
+    auth_date = data.get("auth_date")
+    if not settings.TELEGRAM_BOT_TOKEN or not isinstance(received_hash, str):
+        return False
+    try:
+        auth_timestamp = int(auth_date)
+    except (TypeError, ValueError):
+        return False
+    current_time = int(time.time()) if now is None else now
+    age = current_time - auth_timestamp
+    if age < 0 or age > settings.TELEGRAM_AUTH_MAX_AGE_SECONDS:
+        return False
+    check_string = "\n".join(
+        f"{key}={value}"
+        for key, value in sorted(data.items())
+        if key != "hash" and value is not None
+    )
+    secret_key = hashlib.sha256(settings.TELEGRAM_BOT_TOKEN.encode("utf-8")).digest()
+    expected_hash = hmac.new(
+        secret_key, check_string.encode("utf-8"), hashlib.sha256
+    ).hexdigest()
+    return hmac.compare_digest(expected_hash, received_hash)

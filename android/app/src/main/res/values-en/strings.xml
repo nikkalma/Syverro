@@ -40,6 +40,9 @@
     <string name="filter_reading">Reading</string>
     <string name="filter_finished">Finished</string>
     <string name="filter_planned">Planned</string>
+    <string name="filter_rereading">Re-reading</string>
+    <string name="filter_postponed">Postponed</string>
+    <string name="filter_abandoned">Abandoned</string>
     <string name="empty_library">No books here</string>
     <string name="empty_library_filter">Try a different filter.</string>
 

@@ -5,7 +5,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.syverro.domain.model.ReadingStatus
 import com.syverro.domain.model.SessionStatus
-import com.syverro.domain.repository.BookRepository
+import com.syverro.domain.repository.PersonalBookRepository
 import com.syverro.domain.repository.SessionRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
@@ -21,7 +21,7 @@ import javax.inject.Inject
 
 @HiltViewModel
 class SessionViewModel @Inject constructor(
-    private val bookRepository: BookRepository,
+    private val personalBookRepository: PersonalBookRepository,
     private val sessionRepository: SessionRepository,
 ) : ViewModel() {
 
@@ -41,19 +41,19 @@ class SessionViewModel @Inject constructor(
         viewModelScope.launch {
             val activeSession = sessionRepository.getActive()
             if (activeSession != null) {
-                val book = bookRepository.getById(activeSession.bookId)
+                val book = personalBookRepository.getById(activeSession.personalBookId)
                 currentSessionId = activeSession.id
                 accumulatedSeconds = activeSession.durationSeconds
                 _uiState.update {
                     it.copy(
                         activeBook = book,
-                        selectedBookId = activeSession.bookId,
+                        selectedBookId = activeSession.personalBookId,
                         elapsedSeconds = accumulatedSeconds,
                         isRunning = false,
                     )
                 }
             } else {
-                val readingBooks = bookRepository.getBooksByStatus(ReadingStatus.READING)
+                val readingBooks = personalBookRepository.getByStatus(ReadingStatus.READING)
                 val firstBook = readingBooks.firstOrNull()
                 _uiState.update {
                     it.copy(
@@ -82,7 +82,7 @@ class SessionViewModel @Inject constructor(
     }
 
     fun selectBook(bookId: String) {
-        val book = bookRepository.getById(bookId)
+        val book = personalBookRepository.getById(bookId)
         _uiState.update { it.copy(selectedBookId = bookId, activeBook = book) }
     }
 
@@ -90,11 +90,11 @@ class SessionViewModel @Inject constructor(
         val bookId = _uiState.value.selectedBookId ?: return
         if (currentSessionId != null) return
 
-        bookRepository.updateStatus(bookId, ReadingStatus.READING)
+        personalBookRepository.updateStatus(bookId, ReadingStatus.READING)
         sessionStartWallTime = SystemClock.elapsedRealtime()
         accumulatedSeconds = 0
         currentSessionId = sessionRepository.create(bookId, sessionStartWallTime).id
-        val book = bookRepository.getById(bookId)
+        val book = personalBookRepository.getById(bookId)
         _uiState.update { it.copy(isRunning = true, elapsedSeconds = 0, activeBook = book) }
         startTicker()
     }
@@ -142,7 +142,7 @@ class SessionViewModel @Inject constructor(
         currentSessionId = null
         accumulatedSeconds = 0
 
-        val readingBooks = bookRepository.getBooksByStatus(ReadingStatus.READING)
+        val readingBooks = personalBookRepository.getByStatus(ReadingStatus.READING)
         val firstBook = readingBooks.firstOrNull()
         _uiState.update {
             it.copy(
@@ -180,8 +180,9 @@ class SessionViewModel @Inject constructor(
 
     private fun submitQuote(text: String) {
         val sessionId = currentSessionId ?: return
+        val bookId = _uiState.value.selectedBookId ?: return
         if (text.isBlank()) return
-        sessionRepository.addQuote(sessionId, text, System.currentTimeMillis())
+        sessionRepository.addQuote(bookId, sessionId, text, System.currentTimeMillis())
         val quotes = _uiState.value.capturedQuotes + text
         _uiState.update { it.copy(capturedQuotes = quotes, showQuoteSheet = false, quoteText = "") }
     }

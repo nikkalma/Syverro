@@ -3,9 +3,15 @@ package com.syverro.di
 import android.content.Context
 import androidx.room.Room
 import com.syverro.data.local.dao.BookDao
+import com.syverro.data.local.dao.ExperienceTagDao
+import com.syverro.data.local.dao.LocalDocumentDao
+import com.syverro.data.local.dao.PersonalBookDao
 import com.syverro.data.local.dao.ProfileDao
 import com.syverro.data.local.dao.QuoteDao
+import com.syverro.data.local.dao.ReadingPositionDao
 import com.syverro.data.local.dao.SessionDao
+import com.syverro.data.local.dao.TextNoteDao
+import com.syverro.data.local.dao.VoiceNoteDao
 import com.syverro.BuildConfig
 import com.syverro.data.local.database.SyverroDatabase
 import com.syverro.data.local.seed.SeedBooks
@@ -28,7 +34,7 @@ object DatabaseModule {
             SyverroDatabase::class.java,
             "syverro.db",
         ).addCallback(SeedCallback)
-            .addMigrations(SyverroDatabase.MIGRATION_1_2)
+            .addMigrations(SyverroDatabase.MIGRATION_1_2, SyverroDatabase.MIGRATION_2_3)
             .build()
     }
 
@@ -36,6 +42,12 @@ object DatabaseModule {
     @Singleton
     fun provideBookDao(database: SyverroDatabase): BookDao {
         return database.bookDao()
+    }
+
+    @Provides
+    @Singleton
+    fun providePersonalBookDao(database: SyverroDatabase): PersonalBookDao {
+        return database.personalBookDao()
     }
 
     @Provides
@@ -56,6 +68,36 @@ object DatabaseModule {
         return database.profileDao()
     }
 
+    @Provides
+    @Singleton
+    fun provideTextNoteDao(database: SyverroDatabase): TextNoteDao {
+        return database.textNoteDao()
+    }
+
+    @Provides
+    @Singleton
+    fun provideVoiceNoteDao(database: SyverroDatabase): VoiceNoteDao {
+        return database.voiceNoteDao()
+    }
+
+    @Provides
+    @Singleton
+    fun provideReadingPositionDao(database: SyverroDatabase): ReadingPositionDao {
+        return database.readingPositionDao()
+    }
+
+    @Provides
+    @Singleton
+    fun provideLocalDocumentDao(database: SyverroDatabase): LocalDocumentDao {
+        return database.localDocumentDao()
+    }
+
+    @Provides
+    @Singleton
+    fun provideExperienceTagDao(database: SyverroDatabase): ExperienceTagDao {
+        return database.experienceTagDao()
+    }
+
     private object SeedCallback : androidx.room.RoomDatabase.Callback() {
         override fun onCreate(db: androidx.sqlite.db.SupportSQLiteDatabase) {
             if (!BuildConfig.DEBUG) return
@@ -71,10 +113,14 @@ object DatabaseModule {
                             arrayOf(book.id, book.title, book.author, book.coverUrl, book.description, book.language, book.pageCount),
                         )
                     }
-                    SeedBooks.userBooks().forEach { ub ->
+                    SeedBooks.personalBooks().forEach { pb ->
                         db.execSQL(
-                            "INSERT OR REPLACE INTO user_books (book_id, reading_status, progress, rating, favorite, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?)",
-                            arrayOf(ub.bookId, ub.readingStatus, ub.progress, ub.rating, if (ub.favorite) 1 else 0, ub.createdAt, ub.updatedAt),
+                            "INSERT OR IGNORE INTO personal_books (id, canonical_book_id, title, author_display, local_cover_path, reading_status, progress, current_page, total_pages, start_date, end_date, provenance, has_local_document, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                            arrayOf(
+                                pb.id, pb.canonicalBookId, pb.title, pb.authorDisplay, pb.localCoverPath, pb.readingStatus,
+                                pb.progress, pb.currentPage, pb.totalPages, pb.startDate, pb.endDate, pb.provenance,
+                                if (pb.hasLocalDocument) 1 else 0, pb.createdAt, pb.updatedAt,
+                            ),
                         )
                     }
                 }

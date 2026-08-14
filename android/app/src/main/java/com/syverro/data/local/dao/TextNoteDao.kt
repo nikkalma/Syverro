@@ -1,0 +1,23 @@
+package com.syverro.data.local.dao
+
+import androidx.room.Dao
+import androidx.room.Insert
+import androidx.room.OnConflictStrategy
+import androidx.room.Query
+import com.syverro.data.local.entity.TextNoteEntity
+
+@Dao
+interface TextNoteDao {
+
+    @Query("SELECT * FROM text_notes WHERE book_id = :bookId ORDER BY created_at DESC")
+    fun getByBook(bookId: String): List<TextNoteEntity>
+
+    @Query("SELECT * FROM text_notes WHERE id = :id")
+    fun getById(id: String): TextNoteEntity?
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    fun insert(note: TextNoteEntity)
+
+    @Query("DELETE FROM text_notes WHERE id = :id")
+    fun delete(id: String)
+}

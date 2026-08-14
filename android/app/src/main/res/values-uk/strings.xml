@@ -44,6 +44,9 @@
     <string name="filter_reading">Читаю</string>
     <string name="filter_finished">Прочитано</string>
     <string name="filter_planned">У планах</string>
+    <string name="filter_rereading">Перечитую</string>
+    <string name="filter_postponed">Відкладено</string>
+    <string name="filter_abandoned">Покинуто</string>
     <string name="empty_library">Немає книг</string>
     <string name="empty_library_filter">Спробуйте інший фільтр.</string>
 

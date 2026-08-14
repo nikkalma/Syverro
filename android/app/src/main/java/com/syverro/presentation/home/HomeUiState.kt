@@ -1,10 +1,10 @@
 package com.syverro.presentation.home
 
-import com.syverro.domain.model.Book
+import com.syverro.domain.model.PersonalBook
 import com.syverro.domain.model.ReadingSession
 
 data class HomeUiState(
-    val activeBook: Book? = null,
+    val activeBook: PersonalBook? = null,
     val activeSession: ReadingSession? = null,
     val recentSessions: List<ReadingSession> = emptyList(),
     val booksInProgress: Int = 0,

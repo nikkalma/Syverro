@@ -42,6 +42,9 @@
     <string name="filter_reading">Čitam</string>
     <string name="filter_finished">Završeno</string>
     <string name="filter_planned">U planu</string>
+    <string name="filter_rereading">Ponovo čitam</string>
+    <string name="filter_postponed">Odloženo</string>
+    <string name="filter_abandoned">Napušteno</string>
     <string name="empty_library">Nema knjiga</string>
     <string name="empty_library_filter">Probajte drugi filter.</string>
 

@@ -40,6 +40,9 @@
     <string name="filter_reading">Оқылуда</string>
     <string name="filter_finished">Оқылды</string>
     <string name="filter_planned">Жоспарда</string>
+    <string name="filter_rereading">Қайта оқылуда</string>
+    <string name="filter_postponed">Кейінге қалдырылды</string>
+    <string name="filter_abandoned">Тасталды</string>
     <string name="empty_library">Кітаптар жоқ</string>
     <string name="empty_library_filter">Басқа сүзгіні қолданып көріңіз.</string>
 

@@ -3,7 +3,7 @@ package com.syverro.presentation.bookdetail
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.syverro.domain.model.ReadingStatus
-import com.syverro.domain.repository.BookRepository
+import com.syverro.domain.repository.PersonalBookRepository
 import com.syverro.domain.repository.SessionRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -15,7 +15,7 @@ import javax.inject.Inject
 
 @HiltViewModel
 class BookDetailViewModel @Inject constructor(
-    private val bookRepository: BookRepository,
+    private val personalBookRepository: PersonalBookRepository,
     private val sessionRepository: SessionRepository,
 ) : ViewModel() {
 
@@ -24,8 +24,8 @@ class BookDetailViewModel @Inject constructor(
 
     fun loadBook(bookId: String) {
         viewModelScope.launch {
-            val book = bookRepository.getById(bookId)
-            val hasActive = sessionRepository.getActive()?.bookId == bookId
+            val book = personalBookRepository.getById(bookId)
+            val hasActive = sessionRepository.getActive()?.personalBookId == bookId
             _uiState.update {
                 it.copy(book = book, hasActiveSession = hasActive)
             }
@@ -34,7 +34,7 @@ class BookDetailViewModel @Inject constructor(
 
     fun startReading() {
         val book = _uiState.value.book ?: return
-        bookRepository.updateStatus(book.id, ReadingStatus.READING)
+        personalBookRepository.updateStatus(book.id, ReadingStatus.READING)
         _uiState.update { it.copy(hasActiveSession = true) }
     }
 
@@ -48,9 +48,9 @@ class BookDetailViewModel @Inject constructor(
 
     fun markFinished() {
         val book = _uiState.value.book ?: return
-        bookRepository.updateStatus(book.id, ReadingStatus.FINISHED)
+        personalBookRepository.updateStatus(book.id, ReadingStatus.FINISHED)
         val activeSession = sessionRepository.getActive()
-        if (activeSession?.bookId == book.id) {
+        if (activeSession?.personalBookId == book.id) {
             sessionRepository.update(activeSession.copy(status = com.syverro.domain.model.SessionStatus.FINISHED))
         }
         _uiState.update { it.copy(hasActiveSession = false, showFinishConfirm = false) }

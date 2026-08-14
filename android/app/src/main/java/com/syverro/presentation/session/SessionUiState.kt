@@ -1,12 +1,12 @@
 package com.syverro.presentation.session
 
-import com.syverro.domain.model.Book
+import com.syverro.domain.model.PersonalBook
 
 data class SessionUiState(
-    val activeBook: Book? = null,
+    val activeBook: PersonalBook? = null,
     val selectedBookId: String? = null,
     val hasReadingBooks: Boolean = false,
-    val eligibleBooks: List<Book> = emptyList(),
+    val eligibleBooks: List<PersonalBook> = emptyList(),
     val showBookSelector: Boolean = false,
     val elapsedSeconds: Long = 0,
     val isRunning: Boolean = false,

@@ -4,10 +4,12 @@ import com.syverro.data.local.dao.QuoteDao
 import com.syverro.data.local.dao.SessionDao
 import com.syverro.data.local.entity.QuoteEntity
 import com.syverro.data.local.entity.SessionEntity
+import com.syverro.domain.model.Provenance
 import com.syverro.domain.model.Quote
 import com.syverro.domain.model.ReadingSession
 import com.syverro.domain.model.SessionStatus
 import com.syverro.domain.repository.SessionRepository
+import java.util.UUID
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -25,14 +27,15 @@ class RoomSessionRepository @Inject constructor(
         return sessionDao.getActiveSession()?.toDomain()
     }
 
-    override fun getAllForBook(bookId: String): List<ReadingSession> {
-        return sessionDao.getSessionsByBook(bookId).map { it.toDomain() }
+    override fun getAllForBook(personalBookId: String): List<ReadingSession> {
+        return sessionDao.getSessionsByBook(personalBookId).map { it.toDomain() }
     }
 
-    override fun create(bookId: String, startTime: Long): ReadingSession {
+    override fun create(personalBookId: String, startTime: Long): ReadingSession {
         val now = System.currentTimeMillis()
         val entity = SessionEntity(
-            bookId = bookId,
+            bookId = personalBookId,
+            syncId = UUID.randomUUID().toString(),
             startedAt = now,
             durationSeconds = 0,
             status = SessionStatus.IN_PROGRESS.name,
@@ -41,7 +44,8 @@ class RoomSessionRepository @Inject constructor(
         val id = sessionDao.insertSession(entity)
         return ReadingSession(
             id = id.toString(),
-            bookId = bookId,
+            personalBookId = personalBookId,
+            syncId = entity.syncId,
             startTime = now,
             durationSeconds = 0,
             status = SessionStatus.IN_PROGRESS,
@@ -64,27 +68,35 @@ class RoomSessionRepository @Inject constructor(
         return quoteDao.getQuotesBySession(id).map { it.toDomain() }
     }
 
-    override fun addQuote(sessionId: String, text: String, createdAt: Long): Quote {
-        val id = sessionId.toLongOrNull()
-        val session = id?.let { sessionDao.getSessionById(it) }
+    override fun getAllQuotesForBook(personalBookId: String): List<Quote> {
+        return quoteDao.getQuotesByBook(personalBookId).map { it.toDomain() }
+    }
+
+    override fun addQuote(personalBookId: String, sessionId: String?, text: String, createdAt: Long): Quote {
         val entity = QuoteEntity(
-            sessionId = id ?: 0L,
-            bookId = session?.bookId ?: "",
+            bookId = personalBookId,
+            syncId = UUID.randomUUID().toString(),
+            sessionId = sessionId?.toLongOrNull(),
             text = text,
+            provenance = Provenance.READER_OBSERVED.storageValue,
             createdAt = createdAt,
         )
         val quoteId = quoteDao.insertQuote(entity)
         return Quote(
             id = quoteId.toString(),
+            personalBookId = personalBookId,
+            syncId = entity.syncId,
             sessionId = sessionId,
             text = text,
+            provenance = Provenance.READER_OBSERVED,
             createdAt = createdAt,
         )
     }
 
     private fun SessionEntity.toDomain(): ReadingSession = ReadingSession(
         id = id.toString(),
-        bookId = bookId,
+        personalBookId = bookId,
+        syncId = syncId,
         startTime = startedAt,
         durationSeconds = durationSeconds,
         status = SessionStatus.valueOf(status),
@@ -92,8 +104,14 @@ class RoomSessionRepository @Inject constructor(
 
     private fun QuoteEntity.toDomain(): Quote = Quote(
         id = id.toString(),
-        sessionId = sessionId.toString(),
+        personalBookId = bookId,
+        syncId = syncId,
+        sessionId = sessionId?.toString(),
         text = text,
+        locator = locator,
+        page = page,
+        note = note,
+        provenance = Provenance.fromStorage(provenance),
         createdAt = createdAt,
     )
 }

@@ -7,10 +7,12 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.syverro.R
 import com.syverro.ui.theme.Spacing
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -99,16 +101,19 @@ fun BookDetailScreen(
                         )
                         Spacer(modifier = Modifier.height(Spacing.xs.dp))
                         Text(
-                            text = book.author,
+                            text = book.authorDisplay ?: "",
                             style = MaterialTheme.typography.bodyLarge,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
                         Spacer(modifier = Modifier.height(Spacing.sm.dp))
 
                         val statusLabel = when (book.readingStatus) {
-                            com.syverro.domain.model.ReadingStatus.READING -> "Currently reading"
-                            com.syverro.domain.model.ReadingStatus.FINISHED -> "Finished"
-                            com.syverro.domain.model.ReadingStatus.PLANNED -> "Planned"
+                            com.syverro.domain.model.ReadingStatus.READING -> stringResource(R.string.filter_reading)
+                            com.syverro.domain.model.ReadingStatus.FINISHED -> stringResource(R.string.filter_finished)
+                            com.syverro.domain.model.ReadingStatus.PLANNED -> stringResource(R.string.filter_planned)
+                            com.syverro.domain.model.ReadingStatus.REREADING -> stringResource(R.string.filter_rereading)
+                            com.syverro.domain.model.ReadingStatus.POSTPONED -> stringResource(R.string.filter_postponed)
+                            com.syverro.domain.model.ReadingStatus.ABANDONED -> stringResource(R.string.filter_abandoned)
                         }
                         Text(
                             text = statusLabel,

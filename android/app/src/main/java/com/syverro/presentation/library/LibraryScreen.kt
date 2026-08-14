@@ -19,7 +19,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.syverro.R
-import com.syverro.domain.model.Book
+import com.syverro.domain.model.PersonalBook
 import com.syverro.domain.model.ReadingStatus
 import com.syverro.ui.theme.Spacing
 
@@ -74,6 +74,24 @@ fun LibraryScreen(
                 label = { Text(stringResource(R.string.filter_planned)) },
                 shape = MaterialTheme.shapes.small,
             )
+            FilterChip(
+                selected = state.filter == ReadingStatus.REREADING,
+                onClick = { viewModel.onEvent(LibraryEvent.FilterByStatus(ReadingStatus.REREADING)) },
+                label = { Text(stringResource(R.string.filter_rereading)) },
+                shape = MaterialTheme.shapes.small,
+            )
+            FilterChip(
+                selected = state.filter == ReadingStatus.POSTPONED,
+                onClick = { viewModel.onEvent(LibraryEvent.FilterByStatus(ReadingStatus.POSTPONED)) },
+                label = { Text(stringResource(R.string.filter_postponed)) },
+                shape = MaterialTheme.shapes.small,
+            )
+            FilterChip(
+                selected = state.filter == ReadingStatus.ABANDONED,
+                onClick = { viewModel.onEvent(LibraryEvent.FilterByStatus(ReadingStatus.ABANDONED)) },
+                label = { Text(stringResource(R.string.filter_abandoned)) },
+                shape = MaterialTheme.shapes.small,
+            )
         }
 
         Spacer(modifier = Modifier.height(Spacing.xl.dp))
@@ -121,7 +139,7 @@ fun LibraryScreen(
 }
 
 @Composable
-private fun BookCard(book: Book, onClick: () -> Unit) {
+private fun BookCard(book: PersonalBook, onClick: () -> Unit) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -175,6 +193,9 @@ private fun statusLabel(status: ReadingStatus): String = when (status) {
     ReadingStatus.READING -> stringResource(R.string.filter_reading)
     ReadingStatus.FINISHED -> stringResource(R.string.filter_finished)
     ReadingStatus.PLANNED -> stringResource(R.string.filter_planned)
+    ReadingStatus.REREADING -> stringResource(R.string.filter_rereading)
+    ReadingStatus.POSTPONED -> stringResource(R.string.filter_postponed)
+    ReadingStatus.ABANDONED -> stringResource(R.string.filter_abandoned)
 }
 
 @Composable
@@ -182,4 +203,7 @@ private fun statusColor(status: ReadingStatus) = when (status) {
     ReadingStatus.READING -> MaterialTheme.colorScheme.primary
     ReadingStatus.FINISHED -> MaterialTheme.colorScheme.secondary
     ReadingStatus.PLANNED -> MaterialTheme.colorScheme.onSurfaceVariant
+    ReadingStatus.REREADING -> MaterialTheme.colorScheme.tertiary
+    ReadingStatus.POSTPONED -> MaterialTheme.colorScheme.onSurfaceVariant
+    ReadingStatus.ABANDONED -> MaterialTheme.colorScheme.error
 }

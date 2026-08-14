@@ -3,7 +3,7 @@ package com.syverro.presentation.library
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.syverro.domain.model.ReadingStatus
-import com.syverro.domain.repository.BookRepository
+import com.syverro.domain.repository.PersonalBookRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -14,7 +14,7 @@ import javax.inject.Inject
 
 @HiltViewModel
 class LibraryViewModel @Inject constructor(
-    private val bookRepository: BookRepository,
+    private val personalBookRepository: PersonalBookRepository,
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(LibraryUiState())
@@ -36,9 +36,9 @@ class LibraryViewModel @Inject constructor(
     private fun loadBooks(filter: ReadingStatus? = null) {
         viewModelScope.launch {
             val books = if (filter == null) {
-                bookRepository.getAll()
+                personalBookRepository.getAll()
             } else {
-                bookRepository.getBooksByStatus(filter)
+                personalBookRepository.getByStatus(filter)
             }
             _uiState.update { it.copy(books = books, filter = filter) }
         }

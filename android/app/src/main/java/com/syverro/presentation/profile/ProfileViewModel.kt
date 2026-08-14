@@ -4,7 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.syverro.domain.model.ReadingStatus
 import com.syverro.domain.model.SessionStatus
-import com.syverro.domain.repository.BookRepository
+import com.syverro.domain.repository.PersonalBookRepository
 import com.syverro.domain.repository.ProfileRepository
 import com.syverro.domain.repository.SessionRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -18,7 +18,7 @@ import javax.inject.Inject
 @HiltViewModel
 class ProfileViewModel @Inject constructor(
     private val profileRepository: ProfileRepository,
-    private val bookRepository: BookRepository,
+    private val personalBookRepository: PersonalBookRepository,
     private val sessionRepository: SessionRepository,
 ) : ViewModel() {
 
@@ -39,13 +39,13 @@ class ProfileViewModel @Inject constructor(
     fun refresh() {
         viewModelScope.launch {
             val profile = profileRepository.getProfile()
-            val finished = bookRepository.getBooksByStatus(ReadingStatus.FINISHED)
-            val reading = bookRepository.getBooksByStatus(ReadingStatus.READING)
+            val finished = personalBookRepository.getByStatus(ReadingStatus.FINISHED)
+            val reading = personalBookRepository.getByStatus(ReadingStatus.READING)
             val allSessions = sessionRepository.getAll()
-            val allBooks = bookRepository.getAll()
+            val allBooks = personalBookRepository.getAll()
             val readingBooks = reading.size
             val finishedBooks = finished.size
-            val booksRead = allBooks.size - bookRepository.getBooksByStatus(ReadingStatus.PLANNED).size
+            val booksRead = allBooks.size - personalBookRepository.getByStatus(ReadingStatus.PLANNED).size
             val totalReadingTimeSeconds = allSessions.sumOf { it.durationSeconds }
 
             val insight = generateInsight(booksRead, finishedBooks, totalReadingTimeSeconds)

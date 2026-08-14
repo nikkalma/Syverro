@@ -92,7 +92,7 @@ fun SessionScreen(
                             )
                             Spacer(modifier = Modifier.height(4.dp))
                             Text(
-                                text = book.author,
+                                text = book.authorDisplay ?: "",
                                 style = MaterialTheme.typography.bodyLarge,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                             )

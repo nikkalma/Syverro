@@ -8,21 +8,4 @@ data class Book(
     val description: String = "",
     val language: String = "en",
     val pageCount: Int = 0,
-    val readingStatus: ReadingStatus = ReadingStatus.PLANNED,
-    val progress: Float = 0f,
-    val favorite: Boolean = false,
 )
-
-enum class ReadingStatus {
-    PLANNED,
-    READING,
-    FINISHED;
-
-    companion object {
-        fun fromString(name: String): ReadingStatus = try {
-            valueOf(name)
-        } catch (_: IllegalArgumentException) {
-            PLANNED
-        }
-    }
-}

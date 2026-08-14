@@ -3,7 +3,7 @@ package com.syverro.presentation.home
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.syverro.domain.model.ReadingStatus
-import com.syverro.domain.repository.BookRepository
+import com.syverro.domain.repository.PersonalBookRepository
 import com.syverro.domain.repository.SessionRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -18,7 +18,7 @@ import javax.inject.Inject
 
 @HiltViewModel
 class HomeViewModel @Inject constructor(
-    private val bookRepository: BookRepository,
+    private val personalBookRepository: PersonalBookRepository,
     private val sessionRepository: SessionRepository,
 ) : ViewModel() {
 
@@ -32,9 +32,9 @@ class HomeViewModel @Inject constructor(
     fun refresh() {
         viewModelScope.launch {
             val activeSession = sessionRepository.getActive()
-            val book = activeSession?.let { bookRepository.getById(it.bookId) }
-            val readingBooks = bookRepository.getBooksByStatus(ReadingStatus.READING)
-            val allBooks = bookRepository.getAll()
+            val book = activeSession?.let { personalBookRepository.getById(it.personalBookId) }
+            val readingBooks = personalBookRepository.getByStatus(ReadingStatus.READING)
+            val allBooks = personalBookRepository.getAll()
             val allSessions = sessionRepository.getAll()
             val finishedSessions = allSessions.filter { it.status.name == "FINISHED" }
             val recent = finishedSessions.sortedByDescending { it.startTime }.take(3)

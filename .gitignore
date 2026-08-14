@@ -47,9 +47,15 @@ web-build/
 
 # Native generated
 ios/
-android/
 
 # Android / Gradle
+android/local.properties
+android/.kotlin/
+android/app/build/
+android/*.iml
+android/**/*.iml
+android/build_error.txt
+android/build_output.txt
 .gradle/
 *.apk
 *.aab

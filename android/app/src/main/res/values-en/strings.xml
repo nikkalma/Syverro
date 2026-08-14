@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Syverro</string>
+    <string name="save">Save</string>
+    <string name="cancel">Cancel</string>
+    <string name="delete">Delete</string>
+    <string name="back">Back</string>
+    <string name="close">Close</string>
+    <string name="loading">Loading…</string>
+    <string name="error">Error</string>
+    <string name="retry">Retry</string>
+    <string name="home">Home</string>
+    <string name="library">Library</string>
+    <string name="session">Session</string>
+    <string name="profile">Profile</string>
+    <string name="settings">Settings</string>
+
+    <string name="home_title">Home</string>
+    <string name="continue_reading">Continue reading</string>
+    <string name="continue_reading_label">Continue Reading</string>
+    <string name="no_active_book">No active book</string>
+    <string name="home_empty_description">Add a book to your library&#10;and start reading.</string>
+    <string name="go_to_library">Go to Library</string>
+    <string name="recent_activity">Recent activity</string>
+    <string name="last_session">Last session: %1$s</string>
+    <string name="duration_format">%1$dm %2$ds</string>
+
+    <plurals name="books_in_progress">
+        <item quantity="one">%d book in progress</item>
+        <item quantity="other">%d books in progress</item>
+    </plurals>
+
+    <plurals name="books_in_library">
+        <item quantity="one">%d book in library</item>
+        <item quantity="other">%d books in library</item>
+    </plurals>
+
+    <string name="library_title">Library</string>
+    <string name="filter_all">All</string>
+    <string name="filter_reading">Reading</string>
+    <string name="filter_finished">Finished</string>
+    <string name="filter_planned">Planned</string>
+    <string name="empty_library">No books here</string>
+    <string name="empty_library_filter">Try a different filter.</string>
+
+    <string name="session_title">Session</string>
+    <string name="session_empty_title">No books in progress</string>
+    <string name="session_empty_description">Mark a book as "reading" in your\nlibrary to start tracking sessions.</string>
+    <string name="session_status_reading">Reading…</string>
+    <string name="session_status_paused">Paused</string>
+    <string name="start_session">Start</string>
+    <string name="pause_session">Pause</string>
+    <string name="resume_session">Resume</string>
+    <string name="finish_session">Finish</string>
+    <string name="add_quote">Capture quote</string>
+    <string name="quotes_captured">Quotes captured</string>
+    <string name="quote_placeholder">Type or paste a quote…</string>
+    <string name="save_quote">Save quote</string>
+
+    <string name="profile_title">Profile</string>
+    <string name="reading_statistics">Reading stats</string>
+    <string name="stat_card_reading">Reading</string>
+    <string name="stat_card_finished">Finished</string>
+    <string name="stat_card_sessions">Sessions</string>
+    <string name="total_reading_time">Total reading time</string>
+</resources>

@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Syverro</string>
+    <string name="save">Sačuvaj</string>
+    <string name="cancel">Otkaži</string>
+    <string name="delete">Obriši</string>
+    <string name="back">Nazad</string>
+    <string name="close">Zatvori</string>
+    <string name="loading">Učitavanje…</string>
+    <string name="error">Greška</string>
+    <string name="retry">Pokušaj ponovo</string>
+    <string name="home">Početna</string>
+    <string name="library">Biblioteka</string>
+    <string name="session">Čitanje</string>
+    <string name="profile">Profil</string>
+    <string name="settings">Podešavanja</string>
+
+    <string name="home_title">Početna</string>
+    <string name="continue_reading">Nastavi čitanje</string>
+    <string name="continue_reading_label">Nastavi čitanje</string>
+    <string name="no_active_book">Nema aktivne knjige</string>
+    <string name="home_empty_description">Dodajte knjigu u biblioteku&#10;i počnite čitati.</string>
+    <string name="go_to_library">Idi u biblioteku</string>
+    <string name="recent_activity">Nedavna aktivnost</string>
+    <string name="last_session">Poslednja sesija: %1$s</string>
+    <string name="duration_format">%1$dm %2$ds</string>
+
+    <plurals name="books_in_progress">
+        <item quantity="one">%d knjiga u čitanju</item>
+        <item quantity="few">%d knjige u čitanju</item>
+        <item quantity="other">%d knjiga u čitanju</item>
+    </plurals>
+
+    <plurals name="books_in_library">
+        <item quantity="one">%d knjiga u biblioteci</item>
+        <item quantity="few">%d knjige u biblioteci</item>
+        <item quantity="other">%d knjiga u biblioteci</item>
+    </plurals>
+
+    <string name="library_title">Biblioteka</string>
+    <string name="filter_all">Sve</string>
+    <string name="filter_reading">Čitam</string>
+    <string name="filter_finished">Završeno</string>
+    <string name="filter_planned">U planu</string>
+    <string name="empty_library">Nema knjiga</string>
+    <string name="empty_library_filter">Probajte drugi filter.</string>
+
+    <string name="session_title">Čitanje</string>
+    <string name="session_empty_title">Nema knjiga u čitanju</string>
+    <string name="session_empty_description">Označite knjigu kao „čitam“ u biblioteci&#10;da biste pratili sesije.</string>
+    <string name="session_status_reading">Čitam…</string>
+    <string name="session_status_paused">Pauza</string>
+    <string name="start_session">Start</string>
+    <string name="pause_session">Pauza</string>
+    <string name="resume_session">Nastavi</string>
+    <string name="finish_session">Završi</string>
+    <string name="add_quote">Zabeleži citat</string>
+    <string name="quotes_captured">Zabeleženi citati</string>
+    <string name="quote_placeholder">Unesite ili nalepite citat…</string>
+    <string name="save_quote">Sačuvaj citat</string>
+
+    <string name="profile_title">Profil</string>
+    <string name="reading_statistics">Statistika čitanja</string>
+    <string name="stat_card_reading">Čitam</string>
+    <string name="stat_card_finished">Završeno</string>
+    <string name="stat_card_sessions">Sesije</string>
+    <string name="total_reading_time">Ukupno vrijeme čitanja</string>
+</resources>

@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Syverro</string>
+    <string name="save">Зберегти</string>
+    <string name="cancel">Скасувати</string>
+    <string name="delete">Видалити</string>
+    <string name="back">Назад</string>
+    <string name="close">Закрити</string>
+    <string name="loading">Завантаження…</string>
+    <string name="error">Помилка</string>
+    <string name="retry">Повторити</string>
+    <string name="home">Головна</string>
+    <string name="library">Бібліотека</string>
+    <string name="session">Читання</string>
+    <string name="profile">Профіль</string>
+    <string name="settings">Налаштування</string>
+
+    <string name="home_title">Головна</string>
+    <string name="continue_reading">Продовжити читання</string>
+    <string name="continue_reading_label">Продовжити читання</string>
+    <string name="no_active_book">Немає активної книги</string>
+    <string name="home_empty_description">Додайте книгу до бібліотеки&#10;та почніть читати.</string>
+    <string name="go_to_library">Перейти до бібліотеки</string>
+    <string name="recent_activity">Нещодавня активність</string>
+    <string name="last_session">Остання сесія: %1$s</string>
+    <string name="duration_format">%1$dхв %2$dс</string>
+
+    <plurals name="books_in_progress">
+        <item quantity="one">%d книга в процесі</item>
+        <item quantity="few">%d книги в процесі</item>
+        <item quantity="many">%d книг в процесі</item>
+        <item quantity="other">%d книг в процесі</item>
+    </plurals>
+
+    <plurals name="books_in_library">
+        <item quantity="one">%d книга в бібліотеці</item>
+        <item quantity="few">%d книги в бібліотеці</item>
+        <item quantity="many">%d книг в бібліотеці</item>
+        <item quantity="other">%d книг в бібліотеці</item>
+    </plurals>
+
+    <string name="library_title">Бібліотека</string>
+    <string name="filter_all">Усі</string>
+    <string name="filter_reading">Читаю</string>
+    <string name="filter_finished">Прочитано</string>
+    <string name="filter_planned">У планах</string>
+    <string name="empty_library">Немає книг</string>
+    <string name="empty_library_filter">Спробуйте інший фільтр.</string>
+
+    <string name="session_title">Читання</string>
+    <string name="session_empty_title">Немає книг у процесі</string>
+    <string name="session_empty_description">Позначте книгу як «читаю» в бібліотеці,&#10;щоб почати відстеження сесій.</string>
+    <string name="session_status_reading">Читаю…</string>
+    <string name="session_status_paused">Пауза</string>
+    <string name="start_session">Старт</string>
+    <string name="pause_session">Пауза</string>
+    <string name="resume_session">Продовжити</string>
+    <string name="finish_session">Завершити</string>
+    <string name="add_quote">Записати цитату</string>
+    <string name="quotes_captured">Записані цитати</string>
+    <string name="quote_placeholder">Введіть або вставте цитату…</string>
+    <string name="save_quote">Зберегти цитату</string>
+
+    <string name="profile_title">Профіль</string>
+    <string name="reading_statistics">Статистика читання</string>
+    <string name="stat_card_reading">Читаю</string>
+    <string name="stat_card_finished">Прочитано</string>
+    <string name="stat_card_sessions">Сесії</string>
+    <string name="total_reading_time">Загальний час читання</string>
+</resources>

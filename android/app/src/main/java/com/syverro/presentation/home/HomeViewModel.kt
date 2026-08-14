@@ -29,13 +29,6 @@ class HomeViewModel @Inject constructor(
         refresh()
     }
 
-    fun onEvent(event: HomeEvent) {
-        when (event) {
-            HomeEvent.ContinueReading -> { }
-            HomeEvent.ViewLibrary -> { }
-        }
-    }
-
     fun refresh() {
         viewModelScope.launch {
             val activeSession = sessionRepository.getActive()

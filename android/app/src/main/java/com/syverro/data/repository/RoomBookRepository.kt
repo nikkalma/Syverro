@@ -2,7 +2,6 @@ package com.syverro.data.repository
 
 import com.syverro.data.local.dao.BookDao
 import com.syverro.data.local.mapper.BookMapper
-import com.syverro.data.local.seed.SeedBooks
 import com.syverro.domain.model.Book
 import com.syverro.domain.model.ReadingStatus
 import com.syverro.domain.repository.BookRepository
@@ -74,20 +73,6 @@ class RoomBookRepository @Inject constructor(
         )
     }
 
-    override fun updateRating(id: String, rating: Float) {
-        val book = bookDao.getBook(id) ?: return
-        bookDao.insertUserBook(
-            com.syverro.data.local.entity.UserBookEntity(
-                bookId = id,
-                readingStatus = book.readingStatus ?: "PLANNED",
-                progress = book.progress ?: 0f,
-                rating = rating,
-                favorite = book.favorite ?: false,
-                updatedAt = System.currentTimeMillis(),
-            )
-        )
-    }
-
     override fun toggleFavorite(id: String) {
         val current = bookDao.isFavorite(id)
         val book = bookDao.getBook(id) ?: return
@@ -109,11 +94,4 @@ class RoomBookRepository @Inject constructor(
     }
 
     override fun count(): Int = bookDao.count()
-
-    fun seedIfEmpty() {
-        if (bookDao.count() == 0) {
-            bookDao.insertBooks(SeedBooks.books())
-            SeedBooks.userBooks().forEach { bookDao.insertUserBook(it) }
-        }
-    }
 }

@@ -18,7 +18,6 @@ object BookMapper {
         pageCount = dto.pageCount,
         readingStatus = dto.readingStatus?.let { ReadingStatus.fromString(it) } ?: ReadingStatus.PLANNED,
         progress = dto.progress ?: 0f,
-        rating = dto.rating ?: 0f,
         favorite = dto.favorite ?: false,
     )
 
@@ -36,7 +35,6 @@ object BookMapper {
         bookId = book.id,
         readingStatus = book.readingStatus.name,
         progress = book.progress,
-        rating = book.rating,
         favorite = book.favorite,
         createdAt = System.currentTimeMillis(),
         updatedAt = System.currentTimeMillis(),

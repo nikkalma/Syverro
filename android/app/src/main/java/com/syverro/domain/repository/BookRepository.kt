@@ -13,7 +13,6 @@ interface BookRepository {
     fun update(book: Book)
     fun updateStatus(id: String, status: ReadingStatus)
     fun updateProgress(id: String, progress: Float)
-    fun updateRating(id: String, rating: Float)
     fun toggleFavorite(id: String)
     fun delete(id: String)
     fun count(): Int

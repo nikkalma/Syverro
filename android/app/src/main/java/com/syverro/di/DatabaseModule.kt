@@ -6,6 +6,7 @@ import com.syverro.data.local.dao.BookDao
 import com.syverro.data.local.dao.ProfileDao
 import com.syverro.data.local.dao.QuoteDao
 import com.syverro.data.local.dao.SessionDao
+import com.syverro.BuildConfig
 import com.syverro.data.local.database.SyverroDatabase
 import com.syverro.data.local.seed.SeedBooks
 import dagger.Module
@@ -57,6 +58,7 @@ object DatabaseModule {
 
     private object SeedCallback : androidx.room.RoomDatabase.Callback() {
         override fun onCreate(db: androidx.sqlite.db.SupportSQLiteDatabase) {
+            if (!BuildConfig.DEBUG) return
             db.beginTransaction()
             try {
                 val cursor = db.query("SELECT COUNT(*) FROM books")

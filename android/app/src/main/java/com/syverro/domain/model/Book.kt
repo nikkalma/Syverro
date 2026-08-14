@@ -10,7 +10,6 @@ data class Book(
     val pageCount: Int = 0,
     val readingStatus: ReadingStatus = ReadingStatus.PLANNED,
     val progress: Float = 0f,
-    val rating: Float = 0f,
     val favorite: Boolean = false,
 )
 

@@ -1,7 +1,7 @@
 import { Link, useNavigate } from 'react-router-dom';
 import { useMemo, useRef, useState } from 'react';
 import {
-  Search, Sun, Moon, CornerDownLeft, Home, Users, BookOpen, PenLine, Tags, Landmark, Folder, ShieldAlert, FileText, ScrollText, Settings,
+  Search, Sun, Moon, CornerDownLeft, Home, Users, BookOpen, PenLine, Tags, Landmark, Folder, ShieldAlert, FileText, ScrollText, Settings, ExternalLink,
 } from 'lucide-react';
 import { getLocaleData, getBrowserLocale } from '../../../locales';
 import type { LocaleData } from '../../../locales';
@@ -138,6 +138,27 @@ export default function StudioHeader({ moduleName, theme, onToggleTheme }: Studi
         gap: '12px',
         flexShrink: 0,
       }}>
+        <Link
+          to="/"
+          aria-label="Перейти из студии на сайт"
+          style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: '6px',
+            padding: '6px 10px',
+            background: 'var(--bg)',
+            border: '1px solid var(--border-soft)',
+            borderRadius: '8px',
+            color: 'var(--text-secondary)',
+            textDecoration: 'none',
+            fontSize: '13px',
+            whiteSpace: 'nowrap',
+          }}
+        >
+          <ExternalLink size={14} />
+          На сайт
+        </Link>
+
         <div style={{
           position: 'relative',
           display: 'flex',

@@ -12,8 +12,9 @@ and image SHA.
 - Never run migrations 0013–0016: their columns already exist.
 - Stop on every unexpected revision, schema definition, count, or health result.
 - Do not automatically downgrade after partial failure.
-- `backend/app/main.py` still performs runtime `ALTER TABLE`. It caused this
-  drift and must be removed only in a later migration-ownership phase.
+- Current backend images require an explicit migration step before application
+  startup. The former runtime `ALTER TABLE` path caused this drift and has been
+  removed; never substitute application startup for the commands below.
 
 ## Exact procedure
 
@@ -77,13 +78,21 @@ Run from `/opt/syverro`. Do not echo `.env`, `DATABASE_URL`, or credentials.
 
    Require `0016_knowledge_node_lifecycle` before continuing.
 
-7. Apply only migration 0017, still without replacing the running backend:
+7. Apply migration 0017, then upgrade the pinned image to its exact head, still
+   without replacing the running backend:
 
    ```sh
    docker compose -f docker-compose.prod.yml run --rm --no-deps backend \
      alembic upgrade 0017_book_slugs
    docker compose -f docker-compose.prod.yml run --rm --no-deps backend alembic current
+   docker compose -f docker-compose.prod.yml run --rm --no-deps backend \
+     python -m app.migrations upgrade
+   docker compose -f docker-compose.prod.yml run --rm --no-deps backend \
+     python -m app.migrations check
    ```
+
+   Require `0018_email_verification` for commit `1a0b236`. For later pinned
+   images, require the head reported by that image's migration check.
 
 8. Verify invariants and compare `book_count` with step 3:
 

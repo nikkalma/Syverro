@@ -33,6 +33,15 @@ echo "  backend: ${BACKEND_IMAGE}"
 echo "  web:     ${WEB_IMAGE}"
 docker compose -f "$COMPOSE_FILE" pull
 
+echo "Ensuring PostgreSQL is ready..."
+docker compose -f "$COMPOSE_FILE" up -d --wait postgres
+
+echo "Applying database migrations from the pinned backend image..."
+docker compose -f "$COMPOSE_FILE" run --rm --no-deps backend \
+  python -m app.migrations upgrade
+docker compose -f "$COMPOSE_FILE" run --rm --no-deps backend \
+  python -m app.migrations check
+
 echo "Starting stack..."
 docker compose -f "$COMPOSE_FILE" up -d --remove-orphans
 

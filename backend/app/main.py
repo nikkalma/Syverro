@@ -4,6 +4,7 @@ from app.api import auth, books, sync, admin, taxonomy, admin_taxonomy, admin_bo
 from app.database import engine, Base, AsyncSessionLocal
 from app.seeds.knowledge_graph_seed import seed_knowledge_graph
 from app.services.book_slug import generate_unique_book_slug
+from app.migrations import assert_database_at_head
 from app.models import user, book, author, genre, knowledge_node, knowledge_relation, book_knowledge_relation, user_book_experience
 from app.models.book_genre import book_genres  # noqa: F401 — ensures table is registered
 from app.models.book_author import book_authors  # noqa: F401 — ensures table is registered
@@ -53,126 +54,6 @@ app.include_router(admin_author_knowledge.router)
 app.include_router(graph.router)
 app.include_router(graph_queries.router)
 app.include_router(user_book_experience_api.router)
-
-async def ensure_user_profile_columns(conn):
-    """Add columns that create_all won't add to existing tables."""
-    from sqlalchemy import text
-
-    statements = [
-        "ALTER TABLE users ADD COLUMN IF NOT EXISTS first_name VARCHAR",
-        "ALTER TABLE users ADD COLUMN IF NOT EXISTS last_name VARCHAR",
-        "ALTER TABLE users ADD COLUMN IF NOT EXISTS username VARCHAR",
-        "ALTER TABLE users ADD COLUMN IF NOT EXISTS telegram_id VARCHAR",
-        "ALTER TABLE users ADD COLUMN IF NOT EXISTS photo_url VARCHAR",
-        "ALTER TABLE books ADD COLUMN IF NOT EXISTS description TEXT",
-        "ALTER TABLE books ADD COLUMN IF NOT EXISTS publication_type VARCHAR NOT NULL DEFAULT 'official'",
-        "ALTER TABLE books ADD COLUMN IF NOT EXISTS metadata_status VARCHAR NOT NULL DEFAULT 'draft'",
-        "ALTER TABLE books ADD COLUMN IF NOT EXISTS moderation_status VARCHAR NOT NULL DEFAULT 'pending'",
-        "ALTER TABLE books ADD COLUMN IF NOT EXISTS moderation_reason TEXT",
-        "ALTER TABLE books ADD COLUMN IF NOT EXISTS moderated_by UUID REFERENCES users(id)",
-        "ALTER TABLE books ADD COLUMN IF NOT EXISTS moderated_at TIMESTAMP",
-        "ALTER TABLE books ADD COLUMN IF NOT EXISTS subtitle VARCHAR",
-        "ALTER TABLE books ADD COLUMN IF NOT EXISTS original_title VARCHAR",
-        "ALTER TABLE books ADD COLUMN IF NOT EXISTS original_language VARCHAR",
-        "ALTER TABLE books ADD COLUMN IF NOT EXISTS country_of_origin VARCHAR",
-        "ALTER TABLE books ADD COLUMN IF NOT EXISTS original_publication_year INTEGER",
-        "ALTER TABLE books ADD COLUMN IF NOT EXISTS series_name VARCHAR",
-        "ALTER TABLE books ADD COLUMN IF NOT EXISTS series_position INTEGER",
-        "ALTER TABLE books ADD COLUMN IF NOT EXISTS publication_id UUID REFERENCES author_publications(id) ON DELETE SET NULL",
-        "CREATE INDEX IF NOT EXISTS ix_books_publication_id ON books (publication_id)",
-        "ALTER TABLE books ADD COLUMN IF NOT EXISTS themes JSONB DEFAULT '[]'::jsonb",
-        "ALTER TABLE books ADD COLUMN IF NOT EXISTS motifs JSONB DEFAULT '[]'::jsonb",
-        "ALTER TABLE genres ADD COLUMN IF NOT EXISTS parent_id UUID REFERENCES genres(id)",
-        "ALTER TABLE genres ADD COLUMN IF NOT EXISTS type VARCHAR NOT NULL DEFAULT 'literary'",
-        "ALTER TABLE authors ADD COLUMN IF NOT EXISTS creation_type VARCHAR NOT NULL DEFAULT 'individual_author'",
-        "ALTER TABLE authors ADD COLUMN IF NOT EXISTS first_name VARCHAR",
-        "ALTER TABLE authors ADD COLUMN IF NOT EXISTS middle_name VARCHAR",
-        "ALTER TABLE authors ADD COLUMN IF NOT EXISTS last_name VARCHAR",
-        "ALTER TABLE authors ADD COLUMN IF NOT EXISTS native_name VARCHAR",
-        "ALTER TABLE authors ADD COLUMN IF NOT EXISTS sort_name VARCHAR",
-        "ALTER TABLE authors ADD COLUMN IF NOT EXISTS slug VARCHAR UNIQUE",
-        "ALTER TABLE authors ADD COLUMN IF NOT EXISTS display_name VARCHAR",
-        "ALTER TABLE authors ADD COLUMN IF NOT EXISTS display_name_mode VARCHAR",
-        "ALTER TABLE authors ADD COLUMN IF NOT EXISTS pen_names VARCHAR[] DEFAULT '{}'",
-        "ALTER TABLE authors ADD COLUMN IF NOT EXISTS birth_name VARCHAR",
-        "ALTER TABLE authors ADD COLUMN IF NOT EXISTS search_aliases TEXT",
-        "ALTER TABLE authors ADD COLUMN IF NOT EXISTS pseudonyms VARCHAR[] DEFAULT '{}'",
-        "ALTER TABLE authors ADD COLUMN IF NOT EXISTS nationality VARCHAR",
-        "ALTER TABLE authors ADD COLUMN IF NOT EXISTS languages VARCHAR[] DEFAULT '{}'",
-        "ALTER TABLE authors ADD COLUMN IF NOT EXISTS gender VARCHAR DEFAULT 'unknown'",
-        "ALTER TABLE authors ADD COLUMN IF NOT EXISTS official_website VARCHAR",
-        "ALTER TABLE authors ADD COLUMN IF NOT EXISTS wikipedia_url VARCHAR",
-        "ALTER TABLE authors ADD COLUMN IF NOT EXISTS birth_date VARCHAR",
-        "ALTER TABLE authors ADD COLUMN IF NOT EXISTS death_date VARCHAR",
-        "ALTER TABLE authors ADD COLUMN IF NOT EXISTS birth_place VARCHAR",
-        "ALTER TABLE authors ADD COLUMN IF NOT EXISTS death_place VARCHAR",
-        "ALTER TABLE authors ADD COLUMN IF NOT EXISTS occupations VARCHAR[] DEFAULT '{}'",
-        "ALTER TABLE authors ADD COLUMN IF NOT EXISTS literary_movements VARCHAR[] DEFAULT '{}'",
-        "ALTER TABLE authors ADD COLUMN IF NOT EXISTS active_from_year INTEGER",
-        "ALTER TABLE authors ADD COLUMN IF NOT EXISTS active_to_year INTEGER",
-        "ALTER TABLE authors ADD COLUMN IF NOT EXISTS notable_works VARCHAR[] DEFAULT '{}'",
-        "ALTER TABLE authors ADD COLUMN IF NOT EXISTS genres VARCHAR[] DEFAULT '{}'",
-        "ALTER TABLE authors ADD COLUMN IF NOT EXISTS writing_languages VARCHAR[] DEFAULT '{}'",
-        "ALTER TABLE authors ADD COLUMN IF NOT EXISTS gallery VARCHAR[] DEFAULT '{}'",
-        "ALTER TABLE authors ADD COLUMN IF NOT EXISTS signature_image VARCHAR",
-        "ALTER TABLE authors ADD COLUMN IF NOT EXISTS portrait_caption VARCHAR",
-        "ALTER TABLE authors ADD COLUMN IF NOT EXISTS hero_background_url VARCHAR",
-        "ALTER TABLE authors ADD COLUMN IF NOT EXISTS author_intro_quote VARCHAR",
-        "ALTER TABLE authors ADD COLUMN IF NOT EXISTS birth_date_precision VARCHAR DEFAULT 'full'",
-        "ALTER TABLE authors ADD COLUMN IF NOT EXISTS death_date_precision VARCHAR DEFAULT 'full'",
-        "ALTER TABLE authors ADD COLUMN IF NOT EXISTS birth_place_id UUID REFERENCES places(id) ON DELETE SET NULL",
-        "ALTER TABLE authors ADD COLUMN IF NOT EXISTS death_place_id UUID REFERENCES places(id) ON DELETE SET NULL",
-        "ALTER TABLE authors ADD COLUMN IF NOT EXISTS metadata_status VARCHAR NOT NULL DEFAULT 'draft'",
-        "ALTER TABLE authors ADD COLUMN IF NOT EXISTS hero_quote VARCHAR",
-        "ALTER TABLE authors ADD COLUMN IF NOT EXISTS about_summary VARCHAR",
-        "ALTER TABLE authors ADD COLUMN IF NOT EXISTS ethnic_origin VARCHAR",
-        "ALTER TABLE authors ADD COLUMN IF NOT EXISTS cultural_identity VARCHAR",
-        "ALTER TABLE authors ADD COLUMN IF NOT EXISTS themes VARCHAR[] DEFAULT '{}'",
-        "ALTER TABLE authors ADD COLUMN IF NOT EXISTS motifs VARCHAR[] DEFAULT '{}'",
-        "ALTER TABLE authors ADD COLUMN IF NOT EXISTS concepts VARCHAR[] DEFAULT '{}'",
-        "ALTER TABLE authors ADD COLUMN IF NOT EXISTS atmospheres VARCHAR[] DEFAULT '{}'",
-        "ALTER TABLE knowledge_nodes ADD COLUMN IF NOT EXISTS author_id UUID REFERENCES authors(id) ON DELETE SET NULL",
-        "CREATE INDEX IF NOT EXISTS ix_knowledge_nodes_author_id ON knowledge_nodes (author_id)",
-        "ALTER TABLE knowledge_nodes ADD COLUMN IF NOT EXISTS place_id UUID REFERENCES places(id) ON DELETE SET NULL",
-        "CREATE INDEX IF NOT EXISTS ix_knowledge_nodes_place_id ON knowledge_nodes (place_id)",
-        "ALTER TABLE timeline_events ADD COLUMN IF NOT EXISTS extraction_source VARCHAR NOT NULL DEFAULT 'manual'",
-        "ALTER TABLE knowledge_nodes ADD COLUMN IF NOT EXISTS description TEXT",
-        "ALTER TABLE knowledge_nodes ADD COLUMN IF NOT EXISTS status VARCHAR NOT NULL DEFAULT 'draft'",
-        "ALTER TABLE knowledge_nodes ADD COLUMN IF NOT EXISTS is_sapphire BOOLEAN NOT NULL DEFAULT false",
-        "ALTER TABLE knowledge_nodes ADD COLUMN IF NOT EXISTS explorer_visible BOOLEAN NOT NULL DEFAULT false",
-        "ALTER TABLE sources ADD COLUMN IF NOT EXISTS language VARCHAR",
-        "ALTER TABLE sources ADD COLUMN IF NOT EXISTS reliability_score VARCHAR NOT NULL DEFAULT '3'",
-        "ALTER TABLE sources ADD COLUMN IF NOT EXISTS source_origin VARCHAR NOT NULL DEFAULT 'manual'",
-    ]
-    for sql in statements:
-        await conn.execute(text(sql))
-
-
-async def run_alembic_migrations(conn):
-    """Run pending Alembic migrations using the existing async connection.
-
-    Avoids asyncio.run() deadlock that occurs when alembic.command.upgrade()
-    is called from within an async startup event.
-
-    Columns are created by runtime ALTER TABLE (ensure_user_profile_columns)
-    which runs first. This just tracks the migration as applied.
-    """
-    from sqlalchemy import text as _text
-    result = await conn.execute(_text("SELECT version_num FROM alembic_version"))
-    row = result.fetchone()
-    current = row[0] if row else None
-
-    if current == "0007_author_date_precision_fk":
-        return
-
-    if current == "0006_author_identity_fields":
-        await conn.execute(
-            _text("UPDATE alembic_version SET version_num = '0007_author_date_precision_fk'")
-        )
-        logger.info("✅ Alembic version bumped to 0007 (columns added by runtime ALTER TABLE)")
-    else:
-        logger.warning(f"Unknown alembic version: {current}")
-
 
 GENRE_SEED_DATA = [
     # (name, slug, type, parent_slug_or_None)
@@ -483,12 +364,8 @@ async def seed_books(conn):
 
 @app.on_event("startup")
 async def startup():
+    await assert_database_at_head()
     async with engine.begin() as conn:
-        await conn.run_sync(Base.metadata.create_all)
-        # Runtime ALTER TABLE (handles new columns on existing tables)
-        await ensure_user_profile_columns(conn)
-        # Alembic version tracking (runs after runtime ALTER TABLE made changes)
-        await run_alembic_migrations(conn)
         await seed_genres(conn)
         await migrate_json_genres_to_relations(conn)
         logger.info("🌱 Seeding books...")

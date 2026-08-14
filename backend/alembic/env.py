@@ -37,6 +37,7 @@ from app.models import (  # noqa: F401
     book_authors,  # noqa: F401
     book_genres,  # noqa: F401
     AuthorAward,  # noqa: F401
+    RefreshSession,  # noqa: F401
 )
 
 target_metadata = Base.metadata

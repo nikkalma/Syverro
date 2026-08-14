@@ -62,10 +62,10 @@ async def migration_engine():
         await engine.dispose()
 
 
-def test_expected_head_is_email_verification_revision():
+def test_expected_head_is_refresh_sessions_revision():
     from app.migrations import expected_head
 
-    assert expected_head() == "0018_email_verification"
+    assert expected_head() == "0019_refresh_sessions"
 
 
 @pytest.mark.asyncio
@@ -82,13 +82,17 @@ async def test_empty_database_bootstraps_to_head(migration_engine):
                 column["name"] for column in inspect(sync_conn).get_columns("users")
             }
         )
+        table_names = await conn.run_sync(
+            lambda sync_conn: set(inspect(sync_conn).get_table_names())
+        )
 
-    assert revision == "0018_email_verification"
+    assert revision == "0019_refresh_sessions"
     assert {
         "email_verified",
         "email_verification_token_hash",
         "email_verification_expires_at",
     } <= columns
+    assert "refresh_sessions" in table_names
     assert _run_migration_command("check").returncode == 0
 
 
@@ -98,6 +102,7 @@ async def test_revision_0017_is_upgraded_before_backend_start(migration_engine):
     assert initial.returncode == 0, initial.stdout + initial.stderr
 
     async with migration_engine.begin() as conn:
+        await conn.execute(text("DROP TABLE refresh_sessions"))
         await conn.execute(
             text(
                 "ALTER TABLE users "
@@ -123,7 +128,7 @@ async def test_revision_0017_is_upgraded_before_backend_start(migration_engine):
             }
         )
 
-    assert revision == "0018_email_verification"
+    assert revision == "0019_refresh_sessions"
     assert "email_verified" in columns
 
 

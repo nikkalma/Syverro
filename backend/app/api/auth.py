@@ -1,8 +1,10 @@
 import logging
+import hashlib
 from datetime import datetime
+from uuid import UUID
 
 from fastapi import APIRouter, Cookie, Depends, HTTPException, Response
-from sqlalchemy import select
+from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.config import settings
@@ -19,6 +21,7 @@ from app.core.security import (
     verify_telegram_auth,
 )
 from app.models.user import User
+from app.models.refresh_session import RefreshSession
 from app.schemas.user import (
     EmailVerificationRequest,
     EmailVerificationResponse,
@@ -58,18 +61,62 @@ def _set_auth_cookies(response: Response, tokens: TokenResponse) -> None:
         REFRESH_COOKIE_NAME,
         tokens.refresh_token,
         max_age=REFRESH_TOKEN_EXPIRE_DAYS * 24 * 60 * 60,
-        path="/auth/refresh",
+        path="/auth",
         **cookie_options,
     )
 
 
-def _issue_tokens(response: Response, user_id) -> TokenResponse:
+def _hash_refresh_token(token: str) -> str:
+    return hashlib.sha256(token.encode("utf-8")).hexdigest()
+
+
+async def _issue_tokens(
+    response: Response, db: AsyncSession, user_id: UUID
+) -> TokenResponse:
+    refresh_token = create_refresh_token({"sub": str(user_id)})
+    payload = decode_token(refresh_token)
+    if payload is None or "exp" not in payload:
+        raise RuntimeError("Failed to create refresh token")
     tokens = TokenResponse(
         access_token=create_access_token({"sub": str(user_id)}),
-        refresh_token=create_refresh_token({"sub": str(user_id)}),
+        refresh_token=refresh_token,
     )
+    db.add(
+        RefreshSession(
+            user_id=user_id,
+            token_hash=_hash_refresh_token(refresh_token),
+            expires_at=datetime.utcfromtimestamp(payload["exp"]),
+        )
+    )
+    await db.commit()
     _set_auth_cookies(response, tokens)
     return tokens
+
+
+async def _consume_refresh_session(db: AsyncSession, token: str) -> UUID | None:
+    payload = decode_token(token)
+    if payload is None or payload.get("type") != "refresh" or not payload.get("sub"):
+        return None
+    try:
+        token_user_id = UUID(payload["sub"])
+    except (TypeError, ValueError):
+        return None
+
+    now = datetime.utcnow()
+    result = await db.execute(
+        update(RefreshSession)
+        .where(
+            RefreshSession.token_hash == _hash_refresh_token(token),
+            RefreshSession.revoked_at.is_(None),
+            RefreshSession.expires_at > now,
+        )
+        .values(revoked_at=now)
+        .returning(RefreshSession.user_id)
+    )
+    stored_user_id = result.scalar_one_or_none()
+    if stored_user_id != token_user_id:
+        return None
+    return token_user_id
 
 
 @router.post("/register", response_model=RegistrationResponse, status_code=201)
@@ -155,10 +202,11 @@ async def login(
             raise HTTPException(status_code=401, detail="Invalid email or password")
         if not user.email_verified:
             raise HTTPException(status_code=403, detail="Email verification required")
-        return _issue_tokens(response, user.id)
+        return await _issue_tokens(response, db, user.id)
     except HTTPException:
         raise
     except Exception:
+        await db.rollback()
         logger.exception("Login failed unexpectedly")
         raise HTTPException(status_code=500, detail="Internal server error")
 
@@ -171,12 +219,13 @@ async def refresh_token(
     db: AsyncSession = Depends(get_db),
 ):
     supplied_token = request.refresh_token if request else None
-    payload = decode_token(supplied_token or refresh_cookie or "")
-    if payload is None or payload.get("type") != "refresh":
-        raise HTTPException(status_code=401, detail="Invalid or expired refresh token")
-    user_id = payload.get("sub")
+    refresh_value = supplied_token or refresh_cookie or ""
+    user_id = await _consume_refresh_session(db, refresh_value)
     if user_id is None:
-        raise HTTPException(status_code=401, detail="Invalid token payload")
+        raise HTTPException(status_code=401, detail="Invalid or expired refresh token")
+    # Commit the one-time consume before issuing a replacement. A crash may require
+    # re-login, but can never leave the already-used token replayable.
+    await db.commit()
     result = await db.execute(select(User).where(User.id == user_id))
     user = result.scalar_one_or_none()
     if not user:
@@ -185,13 +234,30 @@ async def refresh_token(
         raise HTTPException(status_code=403, detail="User account is disabled")
     if user.password_hash and not user.email_verified:
         raise HTTPException(status_code=403, detail="Email verification required")
-    return _issue_tokens(response, user.id)
+    return await _issue_tokens(response, db, user.id)
 
 
 @router.post("/logout", status_code=204)
-async def logout(response: Response):
+async def logout(
+    response: Response,
+    request: RefreshTokenRequest | None = None,
+    refresh_cookie: str | None = Cookie(default=None, alias=REFRESH_COOKIE_NAME),
+    db: AsyncSession = Depends(get_db),
+):
+    supplied_token = request.refresh_token if request else None
+    refresh_value = supplied_token or refresh_cookie
+    if refresh_value:
+        await db.execute(
+            update(RefreshSession)
+            .where(
+                RefreshSession.token_hash == _hash_refresh_token(refresh_value),
+                RefreshSession.revoked_at.is_(None),
+            )
+            .values(revoked_at=datetime.utcnow())
+        )
+        await db.commit()
     response.delete_cookie(ACCESS_COOKIE_NAME, path="/")
-    response.delete_cookie(REFRESH_COOKIE_NAME, path="/auth/refresh")
+    response.delete_cookie(REFRESH_COOKIE_NAME, path="/auth")
 
 
 @router.get("/me", response_model=UserResponse)
@@ -228,7 +294,7 @@ async def telegram_login(
             await db.commit()
             await db.refresh(user)
             logger.info("New Telegram user created: %s", user.id)
-        return _issue_tokens(response, user.id)
+        return await _issue_tokens(response, db, user.id)
     except HTTPException:
         raise
     except Exception:

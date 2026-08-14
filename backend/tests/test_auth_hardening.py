@@ -224,15 +224,18 @@ async def test_login_sets_http_only_secure_strict_cookies(monkeypatch):
     )
     monkeypatch.setattr(auth, "get_user_by_email", AsyncMock(return_value=user))
     response = Response()
+    db = FakeSession([])
 
     tokens = await auth.login(
         UserLogin(email="reader@example.com", password="strong-password"),
         response,
-        FakeSession([]),
+        db,
     )
 
     cookies = response.headers.getlist("set-cookie")
     assert tokens.access_token and tokens.refresh_token
+    assert db.added[0].token_hash != tokens.refresh_token
+    assert db.added[0].token_hash == auth._hash_refresh_token(tokens.refresh_token)
     assert any(
         cookie.startswith("syverro_access=")
         and "HttpOnly" in cookie
@@ -245,7 +248,7 @@ async def test_login_sets_http_only_secure_strict_cookies(monkeypatch):
         and "HttpOnly" in cookie
         and "Secure" in cookie
         and "SameSite=strict" in cookie
-        and "Path=/auth/refresh" in cookie
+        and "Path=/auth" in cookie
         for cookie in cookies
     )
 
@@ -279,7 +282,7 @@ async def test_refresh_cookie_rotates_tokens_without_request_body():
         response,
         None,
         refresh_cookie=create_refresh_token({"sub": str(user.id)}),
-        db=FakeSession([user]),
+        db=FakeSession([user.id, user]),
     )
 
     assert tokens.access_token and tokens.refresh_token
@@ -290,7 +293,7 @@ async def test_refresh_cookie_rotates_tokens_without_request_body():
 async def test_logout_expires_both_auth_cookies():
     response = Response()
 
-    await auth.logout(response)
+    await auth.logout(response, refresh_cookie=None, db=FakeSession([]))
 
     cookies = response.headers.getlist("set-cookie")
     assert any(
@@ -301,3 +304,12 @@ async def test_logout_expires_both_auth_cookies():
         cookie.startswith("syverro_refresh=") and "Max-Age=0" in cookie
         for cookie in cookies
     )
+
+
+@pytest.mark.asyncio
+async def test_consumed_refresh_token_cannot_be_replayed():
+    user_id = uuid4()
+    token = create_refresh_token({"sub": str(user_id)})
+
+    assert await auth._consume_refresh_session(FakeSession([user_id]), token) == user_id
+    assert await auth._consume_refresh_session(FakeSession([None]), token) is None

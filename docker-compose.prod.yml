@@ -44,6 +44,9 @@ services:
       ENVIRONMENT: production
       SECRET_KEY: ${SECRET_KEY:?set SECRET_KEY}
       TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN:-}
+      RESEND_API_KEY: ${RESEND_API_KEY:-}
+      EMAIL_FROM: ${EMAIL_FROM:-}
+      SITE_URL: ${SITE_URL:-https://syverro.com}
     ports:
       - "127.0.0.1:8000:8000"
     healthcheck:

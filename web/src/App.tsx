@@ -4,6 +4,7 @@ import Layout from './components/Layout';
 
 import Login from './pages/Login';
 import Register from './pages/Register';
+import VerifyEmail from './pages/VerifyEmail';
 import LibraryPage from './pages/LibraryPage';
 import Insights from './pages/Insights';
 import WorldMap from './pages/WorldMap';
@@ -72,6 +73,7 @@ export default function App() {
         <Route path="/" element={<Layout><LibraryPage /></Layout>} />
         <Route path="/login" element={<Layout><Login /></Layout>} />
         <Route path="/register" element={<Layout><Register /></Layout>} />
+        <Route path="/verify-email" element={<Layout><VerifyEmail /></Layout>} />
         <Route path="/insights" element={<Layout><Insights /></Layout>} />
         <Route path="/authors" element={<Layout><AuthorsPage /></Layout>} />
         <Route path="/genres-themes" element={<Layout><GenresThemesPage /></Layout>} />

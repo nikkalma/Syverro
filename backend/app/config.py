@@ -40,6 +40,9 @@ class Settings:
         self.EMAIL_VERIFICATION_EXPIRE_MINUTES = int(
             os.getenv("EMAIL_VERIFICATION_EXPIRE_MINUTES", "60")
         )
+        self.RESEND_API_KEY = os.getenv("RESEND_API_KEY", "")
+        self.EMAIL_FROM = os.getenv("EMAIL_FROM", "")
+        self.SITE_URL = os.getenv("SITE_URL", "https://syverro.com").rstrip("/")
         self.ALGORITHM = "HS256"
         self.ACCESS_TOKEN_EXPIRE_MINUTES = int(
             os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", "30")

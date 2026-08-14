@@ -31,6 +31,7 @@ class FakeSession:
         self.results = iter(results)
         self.added = []
         self.execute = AsyncMock(side_effect=lambda *_: ScalarResult(next(self.results)))
+        self.flush = AsyncMock()
         self.commit = AsyncMock()
         self.rollback = AsyncMock()
 

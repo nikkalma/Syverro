@@ -122,6 +122,12 @@ async def _consume_refresh_session(db: AsyncSession, token: str) -> UUID | None:
 @router.post("/register", response_model=RegistrationResponse, status_code=201)
 async def register(user_data: UserCreate, db: AsyncSession = Depends(get_db)):
     logger.info("Registration attempt")
+    if not verification_delivery.configured:
+        logger.error("Registration unavailable: email delivery is not configured")
+        raise HTTPException(
+            status_code=503,
+            detail="Registration is temporarily unavailable",
+        )
     try:
         result = await db.execute(select(User).where(User.email == user_data.email))
         if result.scalar_one_or_none():
@@ -136,10 +142,10 @@ async def register(user_data: UserCreate, db: AsyncSession = Depends(get_db)):
             email_verification_expires_at=expires_at,
         )
         db.add(user)
+        await db.flush()
+        await verification_delivery.send(user.email, token)
         await db.commit()
         await db.refresh(user)
-
-        await verification_delivery.send(user.email, token)
         logger.info("Unverified user created: %s", user.id)
         return RegistrationResponse(
             detail="Registration successful. Verify your email before signing in.",

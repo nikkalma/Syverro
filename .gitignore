@@ -118,6 +118,11 @@ Thumbs.db
 
 *.zip
 *.bak
+*.save
+*.tar.gz
+token.txt
+*_all.txt
+*-structure.txt
 
 # =========================
 # Documentation

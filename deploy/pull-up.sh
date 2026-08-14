@@ -13,6 +13,9 @@ if [[ ! -f .env ]]; then
 fi
 
 # shellcheck disable=SC1091
+REQUESTED_IMAGE_TAG="${IMAGE_TAG:-}"
+REQUESTED_BACKEND_IMAGE="${BACKEND_IMAGE:-}"
+REQUESTED_WEB_IMAGE="${WEB_IMAGE:-}"
 set -a
 source .env
 set +a
@@ -22,9 +25,9 @@ if [[ -n "${GHCR_TOKEN:-}" && -n "${GHCR_USER:-}" ]]; then
   echo "$GHCR_TOKEN" | docker login ghcr.io -u "$GHCR_USER" --password-stdin
 fi
 
-IMAGE_TAG="${IMAGE_TAG:-main}"
-BACKEND_IMAGE="${BACKEND_IMAGE:-ghcr.io/nikkalma/syverro-backend:${IMAGE_TAG}}"
-WEB_IMAGE="${WEB_IMAGE:-ghcr.io/nikkalma/syverro-web:${IMAGE_TAG}}"
+IMAGE_TAG="${REQUESTED_IMAGE_TAG:-${IMAGE_TAG:-main}}"
+BACKEND_IMAGE="${REQUESTED_BACKEND_IMAGE:-${BACKEND_IMAGE:-ghcr.io/nikkalma/syverro-backend:${IMAGE_TAG}}}"
+WEB_IMAGE="${REQUESTED_WEB_IMAGE:-${WEB_IMAGE:-ghcr.io/nikkalma/syverro-web:${IMAGE_TAG}}}"
 
 export IMAGE_TAG BACKEND_IMAGE WEB_IMAGE
 

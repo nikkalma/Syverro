@@ -1,6 +1,6 @@
 // src/store/authStore.ts
 import { create } from 'zustand';
-import { setAuthToken, removeAuthToken } from '../shared/api/client';
+import { clearLegacyAuthTokens, removeAuthToken } from '../shared/api/client';
 
 interface User {
   id: string;
@@ -11,7 +11,6 @@ interface User {
 
 interface AuthState {
   user: User | null;
-  token: string | null;
   isAuthenticated: boolean;
   isLoading: boolean;
   setAuth: (token: string, user: User, refreshToken?: string) => void;
@@ -23,22 +22,21 @@ interface AuthState {
 
 const API_URL = import.meta.env.VITE_API_URL || 'https://api.syverro.com';
 
+clearLegacyAuthTokens();
+
 export const useAuthStore = create<AuthState>((set) => ({
   user: JSON.parse(localStorage.getItem('user') || 'null'),
-  token: localStorage.getItem('token') || null,
-  isAuthenticated: !!localStorage.getItem('token'),
+  isAuthenticated: !!localStorage.getItem('user'),
   isLoading: false,
 
-  setAuth: (token: string, user: User, refreshToken?: string) => {
-    setAuthToken(token, refreshToken);
+  setAuth: (_token: string, user: User, _refreshToken?: string) => {
     localStorage.setItem('user', JSON.stringify(user));
-    set({ user, token, isAuthenticated: true });
+    set({ user, isAuthenticated: true });
   },
 
   checkAuth: () => {
-    const token = localStorage.getItem('token');
     const user = JSON.parse(localStorage.getItem('user') || 'null');
-    set({ token, user, isAuthenticated: !!token });
+    set({ user, isAuthenticated: !!user });
   },
 
   login: async (email: string, password: string) => {
@@ -47,6 +45,7 @@ export const useAuthStore = create<AuthState>((set) => ({
     try {
       const response = await fetch(`${API_URL}/auth/login`, {
         method: 'POST',
+        credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password }),
       });
@@ -56,18 +55,14 @@ export const useAuthStore = create<AuthState>((set) => ({
         throw new Error(error.detail || 'Ошибка входа');
       }
 
-      const data = await response.json();
-      const token = data.access_token;
-      const refreshToken = data.refresh_token;
       const userResponse = await fetch(`${API_URL}/auth/me`, {
-        headers: { Authorization: `Bearer ${token}` },
+        credentials: 'include',
       });
       if (!userResponse.ok) {
         throw new Error('Не удалось получить данные пользователя');
       }
       const user = await userResponse.json();
-      set({ user, token, isAuthenticated: true });
-      setAuthToken(token, refreshToken);
+      set({ user, isAuthenticated: true });
       localStorage.setItem('user', JSON.stringify(user));
       set({ isLoading: false });
     } catch (error) {
@@ -99,7 +94,11 @@ export const useAuthStore = create<AuthState>((set) => ({
   },
 
   logout: () => {
+    void fetch(`${API_URL}/auth/logout`, {
+      method: 'POST',
+      credentials: 'include',
+    });
     removeAuthToken();
-    set({ user: null, token: null, isAuthenticated: false });
+    set({ user: null, isAuthenticated: false });
   },
 }));

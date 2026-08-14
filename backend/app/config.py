@@ -44,6 +44,7 @@ class Settings:
         self.ACCESS_TOKEN_EXPIRE_MINUTES = int(
             os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", "30")
         )
+        self.AUTH_COOKIE_SECURE = self.ENVIRONMENT not in {"development", "test"}
 
         if self.DATABASE_URL:
             if self.DATABASE_URL.startswith("postgres://"):

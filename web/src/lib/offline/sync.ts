@@ -5,7 +5,7 @@ import { SyncResponse } from './types';
 
 const API_URL = import.meta.env.VITE_API_URL || 'https://api.syverro.com';
 
-export async function syncLocalEvents(token?: string | null): Promise<SyncResponse> {
+export async function syncLocalEvents(): Promise<SyncResponse> {
   const events = getUnsyncedEvents();
 
   if (events.length === 0) {
@@ -20,12 +20,9 @@ export async function syncLocalEvents(token?: string | null): Promise<SyncRespon
       'Content-Type': 'application/json',
     };
 
-    if (token) {
-      headers['Authorization'] = `Bearer ${token}`;
-    }
-
     const response = await fetch(`${API_URL}/events/sync`, {
       method: 'POST',
+      credentials: 'include',
       headers,
       body: JSON.stringify({ events }),
     });
@@ -78,7 +75,7 @@ export function scheduleSync(delayMs: number = 5000): void {
 }
 
 // Синхронизация при выходе из страницы (ПРИНИМАЕТ ТОКЕН)
-export function setupSyncOnUnload(token?: string | null): void {
+export function setupSyncOnUnload(): void {
   const handleUnload = () => {
     const events = getUnsyncedEvents();
     if (events.length > 0) {
@@ -88,13 +85,10 @@ export function setupSyncOnUnload(token?: string | null): void {
         'Content-Type': 'application/json',
       };
       
-      if (token) {
-        headers['Authorization'] = `Bearer ${token}`;
-      }
-
       // Используем fetch с keepalive для отправки перед закрытием
       fetch(`${apiUrl}/events/sync`, {
         method: 'POST',
+        credentials: 'include',
         headers,
         body: JSON.stringify({ events }),
         keepalive: true,

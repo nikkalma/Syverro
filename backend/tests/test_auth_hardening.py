@@ -6,7 +6,7 @@ from unittest.mock import AsyncMock
 from uuid import uuid4
 
 import pytest
-from fastapi import HTTPException
+from fastapi import HTTPException, Response
 from fastapi.security import HTTPAuthorizationCredentials
 from pydantic import ValidationError
 
@@ -135,7 +135,7 @@ async def test_arbitrary_telegram_id_cannot_reach_user_lookup(monkeypatch):
         id="victim-id", first_name="Mallory", auth_date=1, hash="0" * 64
     )
     with pytest.raises(HTTPException) as exc:
-        await auth.telegram_login(data, FakeSession([]))
+        await auth.telegram_login(data, Response(), FakeSession([]))
     assert exc.value.status_code == 401
     lookup.assert_not_awaited()
 
@@ -148,7 +148,7 @@ async def test_valid_signed_telegram_payload_succeeds(monkeypatch):
     existing = SimpleNamespace(id=uuid4())
     monkeypatch.setattr(auth, "get_user_by_telegram_id", AsyncMock(return_value=existing))
     response = await auth.telegram_login(
-        TelegramAuthData(**_signed_telegram_payload(now)), FakeSession([])
+        TelegramAuthData(**_signed_telegram_payload(now)), Response(), FakeSession([])
     )
     assert response.access_token
     assert response.refresh_token
@@ -185,7 +185,11 @@ async def test_internal_login_exception_is_not_disclosed(monkeypatch):
 
     monkeypatch.setattr(auth, "get_user_by_email", explode)
     with pytest.raises(HTTPException) as exc:
-        await auth.login(UserLogin(email="reader@example.com", password="x"), FakeSession([]))
+        await auth.login(
+            UserLogin(email="reader@example.com", password="x"),
+            Response(),
+            FakeSession([]),
+        )
     assert exc.value.status_code == 500
     assert exc.value.detail == "Internal server error"
     assert "super-secret" not in exc.value.detail
@@ -208,3 +212,92 @@ async def test_refresh_token_cannot_authenticate_as_bearer():
         await get_current_user(credentials, db)
     assert exc.value.status_code == 401
     db.execute.assert_not_awaited()
+
+
+@pytest.mark.asyncio
+async def test_login_sets_http_only_secure_strict_cookies(monkeypatch):
+    monkeypatch.setattr(settings, "AUTH_COOKIE_SECURE", True)
+    user = SimpleNamespace(
+        id=uuid4(),
+        password_hash=auth.get_password_hash("strong-password"),
+        email_verified=True,
+    )
+    monkeypatch.setattr(auth, "get_user_by_email", AsyncMock(return_value=user))
+    response = Response()
+
+    tokens = await auth.login(
+        UserLogin(email="reader@example.com", password="strong-password"),
+        response,
+        FakeSession([]),
+    )
+
+    cookies = response.headers.getlist("set-cookie")
+    assert tokens.access_token and tokens.refresh_token
+    assert any(
+        cookie.startswith("syverro_access=")
+        and "HttpOnly" in cookie
+        and "Secure" in cookie
+        and "SameSite=strict" in cookie
+        for cookie in cookies
+    )
+    assert any(
+        cookie.startswith("syverro_refresh=")
+        and "HttpOnly" in cookie
+        and "Secure" in cookie
+        and "SameSite=strict" in cookie
+        and "Path=/auth/refresh" in cookie
+        for cookie in cookies
+    )
+
+
+@pytest.mark.asyncio
+async def test_access_cookie_authenticates_without_javascript_bearer():
+    from app.core.security import create_access_token
+
+    user = SimpleNamespace(
+        id=uuid4(), is_active=True, password_hash=None, email_verified=False
+    )
+    db = FakeSession([user])
+
+    current = await get_current_user(
+        None,
+        db,
+        access_cookie=create_access_token({"sub": str(user.id)}),
+    )
+
+    assert current is user
+
+
+@pytest.mark.asyncio
+async def test_refresh_cookie_rotates_tokens_without_request_body():
+    user = SimpleNamespace(
+        id=uuid4(), is_active=True, password_hash=None, email_verified=False
+    )
+    response = Response()
+
+    tokens = await auth.refresh_token(
+        response,
+        None,
+        refresh_cookie=create_refresh_token({"sub": str(user.id)}),
+        db=FakeSession([user]),
+    )
+
+    assert tokens.access_token and tokens.refresh_token
+    assert len(response.headers.getlist("set-cookie")) == 2
+
+
+@pytest.mark.asyncio
+async def test_logout_expires_both_auth_cookies():
+    response = Response()
+
+    await auth.logout(response)
+
+    cookies = response.headers.getlist("set-cookie")
+    assert any(
+        cookie.startswith("syverro_access=") and "Max-Age=0" in cookie
+        for cookie in cookies
+    )
+    assert any(
+        cookie.startswith("syverro_refresh=") and "Max-Age=0" in cookie
+        for cookie in cookies
+    )

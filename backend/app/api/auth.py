@@ -1,13 +1,14 @@
 import logging
 from datetime import datetime
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Cookie, Depends, HTTPException, Response
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.config import settings
-from app.core.deps import get_current_user, get_db
+from app.core.deps import ACCESS_COOKIE_NAME, get_current_user, get_db
 from app.core.security import (
+    REFRESH_TOKEN_EXPIRE_DAYS,
     create_access_token,
     create_refresh_token,
     decode_token,
@@ -37,6 +38,38 @@ from app.services.email_verification import (
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/auth", tags=["auth"])
+REFRESH_COOKIE_NAME = "syverro_refresh"
+
+
+def _set_auth_cookies(response: Response, tokens: TokenResponse) -> None:
+    cookie_options = {
+        "httponly": True,
+        "secure": settings.AUTH_COOKIE_SECURE,
+        "samesite": "strict",
+    }
+    response.set_cookie(
+        ACCESS_COOKIE_NAME,
+        tokens.access_token,
+        max_age=settings.ACCESS_TOKEN_EXPIRE_MINUTES * 60,
+        path="/",
+        **cookie_options,
+    )
+    response.set_cookie(
+        REFRESH_COOKIE_NAME,
+        tokens.refresh_token,
+        max_age=REFRESH_TOKEN_EXPIRE_DAYS * 24 * 60 * 60,
+        path="/auth/refresh",
+        **cookie_options,
+    )
+
+
+def _issue_tokens(response: Response, user_id) -> TokenResponse:
+    tokens = TokenResponse(
+        access_token=create_access_token({"sub": str(user_id)}),
+        refresh_token=create_refresh_token({"sub": str(user_id)}),
+    )
+    _set_auth_cookies(response, tokens)
+    return tokens
 
 
 @router.post("/register", response_model=RegistrationResponse, status_code=201)
@@ -110,7 +143,9 @@ async def verify_email(
 
 
 @router.post("/login", response_model=TokenResponse)
-async def login(user_data: UserLogin, db: AsyncSession = Depends(get_db)):
+async def login(
+    user_data: UserLogin, response: Response, db: AsyncSession = Depends(get_db)
+):
     logger.info("Login attempt")
     try:
         user = await get_user_by_email(db, user_data.email)
@@ -120,10 +155,7 @@ async def login(user_data: UserLogin, db: AsyncSession = Depends(get_db)):
             raise HTTPException(status_code=401, detail="Invalid email or password")
         if not user.email_verified:
             raise HTTPException(status_code=403, detail="Email verification required")
-        return TokenResponse(
-            access_token=create_access_token({"sub": str(user.id)}),
-            refresh_token=create_refresh_token({"sub": str(user.id)}),
-        )
+        return _issue_tokens(response, user.id)
     except HTTPException:
         raise
     except Exception:
@@ -132,8 +164,14 @@ async def login(user_data: UserLogin, db: AsyncSession = Depends(get_db)):
 
 
 @router.post("/refresh", response_model=TokenResponse)
-async def refresh_token(request: RefreshTokenRequest, db: AsyncSession = Depends(get_db)):
-    payload = decode_token(request.refresh_token)
+async def refresh_token(
+    response: Response,
+    request: RefreshTokenRequest | None = None,
+    refresh_cookie: str | None = Cookie(default=None, alias=REFRESH_COOKIE_NAME),
+    db: AsyncSession = Depends(get_db),
+):
+    supplied_token = request.refresh_token if request else None
+    payload = decode_token(supplied_token or refresh_cookie or "")
     if payload is None or payload.get("type") != "refresh":
         raise HTTPException(status_code=401, detail="Invalid or expired refresh token")
     user_id = payload.get("sub")
@@ -147,10 +185,13 @@ async def refresh_token(request: RefreshTokenRequest, db: AsyncSession = Depends
         raise HTTPException(status_code=403, detail="User account is disabled")
     if user.password_hash and not user.email_verified:
         raise HTTPException(status_code=403, detail="Email verification required")
-    return TokenResponse(
-        access_token=create_access_token({"sub": str(user.id)}),
-        refresh_token=create_refresh_token({"sub": str(user.id)}),
-    )
+    return _issue_tokens(response, user.id)
+
+
+@router.post("/logout", status_code=204)
+async def logout(response: Response):
+    response.delete_cookie(ACCESS_COOKIE_NAME, path="/")
+    response.delete_cookie(REFRESH_COOKIE_NAME, path="/auth/refresh")
 
 
 @router.get("/me", response_model=UserResponse)
@@ -160,7 +201,9 @@ async def get_current_user_info(current_user: User = Depends(get_current_user)):
 
 @router.post("/telegram", response_model=TokenResponse)
 async def telegram_login(
-    telegram_data: TelegramAuthData, db: AsyncSession = Depends(get_db)
+    telegram_data: TelegramAuthData,
+    response: Response,
+    db: AsyncSession = Depends(get_db),
 ):
     logger.info("Telegram login attempt")
     try:
@@ -185,10 +228,7 @@ async def telegram_login(
             await db.commit()
             await db.refresh(user)
             logger.info("New Telegram user created: %s", user.id)
-        return TokenResponse(
-            access_token=create_access_token({"sub": str(user.id)}),
-            refresh_token=create_refresh_token({"sub": str(user.id)}),
-        )
+        return _issue_tokens(response, user.id)
     except HTTPException:
         raise
     except Exception:

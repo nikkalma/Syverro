@@ -17,7 +17,7 @@ from app.models.knowledge_node import KnowledgeNode
 from app.models.knowledge_relation import KnowledgeRelation
 from app.models.book_knowledge_relation import BookKnowledgeRelation
 from app.models.book_author import book_authors
-from app.models.book_genre import book_genres
+from app.core.public_visibility import public_author_clause, public_book_clause
 
 
 @dataclass
@@ -29,7 +29,9 @@ class NeighborSet:
 
 
 async def get_book(db: AsyncSession, book_id: UUID) -> Book | None:
-    result = await db.execute(select(Book).where(Book.id == book_id))
+    result = await db.execute(
+        select(Book).where(Book.id == book_id, public_book_clause())
+    )
     return result.scalar_one_or_none()
 
 
@@ -38,22 +40,16 @@ async def get_direct_neighbors(db: AsyncSession, book_id: UUID) -> NeighborSet:
     ns = NeighborSet()
 
     author_result = await db.execute(
-        select(Author).join(book_authors).where(book_authors.c.book_id == book_id)
+        select(Author)
+        .join(book_authors)
+        .where(book_authors.c.book_id == book_id, public_author_clause())
     )
     ns.authors = list(author_result.scalars().all())
 
-    genre_result = await db.execute(
-        select(Genre).join(book_genres).where(book_genres.c.book_id == book_id)
-    )
-    ns.genres = list(genre_result.scalars().all())
-
-    bkr_result = await db.execute(
-        select(BookKnowledgeRelation, KnowledgeNode)
-        .join(KnowledgeNode, KnowledgeNode.id == BookKnowledgeRelation.node_id)
-        .where(BookKnowledgeRelation.book_id == book_id)
-        .where(BookKnowledgeRelation.status == "approved")
-    )
-    ns.knowledge_relations = list(bkr_result.all())
+    # Genres and KnowledgeNodes do not have public entity pages yet. They remain
+    # structured book metadata, but are not navigable public graph vertices.
+    ns.genres = []
+    ns.knowledge_relations = []
 
     return ns
 

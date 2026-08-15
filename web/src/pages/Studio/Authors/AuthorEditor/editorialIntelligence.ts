@@ -5,6 +5,7 @@
 import type { AdminAuthor } from '../../../../types/admin';
 import type { EditorialReport, EditorialGroup } from '../../../../components/Studio/editorialIntelligence/types';
 import { deriveStatus, isEmpty } from '../../../../components/Studio/editorialIntelligence/editorialState';
+import { normalizePseudonyms } from './pseudonyms';
 
 export interface AuthorEditorialLabels {
   name: string;
@@ -26,7 +27,7 @@ export function buildAuthorReport(author: AdminAuthor, l: AuthorEditorialLabels)
       { key: 'name', label: l.name, status: deriveStatus({ present: !isEmpty(author.name) }), details: undefined },
       { key: 'native', label: l.nativeName, status: deriveStatus({ present: !isEmpty(author.native_name) }), details: undefined },
       { key: 'slug', label: l.slug, status: deriveStatus({ present: !isEmpty(author.slug) }), details: undefined },
-      { key: 'pen_names', label: l.penNames, status: deriveStatus({ present: !isEmpty(author.pen_names) }), details: undefined },
+      { key: 'pen_names', label: l.penNames, status: deriveStatus({ present: !isEmpty(normalizePseudonyms(author.pen_names, author.pseudonyms)) }), details: undefined },
     ],
   };
 

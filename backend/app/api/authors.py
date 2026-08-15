@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, func, or_, text as sa_text
+from sqlalchemy import select, func, or_
 from app.core.deps import get_db
 from app.models.book import Book
 from app.models.book_author import book_authors
@@ -22,6 +22,11 @@ from app.schemas.author import (
     GoldenAuthorResponse, TimelineEventPublic, QuotePublic,
     CitizenshipPublic, AwardPublic, SourcePublic,
     KnowledgeRelationPublic, GoldenAuthorMetadata, AuthorPublicationPublic,
+)
+from app.core.public_visibility import (
+    PUBLIC_CHILD_STATUS,
+    public_author_clause,
+    public_book_clause,
 )
 from uuid import UUID
 from typing import Optional, List
@@ -45,29 +50,26 @@ def _merge_lists(*lists: Optional[List[str]]) -> List[str]:
 
 @router.get("", response_model=list[AuthorListBrief])
 async def list_authors(db: AsyncSession = Depends(get_db)):
-    cols = ["id", "slug", "name", "display_name", "display_name_mode",
-            "first_name", "last_name", "native_name",
-            "bio", "photo", "country"]
     result = await db.execute(
-        sa_text("SELECT " + ", ".join(cols) + " FROM authors ORDER BY name"),
+        select(Author).where(public_author_clause()).order_by(Author.name)
     )
-    rows = result.mappings().all()
+    rows = result.scalars().all()
     out = []
-    for row in rows:
-        bio = row.get("bio") or ""
+    for author in rows:
+        bio = author.bio or ""
         excerpt = bio[:200] + "..." if len(bio) > 200 else bio if bio else None
         out.append(AuthorListBrief(
-            id=row["id"],
-            slug=row.get("slug"),
-            name=row.get("name", ""),
-            display_name=row.get("display_name"),
-            display_name_mode=row.get("display_name_mode"),
-            first_name=row.get("first_name"),
-            last_name=row.get("last_name"),
-            native_name=row.get("native_name"),
+            id=author.id,
+            slug=author.slug,
+            name=author.name or "",
+            display_name=author.display_name,
+            display_name_mode=author.display_name_mode,
+            first_name=author.first_name,
+            last_name=author.last_name,
+            native_name=author.native_name,
             biography_excerpt=excerpt,
-            photo_url=row.get("photo"),
-            nationality=row.get("country"),
+            photo_url=author.photo,
+            nationality=author.country,
         ))
     return out
 
@@ -79,7 +81,7 @@ async def get_author(
 ):
     # Try slug first, then UUID
     author = await db.scalar(
-        select(Author).where(Author.slug == slug_or_id)
+        select(Author).where(Author.slug == slug_or_id, public_author_clause())
     )
     if not author:
         try:
@@ -87,7 +89,7 @@ async def get_author(
         except ValueError:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Author not found")
         author = await db.scalar(
-            select(Author).where(Author.id == uuid_val)
+            select(Author).where(Author.id == uuid_val, public_author_clause())
         )
         if not author:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Author not found")
@@ -118,7 +120,7 @@ async def get_author(
         .select_from(book_authors)
         .join(Book, book_authors.c.book_id == Book.id)
         .where(book_authors.c.author_id == aid)
-        .where(Book.is_published == True)
+        .where(public_book_clause())
         .order_by(Book.title)
     )
     books = [AuthorBookBrief(id=r[0], slug=r[1], title=r[2], cover=r[3]) for r in book_rows]
@@ -171,7 +173,12 @@ async def get_author(
 
     # --- Timeline events (with place names) ---
     tl_rows = await db.execute(
-        select(TimelineEvent).where(TimelineEvent.author_id == aid).order_by(TimelineEvent.sort_order, TimelineEvent.date_value)
+        select(TimelineEvent)
+        .where(
+            TimelineEvent.author_id == aid,
+            TimelineEvent.status == PUBLIC_CHILD_STATUS,
+        )
+        .order_by(TimelineEvent.sort_order, TimelineEvent.date_value)
     )
     timeline_events_raw = tl_rows.scalars().all()
 
@@ -202,7 +209,12 @@ async def get_author(
 
     # --- Quotes (with source titles) ---
     q_rows = await db.execute(
-        select(AuthorQuote).where(AuthorQuote.author_id == aid).order_by(AuthorQuote.created_at)
+        select(AuthorQuote)
+        .where(
+            AuthorQuote.author_id == aid,
+            AuthorQuote.status == PUBLIC_CHILD_STATUS,
+        )
+        .order_by(AuthorQuote.created_at)
     )
     quotes_raw = q_rows.scalars().all()
     source_ids_q = {q.source_id for q in quotes_raw if q.source_id}
@@ -221,7 +233,12 @@ async def get_author(
 
     # --- Citizenships ---
     cit_rows = await db.execute(
-        select(AuthorCitizenship).where(AuthorCitizenship.author_id == aid).order_by(AuthorCitizenship.from_date)
+        select(AuthorCitizenship)
+        .where(
+            AuthorCitizenship.author_id == aid,
+            AuthorCitizenship.status == PUBLIC_CHILD_STATUS,
+        )
+        .order_by(AuthorCitizenship.from_date)
     )
     citizenships = [CitizenshipPublic(
         id=c.id, state_name=c.state_name, from_date=c.from_date,
@@ -251,13 +268,22 @@ async def get_author(
 
     # --- Knowledge relations (with node names + linked author slugs) ---
     kr_rows = await db.execute(
-        select(AuthorKnowledgeRelation).where(AuthorKnowledgeRelation.author_id == aid)
+        select(AuthorKnowledgeRelation).where(
+            AuthorKnowledgeRelation.author_id == aid,
+            AuthorKnowledgeRelation.status == PUBLIC_CHILD_STATUS,
+        )
     )
     krs = kr_rows.scalars().all()
     node_ids = {kr.node_id for kr in krs}
     node_map = {}
     if node_ids:
-        nodes_db = await db.execute(select(KnowledgeNode).where(KnowledgeNode.id.in_(list(node_ids))))
+        nodes_db = await db.execute(
+            select(KnowledgeNode).where(
+                KnowledgeNode.id.in_(list(node_ids)),
+                KnowledgeNode.status == "published",
+                KnowledgeNode.explorer_visible.is_(True),
+            )
+        )
         node_map = {n.id: n for n in nodes_db.scalars().all()}
 
     # --- Author-level taxonomy from relations + plain-text columns ---
@@ -274,7 +300,10 @@ async def get_author(
     linked_author_ids = {n.author_id for n in node_map.values() if n.author_id}
     if linked_author_ids:
         linked = await db.execute(
-            select(Author.id, Author.slug).where(Author.id.in_(list(linked_author_ids)))
+            select(Author.id, Author.slug).where(
+                Author.id.in_(list(linked_author_ids)),
+                public_author_clause(),
+            )
         )
         linked_slugs = {row_id: slug for row_id, slug in linked.all()}
         author_slug_by_node = {
@@ -296,7 +325,7 @@ async def get_author(
         relation_type=kr.relation_type, source=kr.source,
         status=kr.status, confidence=kr.confidence,
         author_slug=author_slug_by_node.get(kr.node_id),
-    ) for kr in krs]
+    ) for kr in krs if author_slug_by_node.get(kr.node_id)]
 
     return GoldenAuthorResponse(
         id=author.id,

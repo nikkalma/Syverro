@@ -16,7 +16,7 @@ class UserLogin(BaseModel):
 
 class UserResponse(BaseModel):
     id: UUID
-    email: Optional[EmailStr] = None
+    email: Optional[str] = None
     role: str
     created_at: datetime
     email_verified: bool
@@ -28,6 +28,10 @@ class TokenResponse(BaseModel):
     access_token: str
     refresh_token: str
     token_type: str = "bearer"
+
+
+class TelegramLoginResponse(TokenResponse):
+    user: UserResponse
 
 
 class RegistrationResponse(BaseModel):

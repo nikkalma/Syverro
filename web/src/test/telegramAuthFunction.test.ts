@@ -30,8 +30,8 @@ describe('Telegram auth function', () => {
       .mockResolvedValueOnce(new Response(JSON.stringify({
         access_token: 'access-secret',
         refresh_token: 'refresh-secret',
-      }), { status: 200 }))
-      .mockResolvedValueOnce(new Response(JSON.stringify(user), { status: 200 }));
+        user,
+      }), { status: 200 }));
     const response = new TestResponse();
 
     await handler({ method: 'POST', body: { id: 1 } }, response);

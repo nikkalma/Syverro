@@ -28,6 +28,7 @@ from app.schemas.user import (
     RegistrationResponse,
     RefreshTokenRequest,
     TelegramAuthData,
+    TelegramLoginResponse,
     TokenResponse,
     UserCreate,
     UserLogin,
@@ -277,7 +278,7 @@ async def get_current_user_info(current_user: User = Depends(get_current_user)):
     return UserResponse.model_validate(current_user)
 
 
-@router.post("/telegram", response_model=TokenResponse)
+@router.post("/telegram", response_model=TelegramLoginResponse)
 async def telegram_login(
     telegram_data: TelegramAuthData,
     response: Response,
@@ -307,7 +308,11 @@ async def telegram_login(
             await db.commit()
             await db.refresh(user)
             logger.info("New Telegram user created: %s", user.id)
-        return await _issue_tokens(response, db, user.id)
+        tokens = await _issue_tokens(response, db, user.id)
+        return TelegramLoginResponse(
+            **tokens.model_dump(),
+            user=UserResponse.model_validate(user),
+        )
     except HTTPException:
         raise
     except Exception:

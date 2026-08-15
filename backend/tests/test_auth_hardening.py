@@ -146,13 +146,20 @@ async def test_valid_signed_telegram_payload_succeeds(monkeypatch):
     monkeypatch.setattr(settings, "TELEGRAM_BOT_TOKEN", "test-bot-token")
     now = 1_800_000_000
     monkeypatch.setattr("app.core.security.time.time", lambda: now)
-    existing = SimpleNamespace(id=uuid4())
+    existing = SimpleNamespace(
+        id=uuid4(),
+        email="telegram-123456@users.invalid",
+        role="reader",
+        created_at=datetime.utcnow(),
+        email_verified=False,
+    )
     monkeypatch.setattr(auth, "get_user_by_telegram_id", AsyncMock(return_value=existing))
     response = await auth.telegram_login(
         TelegramAuthData(**_signed_telegram_payload(now)), Response(), FakeSession([])
     )
     assert response.access_token
     assert response.refresh_token
+    assert response.user.id == existing.id
 
 
 def test_telegram_schema_requires_hash():

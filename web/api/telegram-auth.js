@@ -18,13 +18,6 @@ export default async function handler(request, response) {
       return response.status(authResponse.status).json(authBody);
     }
 
-    const userResponse = await fetch(`${BACKEND_URL}/auth/me`, {
-      headers: { Authorization: `Bearer ${authBody.access_token}` },
-    });
-    if (!userResponse.ok) {
-      return response.status(502).json({ detail: 'Unable to establish session' });
-    }
-
     const domain = 'Domain=syverro.com';
     const common = `${domain}; HttpOnly; Secure; SameSite=Strict`;
     response.setHeader('Set-Cookie', [
@@ -32,7 +25,7 @@ export default async function handler(request, response) {
       `syverro_refresh=${authBody.refresh_token}; Max-Age=2592000; Path=/auth; ${common}`,
     ]);
     response.setHeader('Cache-Control', 'private, no-store');
-    return response.status(200).json(await userResponse.json());
+    return response.status(200).json(authBody.user);
   } catch {
     return response.status(502).json({ detail: 'Telegram authentication unavailable' });
   }

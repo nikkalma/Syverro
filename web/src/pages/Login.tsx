@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../store/authStore';
+import TelegramLogin from '../components/auth/TelegramLogin';
 
 export default function Login() {
   const [email, setEmail] = useState('');
@@ -10,6 +11,7 @@ export default function Login() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const login = useAuthStore((state) => state.login);
+  const telegramLogin = useAuthStore((state) => state.telegramLogin);
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -28,6 +30,16 @@ export default function Login() {
     }
   };
 
+  const handleTelegramAuth = async (payload: Parameters<typeof telegramLogin>[0]) => {
+    setError('');
+    try {
+      await telegramLogin(payload);
+      navigate('/');
+    } catch (err: any) {
+      setError(err.message || 'Ошибка входа через Telegram');
+    }
+  };
+
   return (
     <div style={{ maxWidth: '400px', margin: '80px auto', padding: '20px', color: '#E6EDF3' }}>
       <h1 style={{ fontSize: '28px', marginBottom: '8px' }}>Вход в Syverro</h1>
@@ -37,6 +49,14 @@ export default function Login() {
           Зарегистрироваться
         </Link>
       </p>
+
+      <TelegramLogin onAuth={handleTelegramAuth} />
+
+      <div style={{ display: 'flex', alignItems: 'center', gap: 12, margin: '24px 0', color: '#6F7D8C', fontSize: 12 }}>
+        <span style={{ height: 1, background: 'rgba(255,255,255,0.08)', flex: 1 }} />
+        или по email
+        <span style={{ height: 1, background: 'rgba(255,255,255,0.08)', flex: 1 }} />
+      </div>
 
       <form onSubmit={handleSubmit}>
         {location.state?.registrationComplete && (

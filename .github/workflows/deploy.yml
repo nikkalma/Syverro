@@ -33,12 +33,13 @@ jobs:
           SHORT_SHA: ${{ steps.sha.outputs.short }}
           OWNER: ${{ github.repository_owner }}
           GHCR_TOKEN: ${{ secrets.GHCR_TOKEN }}
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           VPS_APP_DIR: ${{ vars.VPS_APP_DIR || '/opt/syverro' }}
         with:
           host: ${{ secrets.VPS_HOST }}
           username: ${{ secrets.VPS_USER }}
           key: ${{ secrets.VPS_SSH_KEY }}
-          envs: FULL_SHA,SHORT_SHA,OWNER,GHCR_TOKEN,VPS_APP_DIR
+          envs: FULL_SHA,SHORT_SHA,OWNER,GHCR_TOKEN,TELEGRAM_BOT_TOKEN,VPS_APP_DIR
           script_stop: true
           script: |
             set -euo pipefail

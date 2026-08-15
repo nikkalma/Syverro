@@ -9,12 +9,23 @@ interface User {
   role?: string;
 }
 
+export interface TelegramAuthPayload {
+  id: string;
+  first_name: string;
+  last_name?: string;
+  username?: string;
+  photo_url?: string;
+  auth_date: number;
+  hash: string;
+}
+
 interface AuthState {
   user: User | null;
   isAuthenticated: boolean;
   isLoading: boolean;
   setAuth: (token: string, user: User, refreshToken?: string) => void;
   login: (email: string, password: string) => Promise<void>;
+  telegramLogin: (payload: TelegramAuthPayload) => Promise<void>;
   register: (email: string, password: string) => Promise<void>;
   logout: () => void;
   checkAuth: () => void;
@@ -65,6 +76,35 @@ export const useAuthStore = create<AuthState>((set) => ({
       set({ user, isAuthenticated: true });
       localStorage.setItem('user', JSON.stringify(user));
       set({ isLoading: false });
+    } catch (error) {
+      set({ isLoading: false });
+      throw error;
+    }
+  },
+
+  telegramLogin: async (payload: TelegramAuthPayload) => {
+    set({ isLoading: true });
+    try {
+      const response = await fetch(`${API_URL}/auth/telegram`, {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.detail || 'Ошибка входа через Telegram');
+      }
+
+      const userResponse = await fetch(`${API_URL}/auth/me`, {
+        credentials: 'include',
+      });
+      if (!userResponse.ok) {
+        throw new Error('Не удалось получить данные пользователя');
+      }
+      const user = await userResponse.json();
+      localStorage.setItem('user', JSON.stringify(user));
+      set({ user, isAuthenticated: true, isLoading: false });
     } catch (error) {
       set({ isLoading: false });
       throw error;

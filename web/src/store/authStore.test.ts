@@ -7,6 +7,7 @@ describe('auth token storage', () => {
   beforeEach(() => {
     localStorage.clear();
     vi.restoreAllMocks();
+    useAuthStore.setState({ user: null, isAuthenticated: false, isLoading: false });
   });
 
   it('does not persist access or refresh tokens in JavaScript storage', () => {
@@ -28,6 +29,33 @@ describe('auth token storage', () => {
 
     clearLegacyAuthTokens();
 
+    expect(localStorage.getItem('token')).toBeNull();
+    expect(localStorage.getItem('refresh_token')).toBeNull();
+  });
+
+  it('creates a cookie session from signed Telegram data without storing tokens', async () => {
+    const telegramPayload = {
+      id: '123',
+      first_name: 'Ada',
+      auth_date: 1_800_000_000,
+      hash: 'signed-hash',
+    };
+    const user = { id: 'user-telegram', email: 'telegram-123@users.invalid', created_at: '2026-01-01' };
+    const fetchMock = vi.spyOn(globalThis, 'fetch')
+      .mockResolvedValueOnce(new Response('{}', { status: 200 }))
+      .mockResolvedValueOnce(new Response(JSON.stringify(user), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      }));
+
+    await useAuthStore.getState().telegramLogin(telegramPayload);
+
+    expect(fetchMock).toHaveBeenNthCalledWith(1, expect.stringContaining('/auth/telegram'), expect.objectContaining({
+      method: 'POST',
+      credentials: 'include',
+      body: JSON.stringify(telegramPayload),
+    }));
+    expect(useAuthStore.getState().user).toEqual(user);
     expect(localStorage.getItem('token')).toBeNull();
     expect(localStorage.getItem('refresh_token')).toBeNull();
   });

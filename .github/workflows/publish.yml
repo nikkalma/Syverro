@@ -101,5 +101,6 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
           build-args: |
             VITE_API_URL=${{ vars.VITE_API_URL || 'https://api.syverro.com' }}
+            VITE_TELEGRAM_BOT_USERNAME=${{ vars.VITE_TELEGRAM_BOT_USERNAME || 'SyverroBot' }}
           cache-from: type=gha,scope=web
           cache-to: type=gha,mode=max,scope=web

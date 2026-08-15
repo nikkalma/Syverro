@@ -7,6 +7,8 @@ WORKDIR /app
 # Public API base URL baked into the Vite bundle at build time.
 ARG VITE_API_URL=http://localhost:8000
 ENV VITE_API_URL=$VITE_API_URL
+ARG VITE_TELEGRAM_BOT_USERNAME=SyverroBot
+ENV VITE_TELEGRAM_BOT_USERNAME=$VITE_TELEGRAM_BOT_USERNAME
 
 COPY package.json package-lock.json ./
 RUN npm ci

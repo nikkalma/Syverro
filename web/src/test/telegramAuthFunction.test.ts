@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-import handler from './telegram-auth';
+import handler from '../../api/telegram-auth';
 
 class TestResponse {
   headers = new Map<string, string | string[]>();

@@ -78,6 +78,8 @@ def _proposal_dict(proposal: AIProposal, sources: list) -> dict:
         "status": proposal.status,
         "validation_state": proposal.validation_state,
         "conflict_state": proposal.conflict_state,
+        "review_band": proposal.review_band,
+        "review_reason": proposal.review_reason,
         "run_id": str(proposal.run_id) if proposal.run_id else None,
         "applied_at": proposal.applied_at.isoformat() if proposal.applied_at else None,
         "timeline_event_id": str(proposal.timeline_event_id) if proposal.timeline_event_id else None,

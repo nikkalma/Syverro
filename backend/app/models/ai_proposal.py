@@ -20,6 +20,8 @@ class AIProposal(Base):
     status = Column(String, server_default="proposed", nullable=False)
     validation_state = Column(String, nullable=True)
     conflict_state = Column(String, nullable=True)
+    review_band = Column(String, nullable=True)
+    review_reason = Column(String, nullable=True)
     edited_value = Column(Text, nullable=True)
     run_id = Column(UUID(as_uuid=True), ForeignKey("syvai_runs.id", ondelete="SET NULL"), nullable=True, index=True)
     applied_at = Column(DateTime, nullable=True)

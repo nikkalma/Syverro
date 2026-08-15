@@ -8,6 +8,20 @@ minimal outcome set:
                    evidence, near-duplicate, posthumous date)
     conflict     — conflicts with an existing curated timeline event
     invalid      — malformed or impossible (bad date, precedes author birth)
+
+Every outcome also carries a review band that separates *why* a claim needs
+attention and separates genuinely unsafe claims from policy-mandated review:
+
+    auto_approved  — validated and new: no human decision needed (apply is
+                     still explicit, but there is nothing to arbitrate)
+    auto_rejected  — deterministically resolvable: restatements of curated
+                     events (exact duplicate / same-day restatement) and
+                     schema-invalid claims add nothing or are garbage; the
+                     proposal is rejected without queuing a reviewer
+    quality_review — factual risk: unsupported claim, date conflict, or an
+                     ambiguous near-duplicate a human must decide on
+    policy_review  — factually fine but policy says confirm (posthumous
+                     publication)
 """
 
 from __future__ import annotations
@@ -133,6 +147,74 @@ def labels_similar(a: str, b: str) -> bool:
 
 
 # ---------------------------------------------------------------------------
+# Review bands and reasons
+# ---------------------------------------------------------------------------
+
+REVIEW_BAND_AUTO_APPROVED = "auto_approved"
+REVIEW_BAND_AUTO_REJECTED = "auto_rejected"
+REVIEW_BAND_QUALITY = "quality_review"
+REVIEW_BAND_POLICY = "policy_review"
+
+REVIEW_BAND_VALUES = {
+    REVIEW_BAND_AUTO_APPROVED,
+    REVIEW_BAND_AUTO_REJECTED,
+    REVIEW_BAND_QUALITY,
+    REVIEW_BAND_POLICY,
+}
+
+REVIEW_REASON_NEW_GROUNDED = "new_grounded"
+REVIEW_REASON_INVALID_CLAIM = "invalid_claim"
+REVIEW_REASON_EXACT_DUPLICATE = "exact_duplicate"
+REVIEW_REASON_RESTATEMENT = "restatement"
+REVIEW_REASON_NEAR_DUPLICATE_AMBIGUOUS = "near_duplicate_ambiguous"
+REVIEW_REASON_DATE_CONFLICT = "date_conflict"
+REVIEW_REASON_UNSUPPORTED = "unsupported_claim"
+REVIEW_REASON_POSTHUMOUS = "posthumous_event"
+
+# Bands whose proposals genuinely require a human decision.
+REVIEW_BANDS_NEEDING_HUMAN = {REVIEW_BAND_QUALITY, REVIEW_BAND_POLICY}
+
+
+def _label_token_overlap(a: str, b: str) -> float:
+    """Fraction of the shorter label's normalized tokens present in the longer."""
+    tokens_a = normalize_label(a).split()
+    tokens_b = normalize_label(b).split()
+    if not tokens_a or not tokens_b:
+        return 0.0
+    shorter, longer = (
+        (tokens_a, tokens_b) if len(tokens_a) <= len(tokens_b) else (tokens_b, tokens_a)
+    )
+    common = sum(1 for token in shorter if token in longer)
+    return common / len(shorter)
+
+
+def _is_restatement(claim: "TimelineClaim", matched_event: ExistingEvent | None) -> bool:
+    """True when ``claim`` re-describes ``matched_event`` with no new information.
+
+    Used only for the auto-reject decision — ``compare_with_existing`` is
+    untouched. A claim is a restatement when it shares the event type and the
+    exact same date value as the curated event, and either the labels overlap
+    (identical, prefix, or >=70% token overlap) or both dates are day-precise
+    (same-type same-day events are overwhelmingly restatements, not distinct
+    events). Anything else stays in human review.
+    """
+    if not matched_event:
+        return False
+    if claim.event_type != matched_event.event_type:
+        return False
+    if normalize_date_value(claim.date_value) != normalize_date_value(matched_event.date_value):
+        return False
+    if labels_similar(claim.label, matched_event.label):
+        return True
+    if _label_token_overlap(claim.label, matched_event.label) >= 0.7:
+        return True
+    return (
+        date_granularity(claim.date_value) == "full"
+        and date_granularity(matched_event.date_value) == "full"
+    )
+
+
+# ---------------------------------------------------------------------------
 # Result types
 # ---------------------------------------------------------------------------
 
@@ -154,6 +236,8 @@ class ValidationResult:
     matched_event: ExistingEvent | None = None
     normalized_date_value: str | None = None
     parsed_date: ParsedDate | None = None
+    review_band: str = REVIEW_BAND_AUTO_APPROVED
+    review_reason: str = REVIEW_REASON_NEW_GROUNDED
 
     @property
     def is_validated(self) -> bool:
@@ -265,7 +349,40 @@ def validate_timeline_claim(
         # Posthumous publications are legitimate, but a reviewer should confirm.
         result.validation_state = "needs_review"
 
+    result.review_band, result.review_reason = _classify_review(
+        result, claim, source_count=source_count, posthumous=posthumous
+    )
+
     return result
+
+
+def _classify_review(
+    result: ValidationResult,
+    claim: TimelineClaim,
+    *,
+    source_count: int,
+    posthumous: bool,
+) -> tuple[str, str]:
+    """Decide the review band and reason deterministically.
+
+    Priority order: hard facts (invalid/conflict/duplicate) first, then
+    evidence gaps (unsupported), then policy-only flags (posthumous).
+    """
+    if result.validation_state == "invalid":
+        return REVIEW_BAND_AUTO_REJECTED, REVIEW_REASON_INVALID_CLAIM
+    if result.conflict_state == "conflict":
+        return REVIEW_BAND_QUALITY, REVIEW_REASON_DATE_CONFLICT
+    if result.conflict_state == "duplicate":
+        return REVIEW_BAND_AUTO_REJECTED, REVIEW_REASON_EXACT_DUPLICATE
+    if result.conflict_state == "near_duplicate":
+        if _is_restatement(claim, result.matched_event):
+            return REVIEW_BAND_AUTO_REJECTED, REVIEW_REASON_RESTATEMENT
+        return REVIEW_BAND_QUALITY, REVIEW_REASON_NEAR_DUPLICATE_AMBIGUOUS
+    if source_count <= 0:
+        return REVIEW_BAND_QUALITY, REVIEW_REASON_UNSUPPORTED
+    if posthumous:
+        return REVIEW_BAND_POLICY, REVIEW_REASON_POSTHUMOUS
+    return REVIEW_BAND_AUTO_APPROVED, REVIEW_REASON_NEW_GROUNDED
 
 
 @dataclass

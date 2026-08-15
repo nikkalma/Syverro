@@ -1,10 +1,10 @@
-"""Sapphire benchmark — Charlotte Brontë timeline research.
+"""Sapphire benchmark — Brontë timeline research.
 
 The benchmark compares generated structured timeline claims against a trusted
 reference dataset and reports objective, machine-computed metrics. It never
 evaluates against data produced by the same run: the reference is the
-curated Sapphire Charlotte timeline (see ``REFERENCE_TIMELINE``), which is
-never fed to the provider.
+curated Sapphire timeline (Charlotte Brontë by default, Emily Brontë as the
+generalization probe), which is never fed to the provider.
 
 Two modes:
   * offline (default): a deterministic fake-provider fixture, reproducible
@@ -15,6 +15,13 @@ Two modes:
 Human-intervention metrics answer "how much editorial work did SyvAI save?".
 The ratio is intentionally conservative and documented, not statistically
 meaningful beyond this benchmark.
+
+0.1B review classification: every claim is assigned a review band —
+``auto_approved`` / ``auto_rejected`` (deterministically resolvable, no human
+decision) versus ``quality_review`` / ``policy_review`` (human required). The
+human-intervention ratio counts only the latter two, and the correction ratio
+measures how much of that remaining review is expected to change the timeline
+versus a pure confirmation.
 """
 
 from __future__ import annotations
@@ -26,9 +33,39 @@ import logging
 from dataclasses import dataclass, field
 
 from app.syvai.timeline_claims import SourceRef, TimelineClaim, parse_timeline_claims
-from app.syvai.validators import ExistingEvent, normalize_date_value, validate_timeline_claim
+from app.syvai.validators import (
+    REVIEW_BAND_AUTO_APPROVED,
+    REVIEW_BAND_AUTO_REJECTED,
+    REVIEW_BAND_POLICY,
+    REVIEW_BAND_QUALITY,
+    REVIEW_BANDS_NEEDING_HUMAN,
+    ExistingEvent,
+    ValidationResult,
+    normalize_date_value,
+    validate_timeline_claim,
+)
 
 logger = logging.getLogger(__name__)
+
+CHARLOTTE_BIRTH = "1816-04-21"
+CHARLOTTE_DEATH = "1855-03-31"
+EMILY_BIRTH = "1818-07-30"
+EMILY_DEATH = "1848-12-19"
+
+
+def _reference_events(reference: list[dict]) -> list[ExistingEvent]:
+    """Build the ExistingEvent list the deterministic validator compares against."""
+    return [
+        ExistingEvent(
+            id=f"reference-{index}",
+            event_type=event["event_type"],
+            date_value=event["date_value"],
+            date_precision=event["date_precision"],
+            label=event["label"],
+        )
+        for index, event in enumerate(reference)
+    ]
+
 
 # ---------------------------------------------------------------------------
 # Reference dataset (trusted curated Sapphire Charlotte timeline)
@@ -57,16 +94,31 @@ REFERENCE_TIMELINE: list[dict] = [
      "label": "Marriage to Arthur Bell Nicholls"},
 ]
 
-_REFERENCE_EVENTS: list[ExistingEvent] = [
-    ExistingEvent(
-        id=f"reference-{index}",
-        event_type=event["event_type"],
-        date_value=event["date_value"],
-        date_precision=event["date_precision"],
-        label=event["label"],
-    )
-    for index, event in enumerate(REFERENCE_TIMELINE)
+_REFERENCE_EVENTS: list[ExistingEvent] = _reference_events(REFERENCE_TIMELINE)
+
+# Trusted curated Emily Brontë timeline used as the generalization probe. The
+# validation pipeline is author-agnostic; this second dataset must run through
+# the exact same code paths without regressing the Charlotte benchmark.
+EMILY_REFERENCE_TIMELINE: list[dict] = [
+    {"event_type": "personal", "date_value": "1820", "date_precision": "year",
+     "label": "Family moved to Haworth"},
+    {"event_type": "education", "date_value": "1824", "date_precision": "year",
+     "label": "Cowan Bridge school"},
+    {"event_type": "education", "date_value": "1835", "date_precision": "year",
+     "label": "Roe Head School"},
+    {"event_type": "career", "date_value": "1838", "date_precision": "year",
+     "label": "Teacher at Law Hill School"},
+    {"event_type": "career", "date_value": "1846", "date_precision": "year",
+     "label": "Poems published under pseudonyms"},
+    {"event_type": "publication", "date_value": "1847-12", "date_precision": "month",
+     "label": "Wuthering Heights published"},
+    {"event_type": "personal", "date_value": "1848-09-24", "date_precision": "full",
+     "label": "Death of Branwell Bronte"},
+    {"event_type": "personal", "date_value": "1848-12-19", "date_precision": "full",
+     "label": "Death of Emily Bronte"},
 ]
+
+_EMILY_REFERENCE_EVENTS: list[ExistingEvent] = _reference_events(EMILY_REFERENCE_TIMELINE)
 
 
 # ---------------------------------------------------------------------------
@@ -129,6 +181,57 @@ FIXTURE_CLAIMS: list[tuple[dict, str]] = [
 
 FIXTURE_OUTPUT: str = json.dumps(
     {"events": [claim for claim, _ in FIXTURE_CLAIMS]},
+    ensure_ascii=False,
+)
+
+
+# Emily Brontë fixture mirrors the Charlotte claim distribution (same
+# proportion of matches/new/unsupported/duplicate/conflict) so the
+# human-intervention and correction metrics are comparable across authors.
+EMILY_FIXTURE_CLAIMS: list[tuple[dict, str]] = [
+    ({"event_type": "education", "date_value": "1824", "date_precision": "year",
+      "label": "Attended Cowan Bridge School", "description": "Attended the Clergy Daughters' School with Charlotte.",
+      "sources": [_BRITANNICA, _OXFORD]}, "match"),
+    ({"event_type": "personal", "date_value": "1820", "date_precision": "year",
+      "label": "Moved to Haworth", "description": "The Brontë family settled at Haworth Parsonage.",
+      "sources": [_BRITANNICA, _OXFORD]}, "match"),
+    ({"event_type": "education", "date_value": "1835", "date_precision": "year",
+      "label": "Enrolled at Roe Head School", "description": "Studied at Roe Head while Charlotte was a teacher there.",
+      "sources": [_BRITANNICA, _OXFORD]}, "match"),
+    ({"event_type": "career", "date_value": "1838", "date_precision": "year",
+      "label": "Teacher at Law Hill School", "description": "Worked as a teacher at Law Hill School, Southowram.",
+      "sources": [_BRITANNICA, _OXFORD]}, "match"),
+    ({"event_type": "career", "date_value": "1846", "date_precision": "year",
+      "label": "Poems published under the Bell pseudonyms", "description": "Poems by Currer, Ellis and Acton Bell published together.",
+      "sources": [_BRITANNICA, _OXFORD]}, "match"),
+    ({"event_type": "publication", "date_value": "1847-12", "date_precision": "month",
+      "label": "Wuthering Heights published", "description": "Only novel, published under the name Ellis Bell.",
+      "sources": [_BRITANNICA, _OXFORD]}, "match"),
+    ({"event_type": "personal", "date_value": "1848-09-24", "date_precision": "full",
+      "label": "Death of Branwell Bronte", "description": "Brother Branwell died of tuberculosis.",
+      "sources": [_BRITANNICA, _OXFORD]}, "match"),
+    ({"event_type": "personal", "date_value": "1848-12-19", "date_precision": "full",
+      "label": "Death of Emily Bronte", "description": "Emily died of tuberculosis aged 30.",
+      "sources": [_BRITANNICA, _OXFORD]}, "match"),
+    ({"event_type": "publication", "date_value": "1850-05", "date_precision": "month",
+      "label": "Wuthering Heights second edition published", "description": "Second edition issued posthumously with a biographical notice.",
+      "sources": [_BRITANNICA, _OXFORD]}, "new"),
+    ({"event_type": "milestone", "date_value": "1834", "date_precision": "year",
+      "label": "Gondal saga created with Anne", "description": "Shared imaginary kingdom Gondal, source of much of her poetry.",
+      "sources": [_BRITANNICA]}, "new"),
+    ({"event_type": "milestone", "date_value": "1832", "date_precision": "year",
+      "label": "Attended local folklore festival", "description": "Unverifiable from the provided sources.",
+      "sources": []}, "unsupported"),
+    ({"event_type": "personal", "date_value": "1848-12-19", "date_precision": "full",
+      "label": "Emily Bronte dies in Haworth", "description": "Restatement of the death event.",
+      "sources": [_BRITANNICA, _OXFORD]}, "duplicate"),
+    ({"event_type": "career", "date_value": "1839", "date_precision": "year",
+      "label": "Returned to Law Hill School", "description": "Conflicting year for the Law Hill employment.",
+      "sources": [_BRITANNICA]}, "conflict"),
+]
+
+EMILY_FIXTURE_OUTPUT: str = json.dumps(
+    {"events": [claim for claim, _ in EMILY_FIXTURE_CLAIMS]},
     ensure_ascii=False,
 )
 
@@ -208,7 +311,23 @@ class BenchmarkReport:
     edited_before_apply_count: int
     applied_unchanged_count: int
     human_intervention_ratio: float
-    human_intervention_formula: str = field(default="(needs_review + conflict + invalid + rejected + edited) / total")
+    human_intervention_formula: str = field(
+        default="(quality_review + policy_review) / total"
+    )
+    # review bands (0.1B): why proposals need attention and how much the
+    # system can resolve without a human.
+    auto_resolved_count: int = 0
+    auto_rejected_count: int = 0
+    auto_approved_count: int = 0
+    quality_review_count: int = 0
+    policy_review_count: int = 0
+    reviewed_count: int = 0
+    review_reason_counts: dict[str, int] = field(default_factory=dict)
+    # correction ratio: of the proposals that reach a human, how many are
+    # expected to change the timeline (reject/edit) versus a pure confirmation.
+    corrections_expected: int = 0
+    confirmations_expected: int = 0
+    correction_ratio: float | None = None
     notes: list[str] = field(default_factory=list)
 
 
@@ -225,17 +344,21 @@ def evaluate_snapshots(
     snapshots: list[ProposalSnapshot],
     *,
     ground_truth: dict[str, str] | None = None,
+    author_birth_date: str = CHARLOTTE_BIRTH,
+    author_death_date: str = CHARLOTTE_DEATH,
+    existing_events: list[ExistingEvent] | None = None,
 ) -> BenchmarkReport:
     """Compare snapshots against the reference using the real deterministic
     validator (reference events are treated as the existing timeline).
 
     ``ground_truth`` maps a prediction label to a category
     ("match" | "duplicate" | "conflict" | "unsupported" | "new") and is used
-    to measure detection quality. Live runs have no ground truth and report
-    detection rates as n/a.
+    to measure detection quality and the expected correction ratio. Live runs
+    have no ground truth and report detection rates as n/a.
     """
+    existing_events = existing_events if existing_events is not None else _REFERENCE_EVENTS
     notes: list[str] = []
-    revalidated: list[tuple[ProposalSnapshot, str, str]] = []
+    revalidated: list[tuple[ProposalSnapshot, ValidationResult]] = []
     matched_reference_dates: list[str | None] = []
     matched_reference_ids: list[str | None] = []
 
@@ -249,12 +372,12 @@ def evaluate_snapshots(
         )
         validation = validate_timeline_claim(
             claim,
-            author_birth_date="1816-04-21",
-            author_death_date="1855-03-31",
-            existing_events=_REFERENCE_EVENTS,
+            author_birth_date=author_birth_date,
+            author_death_date=author_death_date,
+            existing_events=existing_events,
             source_count=snapshot.source_count,
         )
-        revalidated.append((snapshot, validation.validation_state, validation.conflict_state))
+        revalidated.append((snapshot, validation))
         if validation.matched_event:
             matched_reference_dates.append(validation.matched_event.date_value)
             matched_reference_ids.append(validation.matched_event.id)
@@ -262,11 +385,11 @@ def evaluate_snapshots(
             matched_reference_dates.append(None)
             matched_reference_ids.append(None)
 
-    matched_count = sum(1 for _, _, conflict_state in revalidated if conflict_state != "new")
+    matched_count = sum(1 for _, validation in revalidated if validation.conflict_state != "new")
     distinct_covered = len({ref_id for ref_id in matched_reference_ids if ref_id is not None})
     exact_date_matches = sum(
         1
-        for (snapshot, _, _), reference_date in zip(revalidated, matched_reference_dates)
+        for (snapshot, _), reference_date in zip(revalidated, matched_reference_dates)
         if reference_date is not None
         and normalize_date_value(snapshot.date_value) == normalize_date_value(reference_date)
     )
@@ -295,23 +418,52 @@ def evaluate_snapshots(
     conflict_expected = _expected("conflict")
     conflict_flagged = _flagged("conflict", lambda s: s.conflict_state == "conflict")
 
-    validated_count = sum(1 for _, state, _ in revalidated if state == "validated")
-    needs_review_count = sum(1 for _, state, _ in revalidated if state == "needs_review")
-    conflict_count = sum(1 for _, state, _ in revalidated if state == "conflict")
-    invalid_count = sum(1 for _, state, _ in revalidated if state == "invalid")
+    validated_count = sum(1 for _, v in revalidated if v.validation_state == "validated")
+    needs_review_count = sum(1 for _, v in revalidated if v.validation_state == "needs_review")
+    conflict_count = sum(1 for _, v in revalidated if v.validation_state == "conflict")
+    invalid_count = sum(1 for _, v in revalidated if v.validation_state == "invalid")
     rejected_count = sum(1 for s in snapshots if s.status == "rejected")
     accepted_count = sum(1 for s in snapshots if s.status in {"accepted", "applied"})
     applied_count = sum(1 for s in snapshots if s.applied)
     edited_before_apply_count = sum(1 for s in snapshots if s.edited)
     applied_unchanged_count = sum(1 for s in snapshots if s.applied and not s.edited)
 
-    human_intervention = needs_review_count + conflict_count + invalid_count + rejected_count + edited_before_apply_count
-    human_intervention_ratio = _rate(human_intervention, len(snapshots)) if snapshots else 0.0
+    auto_rejected_count = sum(1 for _, v in revalidated if v.review_band == REVIEW_BAND_AUTO_REJECTED)
+    auto_approved_count = sum(1 for _, v in revalidated if v.review_band == REVIEW_BAND_AUTO_APPROVED)
+    quality_review_count = sum(1 for _, v in revalidated if v.review_band == REVIEW_BAND_QUALITY)
+    policy_review_count = sum(1 for _, v in revalidated if v.review_band == REVIEW_BAND_POLICY)
+    auto_resolved_count = auto_rejected_count + auto_approved_count
+    reviewed_count = quality_review_count + policy_review_count
+
+    review_reason_counts: dict[str, int] = {}
+    for _, v in revalidated:
+        review_reason_counts[v.review_reason] = review_reason_counts.get(v.review_reason, 0) + 1
+
+    # Expected correction ratio: proposals that reach a human and are expected
+    # to change the timeline (reject/edit) versus confirmations (apply as-is).
+    # Derived from ground truth where available; n/a for live runs.
+    corrections_expected = 0
+    confirmations_expected = 0
+    correction_ratio = None
+    if ground_truth and reviewed_count:
+        for snapshot, validation in revalidated:
+            if validation.review_band not in REVIEW_BANDS_NEEDING_HUMAN:
+                continue
+            category = ground_truth.get(snapshot.label)
+            if category in {"unsupported", "conflict", "duplicate"}:
+                corrections_expected += 1
+            else:
+                confirmations_expected += 1
+        correction_ratio = _rate(corrections_expected, reviewed_count)
+
+    human_intervention_ratio = _rate(reviewed_count, len(snapshots)) if snapshots else 0.0
 
     if needs_review_count and snapshots:
         notes.append(
-            "most needs_review items are restatements of already-curated events "
-            "flagged as duplicates; reviewers bulk-reject them in one pass"
+            f"of {needs_review_count} claims flagged needs_review, "
+            f"{auto_rejected_count} are deterministic restatements/duplicates auto-rejected; "
+            f"only {reviewed_count} genuinely require a human decision "
+            f"({quality_review_count} quality-driven, {policy_review_count} policy-driven)"
         )
     if duplicate_expected and duplicate_flagged < duplicate_expected:
         notes.append("some ground-truth duplicates were not flagged by the deterministic validator")
@@ -322,11 +474,11 @@ def evaluate_snapshots(
         total_claims=len(snapshots),
         schema_valid_claims=len(snapshots),
         schema_valid_rate=1.0,
-        reference_count=len(REFERENCE_TIMELINE),
+        reference_count=len(existing_events),
         covered_references=distinct_covered,
         matched_count=matched_count,
         precision=_rate(matched_count, len(snapshots)),
-        recall=_rate(distinct_covered, len(REFERENCE_TIMELINE)),
+        recall=_rate(distinct_covered, len(existing_events)),
         exact_date_matches=exact_date_matches,
         exact_date_accuracy=_rate(exact_date_matches, matched_count),
         unsupported_count=unsupported_count,
@@ -350,24 +502,42 @@ def evaluate_snapshots(
         edited_before_apply_count=edited_before_apply_count,
         applied_unchanged_count=applied_unchanged_count,
         human_intervention_ratio=human_intervention_ratio,
+        auto_resolved_count=auto_resolved_count,
+        auto_rejected_count=auto_rejected_count,
+        auto_approved_count=auto_approved_count,
+        quality_review_count=quality_review_count,
+        policy_review_count=policy_review_count,
+        reviewed_count=reviewed_count,
+        review_reason_counts=review_reason_counts,
+        corrections_expected=corrections_expected,
+        confirmations_expected=confirmations_expected,
+        correction_ratio=correction_ratio,
         notes=notes,
     )
 
 
-def _fixture_ground_truth() -> dict[str, str]:
-    return {claim["label"]: label for claim, label in FIXTURE_CLAIMS}
+def _fixture_ground_truth(fixture_claims: list[tuple[dict, str]] | None = None) -> dict[str, str]:
+    fixture_claims = fixture_claims if fixture_claims is not None else FIXTURE_CLAIMS
+    return {claim["label"]: label for claim, label in fixture_claims}
 
 
-def offline_benchmark() -> BenchmarkReport:
-    """Run the benchmark on the deterministic fixture."""
-    claims = parse_timeline_claims(FIXTURE_OUTPUT)
+def _offline_benchmark(
+    *,
+    author_birth_date: str,
+    author_death_date: str,
+    reference: list[dict],
+    fixture_output: str,
+    fixture_claims: list[tuple[dict, str]],
+) -> BenchmarkReport:
+    claims = parse_timeline_claims(fixture_output)
+    reference_events = _reference_events(reference)
     snapshots = []
     for claim in claims:
         validation = validate_timeline_claim(
             claim,
-            author_birth_date="1816-04-21",
-            author_death_date="1855-03-31",
-            existing_events=_REFERENCE_EVENTS,
+            author_birth_date=author_birth_date,
+            author_death_date=author_death_date,
+            existing_events=reference_events,
             source_count=len(claim.sources),
         )
         snapshots.append(
@@ -379,13 +549,39 @@ def offline_benchmark() -> BenchmarkReport:
                 source_count=len(claim.sources),
             )
         )
-    report = evaluate_snapshots(snapshots, ground_truth=_fixture_ground_truth())
+    report = evaluate_snapshots(
+        snapshots,
+        ground_truth=_fixture_ground_truth(fixture_claims),
+        author_birth_date=author_birth_date,
+        author_death_date=author_death_date,
+        existing_events=reference_events,
+    )
     return report
 
 
-def format_report(report: BenchmarkReport) -> str:
+def offline_benchmark(author: str = "charlotte") -> BenchmarkReport:
+    """Run the deterministic benchmark for a supported author fixture."""
+    if author == "emily":
+        return _offline_benchmark(
+            author_birth_date=EMILY_BIRTH,
+            author_death_date=EMILY_DEATH,
+            reference=EMILY_REFERENCE_TIMELINE,
+            fixture_output=EMILY_FIXTURE_OUTPUT,
+            fixture_claims=EMILY_FIXTURE_CLAIMS,
+        )
+    return _offline_benchmark(
+        author_birth_date=CHARLOTTE_BIRTH,
+        author_death_date=CHARLOTTE_DEATH,
+        reference=REFERENCE_TIMELINE,
+        fixture_output=FIXTURE_OUTPUT,
+        fixture_claims=FIXTURE_CLAIMS,
+    )
+
+
+def format_report(report: BenchmarkReport, author: str = "charlotte") -> str:
+    author_label = "Emily Brontë" if author == "emily" else "Charlotte Brontë"
     lines = [
-        "=== Sapphire benchmark: Charlotte Brontë timeline research ===",
+        f"=== Sapphire benchmark: {author_label} timeline research ===",
         f"claims: {report.total_claims} (schema-valid {report.schema_valid_claims}, {report.schema_valid_rate:.1%})",
         f"reference events: {report.reference_count}",
         f"precision: {report.precision:.1%} ({report.matched_count}/{report.total_claims})",
@@ -401,8 +597,20 @@ def format_report(report: BenchmarkReport) -> str:
     lines.append("--- human intervention ---")
     lines.append(f"proposals: {report.total_proposals} (validated {report.validated_count}, needs_review {report.needs_review_count}, conflict {report.conflict_count}, invalid {report.invalid_count})")
     lines.append(f"rejected {report.rejected_count}, accepted {report.accepted_count}, applied {report.applied_count} (edited {report.edited_before_apply_count}, unchanged {report.applied_unchanged_count})")
+    lines.append("--- review bands ---")
+    lines.append(f"auto-resolved {report.auto_resolved_count} (auto-approved {report.auto_approved_count}, auto-rejected {report.auto_rejected_count})")
+    lines.append(f"human review {report.reviewed_count} (quality {report.quality_review_count}, policy {report.policy_review_count})")
+    reason_breakdown = ", ".join(f"{reason}={count}" for reason, count in sorted(report.review_reason_counts.items()))
+    lines.append(f"reasons: {reason_breakdown}")
     lines.append(f"human-intervention ratio: {report.human_intervention_ratio:.1%}")
     lines.append(f"formula: {report.human_intervention_formula}")
+    if report.correction_ratio is not None:
+        lines.append(
+            f"correction ratio: {report.correction_ratio:.1%} "
+            f"(corrections {report.corrections_expected}/{report.reviewed_count}, confirmations {report.confirmations_expected}/{report.reviewed_count})"
+        )
+    else:
+        lines.append("correction ratio: n/a (no ground truth; needs reviewer actions)")
     for note in report.notes:
         lines.append(f"note: {note}")
     return "\n".join(lines)
@@ -457,12 +665,18 @@ async def live_benchmark() -> BenchmarkReport:
 
 def main() -> None:
     logging.basicConfig(level=logging.INFO)
-    parser = argparse.ArgumentParser(description="Sapphire benchmark: Charlotte Brontë timeline research")
+    parser = argparse.ArgumentParser(description="Sapphire benchmark: Brontë timeline research")
     parser.add_argument("--live", action="store_true", help="run against a real provider and the database")
+    parser.add_argument("--author", choices=["charlotte", "emily"], default="charlotte")
     args = parser.parse_args()
 
-    report = asyncio.run(live_benchmark()) if args.live else offline_benchmark()
-    print(format_report(report))
+    if args.live:
+        if args.author != "charlotte":
+            parser.error("--live is only supported for the charlotte database record")
+        report = asyncio.run(live_benchmark())
+    else:
+        report = offline_benchmark(args.author)
+    print(format_report(report, author=args.author))
 
 
 if __name__ == "__main__":

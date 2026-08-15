@@ -41,7 +41,12 @@ from app.syvai.timeline_research import (
     load_existing_events,
     load_trusted_sources,
 )
-from app.syvai.validators import ExistingEvent, validate_timeline_claim
+from app.syvai.validators import (
+    REVIEW_BAND_AUTO_REJECTED,
+    REVIEW_BANDS_NEEDING_HUMAN,
+    ExistingEvent,
+    validate_timeline_claim,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -182,9 +187,11 @@ async def _persist_proposals(
             suggested_value=_claim_to_json(claim),
             source_type="ai",
             confidence=confidence,
-            status="proposed",
+            status="rejected" if validation.review_band == REVIEW_BAND_AUTO_REJECTED else "proposed",
             validation_state=validation.validation_state,
             conflict_state=validation.conflict_state,
+            review_band=validation.review_band,
+            review_reason=validation.review_reason,
             run_id=run.id,
         )
         db.add(proposal)
@@ -247,7 +254,7 @@ async def run_timeline_research(
         run.duration_ms = int((time.monotonic() - started) * 1000)
         run.finished_at = datetime.now(timezone.utc)
 
-        if any(p.validation_state != "validated" for p in proposals):
+        if any(p.review_band in REVIEW_BANDS_NEEDING_HUMAN for p in proposals):
             run.status = "review_needed"
         else:
             run.status = "completed"

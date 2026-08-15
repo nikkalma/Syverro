@@ -447,6 +447,7 @@ async def delete_author_source(
 async def get_author_proposals(
     author_id: str,
     status_filter: Optional[str] = None,
+    band_filter: Optional[str] = None,
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db)
 ):
@@ -455,6 +456,8 @@ async def get_author_proposals(
     query = select(AIProposal).where(AIProposal.entity_id == author_id)
     if status_filter:
         query = query.where(AIProposal.status == status_filter)
+    if band_filter:
+        query = query.where(AIProposal.review_band == band_filter)
     query = query.order_by(AIProposal.created_at.desc())
 
     result = await db.execute(query)
@@ -492,6 +495,8 @@ async def get_author_proposals(
             "status": p.status,
             "validation_state": p.validation_state,
             "conflict_state": p.conflict_state,
+            "review_band": p.review_band,
+            "review_reason": p.review_reason,
             "run_id": str(p.run_id) if p.run_id else None,
             "applied_at": p.applied_at.isoformat() if p.applied_at else None,
             "timeline_event_id": str(p.timeline_event_id) if p.timeline_event_id else None,

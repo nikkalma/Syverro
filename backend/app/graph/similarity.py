@@ -16,6 +16,7 @@ from app.models.knowledge_node import KnowledgeNode
 from app.models.book_knowledge_relation import BookKnowledgeRelation
 from app.models.book_author import book_authors
 from app.models.book_genre import book_genres
+from app.core.public_visibility import public_book_clause, public_knowledge_node_clause
 
 
 async def get_book_node_map(db: AsyncSession, book_id: UUID) -> dict[str, set[UUID]]:
@@ -25,6 +26,7 @@ async def get_book_node_map(db: AsyncSession, book_id: UUID) -> dict[str, set[UU
         .join(BookKnowledgeRelation, BookKnowledgeRelation.node_id == KnowledgeNode.id)
         .where(BookKnowledgeRelation.book_id == book_id)
         .where(BookKnowledgeRelation.status == "approved")
+        .where(public_knowledge_node_clause())
     )
     node_map: dict[str, set[UUID]] = {}
     for node_type, node_id in result.all():
@@ -100,6 +102,8 @@ async def calculate_book_similarity(
         .where(BookKnowledgeRelation.node_id.in_(all_my_ids))
         .where(BookKnowledgeRelation.book_id != book_id)
         .where(BookKnowledgeRelation.status == "approved")
+        .where(public_knowledge_node_clause())
+        .where(public_book_clause())
     )
 
     # Aggregate shared nodes per candidate book

@@ -13,13 +13,9 @@ from sqlalchemy import select
 from app.core.deps import get_db
 from app.models.book import Book
 from app.models.author import Author
-from app.models.genre import Genre
-from app.models.knowledge_node import KnowledgeNode
-from app.models.knowledge_relation import KnowledgeRelation
-from app.models.book_knowledge_relation import BookKnowledgeRelation
 from app.models.book_author import book_authors
-from app.models.book_genre import book_genres
 from app.graph.similarity import calculate_book_similarity
+from app.core.public_visibility import public_author_clause, public_book_clause
 
 router = APIRouter(prefix="/graph", tags=["graph-queries"])
 
@@ -43,7 +39,9 @@ async def related_books(
     Returns books ranked by similarity score, each with the list of
     shared nodes that explain why they are related.
     """
-    book_result = await db.execute(select(Book).where(Book.id == book_id))
+    book_result = await db.execute(
+        select(Book).where(Book.id == book_id, public_book_clause())
+    )
     book = book_result.scalar_one_or_none()
     if not book:
         raise HTTPException(status_code=404, detail="Book not found")
@@ -72,9 +70,6 @@ async def find_path(
 
     Returns the shortest path as a list of node steps.
     """
-    if source_node_id == target_node_id:
-        return {"found": True, "path": [_resolve_node_sync(db, source_node_id)], "length": 1}
-
     path = await _bfs_path(db, source_node_id, target_node_id, max_depth)
     if path is None:
         return {"found": False, "path": [], "length": 0}
@@ -97,9 +92,14 @@ async def _bfs_path(
     """BFS over the graph to find the shortest path between two nodes."""
     from collections import deque
 
+    start_type = await _get_node_type(db, start_id)
+    target_type = await _get_node_type(db, target_id)
+    if start_type == "unknown" or target_type == "unknown":
+        return None
+
     visited: set[UUID] = {start_id}
     queue: deque = deque()
-    queue.append((start_id, "unknown", [(start_id, "unknown")]))
+    queue.append((start_id, start_type, [(start_id, start_type)]))
 
     while queue:
         current_id, current_type, path = queue.popleft()
@@ -131,72 +131,20 @@ async def _get_neighbors(
         result = await db.execute(
             select(Author.id, Author.name)
             .join(book_authors, book_authors.c.author_id == Author.id)
-            .where(book_authors.c.book_id == node_id)
+            .where(book_authors.c.book_id == node_id, public_author_clause())
         )
         for row in result.all():
             neighbors.append((row.id, "author"))
 
-        # Genres via book_genres
-        result = await db.execute(
-            select(Genre.id, Genre.name)
-            .join(book_genres, book_genres.c.genre_id == Genre.id)
-            .where(book_genres.c.book_id == node_id)
-        )
-        for row in result.all():
-            neighbors.append((row.id, "genre"))
-
-        # KnowledgeNodes via BKR
-        result = await db.execute(
-            select(KnowledgeNode.id, KnowledgeNode.node_type)
-            .join(BookKnowledgeRelation, BookKnowledgeRelation.node_id == KnowledgeNode.id)
-            .where(BookKnowledgeRelation.book_id == node_id)
-            .where(BookKnowledgeRelation.status == "approved")
-        )
-        for row in result.all():
-            neighbors.append((row.id, row.node_type))
+        # Taxonomy and genre records are structured metadata, not public graph
+        # vertices until dedicated public entity pages exist for them.
 
     if node_type == "author":
         # Books by this author
         result = await db.execute(
             select(Book.id, Book.title)
             .join(book_authors, book_authors.c.book_id == Book.id)
-            .where(book_authors.c.author_id == node_id)
-        )
-        for row in result.all():
-            neighbors.append((row.id, "book"))
-
-    if node_type == "genre":
-        # Books in this genre
-        result = await db.execute(
-            select(Book.id, Book.title)
-            .join(book_genres, book_genres.c.book_id == Book.id)
-            .where(book_genres.c.genre_id == node_id)
-        )
-        for row in result.all():
-            neighbors.append((row.id, "book"))
-
-    if node_type not in ("unknown", "book", "author", "genre"):
-        # KnowledgeNode: related nodes via KR
-        result = await db.execute(
-            select(
-                KnowledgeRelation.source_node_id,
-                KnowledgeRelation.target_node_id,
-            ).where(
-                (KnowledgeRelation.source_node_id == node_id)
-                | (KnowledgeRelation.target_node_id == node_id)
-            )
-        )
-        for row in result.all():
-            other_id = row.target_node_id if row.source_node_id == node_id else row.source_node_id
-            ntype = await _get_node_type(db, other_id)
-            neighbors.append((other_id, ntype))
-
-        # Books connected via BKR
-        result = await db.execute(
-            select(Book.id, Book.title)
-            .join(BookKnowledgeRelation, BookKnowledgeRelation.book_id == Book.id)
-            .where(BookKnowledgeRelation.node_id == node_id)
-            .where(BookKnowledgeRelation.status == "approved")
+            .where(book_authors.c.author_id == node_id, public_book_clause())
         )
         for row in result.all():
             neighbors.append((row.id, "book"))
@@ -206,22 +154,13 @@ async def _get_neighbors(
 
 async def _get_node_type(db: AsyncSession, node_id: UUID) -> str:
     """Determine the type of a node by probing known tables."""
-    result = await db.execute(select(KnowledgeNode.node_type).where(KnowledgeNode.id == node_id))
-    row = result.fetchone()
-    if row:
-        return row[0]
-
-    result = await db.execute(select(Book.id).where(Book.id == node_id))
+    result = await db.execute(select(Book.id).where(Book.id == node_id, public_book_clause()))
     if result.fetchone():
         return "book"
 
-    result = await db.execute(select(Author.id).where(Author.id == node_id))
+    result = await db.execute(select(Author.id).where(Author.id == node_id, public_author_clause()))
     if result.fetchone():
         return "author"
-
-    result = await db.execute(select(Genre.id).where(Genre.id == node_id))
-    if result.fetchone():
-        return "genre"
 
     return "unknown"
 
@@ -229,26 +168,13 @@ async def _get_node_type(db: AsyncSession, node_id: UUID) -> str:
 async def _fetch_node_info(db: AsyncSession, node_id: UUID, node_type: str) -> dict:
     """Resolve a node to {id, type, name} for path display."""
     if node_type == "book":
-        result = await db.execute(select(Book.title).where(Book.id == node_id))
+        result = await db.execute(select(Book.title).where(Book.id == node_id, public_book_clause()))
         row = result.fetchone()
         return {"id": str(node_id), "type": "book", "name": row[0] if row else "Unknown Book"}
 
     if node_type == "author":
-        result = await db.execute(select(Author.name).where(Author.id == node_id))
+        result = await db.execute(select(Author.name).where(Author.id == node_id, public_author_clause()))
         row = result.fetchone()
         return {"id": str(node_id), "type": "author", "name": row[0] if row else "Unknown Author"}
-
-    if node_type == "genre":
-        result = await db.execute(select(Genre.name).where(Genre.id == node_id))
-        row = result.fetchone()
-        return {"id": str(node_id), "type": "genre", "name": row[0] if row else "Unknown Genre"}
-
-    # KnowledgeNode (any type)
-    result = await db.execute(
-        select(KnowledgeNode.name, KnowledgeNode.node_type).where(KnowledgeNode.id == node_id)
-    )
-    row = result.fetchone()
-    if row:
-        return {"id": str(node_id), "type": row[1], "name": row[0]}
 
     return {"id": str(node_id), "type": "unknown", "name": "Unknown"}

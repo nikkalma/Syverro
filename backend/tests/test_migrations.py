@@ -62,10 +62,10 @@ async def migration_engine():
         await engine.dispose()
 
 
-def test_expected_head_is_security_audit_revision():
+def test_expected_head_is_author_source_links_revision():
     from app.migrations import expected_head
 
-    assert expected_head() == "0020_security_audit_logs"
+    assert expected_head() == "0021_author_source_links"
 
 
 @pytest.mark.asyncio
@@ -86,7 +86,7 @@ async def test_empty_database_bootstraps_to_head(migration_engine):
             lambda sync_conn: set(inspect(sync_conn).get_table_names())
         )
 
-    assert revision == "0020_security_audit_logs"
+    assert revision == "0021_author_source_links"
     assert {
         "email_verified",
         "email_verification_token_hash",
@@ -103,6 +103,7 @@ async def test_revision_0017_is_upgraded_before_backend_start(migration_engine):
     assert initial.returncode == 0, initial.stdout + initial.stderr
 
     async with migration_engine.begin() as conn:
+        await conn.execute(text("DROP TABLE author_source_links"))
         await conn.execute(text("DROP TABLE security_audit_logs"))
         await conn.execute(text("DROP TABLE refresh_sessions"))
         await conn.execute(
@@ -130,7 +131,7 @@ async def test_revision_0017_is_upgraded_before_backend_start(migration_engine):
             }
         )
 
-    assert revision == "0020_security_audit_logs"
+    assert revision == "0021_author_source_links"
     assert "email_verified" in columns
 
 

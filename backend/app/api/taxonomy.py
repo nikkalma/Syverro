@@ -2,6 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func, or_
 from app.core.deps import get_db
+from app.core.public_visibility import public_book_clause, public_knowledge_node_clause
 from app.models.knowledge_node import KnowledgeNode
 from app.models.knowledge_relation import KnowledgeRelation
 from app.models.book_knowledge_relation import BookKnowledgeRelation
@@ -28,7 +29,7 @@ async def list_nodes(
     parent_id: Optional[UUID] = Query(None, description="Filter by parent"),
     db: AsyncSession = Depends(get_db),
 ):
-    query = select(KnowledgeNode)
+    query = select(KnowledgeNode).where(public_knowledge_node_clause())
 
     if node_type:
         query = query.where(KnowledgeNode.node_type == node_type)
@@ -46,7 +47,12 @@ async def list_nodes(
 
 @router.get("/nodes/{node_id}", response_model=KnowledgeNodeResponse)
 async def get_node(node_id: UUID, db: AsyncSession = Depends(get_db)):
-    result = await db.execute(select(KnowledgeNode).where(KnowledgeNode.id == node_id))
+    result = await db.execute(
+        select(KnowledgeNode).where(
+            KnowledgeNode.id == node_id,
+            public_knowledge_node_clause(),
+        )
+    )
     node = result.scalar_one_or_none()
     if not node:
         raise HTTPException(status_code=404, detail="Node not found")
@@ -55,6 +61,15 @@ async def get_node(node_id: UUID, db: AsyncSession = Depends(get_db)):
 
 @router.get("/nodes/{node_id}/relations", response_model=List[KnowledgeRelationResponse])
 async def get_node_relations(node_id: UUID, db: AsyncSession = Depends(get_db)):
+    visible_node = await db.scalar(
+        select(KnowledgeNode.id).where(
+            KnowledgeNode.id == node_id,
+            public_knowledge_node_clause(),
+        )
+    )
+    if visible_node is None:
+        raise HTTPException(status_code=404, detail="Node not found")
+
     result = await db.execute(
         select(KnowledgeRelation).where(
             or_(
@@ -73,7 +88,10 @@ async def get_node_relations(node_id: UUID, db: AsyncSession = Depends(get_db)):
 
     if node_ids:
         nodes_result = await db.execute(
-            select(KnowledgeNode).where(KnowledgeNode.id.in_(node_ids))
+            select(KnowledgeNode).where(
+                KnowledgeNode.id.in_(node_ids),
+                public_knowledge_node_clause(),
+            )
         )
         nodes = {n.id: n for n in nodes_result.scalars().all()}
     else:
@@ -83,6 +101,8 @@ async def get_node_relations(node_id: UUID, db: AsyncSession = Depends(get_db)):
     for r in relations:
         source = nodes.get(r.source_node_id)
         target = nodes.get(r.target_node_id)
+        if source is None or target is None:
+            continue
         response.append(KnowledgeRelationResponse(
             id=r.id,
             source_node_id=r.source_node_id,
@@ -108,7 +128,9 @@ async def get_node_relations(node_id: UUID, db: AsyncSession = Depends(get_db)):
 async def get_book_knowledge(book_id: UUID, db: AsyncSession = Depends(get_db)):
     # Get book title
     from app.models.book import Book
-    book_result = await db.execute(select(Book).where(Book.id == book_id))
+    book_result = await db.execute(
+        select(Book).where(Book.id == book_id, public_book_clause())
+    )
     book = book_result.scalar_one_or_none()
     if not book:
         raise HTTPException(status_code=404, detail="Book not found")
@@ -126,7 +148,10 @@ async def get_book_knowledge(book_id: UUID, db: AsyncSession = Depends(get_db)):
     node_ids = [r.node_id for r in relations]
     if node_ids:
         nodes_result = await db.execute(
-            select(KnowledgeNode).where(KnowledgeNode.id.in_(node_ids))
+            select(KnowledgeNode).where(
+                KnowledgeNode.id.in_(node_ids),
+                public_knowledge_node_clause(),
+            )
         )
         nodes = {n.id: n for n in nodes_result.scalars().all()}
     else:
@@ -135,6 +160,8 @@ async def get_book_knowledge(book_id: UUID, db: AsyncSession = Depends(get_db)):
     response_relations = []
     for r in relations:
         node = nodes.get(r.node_id)
+        if node is None:
+            continue
         response_relations.append(BookKnowledgeRelationResponse(
             id=r.id,
             book_id=r.book_id,

@@ -22,6 +22,7 @@ from app.services.security_audit import add_security_event
 from app.models.book import Book
 from app.models.user_book import UserBook
 from app.models.author import Author
+from app.models.place import Place
 from app.models.author_award import AuthorAward
 from app.models.author_publication import AuthorPublication
 from app.models.genre import Genre
@@ -1378,6 +1379,17 @@ async def create_author(
         data.sort_name = data.display_name or data.name
 
     author = Author(**data.model_dump(exclude={"awards"}))
+    for id_field, label_field in (
+        ("birth_place_id", "birth_place"),
+        ("death_place_id", "death_place"),
+    ):
+        place_id = getattr(author, id_field)
+        if place_id is None:
+            continue
+        place = await db.get(Place, place_id)
+        if not place:
+            raise HTTPException(status_code=422, detail=f"Unknown {id_field}")
+        setattr(author, label_field, place.name)
     db.add(author)
     await db.flush()
 
@@ -1443,6 +1455,23 @@ async def update_author(
     for key, value in update_data.items():
         if hasattr(author, key):
             setattr(author, key, value)
+
+    # Place relations are canonical; keep legacy labels synchronized for
+    # public serializers and older clients until those columns are retired.
+    for id_field, label_field in (
+        ("birth_place_id", "birth_place"),
+        ("death_place_id", "death_place"),
+    ):
+        if id_field not in update_data:
+            continue
+        place_id = update_data[id_field]
+        if place_id is None:
+            setattr(author, label_field, None)
+            continue
+        place = await db.get(Place, place_id)
+        if not place:
+            raise HTTPException(status_code=422, detail=f"Unknown {id_field}")
+        setattr(author, label_field, place.name)
 
     # Auto-generate sort_name from structured name fields
     if author.last_name:

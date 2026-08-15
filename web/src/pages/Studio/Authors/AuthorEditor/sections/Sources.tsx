@@ -8,7 +8,6 @@ import type { Source, SourceCreate } from '../../../../../types/admin';
 function emptySource(): SourceCreate {
   return { title: '', source_type: 'website', url: null, citation: null, notes: null };
 }
-
 const SOURCE_TYPES = ['website', 'book', 'interview', 'archive', 'journal', 'encyclopedia', 'other'];
 
 const inputStyle: React.CSSProperties = {
@@ -86,9 +85,9 @@ export default function Sources() {
     setError(null);
     try {
       if (editingIdx === -1) {
-        await apiClient.post('/admin/sources', draft);
+        await apiClient.post(`/admin/authors/${author.id}/sources`, draft);
       } else if (editingIdx !== null && sources[editingIdx]) {
-        await apiClient.put(`/admin/sources/${sources[editingIdx].id}`, draft);
+        await apiClient.put(`/admin/authors/${author.id}/sources/${sources[editingIdx].id}`, draft);
       }
       cancelEdit();
       await fetchSources();
@@ -104,7 +103,7 @@ export default function Sources() {
     if (!s?.id) return;
     if (!window.confirm(st.confirmedDelete)) return;
     try {
-      await apiClient.delete(`/admin/sources/${s.id}`);
+      await apiClient.delete(`/admin/authors/${author.id}/sources/${s.id}`);
       await fetchSources();
     } catch (e: any) {
       setError(e?.response?.data?.detail || e.message || st.errorDelete);
@@ -130,7 +129,7 @@ export default function Sources() {
           {s.citation && <div style={{ fontSize: '13px', color: 'var(--text-secondary)', marginBottom: '8px', fontStyle: 'italic' }}>{s.citation}</div>}
           <div style={{ display: 'flex', gap: '8px', fontSize: '12px', color: 'var(--text-muted)', marginBottom: '6px' }}>
             <span>{s.source_type}</span>
-            {s.url && <span>· <a href={s.url} target="_blank" rel="noopener noreferrer" style={{ color: 'var(--accent)' }}>{s.url}</a></span>}
+            {s.url && <span>В· <a href={s.url} target="_blank" rel="noopener noreferrer" style={{ color: 'var(--accent)' }}>{s.url}</a></span>}
           </div>
           {s.notes && <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>{s.notes}</div>}
           <div style={{ display: 'flex', gap: '8px', marginTop: '8px' }}>

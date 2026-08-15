@@ -8,7 +8,8 @@ from app.models.author_quote import AuthorQuote
 from app.models.author_citizenship import AuthorCitizenship
 from app.models.author_residence import AuthorResidence
 from app.models.ai_proposal import AIProposal
-from app.models.source import Source
+from app.models.source import Source, AuthorSourceLink
+from app.schemas.source import SourceCreate, SourceUpdate
 from app.models.timeline_event import TimelineEvent
 from app.models.author_knowledge_relation import AuthorKnowledgeRelation
 from app.models.author_publication import AuthorPublication
@@ -319,6 +320,11 @@ async def get_author_sources(
 
     source_ids = set()
 
+    direct_result = await db.execute(
+        select(AuthorSourceLink.source_id).where(AuthorSourceLink.author_id == author.id)
+    )
+    source_ids.update(row[0] for row in direct_result)
+
     tl_result = await db.execute(
         select(TimelineEvent.source_id).where(TimelineEvent.author_id == author.id)
     )
@@ -365,6 +371,71 @@ async def get_author_sources(
             "created_at": s.created_at.isoformat() if s.created_at else None,
         } for s in sources],
     }
+
+
+@router.post("/{author_id}/sources", status_code=201)
+async def create_author_source(
+    author_id: str,
+    data: SourceCreate,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    await check_admin(current_user)
+    author = await get_author_or_404(db, author_id)
+    source = Source(**data.model_dump())
+    db.add(source)
+    await db.flush()
+    db.add(AuthorSourceLink(author_id=author.id, source_id=source.id))
+    await db.commit()
+    await db.refresh(source)
+    return source
+
+
+@router.put("/{author_id}/sources/{source_id}")
+async def update_author_source(
+    author_id: str,
+    source_id: str,
+    data: SourceUpdate,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    await check_admin(current_user)
+    author = await get_author_or_404(db, author_id)
+    result = await db.execute(
+        select(Source)
+        .join(AuthorSourceLink, AuthorSourceLink.source_id == Source.id)
+        .where(AuthorSourceLink.author_id == author.id, Source.id == source_id)
+    )
+    source = result.scalar_one_or_none()
+    if not source:
+        raise HTTPException(status_code=404, detail="Author source not found")
+    for key, value in data.model_dump(exclude_unset=True).items():
+        setattr(source, key, value)
+    await db.commit()
+    await db.refresh(source)
+    return source
+
+
+@router.delete("/{author_id}/sources/{source_id}", status_code=204)
+async def delete_author_source(
+    author_id: str,
+    source_id: str,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    await check_admin(current_user)
+    author = await get_author_or_404(db, author_id)
+    result = await db.execute(
+        select(AuthorSourceLink).where(
+            AuthorSourceLink.author_id == author.id,
+            AuthorSourceLink.source_id == source_id,
+        )
+    )
+    link = result.scalar_one_or_none()
+    if not link:
+        raise HTTPException(status_code=404, detail="Author source not found")
+    await db.delete(link)
+    await db.commit()
 
 
 # ============================================================

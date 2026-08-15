@@ -10,6 +10,7 @@ from app.models.author_residence import AuthorResidence
 from app.models.ai_proposal import AIProposal
 from app.models.source import Source, AuthorSourceLink
 from app.schemas.source import SourceCreate, SourceUpdate
+from app.models.ai_proposal_source import AIProposalSource
 from app.models.timeline_event import TimelineEvent
 from app.models.author_knowledge_relation import AuthorKnowledgeRelation
 from app.models.author_publication import AuthorPublication
@@ -458,6 +459,25 @@ async def get_author_proposals(
 
     result = await db.execute(query)
     proposals = result.scalars().all()
+
+    proposal_ids = [proposal.id for proposal in proposals]
+    source_links = {}
+    if proposal_ids:
+        links_result = await db.execute(
+            select(AIProposalSource, Source)
+            .join(Source, Source.id == AIProposalSource.source_id)
+            .where(AIProposalSource.proposal_id.in_(proposal_ids))
+        )
+        for link, source in links_result.all():
+            source_links.setdefault(str(link.proposal_id), []).append({
+                "id": str(source.id),
+                "title": source.title,
+                "url": source.url,
+                "source_type": source.source_type,
+                "reliability_score": source.reliability_score,
+                "reliability_tier": link.reliability_tier,
+            })
+
     return {
         "data": [{
             "id": str(p.id),
@@ -466,12 +486,19 @@ async def get_author_proposals(
             "field_name": p.field_name,
             "current_value": p.current_value,
             "suggested_value": p.suggested_value,
+            "edited_value": p.edited_value,
             "source_type": p.source_type,
             "confidence": p.confidence,
             "status": p.status,
+            "validation_state": p.validation_state,
+            "conflict_state": p.conflict_state,
+            "run_id": str(p.run_id) if p.run_id else None,
+            "applied_at": p.applied_at.isoformat() if p.applied_at else None,
+            "timeline_event_id": str(p.timeline_event_id) if p.timeline_event_id else None,
             "created_at": p.created_at.isoformat() if p.created_at else None,
             "reviewed_at": p.reviewed_at.isoformat() if p.reviewed_at else None,
             "reviewed_by": str(p.reviewed_by) if p.reviewed_by else None,
+            "sources": source_links.get(str(p.id), []),
         } for p in proposals],
     }
 
@@ -513,6 +540,12 @@ async def update_author_proposal(
         proposal.status = data.status
         proposal.reviewed_at = datetime.utcnow()
         proposal.reviewed_by = current_user.id
+    if data.validation_state is not None:
+        proposal.validation_state = data.validation_state
+    if data.conflict_state is not None:
+        proposal.conflict_state = data.conflict_state
+    if data.edited_value is not None:
+        proposal.edited_value = data.edited_value
     await db.commit()
     return {"message": "Proposal updated"}
 

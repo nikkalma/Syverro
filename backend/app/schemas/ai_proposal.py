@@ -20,6 +20,9 @@ class AIProposalCreate(AIProposalBase):
 
 class AIProposalUpdate(BaseModel):
     status: Optional[str] = None
+    validation_state: Optional[str] = None
+    conflict_state: Optional[str] = None
+    edited_value: Optional[str] = None
 
 
 class AIProposalResponse(AIProposalBase):

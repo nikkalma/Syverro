@@ -423,6 +423,15 @@ export interface AuthorResidenceCreate {
 // AI PROPOSALS
 // ============================================================
 
+export interface AIProposalSource {
+  id: string;
+  title: string;
+  url?: string | null;
+  source_type: string;
+  reliability_score: string;
+  reliability_tier?: string | null;
+}
+
 export interface AIProposal {
   id: string;
   entity_type: string;
@@ -430,12 +439,39 @@ export interface AIProposal {
   field_name: string;
   current_value?: string | null;
   suggested_value: string;
+  edited_value?: string | null;
   source_type: string;
   confidence: number;
   status: string;
+  validation_state?: string | null;
+  conflict_state?: string | null;
+  run_id?: string | null;
+  applied_at?: string | null;
+  timeline_event_id?: string | null;
   created_at: string;
   reviewed_at?: string | null;
   reviewed_by?: string | null;
+  sources?: AIProposalSource[];
+}
+
+export interface SyvaiRun {
+  id: string;
+  author_id: string;
+  domain: string;
+  status: string;
+  provider: string;
+  model?: string | null;
+  input_tokens?: number | null;
+  output_tokens?: number | null;
+  total_tokens?: number | null;
+  duration_ms?: number | null;
+  estimated_cost_usd?: number | null;
+  calls: number;
+  source_count: number;
+  error?: string | null;
+  created_at: string;
+  finished_at?: string | null;
+  proposal_count?: number;
 }
 
 export interface AIProposalCreate {

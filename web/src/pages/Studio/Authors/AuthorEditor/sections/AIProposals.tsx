@@ -2,8 +2,61 @@ import { useState, useEffect, useCallback } from 'react';
 import { useAuthorEditor } from '../AuthorEditorContext';
 import EditorSectionCard from '../../../../../components/Studio/shared/EditorSectionCard';
 import { apiClient } from '../../../../../shared/api/client';
-import type { AIProposal } from '../../../../../types/admin';
+import type { AIProposal, SyvaiRun } from '../../../../../types/admin';
 import { getLocaleData, getBrowserLocale } from '../../../../../locales';
+
+const VALIDATION_LABELS: Record<string, string> = {
+  validated: 'validationValidated',
+  needs_review: 'validationNeedsReview',
+  conflict: 'validationConflict',
+  invalid: 'validationInvalid',
+};
+
+const CONFLICT_LABELS: Record<string, string> = {
+  duplicate: 'conflictDuplicate',
+  near_duplicate: 'conflictNearDuplicate',
+  conflict: 'conflictConflict',
+  new: 'conflictNew',
+};
+
+const VALIDATION_COLORS: Record<string, string> = {
+  validated: '#4CAF50',
+  needs_review: '#FFA726',
+  conflict: '#EF5350',
+  invalid: '#EF5350',
+};
+
+const CONFLICT_COLORS: Record<string, string> = {
+  duplicate: '#FFA726',
+  near_duplicate: '#FFA726',
+  conflict: '#EF5350',
+  new: '#5B86A1',
+};
+
+const TIER_COLORS: Record<string, string> = {
+  high: '#4CAF50',
+  medium: '#FFA726',
+  low: '#EF5350',
+  unknown: '#97A6BA',
+};
+
+function parseClaim(value?: string | null): Record<string, any> | null {
+  if (!value) return null;
+  try {
+    const parsed = JSON.parse(value);
+    return parsed && typeof parsed === 'object' ? parsed : null;
+  } catch {
+    return null;
+  }
+}
+
+function summaryLines(value?: string | null): string[] {
+  const parsed = parseClaim(value);
+  if (!parsed) return value ? [value] : [];
+  return [parsed.label, parsed.date_value, parsed.event_type, parsed.description]
+    .filter(Boolean)
+    .map((part) => String(part));
+}
 
 export default function AIProposals() {
   const { author } = useAuthorEditor();
@@ -15,7 +68,9 @@ export default function AIProposals() {
     rejected: copy.rejected,
   };
   const [proposals, setProposals] = useState<AIProposal[]>([]);
+  const [runs, setRuns] = useState<SyvaiRun[]>([]);
   const [loading, setLoading] = useState(true);
+  const [running, setRunning] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [filter, setFilter] = useState<string | undefined>(undefined);
 
@@ -33,15 +88,54 @@ export default function AIProposals() {
     }
   }, [author, filter]);
 
+  const fetchRuns = useCallback(async () => {
+    if (!author) return;
+    try {
+      const res = await apiClient.get(`/admin/authors/${author.id}/ai/runs`);
+      setRuns(res.data?.data || []);
+    } catch {
+      setRuns([]);
+    }
+  }, [author]);
+
   useEffect(() => {
-    if (author) fetchProposals();
-  }, [author, fetchProposals]);
+    if (author) {
+      fetchProposals();
+      fetchRuns();
+    }
+  }, [author, fetchProposals, fetchRuns]);
 
   const updateStatus = async (proposalId: string, status: string) => {
     if (!author) return;
     try {
       await apiClient.put(`/admin/authors/${author.id}/proposals/${proposalId}`, { status });
       await fetchProposals();
+    } catch (e: any) {
+      setError(e?.response?.data?.detail || e.message || copy.failedUpdate);
+    }
+  };
+
+  const runResearch = async () => {
+    if (!author || running) return;
+    setRunning(true);
+    setError(null);
+    try {
+      await apiClient.post(`/admin/authors/${author.id}/ai/timeline`);
+      await fetchProposals();
+      await fetchRuns();
+    } catch (e: any) {
+      setError(e?.response?.data?.detail || e.message || copy.failedUpdate);
+    } finally {
+      setRunning(false);
+    }
+  };
+
+  const applyProposal = async (proposalId: string) => {
+    if (!author) return;
+    try {
+      await apiClient.post(`/admin/authors/${author.id}/proposals/${proposalId}/apply`);
+      await fetchProposals();
+      await fetchRuns();
     } catch (e: any) {
       setError(e?.response?.data?.detail || e.message || copy.failedUpdate);
     }
@@ -60,12 +154,62 @@ export default function AIProposals() {
 
   const filters = ['proposed', 'accepted', 'rejected'];
 
+  const runStatusColor: Record<string, string> = {
+    completed: '#4CAF50',
+    review_needed: '#FFA726',
+    failed: '#EF5350',
+    running: '#5B86A1',
+  };
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
       <EditorSectionCard title={copy.aiTitle}>
-        <p style={{ fontSize: '13px', color: 'var(--text-muted)', margin: '0 0 16px 0', lineHeight: 1.5 }}>
-          {copy.aiDescription}
-        </p>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
+          <p style={{ fontSize: '13px', color: 'var(--text-muted)', margin: 0, lineHeight: 1.5 }}>
+            {copy.aiDescription}
+          </p>
+          <button type="button" onClick={runResearch} disabled={running}
+            style={{
+              padding: '6px 14px', borderRadius: '6px', fontSize: '12px', cursor: 'pointer',
+              background: 'var(--accent)', border: 'none', color: '#fff',
+              opacity: running ? 0.6 : 1, whiteSpace: 'nowrap', marginLeft: '12px',
+            }}>
+            {running ? copy.runningResearch : copy.runResearch}
+          </button>
+        </div>
+
+        {runs.length > 0 && (
+          <div style={{ marginBottom: '16px' }}>
+            <div style={{ fontSize: '10px', textTransform: 'uppercase', color: 'var(--text-muted)', marginBottom: '6px' }}>
+              {copy.runs}
+            </div>
+            {runs.slice(0, 5).map((run) => (
+              <div key={run.id} style={{
+                padding: '6px 12px', marginBottom: '4px', borderRadius: '6px',
+                background: 'var(--surface)', border: '1px solid var(--border-soft)',
+                display: 'flex', gap: '12px', alignItems: 'center', fontSize: '12px',
+              }}>
+                <span style={{ color: runStatusColor[run.status] || 'var(--text-muted)', fontWeight: 500 }}>
+                  {run.status}
+                </span>
+                <span style={{ color: 'var(--text-secondary)' }}>
+                  {run.provider} / {run.model}
+                </span>
+                <span style={{ color: 'var(--text-muted)' }}>
+                  {run.proposal_count ?? 0} proposals · {run.source_count} sources · {run.total_tokens ?? 0} tokens
+                  {run.estimated_cost_usd != null ? ` · $${run.estimated_cost_usd.toFixed(4)}` : ''}
+                </span>
+                {run.error && <span style={{ color: 'var(--error)' }}>{run.error}</span>}
+              </div>
+            ))}
+          </div>
+        )}
+
+        {runs.length === 0 && (
+          <p style={{ fontSize: '12px', color: 'var(--text-muted)', fontStyle: 'italic', margin: '0 0 12px 0' }}>
+            {copy.noRuns}
+          </p>
+        )}
 
         {proposals.length > 0 && (
           <div style={{ display: 'flex', gap: '8px', marginBottom: '16px', flexWrap: 'wrap' }}>
@@ -102,87 +246,159 @@ export default function AIProposals() {
           </p>
         )}
 
-        {filtered.map((p) => (
-          <div key={p.id} style={{
-            padding: '12px 16px', marginBottom: '8px',
-            background: 'var(--surface-hover)', borderRadius: '8px',
-            border: '1px solid var(--border-soft)',
-            opacity: p.status === 'rejected' ? 0.5 : 1,
-          }}>
-            <div style={{ display: 'flex', gap: '8px', alignItems: 'flex-start', marginBottom: '8px' }}>
-              <span style={{
-                padding: '2px 8px', borderRadius: '4px', fontSize: '10px',
-                textTransform: 'uppercase', fontWeight: 500,
-                background: p.source_type === 'ai' ? 'rgba(91,134,161,0.15)' : 'rgba(76,175,80,0.15)',
-                color: p.source_type === 'ai' ? '#5B86A1' : '#4CAF50',
-              }}>
-                {p.source_type === 'ai' ? copy.aiTitle : p.source_type}
-              </span>
-              <span style={{
-                padding: '2px 8px', borderRadius: '4px', fontSize: '10px',
-                textTransform: 'uppercase', fontWeight: 500,
-                background: p.status === 'proposed' ? 'rgba(255,167,38,0.15)' :
-                  p.status === 'accepted' ? 'rgba(76,175,80,0.15)' : 'rgba(239,83,80,0.15)',
-                color: p.status === 'proposed' ? '#FFA726' :
-                  p.status === 'accepted' ? '#4CAF50' : '#EF5350',
-              }}>
-                {proposalStatusLabels[p.status] || p.status}
-              </span>
-              <span style={{ fontSize: '11px', color: 'var(--text-muted)', marginLeft: 'auto' }}>
-                {(p.confidence * 100).toFixed(0)}% {copy.confidence}
-              </span>
-            </div>
-
-            <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '4px' }}>
-              {p.entity_type} → {p.field_name}
-            </div>
-
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', marginBottom: '8px' }}>
-              <div style={{
-                padding: '8px', borderRadius: '6px',
-                background: 'var(--surface)', border: '1px solid var(--border-soft)',
-              }}>
-                <div style={{ fontSize: '10px', textTransform: 'uppercase', color: 'var(--text-muted)', marginBottom: '2px' }}>
-                  {copy.currentValue}
-                </div>
-                <div style={{ fontSize: '13px', color: p.current_value ? 'var(--text-primary)' : 'var(--text-muted)', fontStyle: p.current_value ? 'normal' : 'italic' }}>
-                  {p.current_value || copy.empty}
-                </div>
-              </div>
-              <div style={{
-                padding: '8px', borderRadius: '6px',
-                background: 'rgba(76,175,80,0.08)', border: '1px solid rgba(76,175,80,0.2)',
-              }}>
-                <div style={{ fontSize: '10px', textTransform: 'uppercase', color: '#4CAF50', marginBottom: '2px' }}>
-                  {copy.suggestedValue}
-                </div>
-                <div style={{ fontSize: '13px', color: 'var(--text-primary)' }}>
-                  {p.suggested_value}
-                </div>
-              </div>
-            </div>
-
-            {p.status === 'proposed' && (
-              <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
-                <button type="button" onClick={() => updateStatus(p.id, 'rejected')}
-                  style={{
-                    padding: '6px 14px', borderRadius: '6px', fontSize: '12px', cursor: 'pointer',
-                    background: 'transparent', border: '1px solid var(--border-soft)',
-                    color: 'var(--error)',
+        {filtered.map((p) => {
+          const current = summaryLines(p.current_value);
+          const suggested = summaryLines(p.suggested_value);
+          const validationKey = p.validation_state ? VALIDATION_LABELS[p.validation_state] : null;
+          const conflictKey = p.conflict_state ? CONFLICT_LABELS[p.conflict_state] : null;
+          return (
+            <div key={p.id} style={{
+              padding: '12px 16px', marginBottom: '8px',
+              background: 'var(--surface-hover)', borderRadius: '8px',
+              border: '1px solid var(--border-soft)',
+              opacity: p.status === 'rejected' ? 0.5 : 1,
+            }}>
+              <div style={{ display: 'flex', gap: '8px', alignItems: 'flex-start', marginBottom: '8px', flexWrap: 'wrap' }}>
+                <span style={{
+                  padding: '2px 8px', borderRadius: '4px', fontSize: '10px',
+                  textTransform: 'uppercase', fontWeight: 500,
+                  background: p.source_type === 'ai' ? 'rgba(91,134,161,0.15)' : 'rgba(76,175,80,0.15)',
+                  color: p.source_type === 'ai' ? '#5B86A1' : '#4CAF50',
+                }}>
+                  {p.source_type === 'ai' ? copy.aiTitle : p.source_type}
+                </span>
+                <span style={{
+                  padding: '2px 8px', borderRadius: '4px', fontSize: '10px',
+                  textTransform: 'uppercase', fontWeight: 500,
+                  background: p.status === 'proposed' ? 'rgba(255,167,38,0.15)' :
+                    p.status === 'accepted' ? 'rgba(76,175,80,0.15)' : 'rgba(239,83,80,0.15)',
+                  color: p.status === 'proposed' ? '#FFA726' :
+                    p.status === 'accepted' ? '#4CAF50' : '#EF5350',
+                }}>
+                  {proposalStatusLabels[p.status] || p.status}
+                </span>
+                {validationKey && (
+                  <span style={{
+                    padding: '2px 8px', borderRadius: '4px', fontSize: '10px',
+                    textTransform: 'uppercase', fontWeight: 500,
+                    background: `${VALIDATION_COLORS[p.validation_state!]}1f`,
+                    color: VALIDATION_COLORS[p.validation_state!],
                   }}>
-                  {copy.reject}
-                </button>
-                <button type="button" onClick={() => updateStatus(p.id, 'accepted')}
-                  style={{
-                    padding: '6px 14px', borderRadius: '6px', fontSize: '12px', cursor: 'pointer',
-                    background: '#4CAF50', border: 'none', color: '#fff',
+                    {copy[validationKey as keyof typeof copy] as string}
+                  </span>
+                )}
+                {conflictKey && p.conflict_state !== 'new' && (
+                  <span style={{
+                    padding: '2px 8px', borderRadius: '4px', fontSize: '10px',
+                    textTransform: 'uppercase', fontWeight: 500,
+                    background: `${CONFLICT_COLORS[p.conflict_state!]}1f`,
+                    color: CONFLICT_COLORS[p.conflict_state!],
                   }}>
-                  {copy.accept}
-                </button>
+                    {copy[conflictKey as keyof typeof copy] as string}
+                  </span>
+                )}
+                {p.applied_at && (
+                  <span style={{
+                    padding: '2px 8px', borderRadius: '4px', fontSize: '10px',
+                    textTransform: 'uppercase', fontWeight: 500,
+                    background: 'rgba(76,175,80,0.15)', color: '#4CAF50',
+                  }}>
+                    {copy.applied}
+                  </span>
+                )}
+                <span style={{ fontSize: '11px', color: 'var(--text-muted)', marginLeft: 'auto' }}>
+                  {(p.confidence * 100).toFixed(0)}% {copy.confidence}
+                </span>
               </div>
-            )}
-          </div>
-        ))}
+
+              <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '4px' }}>
+                {p.entity_type} → {p.field_name}
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', marginBottom: '8px' }}>
+                <div style={{
+                  padding: '8px', borderRadius: '6px',
+                  background: 'var(--surface)', border: '1px solid var(--border-soft)',
+                }}>
+                  <div style={{ fontSize: '10px', textTransform: 'uppercase', color: 'var(--text-muted)', marginBottom: '2px' }}>
+                    {copy.currentValue}
+                  </div>
+                  <div style={{ fontSize: '13px', color: current.length ? 'var(--text-primary)' : 'var(--text-muted)', fontStyle: current.length ? 'normal' : 'italic' }}>
+                    {current.length ? current.join(' · ') : copy.empty}
+                  </div>
+                </div>
+                <div style={{
+                  padding: '8px', borderRadius: '6px',
+                  background: 'rgba(76,175,80,0.08)', border: '1px solid rgba(76,175,80,0.2)',
+                }}>
+                  <div style={{ fontSize: '10px', textTransform: 'uppercase', color: '#4CAF50', marginBottom: '2px' }}>
+                    {copy.suggestedValue}
+                  </div>
+                  <div style={{ fontSize: '13px', color: 'var(--text-primary)' }}>
+                    {suggested.join(' · ') || p.suggested_value}
+                  </div>
+                </div>
+              </div>
+
+              {p.sources && p.sources.length > 0 && (
+                <div style={{ marginBottom: '8px' }}>
+                  <div style={{ fontSize: '10px', textTransform: 'uppercase', color: 'var(--text-muted)', marginBottom: '4px' }}>
+                    {copy.sources}
+                  </div>
+                  {p.sources.map((s) => (
+                    <span key={s.id} style={{
+                      display: 'inline-flex', alignItems: 'center', gap: '6px',
+                      padding: '2px 8px', margin: '0 4px 4px 0', borderRadius: '4px',
+                      background: 'var(--surface)', border: '1px solid var(--border-soft)', fontSize: '11px',
+                    }}>
+                      <span style={{
+                        padding: '1px 5px', borderRadius: '3px', fontSize: '9px', fontWeight: 600,
+                        textTransform: 'uppercase',
+                        background: `${TIER_COLORS[s.reliability_tier || 'unknown']}1f`,
+                        color: TIER_COLORS[s.reliability_tier || 'unknown'],
+                      }}>
+                        {s.reliability_tier || 'unknown'}
+                      </span>
+                      {s.title}
+                    </span>
+                  ))}
+                </div>
+              )}
+
+              {p.status === 'proposed' && (
+                <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
+                  <button type="button" onClick={() => updateStatus(p.id, 'rejected')}
+                    style={{
+                      padding: '6px 14px', borderRadius: '6px', fontSize: '12px', cursor: 'pointer',
+                      background: 'transparent', border: '1px solid var(--border-soft)',
+                      color: 'var(--error)',
+                    }}>
+                    {copy.reject}
+                  </button>
+                  <button type="button" onClick={() => updateStatus(p.id, 'accepted')}
+                    style={{
+                      padding: '6px 14px', borderRadius: '6px', fontSize: '12px', cursor: 'pointer',
+                      background: '#4CAF50', border: 'none', color: '#fff',
+                    }}>
+                    {copy.accept}
+                  </button>
+                </div>
+              )}
+
+              {p.status === 'accepted' && p.field_name === 'timeline_event' && !p.applied_at && (
+                <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
+                  <button type="button" onClick={() => applyProposal(p.id)}
+                    style={{
+                      padding: '6px 14px', borderRadius: '6px', fontSize: '12px', cursor: 'pointer',
+                      background: 'var(--accent)', border: 'none', color: '#fff',
+                    }}>
+                    {copy.apply}
+                  </button>
+                </div>
+              )}
+            </div>
+          );
+        })}
 
         {error && (
           <div style={{ padding: '10px', borderRadius: '6px', background: 'rgba(220,38,38,0.1)', border: '1px solid rgba(220,38,38,0.3)', color: 'var(--error)', fontSize: '13px' }}>

@@ -47,6 +47,7 @@ services:
       RESEND_API_KEY: ${RESEND_API_KEY:-}
       EMAIL_FROM: ${EMAIL_FROM:-}
       SITE_URL: ${SITE_URL:-https://syverro.com}
+      AUTH_COOKIE_DOMAIN: ${AUTH_COOKIE_DOMAIN:-syverro.com}
     ports:
       - "127.0.0.1:8000:8000"
     healthcheck:

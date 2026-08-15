@@ -50,6 +50,8 @@ def _set_auth_cookies(response: Response, tokens: TokenResponse) -> None:
         "secure": settings.AUTH_COOKIE_SECURE,
         "samesite": "strict",
     }
+    if settings.AUTH_COOKIE_DOMAIN:
+        cookie_options["domain"] = settings.AUTH_COOKIE_DOMAIN
     response.set_cookie(
         ACCESS_COOKIE_NAME,
         tokens.access_token,
@@ -262,8 +264,12 @@ async def logout(
             .values(revoked_at=datetime.utcnow())
         )
         await db.commit()
-    response.delete_cookie(ACCESS_COOKIE_NAME, path="/")
-    response.delete_cookie(REFRESH_COOKIE_NAME, path="/auth")
+    response.delete_cookie(
+        ACCESS_COOKIE_NAME, path="/", domain=settings.AUTH_COOKIE_DOMAIN
+    )
+    response.delete_cookie(
+        REFRESH_COOKIE_NAME, path="/auth", domain=settings.AUTH_COOKIE_DOMAIN
+    )
 
 
 @router.get("/me", response_model=UserResponse)

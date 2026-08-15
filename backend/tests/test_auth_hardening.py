@@ -218,6 +218,7 @@ async def test_refresh_token_cannot_authenticate_as_bearer():
 @pytest.mark.asyncio
 async def test_login_sets_http_only_secure_strict_cookies(monkeypatch):
     monkeypatch.setattr(settings, "AUTH_COOKIE_SECURE", True)
+    monkeypatch.setattr(settings, "AUTH_COOKIE_DOMAIN", "syverro.com")
     user = SimpleNamespace(
         id=uuid4(),
         password_hash=auth.get_password_hash("strong-password"),
@@ -242,6 +243,7 @@ async def test_login_sets_http_only_secure_strict_cookies(monkeypatch):
         and "HttpOnly" in cookie
         and "Secure" in cookie
         and "SameSite=strict" in cookie
+        and "Domain=syverro.com" in cookie
         for cookie in cookies
     )
     assert any(
@@ -249,6 +251,7 @@ async def test_login_sets_http_only_secure_strict_cookies(monkeypatch):
         and "HttpOnly" in cookie
         and "Secure" in cookie
         and "SameSite=strict" in cookie
+        and "Domain=syverro.com" in cookie
         and "Path=/auth" in cookie
         for cookie in cookies
     )
@@ -291,18 +294,23 @@ async def test_refresh_cookie_rotates_tokens_without_request_body():
 
 
 @pytest.mark.asyncio
-async def test_logout_expires_both_auth_cookies():
+async def test_logout_expires_both_auth_cookies(monkeypatch):
+    monkeypatch.setattr(settings, "AUTH_COOKIE_DOMAIN", "syverro.com")
     response = Response()
 
     await auth.logout(response, refresh_cookie=None, db=FakeSession([]))
 
     cookies = response.headers.getlist("set-cookie")
     assert any(
-        cookie.startswith("syverro_access=") and "Max-Age=0" in cookie
+        cookie.startswith("syverro_access=")
+        and "Max-Age=0" in cookie
+        and "Domain=syverro.com" in cookie
         for cookie in cookies
     )
     assert any(
-        cookie.startswith("syverro_refresh=") and "Max-Age=0" in cookie
+        cookie.startswith("syverro_refresh=")
+        and "Max-Age=0" in cookie
+        and "Domain=syverro.com" in cookie
         for cookie in cookies
     )
 

@@ -12,6 +12,13 @@ within the same React frontend, mounted under `/studio/*` and protected by
 role-based access. Legacy `/admin/*` URLs redirect to their `/studio/*`
 counterparts.
 
+## Deployment task
+
+- Move Studio from `/studio/*` to `studio.syverro.com`, preserving role-based
+  access and a direct navigation link back to `syverro.com`. Treat DNS,
+  routing, authentication-cookie scope, and legacy `/studio/*` redirects as
+  explicit acceptance criteria.
+
 ## Reader vs. Studio
 
 | Area | Reader | Studio |

@@ -48,6 +48,9 @@ class Settings:
             os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", "30")
         )
         self.AUTH_COOKIE_SECURE = self.ENVIRONMENT not in {"development", "test"}
+        self.AUTH_COOKIE_DOMAIN = os.getenv("AUTH_COOKIE_DOMAIN") or (
+            "syverro.com" if self.ENVIRONMENT == "production" else None
+        )
 
         if self.DATABASE_URL:
             if self.DATABASE_URL.startswith("postgres://"):

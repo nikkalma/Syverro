@@ -33,6 +33,15 @@ class Settings:
                 self.ENVIRONMENT,
             )
         self.SECRET_KEY = configured_secret
+        # --- SyvAI provider settings ---
+        # Real API keys are read from the environment only; nothing is committed.
+        self.SYVAI_OPENAI_API_KEY = os.getenv("SYVAI_OPENAI_API_KEY", "")
+        self.SYVAI_OPENAI_BASE_URL = os.getenv("SYVAI_OPENAI_BASE_URL", "https://api.openai.com/v1")
+        self.SYVAI_OPENAI_MODEL = os.getenv("SYVAI_OPENAI_MODEL", "gpt-4o-mini")
+        self.SYVAI_PROVIDER_TIMEOUT_SECONDS = float(os.getenv("SYVAI_PROVIDER_TIMEOUT_SECONDS", "60"))
+        self.SYVAI_PROVIDER_TEMPERATURE = float(os.getenv("SYVAI_PROVIDER_TEMPERATURE", "0"))
+        self.SYVAI_PROVIDER_MAX_TOKENS = int(os.getenv("SYVAI_PROVIDER_MAX_TOKENS", "4096"))
+
         self.TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN", "")
         self.TELEGRAM_AUTH_MAX_AGE_SECONDS = int(
             os.getenv("TELEGRAM_AUTH_MAX_AGE_SECONDS", "300")

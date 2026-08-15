@@ -65,7 +65,7 @@ async def migration_engine():
 def test_expected_head_is_author_source_links_revision():
     from app.migrations import expected_head
 
-    assert expected_head() == "0021_author_source_links"
+assert expected_head() == "0021_syvai_timeline_foundation"
 
 
 @pytest.mark.asyncio
@@ -85,8 +85,18 @@ async def test_empty_database_bootstraps_to_head(migration_engine):
         table_names = await conn.run_sync(
             lambda sync_conn: set(inspect(sync_conn).get_table_names())
         )
+        proposal_columns = await conn.run_sync(
+            lambda sync_conn: {
+                column["name"] for column in inspect(sync_conn).get_columns("ai_proposals")
+            }
+        )
+        run_columns = await conn.run_sync(
+            lambda sync_conn: {
+                column["name"] for column in inspect(sync_conn).get_columns("syvai_runs")
+            }
+        )
 
-    assert revision == "0021_author_source_links"
+assert revision == "0021_syvai_timeline_foundation"
     assert {
         "email_verified",
         "email_verification_token_hash",
@@ -94,6 +104,28 @@ async def test_empty_database_bootstraps_to_head(migration_engine):
     } <= columns
     assert "refresh_sessions" in table_names
     assert "security_audit_logs" in table_names
+    assert "syvai_runs" in table_names
+    assert "ai_proposal_sources" in table_names
+    assert {
+        "validation_state",
+        "conflict_state",
+        "edited_value",
+        "run_id",
+        "applied_at",
+        "timeline_event_id",
+    } <= proposal_columns
+    assert {
+        "status",
+        "provider",
+        "model",
+        "input_tokens",
+        "output_tokens",
+        "total_tokens",
+        "duration_ms",
+        "estimated_cost_usd",
+        "error",
+    } <= run_columns
+
     assert _run_migration_command("check").returncode == 0
 
 
@@ -114,6 +146,19 @@ async def test_revision_0017_is_upgraded_before_backend_start(migration_engine):
                 "DROP COLUMN email_verified"
             )
         )
+        await conn.execute(text("DROP TABLE ai_proposal_sources"))
+        await conn.execute(
+            text(
+                "ALTER TABLE ai_proposals "
+                "DROP COLUMN validation_state, "
+                "DROP COLUMN conflict_state, "
+                "DROP COLUMN edited_value, "
+                "DROP COLUMN run_id, "
+                "DROP COLUMN applied_at, "
+                "DROP COLUMN timeline_event_id"
+            )
+        )
+        await conn.execute(text("DROP TABLE syvai_runs"))
         await conn.execute(
             text("UPDATE alembic_version SET version_num = '0017_book_slugs'")
         )
@@ -131,7 +176,7 @@ async def test_revision_0017_is_upgraded_before_backend_start(migration_engine):
             }
         )
 
-    assert revision == "0021_author_source_links"
+assert revision == "0021_syvai_timeline_foundation"
     assert "email_verified" in columns
 
 

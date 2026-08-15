@@ -24,6 +24,8 @@ from app.models.author_quote import AuthorQuote
 from app.models.author_citizenship import AuthorCitizenship
 from app.models.author_residence import AuthorResidence
 from app.models.ai_proposal import AIProposal
+from app.models.ai_proposal_source import AIProposalSource
+from app.models.syvai_run import SyvaiRun
 from app.models.author_publication import AuthorPublication
 
 __all__ = [
@@ -51,5 +53,7 @@ __all__ = [
     "AuthorCitizenship",
     "AuthorResidence",
     "AIProposal",
+    "AIProposalSource",
+    "SyvaiRun",
     "AuthorPublication",
 ]

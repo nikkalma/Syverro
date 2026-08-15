@@ -26,6 +26,7 @@ android {
     }
 
     compileOptions {
+        isCoreLibraryDesugaringEnabled = true
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
     }
@@ -70,6 +71,11 @@ dependencies {
     implementation(libs.androidx.room.runtime)
     implementation(libs.androidx.room.ktx)
     kapt(libs.androidx.room.compiler)
+
+    implementation(libs.readium.streamer)
+    implementation(libs.readium.shared)
+
+    coreLibraryDesugaring(libs.desugar.jdk.libs)
 
     debugImplementation(libs.androidx.ui.tooling)
 

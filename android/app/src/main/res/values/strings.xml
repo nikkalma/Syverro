@@ -40,6 +40,9 @@
     </plurals>
 
     <string name="library_title">Библиотека</string>
+    <string name="import_epub">Импорт EPUB</string>
+    <string name="importing">Импорт…</string>
+    <string name="import_failed">Не удалось импортировать EPUB</string>
     <string name="filter_all">Все</string>
     <string name="filter_reading">Читаю</string>
     <string name="filter_finished">Прочитано</string>

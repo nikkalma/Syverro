@@ -6,4 +6,6 @@ import com.syverro.domain.model.ReadingStatus
 data class LibraryUiState(
     val books: List<PersonalBook> = emptyList(),
     val filter: ReadingStatus? = null,
+    val isImporting: Boolean = false,
+    val importError: Boolean = false,
 )

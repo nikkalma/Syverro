@@ -1,5 +1,8 @@
 package com.syverro.presentation.library
 
+import android.content.Intent
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
@@ -12,6 +15,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -29,6 +33,18 @@ fun LibraryScreen(
     onBookSelected: (String) -> Unit,
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
+    val context = LocalContext.current
+
+    val importLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.OpenDocument(),
+    ) { uri ->
+        if (uri != null) {
+            runCatching {
+                context.contentResolver.takePersistableUriPermission(uri, Intent.FLAG_GRANT_READ_URI_PERMISSION)
+            }
+            viewModel.onEvent(LibraryEvent.ImportEpub(uri))
+        }
+    }
 
     Column(
         modifier = Modifier
@@ -36,11 +52,29 @@ fun LibraryScreen(
             .padding(horizontal = 24.dp)
             .padding(top = 40.dp),
     ) {
-        Text(
-            text = stringResource(R.string.library_title),
-            style = MaterialTheme.typography.headlineLarge,
-            color = MaterialTheme.colorScheme.onBackground,
-        )
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Text(
+                text = stringResource(R.string.library_title),
+                style = MaterialTheme.typography.headlineLarge,
+                color = MaterialTheme.colorScheme.onBackground,
+            )
+            TextButton(
+                enabled = !state.isImporting,
+                onClick = {
+                    importLauncher.launch(arrayOf("application/epub+zip", "application/octet-stream"))
+                },
+            ) {
+                Text(
+                    text = stringResource(
+                        if (state.isImporting) R.string.importing else R.string.import_epub,
+                    ),
+                )
+            }
+        }
 
         Spacer(modifier = Modifier.height(Spacing.xl.dp))
 
@@ -95,6 +129,15 @@ fun LibraryScreen(
         }
 
         Spacer(modifier = Modifier.height(Spacing.xl.dp))
+
+        if (state.importError) {
+            Text(
+                text = stringResource(R.string.import_failed),
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.error,
+            )
+            Spacer(modifier = Modifier.height(Spacing.sm.dp))
+        }
 
         val books = state.books
         if (books.isEmpty()) {

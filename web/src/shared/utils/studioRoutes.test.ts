@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { isStudioHostname, studioPath, studioUrl } from './studioRoutes';
+import { isStudioHostname, normalizeStudioPath, studioPath, studioUrl } from './studioRoutes';
 
 describe('Studio routes', () => {
   it('uses clean root paths on the Studio subdomain', () => {
@@ -12,5 +12,11 @@ describe('Studio routes', () => {
   it('preserves legacy paths away from the Studio subdomain', () => {
     expect(studioPath('users', 'syverro.com')).toBe('/studio/users');
     expect(studioUrl('users')).toBe('https://studio.syverro.com/users');
+  });
+
+  it('normalizes legacy Studio and admin return paths', () => {
+    expect(normalizeStudioPath('/studio/users')).toBe('/users');
+    expect(normalizeStudioPath('/admin/books')).toBe('/books');
+    expect(studioUrl('/studio/users')).toBe('https://studio.syverro.com/users');
   });
 });

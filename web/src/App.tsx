@@ -58,18 +58,18 @@ import StudioSettings from "./pages/Studio/Settings";
 import ModerationQueue from "./pages/Studio/Moderation/ModerationPage";
 import MetadataWorkspace from "./pages/Studio/Metadata/MetadataPage";
 import BookEnrichmentPage from "./pages/Studio/Metadata/BookEnrichmentPage";
-import { isStudioHostname, studioUrl } from './shared/utils/studioRoutes';
+import { isStudioHostname, normalizeStudioPath, studioUrl } from './shared/utils/studioRoutes';
 
 
 function LegacyStudioRedirect() {
   const location = useLocation();
-  const cleanPath = location.pathname.replace(/^\/studio/, '') || '/';
+  const cleanPath = normalizeStudioPath(location.pathname);
   return <Navigate to={`${cleanPath}${location.search}${location.hash}`} replace />;
 }
 
 function PublicStudioRedirect() {
   const location = useLocation();
-  const cleanPath = location.pathname.replace(/^\/(?:studio|admin)/, '') || '/';
+  const cleanPath = normalizeStudioPath(location.pathname);
   window.location.replace(`${studioUrl(cleanPath)}${location.search}${location.hash}`);
   return null;
 }
@@ -142,7 +142,7 @@ export default function App() {
           <Route path="authors" element={<StudioAuthorsLayout />}>
             <Route index element={<Navigate to="list" replace />} />
             <Route path="list" element={<AuthorList />} />
-            <Route path="new" element={<Navigate to="/studio/authors/list" replace />} />
+            <Route path="new" element={<Navigate to={studioDomain ? '/authors/list' : '/studio/authors/list'} replace />} />
 
             <Route path=":id/edit" element={<AuthorEditorLayout />}>
               <Route index element={<Navigate to="overview" replace />} />

@@ -6,6 +6,7 @@ import type {
   KnowledgeEntityUpdate,
 } from '../../../types/admin';
 import { apiClient } from '../../../shared/api/client';
+import { studioPath } from '../../../shared/utils/studioRoutes';
 
 interface EntityWorkspaceContextType {
   entity: KnowledgeEntity | null;
@@ -69,7 +70,7 @@ export function EntityWorkspaceProvider({ children }: { children: ReactNode }) {
         const res = await apiClient.post('/admin/taxonomy/nodes', data);
         const created = res.data;
         setEntity(created);
-        navigate(`/studio/entities/${created.id}/overview`, { replace: true });
+        navigate(studioPath(`entities/${created.id}/overview`), { replace: true });
       } else if (id) {
         await apiClient.put(`/admin/taxonomy/nodes/${id}`, data);
         const res = await apiClient.get(`/taxonomy/nodes/${id}`);

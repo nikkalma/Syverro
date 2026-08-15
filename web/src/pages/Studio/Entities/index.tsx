@@ -7,6 +7,7 @@ import { ENTITY_TYPES } from '../../../types/admin';
 import { getLocaleData, getBrowserLocale } from '../../../locales';
 import { apiClient } from '../../../shared/api/client';
 import { entityTypeLabel } from './entityType';
+import { studioPath } from '../../../shared/utils/studioRoutes';
 
 type FilterKey = 'all' | 'genre' | 'movement' | 'place' | 'timeline';
 
@@ -107,7 +108,7 @@ export default function StudioEntities() {
           </p>
         </div>
         <button
-          onClick={() => navigate('/studio/entities/new')}
+          onClick={() => navigate(studioPath('entities/new'))}
           style={{
             padding: '10px 20px',
             background: 'var(--primary)',
@@ -196,7 +197,7 @@ export default function StudioEntities() {
           {entities.map((entity) => (
             <div
               key={entity.id}
-              onClick={() => navigate(`/studio/entities/${entity.id}/overview`)}
+              onClick={() => navigate(studioPath(`entities/${entity.id}/overview`))}
               style={{
                 background: 'var(--surface)',
                 border: '1px solid var(--border-soft)',

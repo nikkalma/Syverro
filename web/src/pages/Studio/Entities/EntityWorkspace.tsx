@@ -2,6 +2,7 @@ import { getLocaleData, getBrowserLocale } from '../../../locales';
 import { EntityWorkspaceProvider, useEntityWorkspace } from './EntityWorkspaceContext';
 import EntityWorkspaceLayout from '../../../components/Studio/shared/EntityWorkspaceLayout';
 import { entityTypeLabel } from './entityType';
+import { studioPath } from '../../../shared/utils/studioRoutes';
 
 export const SECTION_PATHS = ['overview', 'identity'] as const;
 
@@ -33,7 +34,7 @@ function WorkspaceContent() {
       sapphireStatus={entity?.is_sapphire ? t.admin.workspace.sapphire : undefined}
       explorerVisible={entity?.explorer_visible}
       sections={activeSections}
-      basePath={isNew ? '/studio/entities/new' : `/studio/entities/${entityId}`}
+      basePath={studioPath(isNew ? 'entities/new' : `entities/${entityId}`)}
       loading={loading}
       error={error}
       notFoundLabel={t.admin.entities.title}

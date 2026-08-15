@@ -1,5 +1,6 @@
 import { NavLink, Outlet } from 'react-router-dom';
 import { getLocaleData, getBrowserLocale } from '../../../locales';
+import { studioPath } from '../../../shared/utils/studioRoutes';
 
 const tabStyle = ({ isActive }: { isActive: boolean }): React.CSSProperties => ({
   background: 'none',
@@ -27,10 +28,10 @@ export default function StudioAuthorsLayout() {
         gap: '4px',
         borderBottom: '1px solid var(--border-soft)',
       }}>
-        <NavLink to="/studio/authors/list" style={tabStyle} end>
+        <NavLink to={studioPath('authors/list')} style={tabStyle} end>
           {t.admin.authors.title}
         </NavLink>
-        <NavLink to="/studio/authors/new" style={tabStyle}>
+        <NavLink to={studioPath('authors/new')} style={tabStyle}>
           {t.admin.authors.newAuthor}
         </NavLink>
       </div>

@@ -2,6 +2,7 @@ import { getLocaleData, getBrowserLocale } from '../../../../locales';
 import EntityWorkspaceLayout from '../../../../components/Studio/shared/EntityWorkspaceLayout';
 import { BookWorkspaceProvider, useBookWorkspace } from './BookWorkspaceContext';
 import { getBookCompletion } from './bookWorkspaceModel';
+import { studioPath } from '../../../../shared/utils/studioRoutes';
 
 const SECTION_PATHS = ['overview', 'identity', 'editorial', 'knowledge', 'preview'] as const;
 
@@ -40,7 +41,7 @@ function WorkspaceContent() {
           : p === 'preview' ? t.admin.bookWorkspace.previewPublishing
           : (t.admin.workspace.sections as Record<string, string>)[p],
       }))}
-      basePath={book?.id ? `/studio/books/${book.id}/workspace` : ''}
+      basePath={book?.id ? studioPath(`books/${book.id}/workspace`) : ''}
       loading={loading}
       error={error}
       notFoundLabel={t.admin.workspace.book}

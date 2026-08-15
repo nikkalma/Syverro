@@ -9,6 +9,7 @@ import AuthorModal from './AuthorModal';
 import { canManageAuthors } from '../../../types/admin';
 import { getLocaleData, getBrowserLocale } from '../../../locales';
 import { apiClient } from '../../../shared/api/client';
+import { studioPath } from '../../../shared/utils/studioRoutes';
 
 export default function AuthorList() {
   const navigate = useNavigate();
@@ -91,7 +92,7 @@ export default function AuthorList() {
   };
 
   const handleOpenEdit = (author: AdminAuthor) => {
-    navigate(`/studio/authors/${author.id}/edit`);
+    navigate(studioPath(`authors/${author.id}/edit`));
   };
 
   const handleOpenDelete = (author: AdminAuthor) => {

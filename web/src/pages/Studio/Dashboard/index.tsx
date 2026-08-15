@@ -9,6 +9,7 @@ import RecentUsers from './RecentUsers';
 import RecentActivity from './RecentActivity';
 import DashboardModuleCards from './DashboardModuleCards';
 import { apiClient } from '../../../shared/api/client';
+import { studioPath } from '../../../shared/utils/studioRoutes';
 
 export default function StudioHome() {
   const navigate = useNavigate();
@@ -84,12 +85,12 @@ export default function StudioHome() {
   }
 
   const snapshotCards = [
-    { label: t.admin.dashboard.users, value: stats?.total_users ?? 0, icon: <Users size={18} />, to: '/studio/users' },
-    { label: t.admin.dashboard.books, value: stats?.total_books ?? 0, icon: <BookOpen size={18} />, to: '/studio/books' },
-    { label: t.admin.dashboard.authors, value: stats?.total_authors ?? 0, icon: <PenLine size={18} />, to: '/studio/authors' },
-    { label: t.admin.dashboard.genres, value: stats?.total_genres ?? 0, icon: <Tags size={18} />, to: '/studio/genres' },
-    { label: t.admin.dashboard.activeUsers, value: stats?.active_users ?? 0, icon: <UserCheck size={18} />, to: '/studio/users' },
-    { label: t.admin.dashboard.newUsers24h, value: stats?.new_users_24h ?? 0, icon: <UserPlus size={18} />, to: '/studio/users' },
+    { label: t.admin.dashboard.users, value: stats?.total_users ?? 0, icon: <Users size={18} />, to: studioPath('users') },
+    { label: t.admin.dashboard.books, value: stats?.total_books ?? 0, icon: <BookOpen size={18} />, to: studioPath('books') },
+    { label: t.admin.dashboard.authors, value: stats?.total_authors ?? 0, icon: <PenLine size={18} />, to: studioPath('authors') },
+    { label: t.admin.dashboard.genres, value: stats?.total_genres ?? 0, icon: <Tags size={18} />, to: studioPath('genres') },
+    { label: t.admin.dashboard.activeUsers, value: stats?.active_users ?? 0, icon: <UserCheck size={18} />, to: studioPath('users') },
+    { label: t.admin.dashboard.newUsers24h, value: stats?.new_users_24h ?? 0, icon: <UserPlus size={18} />, to: studioPath('users') },
   ];
 
   return (

@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../store/authStore';
 import TelegramLogin from '../components/auth/TelegramLogin';
+import { studioUrl } from '../shared/utils/studioRoutes';
 
 export default function Login() {
   const [email, setEmail] = useState('');
@@ -18,8 +19,7 @@ export default function Login() {
   const finishLogin = () => {
     const params = new URLSearchParams(location.search);
     if (params.get('returnTo') === 'studio') {
-      const studioPath = params.get('studioPath') || '/';
-      window.location.assign(`https://studio.syverro.com${studioPath.startsWith('/') ? studioPath : '/'}`);
+      window.location.assign(studioUrl(params.get('studioPath') || '/'));
       return;
     }
     navigate('/');

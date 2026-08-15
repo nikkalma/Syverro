@@ -11,6 +11,7 @@ import BookModal from './BookModal';
 import { canManageBooks } from '../../../types/admin';
 import { getLocaleData, getBrowserLocale } from '../../../locales';
 import { apiClient } from '../../../shared/api/client';
+import { studioPath } from '../../../shared/utils/studioRoutes';
 
 export default function AdminBooks() {
   const locale = getBrowserLocale();
@@ -110,7 +111,7 @@ export default function AdminBooks() {
   };
 
   const handleOpenEdit = (book: AdminBook) => {
-    navigate(`/studio/books/${book.id}/workspace`);
+    navigate(studioPath(`books/${book.id}/workspace`));
   };
 
   const handleOpenDelete = (book: AdminBook) => {

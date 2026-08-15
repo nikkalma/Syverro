@@ -2,6 +2,7 @@
 
 import { useNavigate } from 'react-router-dom';
 import { getLocaleData, getBrowserLocale } from '../../../locales';
+import { studioPath } from '../../../shared/utils/studioRoutes';
 
 interface User {
   id: string;
@@ -47,7 +48,7 @@ export default function RecentUsers({ users }: RecentUsersProps) {
         {users.slice(0, 5).map((user) => (
           <div
             key={user.id}
-            onClick={() => navigate('/studio/users')}
+            onClick={() => navigate(studioPath('users'))}
             style={{
               display: 'flex',
               justifyContent: 'space-between',
@@ -86,7 +87,7 @@ export default function RecentUsers({ users }: RecentUsersProps) {
       </div>
       {users.length > 5 && (
         <button
-          onClick={() => navigate('/studio/users')}
+          onClick={() => navigate(studioPath('users'))}
           style={{
             marginTop: '12px',
             background: 'none',

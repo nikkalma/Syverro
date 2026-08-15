@@ -3,6 +3,7 @@ import { AuthorEditorProvider, useAuthorEditor, SECTION_PATHS } from './AuthorEd
 import { type AdminAuthor, getAuthorDisplayName } from '../../../../types/admin';
 import EntityWorkspaceLayout from '../../../../components/Studio/shared/EntityWorkspaceLayout';
 import MetadataStatusControl from './MetadataStatusControl';
+import { studioPath } from '../../../../shared/utils/studioRoutes';
 
 function computeCompletion(author: AdminAuthor): number {
   const fields = [
@@ -46,7 +47,7 @@ function EditorContent() {
         path: p,
         label: (t.admin.authors.editor.sections as Record<string, string>)[p],
       }))}
-      basePath={`/studio/authors/${author?.id}/edit`}
+      basePath={studioPath(`authors/${author?.id}/edit`)}
       loading={loading}
       error={error}
       notFoundLabel={t.admin.authors.editAuthor}

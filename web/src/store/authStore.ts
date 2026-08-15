@@ -31,7 +31,10 @@ interface AuthState {
   checkAuth: () => void;
 }
 
-const API_URL = import.meta.env.VITE_API_URL || 'https://api.syverro.com';
+const isSyverroWeb = ['syverro.com', 'www.syverro.com'].includes(window.location.hostname);
+const API_URL = isSyverroWeb
+  ? ''
+  : import.meta.env.VITE_API_URL || 'https://api.syverro.com';
 
 const apiErrorMessage = (error: unknown, fallback: string): string => {
   if (typeof error === 'object' && error !== null && 'detail' in error) {

@@ -2,8 +2,9 @@
 
 from contextlib import asynccontextmanager
 import logging
+from uuid import uuid4
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.api import (
@@ -27,6 +28,7 @@ from app.api import (
 from app.bootstrap import bootstrap_application
 
 logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 PUBLIC_ORIGINS = [
     "http://localhost:3000",
@@ -74,6 +76,21 @@ def create_app() -> FastAPI:
         allow_methods=["*"],
         allow_headers=["*"],
     )
+
+    @application.middleware("http")
+    async def attach_request_id(request: Request, call_next):
+        request_id = str(uuid4())
+        request.state.request_id = request_id
+        response = await call_next(request)
+        response.headers["X-Request-ID"] = request_id
+        logger.info(
+            "request_completed request_id=%s method=%s path=%s status=%s",
+            request_id,
+            request.method,
+            request.url.path,
+            response.status_code,
+        )
+        return response
     for router in ROUTERS:
         application.include_router(router)
 

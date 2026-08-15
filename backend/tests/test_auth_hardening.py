@@ -51,6 +51,28 @@ def _request(origin: str | None = None) -> Request:
 
 
 @pytest.mark.asyncio
+async def test_failed_login_audit_contains_no_credentials(monkeypatch):
+    monkeypatch.setattr(auth, "get_user_by_email", AsyncMock(return_value=None))
+    db = FakeSession([])
+
+    with pytest.raises(HTTPException) as denied:
+        await auth.login(
+            UserLogin(email="secret-reader@example.com", password="do-not-log-this"),
+            Response(),
+            _request(),
+            db,
+        )
+
+    assert denied.value.status_code == 401
+    event = db.added[0]
+    assert event.event_type == "user_login_failed"
+    assert event.details == {"reason": "invalid_credentials"}
+    serialized = str(event.details)
+    assert "secret-reader@example.com" not in serialized
+    assert "do-not-log-this" not in serialized
+
+
+@pytest.mark.asyncio
 async def test_registration_creates_unverified_account_without_tokens(monkeypatch):
     db = FakeSession([None])
     response = await auth.register(

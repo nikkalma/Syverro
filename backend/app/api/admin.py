@@ -1,5 +1,5 @@
 # backend/app/api/admin.py (ПОЛНАЯ ВЕРСИЯ)
-from fastapi import APIRouter, Depends, HTTPException, status, Query
+from fastapi import APIRouter, Depends, HTTPException, status, Query, Request
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func, or_, and_, delete, update
 from sqlalchemy.orm import selectinload
@@ -17,6 +17,8 @@ from app.services.metadata_service import recalculate_metadata_status
 from app.services.knowledge_graph import sync_author_graph_fields
 from app.models.user import User
 from app.models.refresh_session import RefreshSession
+from app.models.security_audit_log import SecurityAuditLog
+from app.services.security_audit import add_security_event
 from app.models.book import Book
 from app.models.user_book import UserBook
 from app.models.author import Author
@@ -174,6 +176,30 @@ def _user_dict(user: User, viewer_role: str) -> dict:
         if role != "owner":
             d["email"] = user.email
     return d
+
+
+def _audit_log_dict(log: SecurityAuditLog, actor_email: str | None) -> dict:
+    return {
+        "id": str(log.id),
+        "type": log.event_type,
+        "user_id": str(log.actor_id) if log.actor_id else None,
+        "user_email": actor_email,
+        "endpoint": log.endpoint,
+        "method": log.method,
+        "status_code": log.status_code,
+        "ip": None,
+        "user_agent": None,
+        "details": log.details,
+        "created_at": log.created_at,
+    }
+
+
+def _request_path(request: Request | None, fallback: str) -> str:
+    return request.url.path if request else fallback
+
+
+def _request_method(request: Request | None, fallback: str) -> str:
+    return request.method if request else fallback
 
 # ============================================================
 # 1. DASHBOARD — СТАТИСТИКА
@@ -347,7 +373,8 @@ async def update_user_role(
     user_id: str,
     data: RoleUpdate,
     current_user: User = Depends(get_current_user),
-    db: AsyncSession = Depends(get_db)
+    db: AsyncSession = Depends(get_db),
+    request: Request = None,
 ):
     await check_administrator(current_user)
     
@@ -365,7 +392,15 @@ async def update_user_role(
     if role_rank[data.role] >= role_rank[current_user.role]:
         raise HTTPException(status_code=403, detail="Cannot grant an equal or higher role")
     
+    previous_role = user.role
     user.role = data.role
+    add_security_event(
+        db, event_type="user_role_change", actor_id=current_user.id,
+        target_id=user.id, endpoint=_request_path(request, f"/admin/users/{user_id}/role"),
+        method=_request_method(request, "PUT"),
+        status_code=200, request=request,
+        details={"from_role": previous_role, "to_role": data.role},
+    )
     await db.commit()
     return {"message": "Role updated"}
 
@@ -374,7 +409,8 @@ async def block_user(
     user_id: str,
     data: BlockUpdate,
     current_user: User = Depends(get_current_user),
-    db: AsyncSession = Depends(get_db)
+    db: AsyncSession = Depends(get_db),
+    request: Request = None,
 ):
     await check_administrator(current_user)
     
@@ -391,6 +427,13 @@ async def block_user(
         raise HTTPException(status_code=403, detail="Cannot block an equal or higher role")
     
     user.is_active = data.is_active
+    add_security_event(
+        db, event_type="user_unblock" if data.is_active else "user_block",
+        actor_id=current_user.id, target_id=user.id,
+        endpoint=_request_path(request, f"/admin/users/{user_id}/block"),
+        method=_request_method(request, "PUT"), status_code=200, request=request,
+        details={"is_active": data.is_active},
+    )
     await db.commit()
     return {"message": "User blocked" if not data.is_active else "User unblocked"}
 
@@ -398,7 +441,8 @@ async def block_user(
 async def delete_user(
     user_id: str,
     current_user: User = Depends(get_current_user),
-    db: AsyncSession = Depends(get_db)
+    db: AsyncSession = Depends(get_db),
+    request: Request = None,
 ):
     await check_owner(current_user)
     
@@ -410,6 +454,12 @@ async def delete_user(
     if user.id == current_user.id:
         raise HTTPException(status_code=403, detail="Cannot delete yourself")
     
+    add_security_event(
+        db, event_type="user_delete", actor_id=current_user.id,
+        target_id=user.id, endpoint=_request_path(request, f"/admin/users/{user_id}"),
+        method=_request_method(request, "DELETE"),
+        status_code=200, request=request,
+    )
     await db.delete(user)
     await db.commit()
     return {"message": "User deleted"}
@@ -418,7 +468,8 @@ async def delete_user(
 async def logout_user_sessions(
     user_id: str,
     current_user: User = Depends(get_current_user),
-    db: AsyncSession = Depends(get_db)
+    db: AsyncSession = Depends(get_db),
+    request: Request = None,
 ):
     await check_administrator(current_user)
     result = await db.execute(select(User).where(User.id == user_id))
@@ -442,6 +493,12 @@ async def logout_user_sessions(
             RefreshSession.revoked_at.is_(None),
         )
         .values(revoked_at=datetime.utcnow())
+    )
+    add_security_event(
+        db, event_type="user_sessions_revoked", actor_id=current_user.id,
+        target_id=user.id, endpoint=_request_path(request, f"/admin/users/{user_id}/logout"),
+        method=_request_method(request, "POST"),
+        status_code=200, request=request,
     )
     await db.commit()
     return {"message": "All sessions terminated"}
@@ -715,7 +772,8 @@ async def toggle_publish(
 async def delete_book(
     book_id: str,
     current_user: User = Depends(get_current_user),
-    db: AsyncSession = Depends(get_db)
+    db: AsyncSession = Depends(get_db),
+    request: Request = None,
 ):
     await check_administrator(current_user)
 
@@ -724,6 +782,11 @@ async def delete_book(
     if not book:
         raise HTTPException(status_code=404, detail="Book not found")
 
+    add_security_event(
+        db, event_type="book_delete", actor_id=current_user.id, target_id=book.id,
+        endpoint=_request_path(request, f"/admin/books/{book_id}"),
+        method=_request_method(request, "DELETE"), status_code=200, request=request,
+    )
     await db.delete(book)
     await db.commit()
     return {"message": "Book deleted"}
@@ -819,6 +882,7 @@ async def get_moderation_book_detail(
 @router.post("/moderation/books/{book_id}/approve")
 async def approve_book(
     book_id: str,
+    request: Request,
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db)
 ):
@@ -835,14 +899,20 @@ async def approve_book(
     book.moderated_at = datetime.utcnow()
     book.is_published = True
 
+    add_security_event(
+        db, event_type="book_publish", actor_id=current_user.id,
+        target_id=book.id, endpoint=request.url.path, method=request.method,
+        status_code=200, request=request,
+    )
     await db.commit()
-    logger.info(f"✅ Book APPROVED: {book.id} '{book.title}' by moderator {current_user.id} — now visible in Global Library")
+    logger.info("Book approved: book_id=%s moderator_id=%s", book.id, current_user.id)
     return {"message": "Book approved and published"}
 
 @router.post("/moderation/books/{book_id}/reject")
 async def reject_book(
     book_id: str,
     data: ModerationAction,
+    request: Request,
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db)
 ):
@@ -859,13 +929,19 @@ async def reject_book(
     book.moderated_at = datetime.utcnow()
     book.is_published = False
 
+    add_security_event(
+        db, event_type="book_hide", actor_id=current_user.id,
+        target_id=book.id, endpoint=request.url.path, method=request.method,
+        status_code=200, request=request,
+    )
     await db.commit()
-    logger.info(f"❌ Book REJECTED: {book.id} '{book.title}' by moderator {current_user.id} — reason: {data.reason}")
+    logger.info("Book rejected: book_id=%s moderator_id=%s", book.id, current_user.id)
     return {"message": "Book rejected"}
 
 @router.post("/moderation/books/{book_id}/personal-only")
 async def set_personal_only(
     book_id: str,
+    request: Request,
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db)
 ):
@@ -885,8 +961,13 @@ async def set_personal_only(
     book.moderated_at = datetime.utcnow()
     book.is_published = False
 
+    add_security_event(
+        db, event_type="book_hide", actor_id=current_user.id,
+        target_id=book.id, endpoint=request.url.path, method=request.method,
+        status_code=200, request=request, details={"visibility": "personal_only"},
+    )
     await db.commit()
-    logger.info(f"🔒 Book set to PERSONAL-ONLY: {book.id} '{book.title}' — not in Global Library, only for owner")
+    logger.info("Book set personal-only: book_id=%s moderator_id=%s", book.id, current_user.id)
     return {"message": "Book set to personal only — available for owner, not in Global Library"}
 
 # ============================================================
@@ -1405,7 +1486,8 @@ async def update_author(
 async def delete_author(
     author_id: str,
     current_user: User = Depends(get_current_user),
-    db: AsyncSession = Depends(get_db)
+    db: AsyncSession = Depends(get_db),
+    request: Request = None,
 ):
     await check_administrator(current_user)
 
@@ -1423,6 +1505,11 @@ async def delete_author(
             detail=f"Cannot delete author with {book_count} books. Remove books first."
         )
 
+    add_security_event(
+        db, event_type="author_delete", actor_id=current_user.id, target_id=author.id,
+        endpoint=_request_path(request, f"/admin/authors/{author_id}"),
+        method=_request_method(request, "DELETE"), status_code=200, request=request,
+    )
     await db.delete(author)
     await db.commit()
     return {"message": "Author deleted"}
@@ -1729,7 +1816,8 @@ async def update_genre(
 async def delete_genre(
     genre_id: str,
     current_user: User = Depends(get_current_user),
-    db: AsyncSession = Depends(get_db)
+    db: AsyncSession = Depends(get_db),
+    request: Request = None,
 ):
     await check_administrator(current_user)
 
@@ -1738,12 +1826,17 @@ async def delete_genre(
     if not genre:
         raise HTTPException(status_code=404, detail="Genre not found")
 
+    add_security_event(
+        db, event_type="genre_delete", actor_id=current_user.id, target_id=genre.id,
+        endpoint=_request_path(request, f"/admin/genres/{genre_id}"),
+        method=_request_method(request, "DELETE"), status_code=200, request=request,
+    )
     await db.delete(genre)
     await db.commit()
     return {"message": "Genre deleted"}
 
 # ============================================================
-# 6. ЛОГИ (заглушка, но с правильной структурой)
+# 6. SECURITY AUDIT LOG
 # ============================================================
 
 @router.get("/logs", response_model=dict)
@@ -1757,15 +1850,45 @@ async def get_logs(
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db)
 ):
-    await check_admin(current_user)
+    await check_administrator(current_user)
 
-    # TODO: реализовать модель Log для хранения логов
+    query = select(SecurityAuditLog, User.email).outerjoin(
+        User, SecurityAuditLog.actor_id == User.id
+    )
+    count_query = select(func.count()).select_from(SecurityAuditLog).outerjoin(
+        User, SecurityAuditLog.actor_id == User.id
+    )
+    if type:
+        query = query.where(SecurityAuditLog.event_type == type)
+        count_query = count_query.where(SecurityAuditLog.event_type == type)
+    if user_email:
+        query = query.where(User.email.ilike(f"%{user_email}%"))
+        count_query = count_query.where(User.email.ilike(f"%{user_email}%"))
+    for value, is_start in ((date_from, True), (date_to, False)):
+        if not value:
+            continue
+        try:
+            boundary = datetime.fromisoformat(value)
+        except ValueError:
+            raise HTTPException(status_code=400, detail="Invalid audit log date")
+        predicate = (
+            SecurityAuditLog.created_at >= boundary
+            if is_start else SecurityAuditLog.created_at <= boundary
+        )
+        query = query.where(predicate)
+        count_query = count_query.where(predicate)
+
+    total = await db.scalar(count_query) or 0
+    result = await db.execute(
+        query.order_by(SecurityAuditLog.created_at.desc())
+        .offset((page - 1) * limit).limit(limit)
+    )
     return {
-        "data": [],
-        "total": 0,
+        "data": [_audit_log_dict(log, email) for log, email in result.all()],
+        "total": total,
         "page": page,
         "limit": limit,
-        "total_pages": 0,
+        "total_pages": (total + limit - 1) // limit if total else 0,
     }
 
 @router.get("/logs/recent")
@@ -1774,8 +1897,14 @@ async def get_recent_logs(
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db)
 ):
-    await check_admin(current_user)
-    return []
+    await check_administrator(current_user)
+    result = await db.execute(
+        select(SecurityAuditLog, User.email)
+        .outerjoin(User, SecurityAuditLog.actor_id == User.id)
+        .order_by(SecurityAuditLog.created_at.desc())
+        .limit(limit)
+    )
+    return [_audit_log_dict(log, email) for log, email in result.all()]
 
 # ============================================================
 # 7. НАСТРОЙКИ

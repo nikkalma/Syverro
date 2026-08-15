@@ -29,7 +29,11 @@ class FakeSession:
     def __init__(self, values):
         self.values = iter(values)
         self.statements = []
+        self.added = []
         self.commit = AsyncMock()
+
+    def add(self, value):
+        self.added.append(value)
 
     async def execute(self, statement):
         self.statements.append(statement)
@@ -85,6 +89,10 @@ async def test_admin_can_promote_user_to_moderator():
     )
 
     assert target.role == "moderator"
+    assert db.added[0].event_type == "user_role_change"
+    assert db.added[0].actor_id == admin.id
+    assert db.added[0].target_id == str(target.id)
+    assert db.added[0].details == {"from_role": "user", "to_role": "moderator"}
     db.commit.assert_awaited_once()
 
 

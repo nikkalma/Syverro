@@ -62,10 +62,10 @@ async def migration_engine():
         await engine.dispose()
 
 
-def test_expected_head_is_refresh_sessions_revision():
+def test_expected_head_is_security_audit_revision():
     from app.migrations import expected_head
 
-    assert expected_head() == "0019_refresh_sessions"
+    assert expected_head() == "0020_security_audit_logs"
 
 
 @pytest.mark.asyncio

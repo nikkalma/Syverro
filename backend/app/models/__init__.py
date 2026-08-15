@@ -1,5 +1,6 @@
 from app.models.user import User
 from app.models.refresh_session import RefreshSession
+from app.models.security_audit_log import SecurityAuditLog
 from app.models.book import Book
 from app.models.user_book import UserBook
 from app.models.author import Author
@@ -28,6 +29,7 @@ from app.models.author_publication import AuthorPublication
 __all__ = [
     "User",
     "RefreshSession",
+    "SecurityAuditLog",
     "Book",
     "UserBook",
     "Author",

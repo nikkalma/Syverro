@@ -41,6 +41,7 @@ from app.services.email_verification import (
     hash_verification_token,
     verification_delivery,
 )
+from app.services.security_audit import add_security_event
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/auth", tags=["auth"])
@@ -225,10 +226,28 @@ async def login(
         if not user or not user.password_hash or not verify_password(
             user_data.password, user.password_hash
         ):
+            add_security_event(
+                db, event_type="user_login_failed", actor_id=user.id if user else None,
+                endpoint=request.url.path, method=request.method, status_code=401,
+                request=request, details={"reason": "invalid_credentials"},
+            )
+            await db.commit()
             raise HTTPException(status_code=401, detail="Invalid email or password")
         if not user.email_verified:
+            add_security_event(
+                db, event_type="user_login_failed", actor_id=user.id,
+                endpoint=request.url.path, method=request.method, status_code=403,
+                request=request, details={"reason": "email_unverified"},
+            )
+            await db.commit()
             raise HTTPException(status_code=403, detail="Email verification required")
         tokens = await _issue_tokens(response, db, user.id)
+        add_security_event(
+            db, event_type="user_login", actor_id=user.id,
+            endpoint=request.url.path, method=request.method, status_code=200,
+            request=request,
+        )
+        await db.commit()
         if _is_web_session_request(request):
             return BrowserSessionResponse()
         return tokens
@@ -252,6 +271,12 @@ async def refresh_token(
     refresh_value = supplied_token or refresh_cookie or ""
     user_id = await _consume_refresh_session(db, refresh_value)
     if user_id is None:
+        add_security_event(
+            db, event_type="refresh_rejected", endpoint=http_request.url.path,
+            method=http_request.method, status_code=401, request=http_request,
+            details={"reason": "invalid_expired_or_replayed"},
+        )
+        await db.commit()
         raise HTTPException(status_code=401, detail="Invalid or expired refresh token")
     # Commit the one-time consume before issuing a replacement. A crash may require
     # re-login, but can never leave the already-used token replayable.
@@ -264,6 +289,11 @@ async def refresh_token(
         raise HTTPException(status_code=403, detail="User account is disabled")
     if user.password_hash and not user.email_verified:
         raise HTTPException(status_code=403, detail="Email verification required")
+    add_security_event(
+        db, event_type="refresh_rotated", actor_id=user.id,
+        endpoint=http_request.url.path, method=http_request.method,
+        status_code=200, request=http_request,
+    )
     tokens = await _issue_tokens(response, db, user.id)
     if _is_web_session_request(http_request):
         return BrowserSessionResponse()
@@ -276,10 +306,17 @@ async def logout(
     request: RefreshTokenRequest | None = None,
     refresh_cookie: str | None = Cookie(default=None, alias=REFRESH_COOKIE_NAME),
     db: AsyncSession = Depends(get_db),
+    http_request: Request = None,
 ):
     supplied_token = request.refresh_token if request else None
     refresh_value = supplied_token or refresh_cookie
     if refresh_value:
+        payload = decode_token(refresh_value)
+        actor_id = None
+        try:
+            actor_id = UUID(payload["sub"]) if payload and payload.get("sub") else None
+        except (TypeError, ValueError):
+            actor_id = None
         await db.execute(
             update(RefreshSession)
             .where(
@@ -287,6 +324,12 @@ async def logout(
                 RefreshSession.revoked_at.is_(None),
             )
             .values(revoked_at=datetime.utcnow())
+        )
+        add_security_event(
+            db, event_type="user_logout", actor_id=actor_id,
+            endpoint=http_request.url.path if http_request else "/auth/logout",
+            method=http_request.method if http_request else "POST",
+            status_code=204, request=http_request,
         )
         await db.commit()
     response.delete_cookie(
@@ -317,6 +360,12 @@ async def telegram_login(
         if not settings.TELEGRAM_BOT_TOKEN:
             raise HTTPException(status_code=503, detail="Telegram authentication unavailable")
         if not verify_telegram_auth(telegram_data.model_dump()):
+            add_security_event(
+                db, event_type="telegram_login_failed", endpoint=request.url.path,
+                method=request.method, status_code=401, request=request,
+                details={"reason": "invalid_or_stale_signature"},
+            )
+            await db.commit()
             raise HTTPException(
                 status_code=401, detail="Invalid or stale Telegram authentication"
             )
@@ -337,6 +386,12 @@ async def telegram_login(
             await db.refresh(user)
             logger.info("New Telegram user created: %s", user.id)
         tokens = await _issue_tokens(response, db, user.id)
+        add_security_event(
+            db, event_type="user_login", actor_id=user.id,
+            endpoint=request.url.path, method=request.method, status_code=200,
+            request=request, details={"provider": "telegram"},
+        )
+        await db.commit()
         if _is_web_session_request(request):
             return BrowserTelegramLoginResponse(
                 user=UserResponse.model_validate(user),

@@ -16,6 +16,11 @@ services:
     image: postgres:15
     container_name: syverro-postgres
     restart: unless-stopped
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
     environment:
       POSTGRES_USER: ${POSTGRES_USER:-syverro}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD}
@@ -36,6 +41,11 @@ services:
     image: ${BACKEND_IMAGE:-ghcr.io/nikkalma/syverro-backend:${IMAGE_TAG:-main}}
     container_name: syverro-backend
     restart: unless-stopped
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "5"
     depends_on:
       postgres:
         condition: service_healthy
@@ -66,6 +76,11 @@ services:
     image: ${WEB_IMAGE:-ghcr.io/nikkalma/syverro-web:${IMAGE_TAG:-main}}
     container_name: syverro-web
     restart: unless-stopped
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
     depends_on:
       backend:
         condition: service_healthy

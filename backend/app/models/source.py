@@ -1,4 +1,4 @@
-from sqlalchemy import Column, String, Text, DateTime
+from sqlalchemy import Column, String, Text, DateTime, ForeignKey
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.sql import func
 from app.database import Base
@@ -17,4 +17,12 @@ class Source(Base):
     language = Column(String, nullable=True)
     reliability_score = Column(String, server_default="3", nullable=False)
     source_origin = Column(String, server_default="manual", nullable=False)
+    created_at = Column(DateTime, server_default=func.now(), nullable=False)
+
+
+class AuthorSourceLink(Base):
+    __tablename__ = "author_source_links"
+
+    author_id = Column(UUID(as_uuid=True), ForeignKey("authors.id", ondelete="CASCADE"), primary_key=True)
+    source_id = Column(UUID(as_uuid=True), ForeignKey("sources.id", ondelete="CASCADE"), primary_key=True)
     created_at = Column(DateTime, server_default=func.now(), nullable=False)

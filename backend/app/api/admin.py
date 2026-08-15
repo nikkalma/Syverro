@@ -1,7 +1,7 @@
 # backend/app/api/admin.py (ПОЛНАЯ ВЕРСИЯ)
 from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, func, or_, and_, delete
+from sqlalchemy import select, func, or_, and_, delete, update
 from sqlalchemy.orm import selectinload
 from app.core.deps import get_current_user, get_db
 from app.core.metadata import calculate_missing_fields, get_metadata_status
@@ -16,6 +16,7 @@ from app.services.book_slug import generate_unique_book_slug
 from app.services.metadata_service import recalculate_metadata_status
 from app.services.knowledge_graph import sync_author_graph_fields
 from app.models.user import User
+from app.models.refresh_session import RefreshSession
 from app.models.book import Book
 from app.models.user_book import UserBook
 from app.models.author import Author
@@ -34,7 +35,7 @@ from app.schemas.user import UserResponse
 import logging
 import re
 from datetime import datetime, timedelta
-from typing import Optional, List
+from typing import Literal, Optional, List
 from pydantic import BaseModel
 from uuid import UUID, uuid4
 
@@ -108,7 +109,7 @@ class AdminLogResponse(BaseModel):
     created_at: datetime
 
 class RoleUpdate(BaseModel):
-    role: str
+    role: Literal["user", "moderator", "admin", "owner"]
 
 class BlockUpdate(BaseModel):
     is_active: bool
@@ -132,6 +133,11 @@ class SettingsResponse(BaseModel):
 async def check_admin(user: User) -> User:
     if user.role not in ["owner", "admin", "moderator"]:
         raise HTTPException(status_code=403, detail="Admin access required")
+    return user
+
+async def check_administrator(user: User) -> User:
+    if user.role not in ["owner", "admin"]:
+        raise HTTPException(status_code=403, detail="Administrator access required")
     return user
 
 async def check_owner(user: User) -> User:
@@ -343,7 +349,7 @@ async def update_user_role(
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db)
 ):
-    await check_admin(current_user)
+    await check_administrator(current_user)
     
     # Не даем изменить роль владельца
     result = await db.execute(select(User).where(User.id == user_id))
@@ -351,8 +357,13 @@ async def update_user_role(
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
     
-    if user.role == "owner":
-        raise HTTPException(status_code=403, detail="Cannot change owner role")
+    role_rank = {"user": 0, "moderator": 1, "admin": 2, "owner": 3}
+    if user.id == current_user.id:
+        raise HTTPException(status_code=403, detail="Cannot change your own role")
+    if role_rank.get(user.role, -1) >= role_rank[current_user.role]:
+        raise HTTPException(status_code=403, detail="Cannot change an equal or higher role")
+    if role_rank[data.role] >= role_rank[current_user.role]:
+        raise HTTPException(status_code=403, detail="Cannot grant an equal or higher role")
     
     user.role = data.role
     await db.commit()
@@ -365,7 +376,7 @@ async def block_user(
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db)
 ):
-    await check_admin(current_user)
+    await check_administrator(current_user)
     
     # Не даем заблокировать владельца
     result = await db.execute(select(User).where(User.id == user_id))
@@ -373,8 +384,11 @@ async def block_user(
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
     
-    if user.role == "owner":
-        raise HTTPException(status_code=403, detail="Cannot block owner")
+    role_rank = {"user": 0, "moderator": 1, "admin": 2, "owner": 3}
+    if user.id == current_user.id:
+        raise HTTPException(status_code=403, detail="Cannot block yourself")
+    if role_rank.get(user.role, -1) >= role_rank[current_user.role]:
+        raise HTTPException(status_code=403, detail="Cannot block an equal or higher role")
     
     user.is_active = data.is_active
     await db.commit()
@@ -406,8 +420,30 @@ async def logout_user_sessions(
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db)
 ):
-    await check_admin(current_user)
-    # TODO: реализовать очистку сессий (если есть таблица sessions)
+    await check_administrator(current_user)
+    result = await db.execute(select(User).where(User.id == user_id))
+    user = result.scalar_one_or_none()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    role_rank = {"user": 0, "moderator": 1, "admin": 2, "owner": 3}
+    if user.id == current_user.id:
+        raise HTTPException(status_code=403, detail="Cannot terminate your own sessions")
+    if role_rank.get(user.role, -1) >= role_rank[current_user.role]:
+        raise HTTPException(
+            status_code=403,
+            detail="Cannot terminate sessions for an equal or higher role",
+        )
+
+    await db.execute(
+        update(RefreshSession)
+        .where(
+            RefreshSession.user_id == user.id,
+            RefreshSession.revoked_at.is_(None),
+        )
+        .values(revoked_at=datetime.utcnow())
+    )
+    await db.commit()
     return {"message": "All sessions terminated"}
 
 # ============================================================
@@ -681,7 +717,7 @@ async def delete_book(
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db)
 ):
-    await check_admin(current_user)
+    await check_administrator(current_user)
 
     result = await db.execute(select(Book).where(Book.id == book_id))
     book = result.scalar_one_or_none()
@@ -935,8 +971,7 @@ async def update_metadata_book(
     db: AsyncSession = Depends(get_db)
 ):
     """Enrich book metadata (admin only). Author management uses /admin/books/{id}/authors endpoints."""
-    if current_user.role == "moderator":
-        raise HTTPException(status_code=403, detail="Moderators cannot enrich metadata")
+    await check_administrator(current_user)
 
     result = await db.execute(select(Book).where(Book.id == book_id))
     book = result.scalar_one_or_none()
@@ -1372,7 +1407,7 @@ async def delete_author(
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db)
 ):
-    await check_admin(current_user)
+    await check_administrator(current_user)
 
     result = await db.execute(select(Author).where(Author.id == author_id))
     author = result.scalar_one_or_none()
@@ -1696,7 +1731,7 @@ async def delete_genre(
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db)
 ):
-    await check_admin(current_user)
+    await check_administrator(current_user)
 
     result = await db.execute(select(Genre).where(Genre.id == genre_id))
     genre = result.scalar_one_or_none()

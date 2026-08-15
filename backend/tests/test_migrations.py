@@ -62,10 +62,10 @@ async def migration_engine():
         await engine.dispose()
 
 
-def test_expected_head_is_author_source_links_revision():
+def test_expected_head_is_syvai_review_bands_revision():
     from app.migrations import expected_head
 
-assert expected_head() == "0021_syvai_timeline_foundation"
+    assert expected_head() == "0022_syvai_review_bands"
 
 
 @pytest.mark.asyncio
@@ -96,7 +96,7 @@ async def test_empty_database_bootstraps_to_head(migration_engine):
             }
         )
 
-assert revision == "0021_syvai_timeline_foundation"
+assert revision == "0022_syvai_review_bands"
     assert {
         "email_verified",
         "email_verification_token_hash",
@@ -109,6 +109,8 @@ assert revision == "0021_syvai_timeline_foundation"
     assert {
         "validation_state",
         "conflict_state",
+        "review_band",
+        "review_reason",
         "edited_value",
         "run_id",
         "applied_at",
@@ -152,6 +154,8 @@ async def test_revision_0017_is_upgraded_before_backend_start(migration_engine):
                 "ALTER TABLE ai_proposals "
                 "DROP COLUMN validation_state, "
                 "DROP COLUMN conflict_state, "
+                "DROP COLUMN review_band, "
+                "DROP COLUMN review_reason, "
                 "DROP COLUMN edited_value, "
                 "DROP COLUMN run_id, "
                 "DROP COLUMN applied_at, "
@@ -176,7 +180,7 @@ async def test_revision_0017_is_upgraded_before_backend_start(migration_engine):
             }
         )
 
-assert revision == "0021_syvai_timeline_foundation"
+assert revision == "0022_syvai_review_bands"
     assert "email_verified" in columns
 
 

@@ -2,6 +2,18 @@ import pytest
 
 from app.syvai.timeline_claims import TimelineClaim
 from app.syvai.validators import (
+    REVIEW_BAND_AUTO_APPROVED,
+    REVIEW_BAND_AUTO_REJECTED,
+    REVIEW_BAND_POLICY,
+    REVIEW_BAND_QUALITY,
+    REVIEW_REASON_DATE_CONFLICT,
+    REVIEW_REASON_EXACT_DUPLICATE,
+    REVIEW_REASON_INVALID_CLAIM,
+    REVIEW_REASON_NEAR_DUPLICATE_AMBIGUOUS,
+    REVIEW_REASON_NEW_GROUNDED,
+    REVIEW_REASON_POSTHUMOUS,
+    REVIEW_REASON_RESTATEMENT,
+    REVIEW_REASON_UNSUPPORTED,
     ExistingEvent,
     date_granularity,
     labels_similar,
@@ -72,6 +84,8 @@ def test_validated_claim():
     )
     assert result.validation_state == "validated"
     assert result.conflict_state == "new"
+    assert result.review_band == REVIEW_BAND_AUTO_APPROVED
+    assert result.review_reason == REVIEW_REASON_NEW_GROUNDED
 
 
 def test_missing_sources_forces_needs_review():
@@ -84,6 +98,8 @@ def test_missing_sources_forces_needs_review():
     )
     assert result.validation_state == "needs_review"
     assert "no supporting source evidence" in result.issues
+    assert result.review_band == REVIEW_BAND_QUALITY
+    assert result.review_reason == REVIEW_REASON_UNSUPPORTED
 
 
 def test_invalid_date_format_is_invalid():
@@ -95,6 +111,8 @@ def test_invalid_date_format_is_invalid():
         source_count=1,
     )
     assert result.validation_state == "invalid"
+    assert result.review_band == REVIEW_BAND_AUTO_REJECTED
+    assert result.review_reason == REVIEW_REASON_INVALID_CLAIM
 
 
 def test_before_birth_is_invalid():
@@ -107,6 +125,7 @@ def test_before_birth_is_invalid():
     )
     assert result.validation_state == "invalid"
     assert "precedes author birth" in " ".join(result.issues)
+    assert result.review_band == REVIEW_BAND_AUTO_REJECTED
 
 
 def test_precision_finer_than_value_is_invalid():
@@ -129,6 +148,8 @@ def test_posthumous_event_is_needs_review():
         source_count=1,
     )
     assert result.validation_state == "needs_review"
+    assert result.review_band == REVIEW_BAND_POLICY
+    assert result.review_reason == REVIEW_REASON_POSTHUMOUS
 
 
 def test_exact_duplicate_flagged():
@@ -142,6 +163,36 @@ def test_exact_duplicate_flagged():
     assert result.conflict_state == "duplicate"
     assert result.matched_event.id == "ref-1"
     assert result.validation_state == "needs_review"
+    assert result.review_band == REVIEW_BAND_AUTO_REJECTED
+    assert result.review_reason == REVIEW_REASON_EXACT_DUPLICATE
+
+
+def test_restatement_auto_rejected():
+    """Same type, same date, high label overlap -> deterministic restatement."""
+    result = validate_timeline_claim(
+        _claim(event_type="education", date_value="1824", label="Attended Cowan Bridge School"),
+        author_birth_date="1816-04-21",
+        author_death_date="1855-03-31",
+        existing_events=REFERENCE_EVENTS,
+        source_count=1,
+    )
+    assert result.conflict_state == "near_duplicate"
+    assert result.review_band == REVIEW_BAND_AUTO_REJECTED
+    assert result.review_reason == REVIEW_REASON_RESTATEMENT
+
+
+def test_ambiguous_near_duplicate_needs_human():
+    """Same type/date but unrelated label stays in quality review."""
+    result = validate_timeline_claim(
+        _claim(event_type="education", date_value="1824", label="Moved with family to new lodgings"),
+        author_birth_date="1816-04-21",
+        author_death_date="1855-03-31",
+        existing_events=REFERENCE_EVENTS,
+        source_count=1,
+    )
+    assert result.conflict_state == "near_duplicate"
+    assert result.review_band == REVIEW_BAND_QUALITY
+    assert result.review_reason == REVIEW_REASON_NEAR_DUPLICATE_AMBIGUOUS
 
 
 def test_conflict_within_year_flagged():
@@ -154,6 +205,8 @@ def test_conflict_within_year_flagged():
     )
     assert result.conflict_state == "conflict"
     assert result.validation_state == "conflict"
+    assert result.review_band == REVIEW_BAND_QUALITY
+    assert result.review_reason == REVIEW_REASON_DATE_CONFLICT
 
 
 def test_new_event_not_matched():
@@ -166,6 +219,8 @@ def test_new_event_not_matched():
     )
     assert result.conflict_state == "new"
     assert result.validation_state == "validated"
+    assert result.review_band == REVIEW_BAND_AUTO_APPROVED
+    assert result.review_reason == REVIEW_REASON_NEW_GROUNDED
 
 
 def test_normalize_label_strips_punctuation_and_case():

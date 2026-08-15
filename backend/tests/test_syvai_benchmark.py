@@ -1,4 +1,8 @@
+import pytest
+
 from app.syvai.benchmark import (
+    EMILY_FIXTURE_CLAIMS,
+    EMILY_REFERENCE_TIMELINE,
     FIXTURE_CLAIMS,
     ProposalSnapshot,
     REFERENCE_TIMELINE,
@@ -44,9 +48,57 @@ def test_offline_benchmark_metrics_are_sane():
 
 def test_offline_benchmark_human_intervention():
     report = offline_benchmark()
-    expected = (report.needs_review_count + report.conflict_count + report.invalid_count) / report.total_claims
+    expected = report.reviewed_count / report.total_claims
     assert report.human_intervention_ratio == expected
     assert 0.0 < report.human_intervention_ratio < 1.0
+    assert report.human_intervention_ratio < 0.3
+
+
+def test_offline_benchmark_review_bands_and_correction_ratio():
+    """0.1B: quality/policy separation, auto-resolution, correction signal."""
+    report = offline_benchmark()
+    assert report.reviewed_count == 3
+    assert report.quality_review_count == 2
+    assert report.policy_review_count == 1
+    assert report.auto_approved_count == 2
+    assert report.auto_rejected_count == 11
+    assert report.auto_resolved_count == 13
+    assert report.review_reason_counts["date_conflict"] == 1
+    assert report.review_reason_counts["unsupported_claim"] == 1
+    assert report.review_reason_counts["posthumous_event"] == 1
+    assert report.review_reason_counts["restatement"] == 2
+    assert report.review_reason_counts["exact_duplicate"] == 9
+    assert report.review_reason_counts["new_grounded"] == 2
+    assert report.corrections_expected == 2
+    assert report.confirmations_expected == 1
+    assert report.correction_ratio == pytest.approx(2 / 3, abs=0.001)
+
+
+def test_emily_offline_benchmark_is_comparable():
+    """The unchanged pipeline must generalize to Emily with comparable metrics."""
+    report = offline_benchmark("emily")
+    assert report.total_claims == len(EMILY_FIXTURE_CLAIMS) == 13
+    assert report.reference_count == len(EMILY_REFERENCE_TIMELINE) == 8
+    assert report.recall == 1.0
+    assert report.precision <= 1.0
+    assert report.duplicate_detection_rate == 1.0
+    assert report.conflict_detection_rate == 1.0
+    assert report.reviewed_count == 3
+    assert report.quality_review_count == 2
+    assert report.policy_review_count == 1
+    assert report.auto_rejected_count == 9
+    assert report.correction_ratio == pytest.approx(2 / 3, abs=0.001)
+    assert report.human_intervention_ratio == pytest.approx(3 / 13, abs=0.001)
+
+
+def test_correction_ratio_is_none_without_ground_truth():
+    claims = parse_timeline_claims(
+        '[{"event_type": "milestone", "date_value": "1831", "date_precision": "year", "label": "Roe Head"}]'
+    )
+    snapshots = [_snapshot(claims[0])]
+    report = evaluate_snapshots(snapshots)
+    assert report.correction_ratio is None
+    assert report.corrections_expected == 0
 
 
 def test_detection_rates_are_none_without_ground_truth():

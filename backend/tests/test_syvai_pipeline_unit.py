@@ -207,6 +207,72 @@ async def test_run_timeline_research_no_sources_marks_needs_review():
 
 
 @pytest.mark.asyncio
+async def test_restatement_proposal_is_auto_rejected_with_band():
+    """0.1B: restatements of curated events are rejected without queueing a reviewer."""
+    author = _author()
+    source = _source()
+    session = FakeSession(
+        sources=[source],
+        events=[
+            ExistingEvent(
+                id="e1",
+                event_type="education",
+                date_value="1824",
+                date_precision="year",
+                label="Cowan Bridge school",
+            )
+        ],
+    )
+    claim = {
+        "event_type": "education",
+        "date_value": "1824",
+        "date_precision": "year",
+        "label": "Attended Cowan Bridge School",
+        "description": "Enrolled at the school run by the Clergy Daughters' institution.",
+        "sources": [{"title": "Encyclopaedia Britannica", "source_type": "encyclopedia"}],
+    }
+    provider = FakeProvider(json.dumps({"events": [claim]}))
+
+    outcome = await run_timeline_research(session, author, provider)
+
+    assert outcome.error is None
+    assert outcome.run.status == "completed"
+    assert len(outcome.proposals) == 1
+    proposal = outcome.proposals[0]
+    assert proposal.review_band == "auto_rejected"
+    assert proposal.review_reason == "restatement"
+    assert proposal.status == "rejected"
+    assert proposal.reviewed_at is None
+    assert proposal.reviewed_by is None
+
+
+@pytest.mark.asyncio
+async def test_quality_and_policy_bands_require_human_review():
+    """0.1B: unsupported claims (quality) and posthumous events (policy) keep review_needed."""
+    author = _author()
+    source = _source(title="Smith Elder")
+    session = FakeSession(sources=[source])
+    claims = [
+        {
+            "event_type": "publication",
+            "date_value": "1857",
+            "date_precision": "year",
+            "label": "The Professor published posthumously",
+            "sources": [{"title": "Smith Elder", "source_type": "publisher"}],
+        }
+    ]
+    provider = FakeProvider(json.dumps({"events": claims}))
+
+    outcome = await run_timeline_research(session, author, provider)
+
+    assert outcome.run.status == "review_needed"
+    proposal = outcome.proposals[0]
+    assert proposal.review_band == "policy_review"
+    assert proposal.review_reason == "posthumous_event"
+    assert proposal.status == "proposed"
+
+
+@pytest.mark.asyncio
 async def test_run_timeline_research_records_structured_output_failure():
     author = _author()
     session = FakeSession(sources=[])

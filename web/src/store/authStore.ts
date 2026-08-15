@@ -32,9 +32,10 @@ interface AuthState {
 }
 
 const isSyverroWeb = ['syverro.com', 'www.syverro.com'].includes(window.location.hostname);
+const DIRECT_API_URL = import.meta.env.VITE_API_URL || 'https://api.syverro.com';
 const API_URL = isSyverroWeb
   ? ''
-  : import.meta.env.VITE_API_URL || 'https://api.syverro.com';
+  : DIRECT_API_URL;
 
 const apiErrorMessage = (error: unknown, fallback: string): string => {
   if (typeof error === 'object' && error !== null && 'detail' in error) {
@@ -42,6 +43,17 @@ const apiErrorMessage = (error: unknown, fallback: string): string => {
     if (typeof detail === 'string' && detail.trim()) return detail;
   }
   return fallback;
+};
+
+const fetchCurrentUser = async (): Promise<Response> => {
+  const proxiedResponse = await fetch(`${API_URL}/auth/me`, {
+    credentials: 'include',
+  });
+  if (proxiedResponse.ok || !isSyverroWeb) return proxiedResponse;
+
+  return fetch(`${DIRECT_API_URL}/auth/me`, {
+    credentials: 'include',
+  });
 };
 
 clearLegacyAuthTokens();
@@ -77,9 +89,7 @@ export const useAuthStore = create<AuthState>((set) => ({
         throw new Error(apiErrorMessage(error, 'Ошибка входа'));
       }
 
-      const userResponse = await fetch(`${API_URL}/auth/me`, {
-        credentials: 'include',
-      });
+      const userResponse = await fetchCurrentUser();
       if (!userResponse.ok) {
         throw new Error('Не удалось получить данные пользователя');
       }
@@ -107,9 +117,7 @@ export const useAuthStore = create<AuthState>((set) => ({
         throw new Error(apiErrorMessage(error, 'Ошибка входа через Telegram'));
       }
 
-      const userResponse = await fetch(`${API_URL}/auth/me`, {
-        credentials: 'include',
-      });
+      const userResponse = await fetchCurrentUser();
       if (!userResponse.ok) {
         throw new Error('Не удалось получить данные пользователя');
       }

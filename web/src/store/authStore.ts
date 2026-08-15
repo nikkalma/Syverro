@@ -106,7 +106,10 @@ export const useAuthStore = create<AuthState>((set) => ({
   telegramLogin: async (payload: TelegramAuthPayload) => {
     set({ isLoading: true });
     try {
-      const response = await fetch(`${API_URL}/auth/telegram`, {
+      const telegramAuthUrl = isSyverroWeb
+        ? '/api/telegram-auth'
+        : `${API_URL}/auth/telegram`;
+      const response = await fetch(telegramAuthUrl, {
         method: 'POST',
         credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
@@ -117,11 +120,15 @@ export const useAuthStore = create<AuthState>((set) => ({
         throw new Error(apiErrorMessage(error, 'Ошибка входа через Telegram'));
       }
 
-      const userResponse = await fetchCurrentUser();
-      if (!userResponse.ok) {
-        throw new Error('Не удалось получить данные пользователя');
-      }
-      const user = await userResponse.json();
+      const user = isSyverroWeb
+        ? await response.json()
+        : await (async () => {
+            const userResponse = await fetchCurrentUser();
+            if (!userResponse.ok) {
+              throw new Error('Не удалось получить данные пользователя');
+            }
+            return userResponse.json();
+          })();
       localStorage.setItem('user', JSON.stringify(user));
       set({ user, isAuthenticated: true, isLoading: false });
     } catch (error) {

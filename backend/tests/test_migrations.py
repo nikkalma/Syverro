@@ -86,13 +86,14 @@ async def test_empty_database_bootstraps_to_head(migration_engine):
             lambda sync_conn: set(inspect(sync_conn).get_table_names())
         )
 
-    assert revision == "0019_refresh_sessions"
+    assert revision == "0020_security_audit_logs"
     assert {
         "email_verified",
         "email_verification_token_hash",
         "email_verification_expires_at",
     } <= columns
     assert "refresh_sessions" in table_names
+    assert "security_audit_logs" in table_names
     assert _run_migration_command("check").returncode == 0
 
 
@@ -102,6 +103,7 @@ async def test_revision_0017_is_upgraded_before_backend_start(migration_engine):
     assert initial.returncode == 0, initial.stdout + initial.stderr
 
     async with migration_engine.begin() as conn:
+        await conn.execute(text("DROP TABLE security_audit_logs"))
         await conn.execute(text("DROP TABLE refresh_sessions"))
         await conn.execute(
             text(
@@ -128,7 +130,7 @@ async def test_revision_0017_is_upgraded_before_backend_start(migration_engine):
             }
         )
 
-    assert revision == "0019_refresh_sessions"
+    assert revision == "0020_security_audit_logs"
     assert "email_verified" in columns
 
 

@@ -58,18 +58,29 @@ import StudioSettings from "./pages/Studio/Settings";
 import ModerationQueue from "./pages/Studio/Moderation/ModerationPage";
 import MetadataWorkspace from "./pages/Studio/Metadata/MetadataPage";
 import BookEnrichmentPage from "./pages/Studio/Metadata/BookEnrichmentPage";
+import { isStudioHostname, studioUrl } from './shared/utils/studioRoutes';
 
 
-function AdminRedirect() {
+function LegacyStudioRedirect() {
   const location = useLocation();
-  const studioPath = '/studio' + location.pathname.replace('/admin', '') + location.search + location.hash;
-  return <Navigate to={studioPath} replace />;
+  const cleanPath = location.pathname.replace(/^\/studio/, '') || '/';
+  return <Navigate to={`${cleanPath}${location.search}${location.hash}`} replace />;
+}
+
+function PublicStudioRedirect() {
+  const location = useLocation();
+  const cleanPath = location.pathname.replace(/^\/(?:studio|admin)/, '') || '/';
+  window.location.replace(`${studioUrl(cleanPath)}${location.search}${location.hash}`);
+  return null;
 }
 
 export default function App() {
+  const studioDomain = isStudioHostname();
+
   return (
     <BrowserRouter>
       <Routes>
+        {!studioDomain && <>
         <Route path="/" element={<Layout><LibraryPage /></Layout>} />
         <Route path="/login" element={<Layout><Login /></Layout>} />
         <Route path="/register" element={<Layout><Register /></Layout>} />
@@ -88,10 +99,15 @@ export default function App() {
         <Route path="/author/:slug" element={<Layout><AuthorPage /></Layout>} />
         <Route path="/my-library" element={<Layout><MyLibraryPage /></Layout>} />
 
-        <Route path="/admin" element={<Navigate to="/studio" replace />} />
-        <Route path="/admin/*" element={<AdminRedirect />} />
+        <Route path="/admin" element={<PublicStudioRedirect />} />
+        <Route path="/admin/*" element={<PublicStudioRedirect />} />
+        <Route path="/studio" element={<PublicStudioRedirect />} />
+        <Route path="/studio/*" element={<PublicStudioRedirect />} />
+        </>}
 
-        <Route path="/studio" element={<StudioRoute />}>
+        {studioDomain && <Route path="/studio/*" element={<LegacyStudioRedirect />} />}
+
+        <Route path={studioDomain ? '/' : '/studio'} element={<StudioRoute />}>
           <Route index element={<StudioHome />} />
           <Route path="users" element={<StudioUsers />} />
           <Route path="books" element={<StudioBooks />} />

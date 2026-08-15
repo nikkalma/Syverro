@@ -5,6 +5,7 @@ import {
 } from 'lucide-react';
 import { getLocaleData, getBrowserLocale } from '../../../locales';
 import type { LocaleData } from '../../../locales';
+import { studioPath } from '../../../shared/utils/studioRoutes';
 
 interface StudioHeaderProps {
   moduleName: string;
@@ -13,17 +14,17 @@ interface StudioHeaderProps {
 }
 
 const getQuickModules = (t: LocaleData): { path: string; icon: React.ReactNode; label: string }[] => [
-  { path: '/studio', icon: <Home size={14} />, label: t.admin.nav.dashboard },
-  { path: '/studio/users', icon: <Users size={14} />, label: t.admin.nav.users },
-  { path: '/studio/books', icon: <BookOpen size={14} />, label: t.admin.nav.books },
-  { path: '/studio/authors', icon: <PenLine size={14} />, label: t.admin.nav.authors },
-  { path: '/studio/genres', icon: <Tags size={14} />, label: t.admin.nav.genres },
-  { path: '/studio/taxonomy', icon: <Landmark size={14} />, label: t.admin.nav.taxonomy },
-  { path: '/studio/entities', icon: <Folder size={14} />, label: t.admin.nav.entities },
-  { path: '/studio/moderation', icon: <ShieldAlert size={14} />, label: t.admin.nav.moderation },
-  { path: '/studio/metadata', icon: <FileText size={14} />, label: t.admin.nav.metadata },
-  { path: '/studio/logs', icon: <ScrollText size={14} />, label: t.admin.nav.logs },
-  { path: '/studio/settings', icon: <Settings size={14} />, label: t.admin.nav.settings },
+  { path: studioPath(), icon: <Home size={14} />, label: t.admin.nav.dashboard },
+  { path: studioPath('users'), icon: <Users size={14} />, label: t.admin.nav.users },
+  { path: studioPath('books'), icon: <BookOpen size={14} />, label: t.admin.nav.books },
+  { path: studioPath('authors'), icon: <PenLine size={14} />, label: t.admin.nav.authors },
+  { path: studioPath('genres'), icon: <Tags size={14} />, label: t.admin.nav.genres },
+  { path: studioPath('taxonomy'), icon: <Landmark size={14} />, label: t.admin.nav.taxonomy },
+  { path: studioPath('entities'), icon: <Folder size={14} />, label: t.admin.nav.entities },
+  { path: studioPath('moderation'), icon: <ShieldAlert size={14} />, label: t.admin.nav.moderation },
+  { path: studioPath('metadata'), icon: <FileText size={14} />, label: t.admin.nav.metadata },
+  { path: studioPath('logs'), icon: <ScrollText size={14} />, label: t.admin.nav.logs },
+  { path: studioPath('settings'), icon: <Settings size={14} />, label: t.admin.nav.settings },
 ];
 
 export default function StudioHeader({ moduleName, theme, onToggleTheme }: StudioHeaderProps) {
@@ -90,7 +91,7 @@ export default function StudioHeader({ moduleName, theme, onToggleTheme }: Studi
           whiteSpace: 'nowrap',
           flexShrink: 0,
         }}>
-          <Link to="/studio" style={{ textDecoration: 'none', display: 'flex', alignItems: 'baseline', gap: '10px' }}>
+          <Link to={studioPath()} style={{ textDecoration: 'none', display: 'flex', alignItems: 'baseline', gap: '10px' }}>
             <span style={{
               fontSize: '16px',
               fontWeight: '600',
@@ -138,8 +139,8 @@ export default function StudioHeader({ moduleName, theme, onToggleTheme }: Studi
         gap: '12px',
         flexShrink: 0,
       }}>
-        <Link
-          to="/"
+        <a
+          href="https://syverro.com"
           aria-label="Перейти из студии на сайт"
           style={{
             display: 'inline-flex',
@@ -157,7 +158,7 @@ export default function StudioHeader({ moduleName, theme, onToggleTheme }: Studi
         >
           <ExternalLink size={14} />
           На сайт
-        </Link>
+        </a>
 
         <div style={{
           position: 'relative',

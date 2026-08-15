@@ -75,4 +75,18 @@ describe('auth token storage', () => {
       hash: 'signed-hash',
     })).rejects.toThrow('Ошибка входа через Telegram');
   });
+
+  it('restores a shared cookie session on a fresh subdomain origin', async () => {
+    const user = { id: 'owner-1', email: 'owner@example.com', created_at: '2026-01-01', role: 'owner' };
+    vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce(new Response(JSON.stringify(user), {
+      status: 200,
+      headers: { 'Content-Type': 'application/json' },
+    }));
+
+    await expect(useAuthStore.getState().restoreSession()).resolves.toBe(true);
+
+    expect(useAuthStore.getState().user).toEqual(user);
+    expect(useAuthStore.getState().isAuthenticated).toBe(true);
+    expect(localStorage.getItem('user')).toContain('owner-1');
+  });
 });

@@ -15,6 +15,16 @@ export default function Login() {
   const navigate = useNavigate();
   const location = useLocation();
 
+  const finishLogin = () => {
+    const params = new URLSearchParams(location.search);
+    if (params.get('returnTo') === 'studio') {
+      const studioPath = params.get('studioPath') || '/';
+      window.location.assign(`https://studio.syverro.com${studioPath.startsWith('/') ? studioPath : '/'}`);
+      return;
+    }
+    navigate('/');
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
@@ -22,7 +32,7 @@ export default function Login() {
 
     try {
       await login(email, password);
-      navigate('/');
+      finishLogin();
     } catch (err: any) {
       setError(err.message || 'Ошибка входа');
     } finally {
@@ -34,7 +44,7 @@ export default function Login() {
     setError('');
     try {
       await telegramLogin(payload);
-      navigate('/');
+      finishLogin();
     } catch (err: any) {
       setError(err.message || 'Ошибка входа через Telegram');
     }

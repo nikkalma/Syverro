@@ -29,9 +29,10 @@ interface AuthState {
   register: (email: string, password: string) => Promise<void>;
   logout: () => void;
   checkAuth: () => void;
+  restoreSession: () => Promise<boolean>;
 }
 
-const isSyverroWeb = ['syverro.com', 'www.syverro.com'].includes(window.location.hostname);
+const isSyverroWeb = ['syverro.com', 'www.syverro.com', 'studio.syverro.com'].includes(window.location.hostname);
 const DIRECT_API_URL = import.meta.env.VITE_API_URL || 'https://api.syverro.com';
 const API_URL = isSyverroWeb
   ? ''
@@ -71,6 +72,26 @@ export const useAuthStore = create<AuthState>((set) => ({
   checkAuth: () => {
     const user = JSON.parse(localStorage.getItem('user') || 'null');
     set({ user, isAuthenticated: !!user });
+  },
+
+  restoreSession: async () => {
+    set({ isLoading: true });
+    try {
+      const response = await fetchCurrentUser();
+      if (!response.ok) {
+        localStorage.removeItem('user');
+        set({ user: null, isAuthenticated: false, isLoading: false });
+        return false;
+      }
+      const user = await response.json();
+      localStorage.setItem('user', JSON.stringify(user));
+      set({ user, isAuthenticated: true, isLoading: false });
+      return true;
+    } catch {
+      localStorage.removeItem('user');
+      set({ user: null, isAuthenticated: false, isLoading: false });
+      return false;
+    }
   },
 
   login: async (email: string, password: string) => {

@@ -2,13 +2,14 @@
 
 import { ReactNode, useEffect } from 'react';
 import { ShieldAlert } from 'lucide-react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useLocation } from 'react-router-dom';
 import { useAuthStore } from '../../store/authStore';
 import { useAdminTheme } from '../../store/adminStore';
 import { ADMIN_ROLES } from '../../types/admin';
 import { getLocaleData, getBrowserLocale } from '../../locales';
 import type { LocaleData } from '../../locales';
 import StudioHeader from './shared/StudioHeader';
+import { studioPath } from '../../shared/utils/studioRoutes';
 import './StudioLayout.css';
 
 interface AdminLayoutProps {
@@ -16,20 +17,19 @@ interface AdminLayoutProps {
 }
 
 const MODULE_ROUTES: { prefix: string; key: keyof LocaleData['admin']['nav'] }[] = [
-  { prefix: '/studio/users', key: 'users' },
-  { prefix: '/studio/books', key: 'books' },
-  { prefix: '/studio/authors', key: 'authors' },
-  { prefix: '/studio/genres', key: 'genres' },
-  { prefix: '/studio/taxonomy', key: 'taxonomy' },
-  { prefix: '/studio/entities', key: 'entities' },
-  { prefix: '/studio/moderation', key: 'moderation' },
-  { prefix: '/studio/metadata', key: 'metadata' },
-  { prefix: '/studio/logs', key: 'logs' },
-  { prefix: '/studio/settings', key: 'settings' },
+  { prefix: studioPath('users'), key: 'users' },
+  { prefix: studioPath('books'), key: 'books' },
+  { prefix: studioPath('authors'), key: 'authors' },
+  { prefix: studioPath('genres'), key: 'genres' },
+  { prefix: studioPath('taxonomy'), key: 'taxonomy' },
+  { prefix: studioPath('entities'), key: 'entities' },
+  { prefix: studioPath('moderation'), key: 'moderation' },
+  { prefix: studioPath('metadata'), key: 'metadata' },
+  { prefix: studioPath('logs'), key: 'logs' },
+  { prefix: studioPath('settings'), key: 'settings' },
 ];
 
 export default function StudioLayout({ children }: AdminLayoutProps) {
-  const navigate = useNavigate();
   const location = useLocation();
   const { user } = useAuthStore();
   const { theme, toggleTheme } = useAdminTheme();
@@ -62,7 +62,7 @@ export default function StudioLayout({ children }: AdminLayoutProps) {
         <h1 style={{ fontSize: '24px', fontWeight: '400' }}>{t.admin.access.denied}</h1>
         <p style={{ color: 'var(--text-secondary)' }}>{t.admin.access.noPermission}</p>
         <button
-          onClick={() => navigate('/')}
+          onClick={() => window.location.href = 'https://syverro.com'}
           className="glass-button glass-button-primary"
         >
           {t.admin.access.returnHome}

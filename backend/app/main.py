@@ -34,6 +34,7 @@ PUBLIC_ORIGINS = [
     "http://localhost:5173",
     "https://syverro.com",
     "https://www.syverro.com",
+    "https://studio.syverro.com",
     "https://api.syverro.com",
     "http://77.233.220.197:3002",
 ]

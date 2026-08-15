@@ -1,6 +1,6 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { ShieldAlert } from 'lucide-react';
-import { Navigate, Outlet, useLocation } from 'react-router-dom';
+import { Outlet, useLocation } from 'react-router-dom';
 import { useAuthStore } from '../../store/authStore';
 import { getLocaleData, getBrowserLocale } from '../../locales';
 import StudioLayout from '../../components/Studio/StudioLayout';
@@ -10,17 +10,28 @@ interface AdminRouteProps {
 }
 
 export default function StudioRoute({ requiredRole = 'moderator' }: AdminRouteProps) {
-  const { user, isAuthenticated, checkAuth } = useAuthStore();
+  const { user, isAuthenticated, restoreSession } = useAuthStore();
+  const [sessionChecked, setSessionChecked] = useState(false);
   const location = useLocation();
   const locale = getBrowserLocale();
   const t = getLocaleData(locale);
 
   useEffect(() => {
-    checkAuth();
-  }, []);
+    void restoreSession().finally(() => setSessionChecked(true));
+  }, [restoreSession]);
+
+  if (!sessionChecked) {
+    return (
+      <div style={{ minHeight: '100vh', display: 'grid', placeItems: 'center' }}>
+        <div>{t.admin.common.loading}</div>
+      </div>
+    );
+  }
 
   if (!isAuthenticated) {
-    return <Navigate to="/login" state={{ from: location }} replace />;
+    const returnTo = encodeURIComponent(`${location.pathname}${location.search}${location.hash}`);
+    window.location.replace(`https://syverro.com/login?returnTo=studio&studioPath=${returnTo}`);
+    return null;
   }
 
   if (!user) {
@@ -76,7 +87,7 @@ export default function StudioRoute({ requiredRole = 'moderator' }: AdminRoutePr
           </span>
         </p>
         <button
-          onClick={() => window.location.href = '/'}
+          onClick={() => window.location.href = 'https://syverro.com'}
           style={{
             padding: '10px 24px',
             background: 'var(--primary)',

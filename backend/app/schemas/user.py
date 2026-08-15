@@ -49,7 +49,7 @@ class RefreshTokenRequest(BaseModel):
 
 # ===== TELEGRAM (оставляем для будущего) =====
 class TelegramAuthData(BaseModel):
-    id: str
+    id: int
     first_name: str
     last_name: Optional[str] = None
     username: Optional[str] = None

@@ -285,11 +285,12 @@ async def telegram_login(
             raise HTTPException(
                 status_code=401, detail="Invalid or stale Telegram authentication"
             )
-        user = await get_user_by_telegram_id(db, telegram_data.id)
+        telegram_id = str(telegram_data.id)
+        user = await get_user_by_telegram_id(db, telegram_id)
         if not user:
             user = User(
-                email=f"telegram-{telegram_data.id}@users.invalid",
-                telegram_id=telegram_data.id,
+                email=f"telegram-{telegram_id}@users.invalid",
+                telegram_id=telegram_id,
                 first_name=telegram_data.first_name,
                 last_name=telegram_data.last_name,
                 username=telegram_data.username,

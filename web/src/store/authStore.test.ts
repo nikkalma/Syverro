@@ -35,7 +35,7 @@ describe('auth token storage', () => {
 
   it('creates a cookie session from signed Telegram data without storing tokens', async () => {
     const telegramPayload = {
-      id: '123',
+      id: 123,
       first_name: 'Ada',
       auth_date: 1_800_000_000,
       hash: 'signed-hash',
@@ -58,5 +58,21 @@ describe('auth token storage', () => {
     expect(useAuthStore.getState().user).toEqual(user);
     expect(localStorage.getItem('token')).toBeNull();
     expect(localStorage.getItem('refresh_token')).toBeNull();
+  });
+
+  it('does not expose structured API errors as [object Object]', async () => {
+    vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce(new Response(JSON.stringify({
+      detail: [{ loc: ['body', 'id'], msg: 'Invalid value' }],
+    }), {
+      status: 422,
+      headers: { 'Content-Type': 'application/json' },
+    }));
+
+    await expect(useAuthStore.getState().telegramLogin({
+      id: 123,
+      first_name: 'Ada',
+      auth_date: 1_800_000_000,
+      hash: 'signed-hash',
+    })).rejects.toThrow('Ошибка входа через Telegram');
   });
 });

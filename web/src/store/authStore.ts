@@ -10,7 +10,7 @@ interface User {
 }
 
 export interface TelegramAuthPayload {
-  id: string;
+  id: number;
   first_name: string;
   last_name?: string;
   username?: string;
@@ -32,6 +32,14 @@ interface AuthState {
 }
 
 const API_URL = import.meta.env.VITE_API_URL || 'https://api.syverro.com';
+
+const apiErrorMessage = (error: unknown, fallback: string): string => {
+  if (typeof error === 'object' && error !== null && 'detail' in error) {
+    const detail = (error as { detail?: unknown }).detail;
+    if (typeof detail === 'string' && detail.trim()) return detail;
+  }
+  return fallback;
+};
 
 clearLegacyAuthTokens();
 
@@ -63,7 +71,7 @@ export const useAuthStore = create<AuthState>((set) => ({
 
       if (!response.ok) {
         const error = await response.json();
-        throw new Error(error.detail || 'Ошибка входа');
+        throw new Error(apiErrorMessage(error, 'Ошибка входа'));
       }
 
       const userResponse = await fetch(`${API_URL}/auth/me`, {
@@ -93,7 +101,7 @@ export const useAuthStore = create<AuthState>((set) => ({
       });
       if (!response.ok) {
         const error = await response.json();
-        throw new Error(error.detail || 'Ошибка входа через Telegram');
+        throw new Error(apiErrorMessage(error, 'Ошибка входа через Telegram'));
       }
 
       const userResponse = await fetch(`${API_URL}/auth/me`, {
@@ -123,7 +131,7 @@ export const useAuthStore = create<AuthState>((set) => ({
 
       if (!response.ok) {
         const error = await response.json();
-        throw new Error(error.detail || 'Ошибка регистрации');
+        throw new Error(apiErrorMessage(error, 'Ошибка регистрации'));
       }
 
       set({ isLoading: false });

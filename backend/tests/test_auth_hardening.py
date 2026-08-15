@@ -98,7 +98,7 @@ async def test_invalid_and_expired_verification_tokens_fail_safely():
 
 def _signed_telegram_payload(now: int, **overrides):
     payload = {
-        "id": "123456",
+        "id": 123456,
         "first_name": "Ada",
         "last_name": None,
         "username": "ada",
@@ -121,7 +121,7 @@ def test_telegram_login_widget_signature_and_freshness(monkeypatch):
     valid = _signed_telegram_payload(now)
     assert verify_telegram_auth(valid, now=now)
 
-    tampered = dict(valid, id="999")
+    tampered = dict(valid, id=999)
     assert not verify_telegram_auth(tampered, now=now)
     assert not verify_telegram_auth({k: v for k, v in valid.items() if k != "hash"}, now=now)
     assert not verify_telegram_auth(_signed_telegram_payload(now - 301), now=now)
@@ -133,7 +133,7 @@ async def test_arbitrary_telegram_id_cannot_reach_user_lookup(monkeypatch):
     lookup = AsyncMock()
     monkeypatch.setattr(auth, "get_user_by_telegram_id", lookup)
     data = TelegramAuthData(
-        id="victim-id", first_name="Mallory", auth_date=1, hash="0" * 64
+        id=1, first_name="Mallory", auth_date=1, hash="0" * 64
     )
     with pytest.raises(HTTPException) as exc:
         await auth.telegram_login(data, Response(), FakeSession([]))
@@ -157,7 +157,7 @@ async def test_valid_signed_telegram_payload_succeeds(monkeypatch):
 
 def test_telegram_schema_requires_hash():
     with pytest.raises(ValidationError):
-        TelegramAuthData(id="1", first_name="Ada", auth_date=1)
+        TelegramAuthData(id=1, first_name="Ada", auth_date=1)
 
 
 def test_production_secret_configuration_fails_closed(monkeypatch):

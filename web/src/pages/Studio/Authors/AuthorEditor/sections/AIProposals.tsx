@@ -40,6 +40,31 @@ const TIER_COLORS: Record<string, string> = {
   unknown: '#97A6BA',
 };
 
+const BAND_COLORS: Record<string, string> = {
+  auto_approved: '#4CAF50',
+  auto_rejected: '#97A6BA',
+  quality_review: '#EF5350',
+  policy_review: '#5B86A1',
+};
+
+const BAND_LABELS: Record<string, string> = {
+  auto_approved: 'Auto-approved',
+  auto_rejected: 'Auto-rejected',
+  quality_review: 'Quality review',
+  policy_review: 'Policy review',
+};
+
+const REASON_LABELS: Record<string, string> = {
+  new_grounded: 'new grounded claim',
+  invalid_claim: 'invalid claim',
+  exact_duplicate: 'exact duplicate of curated event',
+  restatement: 'restatement of curated event',
+  near_duplicate_ambiguous: 'ambiguous near-duplicate',
+  date_conflict: 'conflicts with curated timeline',
+  unsupported_claim: 'no supporting source evidence',
+  posthumous_event: 'posthumous event (policy)',
+};
+
 function parseClaim(value?: string | null): Record<string, any> | null {
   if (!value) return null;
   try {
@@ -73,12 +98,13 @@ export default function AIProposals() {
   const [running, setRunning] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [filter, setFilter] = useState<string | undefined>(undefined);
+  const [bandFilter, setBandFilter] = useState<string | undefined>(undefined);
 
   const fetchProposals = useCallback(async () => {
     if (!author) return;
     setLoading(true);
     try {
-      const params = filter ? { status_filter: filter } : {};
+      const params = { status_filter: filter, band_filter: bandFilter };
       const res = await apiClient.get(`/admin/authors/${author.id}/proposals`, { params });
       setProposals(res.data?.data || []);
     } catch {
@@ -86,7 +112,7 @@ export default function AIProposals() {
     } finally {
       setLoading(false);
     }
-  }, [author, filter]);
+  }, [author, filter, bandFilter]);
 
   const fetchRuns = useCallback(async () => {
     if (!author) return;
@@ -152,7 +178,17 @@ export default function AIProposals() {
     return acc;
   }, {});
 
+  const bandCounts = proposals.reduce<Record<string, number>>((acc, p) => {
+    if (p.review_band) {
+      acc[p.review_band] = (acc[p.review_band] || 0) + 1;
+    }
+    return acc;
+  }, {});
+
   const filters = ['proposed', 'accepted', 'rejected'];
+  const bandFilters = Object.keys(bandCounts).length > 0
+    ? ['quality_review', 'policy_review', 'auto_rejected', 'auto_approved']
+    : [];
 
   const runStatusColor: Record<string, string> = {
     completed: '#4CAF50',
@@ -236,6 +272,31 @@ export default function AIProposals() {
           </div>
         )}
 
+        {bandFilters.length > 0 && (
+          <div style={{ display: 'flex', gap: '8px', marginBottom: '16px', flexWrap: 'wrap' }}>
+            <button type="button" onClick={() => setBandFilter(undefined)}
+              style={{
+                padding: '4px 12px', borderRadius: '16px', fontSize: '12px', cursor: 'pointer',
+                background: !bandFilter ? 'var(--accent)' : 'var(--surface-hover)',
+                border: '1px solid var(--border-soft)',
+                color: !bandFilter ? '#fff' : 'var(--text-secondary)',
+              }}>
+              {t.admin.common.all}
+            </button>
+            {bandFilters.map((b) => (
+              <button key={b} type="button" onClick={() => setBandFilter(b)}
+                style={{
+                  padding: '4px 12px', borderRadius: '16px', fontSize: '12px', cursor: 'pointer',
+                  background: bandFilter === b ? 'var(--accent)' : 'var(--surface-hover)',
+                  border: '1px solid var(--border-soft)',
+                  color: bandFilter === b ? '#fff' : 'var(--text-secondary)',
+                }}>
+                {BAND_LABELS[b] || b} ({bandCounts[b] || 0})
+              </button>
+            ))}
+          </div>
+        )}
+
         {loading && <div style={{ fontSize: '13px', color: 'var(--text-muted)' }}>{copy.loadingSuggestions}</div>}
 
         {!loading && filtered.length === 0 && (
@@ -297,6 +358,16 @@ export default function AIProposals() {
                     {copy[conflictKey as keyof typeof copy] as string}
                   </span>
                 )}
+                {p.review_band && (
+                  <span style={{
+                    padding: '2px 8px', borderRadius: '4px', fontSize: '10px',
+                    textTransform: 'uppercase', fontWeight: 500,
+                    background: `${BAND_COLORS[p.review_band] || '#97A6BA'}1f`,
+                    color: BAND_COLORS[p.review_band] || '#97A6BA',
+                  }}>
+                    {BAND_LABELS[p.review_band] || p.review_band}
+                  </span>
+                )}
                 {p.applied_at && (
                   <span style={{
                     padding: '2px 8px', borderRadius: '4px', fontSize: '10px',
@@ -313,6 +384,11 @@ export default function AIProposals() {
 
               <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '4px' }}>
                 {p.entity_type} → {p.field_name}
+                {p.review_reason && (
+                  <span style={{ marginLeft: '8px', fontStyle: 'italic' }}>
+                    {REASON_LABELS[p.review_reason] || p.review_reason}
+                  </span>
+                )}
               </div>
 
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', marginBottom: '8px' }}>

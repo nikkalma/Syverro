@@ -445,6 +445,8 @@ export interface AIProposal {
   status: string;
   validation_state?: string | null;
   conflict_state?: string | null;
+  review_band?: string | null;
+  review_reason?: string | null;
   run_id?: string | null;
   applied_at?: string | null;
   timeline_event_id?: string | null;

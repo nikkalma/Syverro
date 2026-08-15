@@ -17,6 +17,11 @@ class Source(Base):
     language = Column(String, nullable=True)
     reliability_score = Column(String, server_default="3", nullable=False)
     source_origin = Column(String, server_default="manual", nullable=False)
+    authority_tier = Column(String, nullable=True)
+    review_status = Column(String, server_default="pending", nullable=False, index=True)
+    normalized_url = Column(String, nullable=True, index=True)
+    discovered_by = Column(String, nullable=True)
+    discovered_at = Column(DateTime(timezone=True), nullable=True)
     created_at = Column(DateTime, server_default=func.now(), nullable=False)
 
 

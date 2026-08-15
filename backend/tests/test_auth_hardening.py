@@ -6,7 +6,7 @@ from unittest.mock import AsyncMock
 from uuid import uuid4
 
 import pytest
-from fastapi import HTTPException, Response
+from fastapi import HTTPException, Request, Response
 from fastapi.security import HTTPAuthorizationCredentials
 from pydantic import ValidationError
 
@@ -41,6 +41,13 @@ class FakeSession:
     async def refresh(self, value):
         value.id = value.id or uuid4()
         value.created_at = value.created_at or datetime.utcnow()
+
+
+def _request(origin: str | None = None) -> Request:
+    headers = [] if origin is None else [(b"origin", origin.encode())]
+    return Request(
+        {"type": "http", "method": "POST", "path": "/", "headers": headers}
+    )
 
 
 @pytest.mark.asyncio
@@ -136,7 +143,7 @@ async def test_arbitrary_telegram_id_cannot_reach_user_lookup(monkeypatch):
         id=1, first_name="Mallory", auth_date=1, hash="0" * 64
     )
     with pytest.raises(HTTPException) as exc:
-        await auth.telegram_login(data, Response(), FakeSession([]))
+        await auth.telegram_login(data, Response(), _request(), FakeSession([]))
     assert exc.value.status_code == 401
     lookup.assert_not_awaited()
 
@@ -155,11 +162,40 @@ async def test_valid_signed_telegram_payload_succeeds(monkeypatch):
     )
     monkeypatch.setattr(auth, "get_user_by_telegram_id", AsyncMock(return_value=existing))
     response = await auth.telegram_login(
-        TelegramAuthData(**_signed_telegram_payload(now)), Response(), FakeSession([])
+        TelegramAuthData(**_signed_telegram_payload(now)),
+        Response(),
+        _request(),
+        FakeSession([]),
     )
     assert response.access_token
     assert response.refresh_token
     assert response.user.id == existing.id
+
+
+@pytest.mark.asyncio
+async def test_web_telegram_response_does_not_expose_tokens(monkeypatch):
+    monkeypatch.setattr(settings, "TELEGRAM_BOT_TOKEN", "test-bot-token")
+    now = 1_800_000_000
+    monkeypatch.setattr("app.core.security.time.time", lambda: now)
+    existing = SimpleNamespace(
+        id=uuid4(),
+        email="telegram-123456@users.invalid",
+        role="reader",
+        created_at=datetime.utcnow(),
+        email_verified=False,
+    )
+    monkeypatch.setattr(auth, "get_user_by_telegram_id", AsyncMock(return_value=existing))
+
+    response = await auth.telegram_login(
+        TelegramAuthData(**_signed_telegram_payload(now)),
+        Response(),
+        _request("https://syverro.com"),
+        FakeSession([]),
+    )
+
+    assert response.user.id == existing.id
+    assert not hasattr(response, "access_token")
+    assert not hasattr(response, "refresh_token")
 
 
 def test_telegram_schema_requires_hash():
@@ -203,6 +239,7 @@ async def test_internal_login_exception_is_not_disclosed(monkeypatch):
         await auth.login(
             UserLogin(email="reader@example.com", password="x"),
             Response(),
+            _request(),
             FakeSession([]),
         )
     assert exc.value.status_code == 500
@@ -245,6 +282,7 @@ async def test_login_sets_http_only_secure_strict_cookies(monkeypatch):
     tokens = await auth.login(
         UserLogin(email="reader@example.com", password="strong-password"),
         response,
+        _request(),
         db,
     )
 
@@ -269,6 +307,29 @@ async def test_login_sets_http_only_secure_strict_cookies(monkeypatch):
         and "Path=/auth" in cookie
         for cookie in cookies
     )
+
+
+@pytest.mark.asyncio
+async def test_web_login_response_does_not_expose_tokens(monkeypatch):
+    user = SimpleNamespace(
+        id=uuid4(),
+        password_hash=auth.get_password_hash("strong-password"),
+        email_verified=True,
+    )
+    monkeypatch.setattr(auth, "get_user_by_email", AsyncMock(return_value=user))
+    raw_response = Response()
+
+    response = await auth.login(
+        UserLogin(email="reader@example.com", password="strong-password"),
+        raw_response,
+        _request("https://studio.syverro.com"),
+        FakeSession([]),
+    )
+
+    assert response.detail == "Session established"
+    assert not hasattr(response, "access_token")
+    assert not hasattr(response, "refresh_token")
+    assert len(raw_response.headers.getlist("set-cookie")) == 2
 
 
 @pytest.mark.asyncio
@@ -298,6 +359,7 @@ async def test_refresh_cookie_rotates_tokens_without_request_body():
 
     tokens = await auth.refresh_token(
         response,
+        _request(),
         None,
         refresh_cookie=create_refresh_token({"sub": str(user.id)}),
         db=FakeSession([user.id, user]),
@@ -305,6 +367,27 @@ async def test_refresh_cookie_rotates_tokens_without_request_body():
 
     assert tokens.access_token and tokens.refresh_token
     assert len(response.headers.getlist("set-cookie")) == 2
+
+
+@pytest.mark.asyncio
+async def test_web_refresh_response_does_not_expose_rotated_tokens():
+    user = SimpleNamespace(
+        id=uuid4(), is_active=True, password_hash=None, email_verified=False
+    )
+    raw_response = Response()
+
+    response = await auth.refresh_token(
+        raw_response,
+        _request("https://syverro.com"),
+        None,
+        refresh_cookie=create_refresh_token({"sub": str(user.id)}),
+        db=FakeSession([user.id, user]),
+    )
+
+    assert response.detail == "Session established"
+    assert not hasattr(response, "access_token")
+    assert not hasattr(response, "refresh_token")
+    assert len(raw_response.headers.getlist("set-cookie")) == 2
 
 
 @pytest.mark.asyncio

@@ -3,7 +3,7 @@ import hashlib
 from datetime import datetime
 from uuid import UUID
 
-from fastapi import APIRouter, Cookie, Depends, HTTPException, Response
+from fastapi import APIRouter, Cookie, Depends, HTTPException, Request, Response
 from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -23,6 +23,8 @@ from app.core.security import (
 from app.models.user import User
 from app.models.refresh_session import RefreshSession
 from app.schemas.user import (
+    BrowserSessionResponse,
+    BrowserTelegramLoginResponse,
     EmailVerificationRequest,
     EmailVerificationResponse,
     RegistrationResponse,
@@ -43,6 +45,18 @@ from app.services.email_verification import (
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/auth", tags=["auth"])
 REFRESH_COOKIE_NAME = "syverro_refresh"
+WEB_SESSION_ORIGINS = {
+    "http://localhost:3000",
+    "http://localhost:3001",
+    "http://localhost:5173",
+    "https://syverro.com",
+    "https://www.syverro.com",
+    "https://studio.syverro.com",
+}
+
+
+def _is_web_session_request(request: Request) -> bool:
+    return request.headers.get("origin") in WEB_SESSION_ORIGINS
 
 
 def _set_auth_cookies(response: Response, tokens: TokenResponse) -> None:
@@ -198,9 +212,12 @@ async def verify_email(
         raise HTTPException(status_code=500, detail="Internal server error")
 
 
-@router.post("/login", response_model=TokenResponse)
+@router.post("/login", response_model=TokenResponse | BrowserSessionResponse)
 async def login(
-    user_data: UserLogin, response: Response, db: AsyncSession = Depends(get_db)
+    user_data: UserLogin,
+    response: Response,
+    request: Request,
+    db: AsyncSession = Depends(get_db),
 ):
     logger.info("Login attempt")
     try:
@@ -211,7 +228,10 @@ async def login(
             raise HTTPException(status_code=401, detail="Invalid email or password")
         if not user.email_verified:
             raise HTTPException(status_code=403, detail="Email verification required")
-        return await _issue_tokens(response, db, user.id)
+        tokens = await _issue_tokens(response, db, user.id)
+        if _is_web_session_request(request):
+            return BrowserSessionResponse()
+        return tokens
     except HTTPException:
         raise
     except Exception:
@@ -220,9 +240,10 @@ async def login(
         raise HTTPException(status_code=500, detail="Internal server error")
 
 
-@router.post("/refresh", response_model=TokenResponse)
+@router.post("/refresh", response_model=TokenResponse | BrowserSessionResponse)
 async def refresh_token(
     response: Response,
+    http_request: Request,
     request: RefreshTokenRequest | None = None,
     refresh_cookie: str | None = Cookie(default=None, alias=REFRESH_COOKIE_NAME),
     db: AsyncSession = Depends(get_db),
@@ -243,7 +264,10 @@ async def refresh_token(
         raise HTTPException(status_code=403, detail="User account is disabled")
     if user.password_hash and not user.email_verified:
         raise HTTPException(status_code=403, detail="Email verification required")
-    return await _issue_tokens(response, db, user.id)
+    tokens = await _issue_tokens(response, db, user.id)
+    if _is_web_session_request(http_request):
+        return BrowserSessionResponse()
+    return tokens
 
 
 @router.post("/logout", status_code=204)
@@ -278,10 +302,14 @@ async def get_current_user_info(current_user: User = Depends(get_current_user)):
     return UserResponse.model_validate(current_user)
 
 
-@router.post("/telegram", response_model=TelegramLoginResponse)
+@router.post(
+    "/telegram",
+    response_model=TelegramLoginResponse | BrowserTelegramLoginResponse,
+)
 async def telegram_login(
     telegram_data: TelegramAuthData,
     response: Response,
+    request: Request,
     db: AsyncSession = Depends(get_db),
 ):
     logger.info("Telegram login attempt")
@@ -309,6 +337,10 @@ async def telegram_login(
             await db.refresh(user)
             logger.info("New Telegram user created: %s", user.id)
         tokens = await _issue_tokens(response, db, user.id)
+        if _is_web_session_request(request):
+            return BrowserTelegramLoginResponse(
+                user=UserResponse.model_validate(user),
+            )
         return TelegramLoginResponse(
             **tokens.model_dump(),
             user=UserResponse.model_validate(user),

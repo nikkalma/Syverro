@@ -30,6 +30,14 @@ class TokenResponse(BaseModel):
     token_type: str = "bearer"
 
 
+class BrowserSessionResponse(BaseModel):
+    detail: str = "Session established"
+
+
+class BrowserTelegramLoginResponse(BrowserSessionResponse):
+    user: UserResponse
+
+
 class TelegramLoginResponse(TokenResponse):
     user: UserResponse
 

@@ -27,6 +27,24 @@ def upgrade() -> None:
         sa.ForeignKeyConstraint(["source_id"], ["sources.id"], ondelete="CASCADE"),
         sa.PrimaryKeyConstraint("author_id", "source_id"),
     )
+    op.execute(
+        """
+        UPDATE authors
+        SET birth_place = places.name
+        FROM places
+        WHERE authors.birth_place_id = places.id
+          AND authors.birth_place IS DISTINCT FROM places.name
+        """
+    )
+    op.execute(
+        """
+        UPDATE authors
+        SET death_place = places.name
+        FROM places
+        WHERE authors.death_place_id = places.id
+          AND authors.death_place IS DISTINCT FROM places.name
+        """
+    )
 
 
 def downgrade() -> None:

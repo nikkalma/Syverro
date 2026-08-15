@@ -35,7 +35,7 @@ class Settings:
         self.SECRET_KEY = configured_secret
         self.TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN", "")
         self.TELEGRAM_AUTH_MAX_AGE_SECONDS = int(
-            os.getenv("TELEGRAM_AUTH_MAX_AGE_SECONDS", "86400")
+            os.getenv("TELEGRAM_AUTH_MAX_AGE_SECONDS", "300")
         )
         self.EMAIL_VERIFICATION_EXPIRE_MINUTES = int(
             os.getenv("EMAIL_VERIFICATION_EXPIRE_MINUTES", "60")

@@ -186,6 +186,13 @@ def test_development_without_secret_is_testable(monkeypatch):
     assert Settings().SECRET_KEY
 
 
+def test_telegram_auth_freshness_defaults_to_five_minutes(monkeypatch):
+    monkeypatch.setenv("ENVIRONMENT", "development")
+    monkeypatch.delenv("SECRET_KEY", raising=False)
+    monkeypatch.delenv("TELEGRAM_AUTH_MAX_AGE_SECONDS", raising=False)
+    assert Settings().TELEGRAM_AUTH_MAX_AGE_SECONDS == 300
+
+
 @pytest.mark.asyncio
 async def test_internal_login_exception_is_not_disclosed(monkeypatch):
     async def explode(*_):

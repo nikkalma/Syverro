@@ -17,3 +17,15 @@ class ProviderError(SyvaiError):
 
 class StructuredOutputError(SyvaiError):
     """Provider returned content that could not be parsed into the expected schema."""
+
+
+class DiscoveryError(SyvaiError):
+    """The bounded source-discovery layer could not complete its task."""
+
+
+class FetchError(DiscoveryError):
+    """A safe fetch failed (SSRF guard, timeout, size cap, or HTTP error)."""
+
+    def __init__(self, message: str, code: str | None = None):
+        super().__init__(message)
+        self.code = code or "fetch_failed"

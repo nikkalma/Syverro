@@ -41,6 +41,26 @@ class Settings:
         self.SYVAI_PROVIDER_TIMEOUT_SECONDS = float(os.getenv("SYVAI_PROVIDER_TIMEOUT_SECONDS", "60"))
         self.SYVAI_PROVIDER_TEMPERATURE = float(os.getenv("SYVAI_PROVIDER_TEMPERATURE", "0"))
         self.SYVAI_PROVIDER_MAX_TOKENS = int(os.getenv("SYVAI_PROVIDER_MAX_TOKENS", "4096"))
+        # --- SyvAI 0.2A source-discovery settings (env-only, fail-safe) ---
+        self.SYVAI_DISCOVERY_ENABLED = os.getenv("SYVAI_DISCOVERY_ENABLED", "").lower() in {
+            "1", "true", "yes", "on",
+        }
+        self.SYVAI_DISCOVERY_PROVIDER = os.getenv("SYVAI_DISCOVERY_PROVIDER", "wikipedia")
+        self.SYVAI_DISCOVERY_MAX_CANDIDATES = int(
+            os.getenv("SYVAI_DISCOVERY_MAX_CANDIDATES", "5")
+        )
+        self.SYVAI_DISCOVERY_MAX_PER_FAMILY = int(
+            os.getenv("SYVAI_DISCOVERY_MAX_PER_FAMILY", "2")
+        )
+        self.SYVAI_DISCOVERY_TIMEOUT_SECONDS = float(
+            os.getenv("SYVAI_DISCOVERY_TIMEOUT_SECONDS", "15")
+        )
+        self.SYVAI_DISCOVERY_MAX_PAGE_BYTES = int(
+            os.getenv("SYVAI_DISCOVERY_MAX_PAGE_BYTES", "500000")
+        )
+        self.SYVAI_DISCOVERY_USER_AGENT = os.getenv(
+            "SYVAI_DISCOVERY_USER_AGENT", "SyverroSyvAI/0.2 (+https://syverro.com)"
+        )
 
         self.TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN", "")
         self.TELEGRAM_AUTH_MAX_AGE_SECONDS = int(

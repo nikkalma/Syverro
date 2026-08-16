@@ -14,9 +14,11 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.models.author import Author
 from app.models.author_citizenship import AuthorCitizenship
 from app.models.author_knowledge_relation import AuthorKnowledgeRelation
+from app.models.author_publication import AuthorPublication
 from app.models.author_quote import AuthorQuote
 from app.models.author_residence import AuthorResidence
 from app.models.source import Source
+from app.models.source_candidate import SourceCandidate
 from app.models.timeline_event import TimelineEvent
 from app.syvai.validators import ExistingEvent
 
@@ -46,10 +48,22 @@ async def collect_author_source_ids(db: AsyncSession, author_id: str) -> set[str
         select(AuthorCitizenship.source_id).where(AuthorCitizenship.author_id == author_id),
         select(AuthorResidence.source_id).where(AuthorResidence.author_id == author_id),
         select(AuthorKnowledgeRelation.source_id).where(AuthorKnowledgeRelation.author_id == author_id),
+        select(AuthorPublication.source_id).where(AuthorPublication.author_id == author_id),
     ]
     for query in queries:
         result = await db.execute(query)
         source_ids.update(str(row[0]) for row in result if row[0])
+
+    # SyvAI 0.2A: sources promoted by bounded discovery (auto or human approved)
+    # belong to this author's research corpus even before any editorial record
+    # references them — the start-from-zero bridge for Anne.
+    discovery_result = await db.execute(
+        select(SourceCandidate.source_id).where(
+            SourceCandidate.author_id == author_id,
+            SourceCandidate.review_action.in_(("approved", "auto_approved")),
+        )
+    )
+    source_ids.update(str(row[0]) for row in discovery_result if row[0])
     return source_ids
 
 

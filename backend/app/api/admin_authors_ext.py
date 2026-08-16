@@ -14,6 +14,7 @@ from app.models.ai_proposal_source import AIProposalSource
 from app.models.timeline_event import TimelineEvent
 from app.models.author_knowledge_relation import AuthorKnowledgeRelation
 from app.models.author_publication import AuthorPublication
+from app.models.source_candidate import SourceCandidate
 from app.schemas.author_quote import AuthorQuoteCreate, AuthorQuoteUpdate, AuthorQuoteResponse
 from app.schemas.author_citizenship import AuthorCitizenshipCreate, AuthorCitizenshipUpdate, AuthorCitizenshipResponse
 from app.schemas.author_residence import AuthorResidenceCreate, AuthorResidenceUpdate, AuthorResidenceResponse
@@ -351,6 +352,19 @@ async def get_author_sources(
     )
     source_ids.update(row[0] for row in kr_result if row[0])
 
+    pub_result = await db.execute(
+        select(AuthorPublication.source_id).where(AuthorPublication.author_id == author.id)
+    )
+    source_ids.update(row[0] for row in pub_result if row[0])
+
+    discovery_result = await db.execute(
+        select(SourceCandidate.source_id).where(
+            SourceCandidate.author_id == author.id,
+            SourceCandidate.review_action.in_(("approved", "auto_approved")),
+        )
+    )
+    source_ids.update(row[0] for row in discovery_result if row[0])
+
     if not source_ids:
         return {"data": []}
 
@@ -369,6 +383,9 @@ async def get_author_sources(
             "language": s.language,
             "reliability_score": s.reliability_score,
             "source_origin": s.source_origin,
+            "authority_tier": s.authority_tier,
+            "review_status": s.review_status,
+            "normalized_url": s.normalized_url,
             "created_at": s.created_at.isoformat() if s.created_at else None,
         } for s in sources],
     }

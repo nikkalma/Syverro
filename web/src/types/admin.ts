@@ -476,6 +476,76 @@ export interface SyvaiRun {
   proposal_count?: number;
 }
 
+// ============================================================
+// SOURCE DISCOVERY (SyvAI 0.2A)
+// ============================================================
+
+export interface DiscoveryStatus {
+  enabled: boolean;
+  provider?: string | null;
+  configured: boolean;
+  status: 'OK' | 'NOT_CONFIGURED';
+}
+
+export interface DiscoveryRun {
+  id: string;
+  author_id: string;
+  domain: string;
+  status: string;
+  provider: string;
+  model?: string | null;
+  duration_ms?: number | null;
+  calls: number;
+  source_count: number;
+  error?: string | null;
+  created_at?: string | null;
+  finished_at?: string | null;
+}
+
+export interface SourceCandidate {
+  id: string;
+  author_id: string;
+  run_id?: string | null;
+  source_id?: string | null;
+  url: string;
+  normalized_url: string;
+  title?: string | null;
+  source_type?: string | null;
+  authority_tier: string;
+  quality_score?: number | null;
+  assessment: string;
+  assessment_reason?: string | null;
+  provider?: string | null;
+  origin?: string | null;
+  evidence?: string | null;
+  status: string;
+  review_action?: string | null;
+  reviewed_at?: string | null;
+  reviewed_by?: string | null;
+  created_at?: string | null;
+}
+
+export interface DiscoveryRunResponse {
+  run: DiscoveryRun;
+  candidates: SourceCandidate[];
+  created_sources: string[];
+  duplicate_skipped: number;
+  family_skipped: number;
+  unparseable_skipped: number;
+  message: string;
+}
+
+export interface DiscoveryMetrics {
+  author_id: string;
+  candidates_total: number;
+  candidates_pending: number;
+  by_assessment: Record<string, number>;
+  by_review_action: Record<string, number>;
+  auto_approved_sources: number;
+  human_actions_per_author: number;
+  formula: string;
+}
+
 export interface AIProposalCreate {
   entity_type: string;
   entity_id?: string | null;

@@ -459,6 +459,7 @@ export interface LocaleData {
             sources: string;
             publications: string;
             ai: string;
+            discovery: string;
           };
         publications: {
           title: string;
@@ -710,6 +711,32 @@ export interface LocaleData {
           errorSave: string;
           errorDelete: string;
           sourceTypes: { website: string; book: string; interview: string; archive: string; journal: string; encyclopedia: string; other: string };
+        };
+        discovery: {
+          title: string;
+          description: string;
+          notConfigured: string;
+          notConfiguredHint: string;
+          statusLabel: string;
+          providerLabel: string;
+          run: string;
+          running: string;
+          totalCandidates: string;
+          pendingCandidates: string;
+          autoApprovedSources: string;
+          humanActions: string;
+          runs: string;
+          candidatesWord: string;
+          noRuns: string;
+          noCandidates: string;
+          noFilteredCandidates: string;
+          approve: string;
+          reject: string;
+          errorLoad: string;
+          errorRun: string;
+          errorReview: string;
+          assessments: { auto_usable: string; needs_review: string; rejected: string };
+          authorityTiers: { high: string; medium: string; low: string; unknown: string };
         };
       };
     };

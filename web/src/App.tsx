@@ -46,6 +46,7 @@ import {
   Sources,
   Publications,
   AIProposals,
+  SourceDiscovery,
 } from "./pages/Studio/Authors/AuthorEditor";
 import StudioGenres from "./pages/Studio/Genres";
 import StudioTaxonomy from "./pages/Studio/Taxonomy";
@@ -156,6 +157,7 @@ export default function App() {
               <Route path="sources" element={<Sources />} />
               <Route path="publications" element={<Publications />} />
               <Route path="ai" element={<AIProposals />} />
+              <Route path="discovery" element={<SourceDiscovery />} />
             </Route>
           </Route>
         </Route>

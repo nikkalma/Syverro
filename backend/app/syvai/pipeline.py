@@ -252,7 +252,7 @@ async def run_timeline_research(
 
         _record_usage(run, result.usage)
         run.duration_ms = int((time.monotonic() - started) * 1000)
-        run.finished_at = datetime.now(timezone.utc)
+        run.finished_at = datetime.now(timezone.utc).replace(tzinfo=None)
 
         if any(p.review_band in REVIEW_BANDS_NEEDING_HUMAN for p in proposals):
             run.status = "review_needed"
@@ -267,7 +267,7 @@ async def run_timeline_research(
         run.status = "failed"
         run.error = _sanitize_error(exc)
         run.duration_ms = int((time.monotonic() - started) * 1000)
-        run.finished_at = datetime.now(timezone.utc)
+        run.finished_at = datetime.now(timezone.utc).replace(tzinfo=None)
         await db.commit()
         await db.refresh(run)
         logger.warning("syvai timeline run failed: %s", run.error)
@@ -276,7 +276,7 @@ async def run_timeline_research(
         run.status = "failed"
         run.error = _sanitize_error(exc)
         run.duration_ms = int((time.monotonic() - started) * 1000)
-        run.finished_at = datetime.now(timezone.utc)
+        run.finished_at = datetime.now(timezone.utc).replace(tzinfo=None)
         await db.commit()
         await db.refresh(run)
         logger.exception("syvai timeline run crashed: %s", run.error)

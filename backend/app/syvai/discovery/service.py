@@ -185,7 +185,7 @@ async def run_discovery(
         run.source_count = len(candidates)
         run.calls = 1
         run.duration_ms = int((time.monotonic() - started) * 1000)
-        run.finished_at = datetime.now(timezone.utc)
+        run.finished_at = datetime.now(timezone.utc).replace(tzinfo=None)
         if any(c.assessment == ASSESSMENT_NEEDS_REVIEW for c in candidates):
             run.status = "review_needed"
         else:
@@ -206,7 +206,7 @@ async def run_discovery(
         run.status = "failed"
         run.error = _sanitize_error(exc)
         run.duration_ms = int((time.monotonic() - started) * 1000)
-        run.finished_at = datetime.now(timezone.utc)
+        run.finished_at = datetime.now(timezone.utc).replace(tzinfo=None)
         await db.commit()
         await db.refresh(run)
         logger.warning("syvai discovery run failed: %s", run.error)
@@ -215,7 +215,7 @@ async def run_discovery(
         run.status = "failed"
         run.error = _sanitize_error(exc)
         run.duration_ms = int((time.monotonic() - started) * 1000)
-        run.finished_at = datetime.now(timezone.utc)
+        run.finished_at = datetime.now(timezone.utc).replace(tzinfo=None)
         await db.commit()
         await db.refresh(run)
         logger.exception("syvai discovery run crashed: %s", run.error)

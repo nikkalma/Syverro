@@ -32,6 +32,7 @@ from app.models.author import Author
 from app.models.source import Source
 from app.models.syvai_run import SyvaiRun
 from app.syvai.confidence import compute_confidence
+from app.syvai.corroboration import corroborate_sources
 from app.syvai.errors import ConfigurationError, ProviderError, StructuredOutputError
 from app.syvai.evidence import (
     EvidenceVerification,
@@ -197,6 +198,17 @@ async def _persist_proposals(
             if verification.is_grounded:
                 grounded_source_count += 1
 
+        # 0.2E: corroboration counts only families of verified grounded sources.
+        corroboration = corroborate_sources(
+            [source_by_id.get(matched["id"]) for matched in matched_sources],
+            [verifications[matched["id"]].is_grounded for matched in matched_sources],
+        )
+        grounded_reliabilities = [
+            matched.get("reliability_score")
+            for matched in matched_sources
+            if verifications[matched["id"]].is_grounded
+        ]
+
         validation = validate_timeline_claim(
             claim,
             author_birth_date=author.birth_date,
@@ -208,9 +220,10 @@ async def _persist_proposals(
         confidence = compute_confidence(
             validation=validation,
             source_count=len(matched_sources),
-            distinct_source_count=len(matched_sources),
             reliabilities=reliabilities,
             grounded_source_count=grounded_source_count,
+            independent_grounded_source_count=corroboration.independent_grounded_source_count,
+            grounded_reliabilities=grounded_reliabilities,
         )
 
         proposal = AIProposal(
@@ -230,6 +243,10 @@ async def _persist_proposals(
         )
         db.add(proposal)
         await db.flush()
+        # 0.2E: corroboration is a runtime-derived property (not a column); it
+        # is surfaced on the in-memory proposal so API serialization can expose
+        # it without a schema migration.
+        proposal.corroboration = corroboration.to_dict()
 
         for matched in matched_sources:
             source_id = matched["id"]

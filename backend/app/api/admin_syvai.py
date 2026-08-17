@@ -87,6 +87,7 @@ def _proposal_dict(proposal: AIProposal, sources: list) -> dict:
         "reviewed_at": proposal.reviewed_at.isoformat() if proposal.reviewed_at else None,
         "reviewed_by": str(proposal.reviewed_by) if proposal.reviewed_by else None,
         "sources": sources,
+        "corroboration": getattr(proposal, "corroboration", None),
     }
 
 

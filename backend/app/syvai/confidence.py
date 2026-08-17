@@ -3,9 +3,10 @@
 Confidence is derived from observable evidence rather than model self-report:
 
     base 0.50                      structured claim with >=1 trusted source
-    + 0.15                         >=2 distinct sources agree
-    + 0.10                         >=3 distinct sources agree
-    + 0.10 * avg_reliability       mean reliability of linked sources (0..1)
+    + 0.15                         >=2 VERIFIED, INDEPENDENTLY-GROUNDED
+                                   source families agree (0.2E)
+    + 0.10                         >=3 such families agree (0.2E)
+    + 0.10 * avg_reliability       mean reliability of GROUNDED sources (0..1)
     + 0.15                         deterministic validation == validated
     + 0.05                         >=1 source with verified claim-level
                                    grounding (0.2C; skipped when unverified)
@@ -14,6 +15,15 @@ Confidence is derived from observable evidence rather than model self-report:
     - 0.00                         validation_state == needs_review
 
 Final value is clamped to [0.10, 0.99].
+
+0.2E changes (multi-source corroboration):
+
+  * the multiplicity bonuses ($+0.15$ / $+0.10$) are granted ONLY for sources in
+    distinct source families whose claim-level evidence was deterministically
+    verified (``independent_grounded_source_count``). A second Wikipedia mirror,
+    duplicate URL variants, or an unparseable URL never inflates confidence;
+  * the reliability averaging term is computed over the GROUNDED sources only,
+    so a partially-grounded source never contributes a reliability bonus.
 
 Reliability normalization handles the legacy free-form ``reliability_score``
 strings in the ``sources`` table ("4", "0.8", "1.0", ...):
@@ -54,19 +64,25 @@ def compute_confidence(
     *,
     validation: ValidationResult,
     source_count: int,
-    distinct_source_count: int,
-    reliabilities: list[str | float | None],
+    reliabilities: list[str | float | None] | None = None,
     grounded_source_count: int = 0,
+    independent_grounded_source_count: int = 0,
+    grounded_reliabilities: list[str | float | None] | None = None,
 ) -> float:
     score = 0.0
     if source_count >= 1:
         score = 0.50
-    if distinct_source_count >= 2:
+    # 0.2E: multiplicity bonuses reflect verified, family-distinct grounding.
+    if independent_grounded_source_count >= 2:
         score += 0.15
-    if distinct_source_count >= 3:
+    if independent_grounded_source_count >= 3:
         score += 0.10
-    if reliabilities:
-        score += 0.10 * source_reliability_score(reliabilities)
+    # Reliability term counts grounded sources only (never partial/ungrounded).
+    reliability_input = (
+        grounded_reliabilities if grounded_reliabilities is not None else reliabilities
+    )
+    if reliability_input:
+        score += 0.10 * source_reliability_score(reliability_input)
     if source_count >= 1 and grounded_source_count >= 1:
         score += 0.05
 

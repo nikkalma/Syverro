@@ -36,7 +36,7 @@ def _author():
     )
 
 
-def _source(title="Encyclopaedia Britannica", score="4"):
+def _source(title="Encyclopaedia Britannica", score="4", citation=None):
     return Source(
         id=uuid4(),
         title=title,
@@ -44,6 +44,7 @@ def _source(title="Encyclopaedia Britannica", score="4"):
         url="https://www.britannica.com",
         reliability_score=score,
         source_origin="manual",
+        citation=citation,
     )
 
 
@@ -157,12 +158,30 @@ def test_sanitize_error_never_leaks_body():
     assert "provider body" not in _sanitize_error(RuntimeError("boom"))
 
 
+DEFAULT_CITATION = (
+    "Charlotte Brontë enrolled at Roe Head School in Mirfield in 1831. "
+    "She later worked as a governess before the publication of Jane Eyre."
+)
+
+
+def _claim(evidence: str | None, **source_overrides) -> dict:
+    source = {"title": "Encyclopaedia Britannica", "source_type": "encyclopedia"}
+    if evidence is not None:
+        source["evidence"] = evidence
+    source.update(source_overrides)
+    claim = dict(CLAIM_JSON)
+    claim["sources"] = [source]
+    return claim
+
+
 @pytest.mark.asyncio
 async def test_run_timeline_research_persists_proposals_and_links_sources():
     author = _author()
-    source = _source()
+    source = _source(citation=DEFAULT_CITATION)
     session = FakeSession(sources=[source])
-    provider = FakeProvider(json.dumps({"events": [CLAIM_JSON]}))
+    provider = FakeProvider(
+        json.dumps({"events": [_claim("Enrolled at Roe Head School in Mirfield in 1831")]})
+    )
 
     outcome = await run_timeline_research(session, author, provider)
 
@@ -180,11 +199,15 @@ async def test_run_timeline_research_persists_proposals_and_links_sources():
     assert proposal.validation_state == "validated"
     assert proposal.confidence > 0.5
 
+    assert proposal.review_band == "auto_approved"
+    assert proposal.review_reason == "new_grounded"
+
     sources = [obj for obj in session.added if isinstance(obj, AIProposalSource)]
     assert len(sources) == 1
     assert sources[0].proposal_id == proposal.id
     assert str(sources[0].source_id) == str(source.id)
     assert sources[0].reliability_tier == "high"
+    assert sources[0].snippet == "Enrolled at Roe Head School in Mirfield in 1831"
 
     assert outcome.run.provider == "fake"
     assert outcome.run.total_tokens == 150
@@ -250,7 +273,10 @@ async def test_restatement_proposal_is_auto_rejected_with_band():
 async def test_quality_and_policy_bands_require_human_review():
     """0.1B: unsupported claims (quality) and posthumous events (policy) keep review_needed."""
     author = _author()
-    source = _source(title="Smith Elder")
+    source = _source(
+        title="Smith Elder",
+        citation="The Professor, Charlotte Brontë's first novel, was published posthumously in 1857.",
+    )
     session = FakeSession(sources=[source])
     claims = [
         {
@@ -258,7 +284,13 @@ async def test_quality_and_policy_bands_require_human_review():
             "date_value": "1857",
             "date_precision": "year",
             "label": "The Professor published posthumously",
-            "sources": [{"title": "Smith Elder", "source_type": "publisher"}],
+            "sources": [
+                {
+                    "title": "Smith Elder",
+                    "source_type": "publisher",
+                    "evidence": "The Professor, Charlotte Brontë's first novel, was published posthumously in 1857",
+                }
+            ],
         }
     ]
     provider = FakeProvider(json.dumps({"events": claims}))
@@ -270,6 +302,37 @@ async def test_quality_and_policy_bands_require_human_review():
     assert proposal.review_band == "policy_review"
     assert proposal.review_reason == "posthumous_event"
     assert proposal.status == "proposed"
+
+
+@pytest.mark.asyncio
+async def test_ungrounded_evidence_keeps_human_review():
+    """0.2C: linked sources whose evidence cannot be verified never auto-approve."""
+    author = _author()
+    source = _source(citation=DEFAULT_CITATION)
+    session = FakeSession(sources=[source])
+    provider = FakeProvider(
+        json.dumps(
+            {
+                "events": [
+                    _claim(
+                        "Enrolled at an academy in the town where she boarded.",
+                    )
+                ]
+            }
+        )
+    )
+
+    outcome = await run_timeline_research(session, author, provider)
+
+    assert outcome.run.status == "review_needed"
+    proposal = outcome.proposals[0]
+    assert proposal.review_band == "quality_review"
+    assert proposal.review_reason == "ungrounded"
+    assert proposal.status == "proposed"
+
+    links = [obj for obj in session.added if isinstance(obj, AIProposalSource)]
+    assert len(links) == 1
+    assert links[0].snippet is None
 
 
 @pytest.mark.asyncio

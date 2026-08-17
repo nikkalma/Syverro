@@ -35,12 +35,19 @@ DATE_PRECISION_VALUES = set(DatePrecision.__args__)  # type: ignore[attr-defined
 
 
 class SourceRef(BaseModel):
-    """A source reference cited by the model for a single claim."""
+    """A source reference cited by the model for a single claim.
+
+    ``evidence`` is the SyvAI 0.2C claim-level evidence fragment: a short,
+    near-verbatim extract from the source's stored citation text that supports
+    the claim. It is verified deterministically by ``app.syvai.evidence``
+    before a proposal can be auto-approved; it is never trusted on faith.
+    """
 
     title: str = Field(min_length=1)
     source_type: str | None = None
     url: str | None = None
     language: str | None = None
+    evidence: str | None = None
 
 
 class TimelineClaim(BaseModel):

@@ -7,6 +7,8 @@ Confidence is derived from observable evidence rather than model self-report:
     + 0.10                         >=3 distinct sources agree
     + 0.10 * avg_reliability       mean reliability of linked sources (0..1)
     + 0.15                         deterministic validation == validated
+    + 0.05                         >=1 source with verified claim-level
+                                   grounding (0.2C; skipped when unverified)
     - 0.10                         conflict_state == duplicate / near_duplicate
     - 0.30                         conflict_state == conflict
     - 0.00                         validation_state == needs_review
@@ -54,6 +56,7 @@ def compute_confidence(
     source_count: int,
     distinct_source_count: int,
     reliabilities: list[str | float | None],
+    grounded_source_count: int = 0,
 ) -> float:
     score = 0.0
     if source_count >= 1:
@@ -64,6 +67,8 @@ def compute_confidence(
         score += 0.10
     if reliabilities:
         score += 0.10 * source_reliability_score(reliabilities)
+    if source_count >= 1 and grounded_source_count >= 1:
+        score += 0.05
 
     if validation.validation_state == "validated":
         score += 0.15

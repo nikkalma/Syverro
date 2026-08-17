@@ -496,6 +496,7 @@ async def get_author_proposals(
                 "source_type": source.source_type,
                 "reliability_score": source.reliability_score,
                 "reliability_tier": link.reliability_tier,
+                "snippet": link.snippet,
             })
 
     return {

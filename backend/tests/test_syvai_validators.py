@@ -13,6 +13,7 @@ from app.syvai.validators import (
     REVIEW_REASON_NEW_GROUNDED,
     REVIEW_REASON_POSTHUMOUS,
     REVIEW_REASON_RESTATEMENT,
+    REVIEW_REASON_UNGROUNDED,
     REVIEW_REASON_UNSUPPORTED,
     ExistingEvent,
     date_granularity,
@@ -221,6 +222,46 @@ def test_new_event_not_matched():
     assert result.validation_state == "validated"
     assert result.review_band == REVIEW_BAND_AUTO_APPROVED
     assert result.review_reason == REVIEW_REASON_NEW_GROUNDED
+
+
+def test_auto_approval_requires_verified_grounding():
+    """0.2C: with grounding enforcement enabled, zero verified sources demotes
+    the claim from auto_approved to human quality review."""
+    result = validate_timeline_claim(
+        _claim(),
+        author_birth_date="1816-04-21",
+        author_death_date="1855-03-31",
+        existing_events=REFERENCE_EVENTS,
+        source_count=2,
+        grounded_source_count=0,
+    )
+    assert result.validation_state == "validated"
+    assert result.review_band == REVIEW_BAND_QUALITY
+    assert result.review_reason == REVIEW_REASON_UNGROUNDED
+
+
+def test_verified_grounding_keeps_auto_approval():
+    result = validate_timeline_claim(
+        _claim(),
+        author_birth_date="1816-04-21",
+        author_death_date="1855-03-31",
+        existing_events=REFERENCE_EVENTS,
+        source_count=2,
+        grounded_source_count=1,
+    )
+    assert result.review_band == REVIEW_BAND_AUTO_APPROVED
+    assert result.review_reason == REVIEW_REASON_NEW_GROUNDED
+
+
+def test_legacy_calls_without_grounding_are_unchanged():
+    result = validate_timeline_claim(
+        _claim(),
+        author_birth_date="1816-04-21",
+        author_death_date="1855-03-31",
+        existing_events=REFERENCE_EVENTS,
+        source_count=2,
+    )
+    assert result.review_band == REVIEW_BAND_AUTO_APPROVED
 
 
 def test_normalize_label_strips_punctuation_and_case():

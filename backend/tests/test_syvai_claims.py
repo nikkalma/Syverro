@@ -60,6 +60,24 @@ def test_rejects_missing_required_field():
         parse_timeline_claims(json.dumps({"events": [bad]}))
 
 
+def test_parses_claim_level_evidence():
+    event = dict(GOOD_EVENT)
+    event["sources"] = [
+        {
+            "title": "Encyclopaedia Britannica",
+            "source_type": "encyclopedia",
+            "evidence": "enrolled at the Clergy Daughters' School in 1824",
+        }
+    ]
+    claims = parse_timeline_claims(json.dumps({"events": [event]}))
+    assert claims[0].sources[0].evidence == "enrolled at the Clergy Daughters' School in 1824"
+
+
+def test_sources_without_evidence_default_to_none():
+    claims = parse_timeline_claims(json.dumps({"events": [GOOD_EVENT]}))
+    assert claims[0].sources[0].evidence is None
+
+
 def test_normalizes_month_year_precision():
     event = dict(GOOD_EVENT)
     event["date_precision"] = "month_year"

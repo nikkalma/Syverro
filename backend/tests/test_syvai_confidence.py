@@ -106,6 +106,24 @@ def test_duplicate_flag_reduces_confidence():
     assert duplicate < clean
 
 
+def test_verified_grounding_boosts_confidence():
+    """0.2C: a source with deterministically verified evidence adds +0.05."""
+    base = compute_confidence(
+        validation=_validation(),
+        source_count=1,
+        distinct_source_count=1,
+        reliabilities=["0.8"],
+    )
+    grounded = compute_confidence(
+        validation=_validation(),
+        source_count=1,
+        distinct_source_count=1,
+        reliabilities=["0.8"],
+        grounded_source_count=1,
+    )
+    assert grounded > base
+
+
 def test_clamped_bounds():
     low = compute_confidence(
         validation=_validation(state="invalid"),

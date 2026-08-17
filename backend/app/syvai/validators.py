@@ -169,6 +169,7 @@ REVIEW_REASON_RESTATEMENT = "restatement"
 REVIEW_REASON_NEAR_DUPLICATE_AMBIGUOUS = "near_duplicate_ambiguous"
 REVIEW_REASON_DATE_CONFLICT = "date_conflict"
 REVIEW_REASON_UNSUPPORTED = "unsupported_claim"
+REVIEW_REASON_UNGROUNDED = "ungrounded"
 REVIEW_REASON_POSTHUMOUS = "posthumous_event"
 
 # Bands whose proposals genuinely require a human decision.
@@ -256,8 +257,17 @@ def validate_timeline_claim(
     author_death_date: str | None,
     existing_events: list[ExistingEvent],
     source_count: int,
+    grounded_source_count: int | None = None,
 ) -> ValidationResult:
-    """Validate a single claim deterministically and classify it."""
+    """Validate a single claim deterministically and classify it.
+
+    ``grounded_source_count`` is the number of linked sources whose claim-level
+    evidence was deterministically verified against the stored citation.
+    When provided, a claim with linked sources but no verified grounding is
+    demoted from auto-approval to human quality review (0.2C invariant).
+    ``None`` keeps the legacy behavior so benchmark fixtures and callers that
+    do not perform evidence verification are unchanged.
+    """
     issues: list[str] = []
     precision_mismatch = False
     result = ValidationResult(
@@ -350,7 +360,11 @@ def validate_timeline_claim(
         result.validation_state = "needs_review"
 
     result.review_band, result.review_reason = _classify_review(
-        result, claim, source_count=source_count, posthumous=posthumous
+        result,
+        claim,
+        source_count=source_count,
+        posthumous=posthumous,
+        grounded_source_count=grounded_source_count,
     )
 
     return result
@@ -362,11 +376,13 @@ def _classify_review(
     *,
     source_count: int,
     posthumous: bool,
+    grounded_source_count: int | None = None,
 ) -> tuple[str, str]:
     """Decide the review band and reason deterministically.
 
     Priority order: hard facts (invalid/conflict/duplicate) first, then
-    evidence gaps (unsupported), then policy-only flags (posthumous).
+    evidence gaps (unsupported, then unverified grounding), then policy-only
+    flags (posthumous).
     """
     if result.validation_state == "invalid":
         return REVIEW_BAND_AUTO_REJECTED, REVIEW_REASON_INVALID_CLAIM
@@ -380,6 +396,8 @@ def _classify_review(
         return REVIEW_BAND_QUALITY, REVIEW_REASON_NEAR_DUPLICATE_AMBIGUOUS
     if source_count <= 0:
         return REVIEW_BAND_QUALITY, REVIEW_REASON_UNSUPPORTED
+    if grounded_source_count is not None and grounded_source_count == 0:
+        return REVIEW_BAND_QUALITY, REVIEW_REASON_UNGROUNDED
     if posthumous:
         return REVIEW_BAND_POLICY, REVIEW_REASON_POSTHUMOUS
     return REVIEW_BAND_AUTO_APPROVED, REVIEW_REASON_NEW_GROUNDED

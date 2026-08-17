@@ -104,6 +104,7 @@ async def _proposal_sources(db: AsyncSession, proposal_id: UUID) -> list[dict]:
             "source_type": source.source_type,
             "reliability_score": source.reliability_score,
             "reliability_tier": link.reliability_tier,
+            "snippet": link.snippet,
         }
         for link, source in result.all()
     ]

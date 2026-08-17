@@ -33,8 +33,9 @@ from app.models.source import Source
 from app.models.syvai_run import SyvaiRun
 from app.syvai.confidence import compute_confidence
 from app.syvai.errors import ConfigurationError, ProviderError, StructuredOutputError
+from app.syvai.evidence import EvidenceVerification, extract_detail_tokens, verify_evidence
 from app.syvai.provider import Provider, ProviderResult
-from app.syvai.prompts.timeline_v1 import build_timeline_prompt
+from app.syvai.prompts.timeline_v2 import build_timeline_prompt
 from app.syvai.timeline_claims import TimelineClaim, parse_timeline_claims
 from app.syvai.timeline_research import (
     build_research_input,
@@ -157,26 +158,49 @@ async def _persist_proposals(
 
     for claim in claims:
         matched_sources = []
+        ref_evidence: dict[str, str | None] = {}
         seen_source_ids: set[str] = set()
         for ref in claim.sources:
             matched = _match_source(ref.model_dump(), trusted_sources)
             if matched and matched["id"] not in seen_source_ids:
                 matched_sources.append(matched)
                 seen_source_ids.add(matched["id"])
+                ref_evidence[matched["id"]] = ref.evidence
 
         reliabilities = [source.get("reliability_score") for source in matched_sources]
+
+        # 0.2C: verify every returned evidence fragment against the stored
+        # citation text before the claim can be considered grounded.
+        detail_tokens = extract_detail_tokens(claim.label, claim.description or "")
+        verifications: dict[str, EvidenceVerification] = {}
+        grounded_source_count = 0
+        for matched in matched_sources:
+            source_id = matched["id"]
+            source_row = source_by_id.get(source_id)
+            citation = source_row.citation if source_row else None
+            verification = verify_evidence(
+                ref_evidence.get(source_id),
+                citation,
+                detail_tokens=detail_tokens,
+            )
+            verifications[source_id] = verification
+            if verification.is_grounded:
+                grounded_source_count += 1
+
         validation = validate_timeline_claim(
             claim,
             author_birth_date=author.birth_date,
             author_death_date=author.death_date,
             existing_events=existing_events,
             source_count=len(matched_sources),
+            grounded_source_count=grounded_source_count,
         )
         confidence = compute_confidence(
             validation=validation,
             source_count=len(matched_sources),
             distinct_source_count=len(matched_sources),
             reliabilities=reliabilities,
+            grounded_source_count=grounded_source_count,
         )
 
         proposal = AIProposal(
@@ -199,11 +223,18 @@ async def _persist_proposals(
 
         for matched in matched_sources:
             source_id = matched["id"]
+            verification = verifications[source_id]
+            evidence_text = ref_evidence.get(source_id)
+            snippet = (
+                evidence_text.strip()
+                if verification.is_persistable and evidence_text
+                else None
+            )
             db.add(
                 AIProposalSource(
                     proposal_id=proposal.id,
                     source_id=source_id,
-                    snippet=None,
+                    snippet=snippet,
                     reliability_tier=_reliability_tier(
                         source_by_id.get(source_id).reliability_score
                         if source_by_id.get(source_id) else None

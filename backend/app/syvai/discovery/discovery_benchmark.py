@@ -84,7 +84,9 @@ class FixtureCandidate:
     """A frozen candidate with ground truth for the benchmark.
 
     ``provider`` is the simulated discoverer (wikipedia/loc/archive); the URL is
-    the realistic candidate the real adapter would emit.
+    the realistic candidate the real adapter would emit. ``metadata_fields``
+    optionally carries the provider's item/metadata record (creator, title,
+    date) so the benchmark exercises the 0.3C enrichment assessment path.
     """
 
     provider: str
@@ -94,6 +96,7 @@ class FixtureCandidate:
     evidence: str | None
     relevant: bool
     wrong_entity: bool = False
+    metadata_fields: dict[str, str] = field(default_factory=dict)
 
 
 @dataclass(frozen=True)
@@ -368,6 +371,7 @@ def _run_author(
             source_type=candidate.source_type,
             origin=f"{candidate.provider}_search",
             evidence=candidate.evidence,
+            metadata_fields=candidate.metadata_fields,
         )
         for candidate in active
     ]
@@ -387,6 +391,7 @@ def _run_author(
             evidence=candidate.evidence,
             authority_tier=tier,
             query_terms=terms,
+            metadata_fields=candidate.metadata_fields,
         )
         rows.append(
             {

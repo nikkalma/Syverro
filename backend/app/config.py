@@ -60,6 +60,12 @@ class Settings:
         self.SYVAI_DISCOVERY_MAX_PER_FAMILY = int(
             os.getenv("SYVAI_DISCOVERY_MAX_PER_FAMILY", "2")
         )
+        # 0.3C: hard per-run cap on provider item/metadata detail requests
+        # (enrichment). Detail fetch is strictly optional; search candidates
+        # never depend on it.
+        self.SYVAI_DISCOVERY_DETAIL_MAX_PER_RUN = int(
+            os.getenv("SYVAI_DISCOVERY_DETAIL_MAX_PER_RUN", "6")
+        )
         self.SYVAI_DISCOVERY_TIMEOUT_SECONDS = float(
             os.getenv("SYVAI_DISCOVERY_TIMEOUT_SECONDS", "15")
         )

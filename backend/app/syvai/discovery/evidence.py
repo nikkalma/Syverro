@@ -61,3 +61,35 @@ def extract_evidence(raw: str, limit: int = _EVIDENCE_LIMIT) -> str:
         # Keep the text as data but never let the raw marker pass verbatim.
         evidence = evidence.replace(":", " ", 1) if evidence.casefold().startswith("system:") else evidence
     return evidence
+
+
+def build_structured_evidence(
+    fields: dict[str, str | None],
+    *,
+    limit: int = _EVIDENCE_LIMIT,
+    max_field_chars: int = 240,
+) -> str:
+    """Build a bounded, labeled, plain-text evidence snippet from structured metadata.
+
+    Values are handled exactly like fetched text: markup stripped, whitespace
+    collapsed, stripped, injection markers flattened. Each field is hard-truncated
+    to ``max_field_chars`` and the joined snippet is capped at ``limit``, so a
+    hostile or huge metadata value can never smuggle a multi-page payload into
+    the reference corpus.
+    """
+    parts: list[str] = []
+    for label, value in fields.items():
+        text = strip_markup(value or "")
+        if not text:
+            continue
+        if len(text) > max_field_chars:
+            text = text[:max_field_chars].rstrip()
+        parts.append(f"{label}: {text}")
+    if not parts:
+        return ""
+    evidence = " ".join(parts)
+    if len(evidence) > limit:
+        evidence = evidence[:limit]
+    if _contains_injection_marker(evidence):
+        evidence = evidence.replace(":", " ", 1) if evidence.casefold().startswith("system:") else evidence
+    return evidence

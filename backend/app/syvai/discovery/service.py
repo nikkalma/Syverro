@@ -216,6 +216,7 @@ async def run_discovery(
                     authority_tier=tier,
                     query_terms=terms,
                     existing_normalized=existing_normalized,
+                    metadata_fields=candidate.metadata_fields,
                 )
                 row = SourceCandidate(
                     author_id=author.id,

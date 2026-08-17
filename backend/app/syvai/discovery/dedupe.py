@@ -17,13 +17,20 @@ from app.syvai.discovery.urls import normalize_url, registrable_domain
 
 @dataclass(frozen=True)
 class RawCandidate:
-    """A candidate as returned by a provider, before normalization."""
+    """A candidate as returned by a provider, before normalization.
+
+    ``metadata_fields`` optionally carries structured metadata pulled from the
+    provider's own item/metadata record (title, creator/contributor, date,
+    description...). Only fields identified as author-identifying are later
+    consulted for relevance; it is never a free-form injection surface.
+    """
 
     url: str
     title: str | None = None
     source_type: str | None = None
     origin: str | None = None
     evidence: str | None = None
+    metadata_fields: dict[str, str] = field(default_factory=dict)
 
 
 @dataclass

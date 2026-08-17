@@ -11,13 +11,15 @@ deterministic, network-free fixture.
 
 from __future__ import annotations
 
+import json
 import logging
 from dataclasses import dataclass
 from typing import Protocol
 from urllib.parse import quote, urlencode
 
 from app.config import settings
-from app.syvai.discovery.evidence import extract_evidence
+from app.syvai.discovery.assessment import _identity_matches
+from app.syvai.discovery.evidence import build_structured_evidence, extract_evidence
 from app.syvai.discovery.fetcher import FetcherConfig, SafeFetcher
 from app.syvai.discovery.dedupe import RawCandidate
 from app.syvai.errors import ConfigurationError, ProviderError
@@ -232,6 +234,42 @@ class LocDiscoveryProvider:
         )
         return f"{LOC_SEARCH_URL}?{params}"
 
+    @staticmethod
+    def _item_detail_url(item_url: str) -> str:
+        return f"{item_url}?fo=json"
+
+    async def _enrich_loc(self, author, results: list[RawCandidate]) -> list[RawCandidate]:
+        """Bounded, best-effort enrichment from the official item JSON API.
+
+        A candidate is only enriched when the author identity is already
+        visible in its search snippet (so we never spend requests on noise) and
+        only up to ``SYVAI_DISCOVERY_DETAIL_MAX_PER_RUN`` detail requests.
+        Every failure falls back to the original search candidate; enrichment
+        can never abort the provider.
+        """
+        budget = _detail_budget()
+        enriched: list[RawCandidate] = []
+        for candidate in results:
+            if budget <= 0 or not _probe_matches_author(candidate, author):
+                enriched.append(candidate)
+                continue
+            detail_url = self._item_detail_url(candidate.url)
+            host = detail_url.split("/")[2] if detail_url.startswith(("http://", "https://")) else ""
+            if host not in LOC_ALLOWED_HOSTS:
+                enriched.append(candidate)
+                continue
+            budget -= 1
+            try:
+                page = await self._fetcher.fetch(detail_url)
+                data = json.loads(page.text)
+            except Exception as exc:  # noqa: BLE001 - best-effort enrichment
+                logger.info("loc detail enrichment failed for %s: %s", candidate.url, exc)
+                enriched.append(candidate)
+                continue
+            rebuilt = _loc_enriched_candidate(data.get("item") or {}, candidate)
+            enriched.append(rebuilt if rebuilt is not None else candidate)
+        return enriched
+
     async def discover(self, author, query_terms: list[str]) -> list[RawCandidate]:
         url = self._search_url(query_terms, self._max_candidates)
         host = url.split("/")[2] if url.startswith(("http://", "https://")) else ""
@@ -242,8 +280,6 @@ class LocDiscoveryProvider:
             page = await self._fetcher.fetch(url)
         except Exception as exc:  # noqa: BLE001 - wrap into provider taxonomy
             raise ProviderError(f"loc discovery fetch failed: {exc}") from exc
-
-        import json
 
         try:
             data = json.loads(page.text)
@@ -269,6 +305,15 @@ class LocDiscoveryProvider:
                 source_type = original_format
             elif isinstance(original_format, list) and original_format:
                 source_type = original_format[0]
+            search_metadata: dict[str, str] = {}
+            search_creator = _join_names(item.get("contributor") or item.get("creator") or [])
+            search_date = _first_text(item.get("date"))
+            if search_creator or search_date:
+                search_metadata["title"] = item.get("title") or ""
+                if search_creator:
+                    search_metadata["creator"] = search_creator
+                if search_date:
+                    search_metadata["date"] = search_date
             results.append(
                 RawCandidate(
                     url=canonical,
@@ -276,11 +321,12 @@ class LocDiscoveryProvider:
                     source_type=source_type,
                     origin="loc_search",
                     evidence=extract_evidence(" ".join(description)),
+                    metadata_fields=search_metadata,
                 )
             )
             if len(results) >= self._max_candidates:
                 break
-        return results
+        return await self._enrich_loc(author, results)
 
 
 # ---------------------------------------------------------------------------
@@ -313,12 +359,47 @@ class ArchiveDiscoveryProvider:
                 ("fl[]", "title"),
                 ("fl[]", "mediatype"),
                 ("fl[]", "description"),
+                ("fl[]", "creator"),
+                ("fl[]", "date"),
                 ("rows", str(limit)),
                 ("page", "1"),
                 ("output", "json"),
             ]
         )
         return f"{ARCHIVE_SEARCH_URL}?{params}"
+
+    @staticmethod
+    def _metadata_url(detail_url: str) -> str:
+        """Official Item Metadata API: https://archive.org/metadata/{identifier}."""
+        from urllib.parse import urlsplit
+
+        path = urlsplit(detail_url).path
+        identifier = path.split("/")[-1] if path.rstrip("/") else ""
+        return f"https://archive.org/metadata/{identifier}"
+
+    async def _enrich_archive(self, author, results: list[RawCandidate]) -> list[RawCandidate]:
+        budget = _detail_budget()
+        enriched: list[RawCandidate] = []
+        for candidate in results:
+            if budget <= 0 or not _probe_matches_author(candidate, author):
+                enriched.append(candidate)
+                continue
+            metadata_url = self._metadata_url(candidate.url)
+            host = metadata_url.split("/")[2] if metadata_url.startswith(("http://", "https://")) else ""
+            if host not in ARCHIVE_ALLOWED_HOSTS:
+                enriched.append(candidate)
+                continue
+            budget -= 1
+            try:
+                page = await self._fetcher.fetch(metadata_url)
+                data = json.loads(page.text)
+            except Exception as exc:  # noqa: BLE001 - best-effort enrichment
+                logger.info("archive detail enrichment failed for %s: %s", candidate.url, exc)
+                enriched.append(candidate)
+                continue
+            rebuilt = _archive_enriched_candidate(data.get("metadata") or {}, candidate)
+            enriched.append(rebuilt if rebuilt is not None else candidate)
+        return enriched
 
     async def discover(self, author, query_terms: list[str]) -> list[RawCandidate]:
         url = self._search_url(query_terms, self._max_candidates)
@@ -330,8 +411,6 @@ class ArchiveDiscoveryProvider:
             page = await self._fetcher.fetch(url)
         except Exception as exc:  # noqa: BLE001 - wrap into provider taxonomy
             raise ProviderError(f"archive discovery fetch failed: {exc}") from exc
-
-        import json
 
         try:
             data = json.loads(page.text)
@@ -348,6 +427,15 @@ class ArchiveDiscoveryProvider:
                 description = " ".join(description)
             mediatype = doc.get("mediatype") or "texts"
             source_type = "text" if mediatype == "texts" else (mediatype or "archive_item")
+            search_metadata: dict[str, str] = {}
+            search_creator = _join_text(doc.get("creator"))
+            search_date = _first_text(doc.get("date"))
+            if search_creator or search_date:
+                search_metadata["title"] = doc.get("title") or ""
+                if search_creator:
+                    search_metadata["creator"] = search_creator
+                if search_date:
+                    search_metadata["date"] = search_date
             results.append(
                 RawCandidate(
                     url=f"https://archive.org/details/{identifier}",
@@ -355,11 +443,147 @@ class ArchiveDiscoveryProvider:
                     source_type=source_type,
                     origin="archive_search",
                     evidence=extract_evidence(description or ""),
+                    metadata_fields=search_metadata,
                 )
             )
             if len(results) >= self._max_candidates:
                 break
-        return results
+        return await self._enrich_archive(author, results)
+
+
+# ---------------------------------------------------------------------------
+# 0.3C trusted-corpus enrichment helpers (bounded, provider-owned)
+# ---------------------------------------------------------------------------
+
+
+def _first_text(value) -> str:
+    """Return the first non-empty scalar inside a possibly nested list/str."""
+    if isinstance(value, str):
+        return value
+    if isinstance(value, list):
+        for item in value:
+            text = _first_text(item)
+            if text:
+                return text
+    return ""
+
+
+def _join_text(value) -> str:
+    if isinstance(value, str):
+        return value
+    if isinstance(value, list):
+        return ", ".join(text for text in (_first_text(item) for item in value) if text)
+    return ""
+
+
+def _join_names(value) -> str:
+    """Flatten a names/contributor field (list of {name} dicts, list of str, or str)."""
+    if isinstance(value, str):
+        return value
+    if isinstance(value, list):
+        names: list[str] = []
+        for item in value:
+            if isinstance(item, dict):
+                name = item.get("name") or item.get("label")
+                if name:
+                    names.append(str(name))
+            elif isinstance(item, str) and item:
+                names.append(item)
+        return ", ".join(names)
+    return ""
+
+
+def _author_identity_terms(author) -> list[str]:
+    return [
+        name for name in (getattr(author, "display_name", None), getattr(author, "name", None))
+        if name
+    ]
+
+
+def _probe_matches_author(candidate: RawCandidate, author) -> bool:
+    """Pre-filter: does the author's identity appear in available search data?
+
+    Probes the title, the evidence snippet, and any search-level metadata the
+    provider already holds (creator/date). Used only to decide whether a
+    *bounded* detail fetch is worthwhile; a miss simply skips enrichment and
+    keeps the search candidate unchanged.
+    """
+    probe = " ".join(
+        str(value)
+        for value in (
+            candidate.title or "",
+            candidate.evidence or "",
+            *candidate.metadata_fields.values(),
+        )
+        if value
+    )
+    return any(_identity_matches(f" {probe} ", term) for term in _author_identity_terms(author))
+
+
+def _detail_budget() -> int:
+    return max(0, int(getattr(settings, "SYVAI_DISCOVERY_DETAIL_MAX_PER_RUN", 6)))
+
+
+def _loc_enriched_candidate(item: dict, base: RawCandidate) -> RawCandidate | None:
+    """Rebuild a LOC candidate from the official item JSON, or None to keep base."""
+    if not isinstance(item, dict) or not item:
+        return None
+    title = _first_text(item.get("title"))
+    creator = _join_names(item.get("contributor") or item.get("creator") or [])
+    date = _first_text(item.get("date"))
+    description = _join_text(item.get("description") or item.get("summary") or [])
+    subjects = _join_text(item.get("subject") or item.get("subjects") or [])
+    if not (creator or description or subjects):
+        return None
+    metadata_fields = {
+        "title": title or base.title or "",
+        "creator": creator,
+        "date": date,
+    }
+    evidence = build_structured_evidence(
+        {"title": title or base.title, "creator": creator, "date": date, "description": description or subjects}
+    )
+    return RawCandidate(
+        url=base.url,
+        title=base.title,
+        source_type=base.source_type,
+        origin=base.origin,
+        evidence=evidence or base.evidence,
+        metadata_fields=metadata_fields,
+    )
+
+
+def _archive_enriched_candidate(metadata: dict, base: RawCandidate) -> RawCandidate | None:
+    """Rebuild an Archive candidate from the official metadata record, or None."""
+    if not isinstance(metadata, dict) or not metadata:
+        return None
+    title = _first_text(metadata.get("title"))
+    creator = _join_text(metadata.get("creator"))
+    date = _first_text(metadata.get("date") or metadata.get("year"))
+    description = _join_text(metadata.get("description") or metadata.get("summary"))
+    subject = _join_text(metadata.get("subject"))
+    if not (creator or description or subject):
+        return None
+    metadata_fields = {
+        "title": title or base.title or "",
+        "creator": creator,
+        "date": date,
+    }
+    evidence = build_structured_evidence(
+        {"title": title or base.title, "creator": creator, "date": date, "description": description or subject}
+    )
+    mediatype = _first_text(metadata.get("mediatype"))
+    source_type = base.source_type
+    if mediatype:
+        source_type = "text" if mediatype == "texts" else (mediatype or base.source_type)
+    return RawCandidate(
+        url=base.url,
+        title=base.title,
+        source_type=source_type,
+        origin=base.origin,
+        evidence=evidence or base.evidence,
+        metadata_fields=metadata_fields,
+    )
 
 
 # ---------------------------------------------------------------------------

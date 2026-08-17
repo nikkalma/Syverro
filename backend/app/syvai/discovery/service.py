@@ -175,6 +175,18 @@ async def run_discovery(
             existing_sources = existing_result.scalars().all()
             existing_normalized = _existing_normalized(existing_sources)
 
+            # A candidate URL is a persistent author+URL identity
+            # (uq_source_candidates_author_normalized), so URLs surfaced by
+            # any prior run for this author must never be re-inserted —
+            # whether they are still pending review or were already
+            # approved/rejected. Fold them into the dedup set so re-discovery
+            # is skipped (counted as an existing duplicate) and prior review
+            # decisions are left untouched.
+            prior_candidates_result = await db.execute(
+                select(SourceCandidate).where(SourceCandidate.author_id == author.id)
+            )
+            existing_normalized |= _existing_normalized(prior_candidates_result.scalars().all())
+
             kept, summary = dedupe_candidates(
                 [candidate for _, candidate in ordered],
                 existing_normalized=existing_normalized,

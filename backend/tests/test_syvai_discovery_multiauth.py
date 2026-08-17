@@ -586,6 +586,179 @@ async def test_metrics_per_provider_families_and_run_counts():
 
 
 # ---------------------------------------------------------------------------
+# 0.3A corrective: re-running discovery must never re-insert a URL already
+# persisted as a SourceCandidate for the author (uq_source_candidates_author_
+# normalized). Prior candidates are folded into the dedup set regardless of
+# their review state, so rediscovery is skipped and prior decisions survive.
+# ---------------------------------------------------------------------------
+
+
+def _prior_candidate(
+    url,
+    *,
+    author_id,
+    run_id,
+    assessment="needs_review",
+    review_action=None,
+    status="pending",
+    source_id=None,
+):
+    return SourceCandidate(
+        id=uuid4(),
+        author_id=author_id,
+        run_id=run_id,
+        source_id=source_id,
+        url=url,
+        normalized_url=url,
+        title="Anne Brontë",
+        source_type="encyclopedia",
+        authority_tier="medium",
+        quality_score=70.0,
+        assessment=assessment,
+        provider="wikipedia-discovery",
+        status=status,
+        review_action=review_action,
+    )
+
+
+def _prior_source(url):
+    return Source(
+        url=url,
+        normalized_url=url,
+        title="Anne Brontë",
+        source_type="encyclopedia",
+        authority_tier="high",
+        review_status="reviewed",
+        source_origin="syvai_discovery",
+    )
+
+
+def _added_candidate_urls(session):
+    return {
+        c.normalized_url
+        for c in session.added
+        if isinstance(c, SourceCandidate)
+    }
+
+
+@pytest.mark.asyncio
+async def test_rerun_skips_prior_rejected_candidate():
+    author = _author()
+    prior_run = SyvaiRun(id=uuid4(), author_id=author.id, domain="source_discovery", status="review_needed")
+    prior = _prior_candidate(
+        "https://en.wikipedia.org/wiki/Anne_Bront%C3%AB",
+        author_id=author.id,
+        run_id=prior_run.id,
+        review_action="rejected",
+        status="reviewed",
+    )
+    session = FakeDiscoverySession(candidates=[prior])
+
+    outcome = await run_discovery(session, author, [OkProvider([_wikipedia()])])
+
+    assert outcome.error is None
+    assert outcome.candidates == []
+    assert outcome.duplicate_skipped == 1
+    assert "https://en.wikipedia.org/wiki/Anne_Brontë" not in _added_candidate_urls(session)
+    assert prior.review_action == "rejected" and prior.status == "reviewed"  # decision not resurrected
+
+
+@pytest.mark.asyncio
+async def test_rerun_skips_prior_pending_candidate():
+    author = _author()
+    prior_run = SyvaiRun(id=uuid4(), author_id=author.id, domain="source_discovery", status="review_needed")
+    prior = _prior_candidate(
+        "https://en.wikipedia.org/wiki/Anne_Bront%C3%AB",
+        author_id=author.id,
+        run_id=prior_run.id,
+    )
+    session = FakeDiscoverySession(candidates=[prior])
+
+    outcome = await run_discovery(session, author, [OkProvider([_wikipedia()])])
+
+    assert outcome.error is None
+    assert outcome.candidates == []
+    assert outcome.duplicate_skipped == 1
+    assert "https://en.wikipedia.org/wiki/Anne_Brontë" not in _added_candidate_urls(session)
+    assert prior.status == "pending" and prior.review_action is None  # untouched
+
+
+@pytest.mark.asyncio
+async def test_rerun_skips_prior_approved_promoted_candidate():
+    url = "https://en.wikipedia.org/wiki/Anne_Bront%C3%AB"
+    author = _author()
+    prior_run = SyvaiRun(id=uuid4(), author_id=author.id, domain="source_discovery", status="completed")
+    promoted = _prior_source(url)
+    promoted.id = uuid4()
+    prior = _prior_candidate(
+        url,
+        author_id=author.id,
+        run_id=prior_run.id,
+        assessment="auto_usable",
+        review_action="auto_approved",
+        status="reviewed",
+        source_id=promoted.id,
+    )
+    session = FakeDiscoverySession(sources=[promoted], candidates=[prior])
+
+    outcome = await run_discovery(
+        session,
+        author,
+        [OkProvider([_wikipedia(url), _wikipedia("https://en.wikipedia.org/wiki/Agnes_Grey")])],
+    )
+
+    assert outcome.error is None
+    assert outcome.duplicate_skipped >= 1
+    assert [c.normalized_url for c in outcome.candidates] == ["https://en.wikipedia.org/wiki/Agnes_Grey"]
+    assert outcome.created_sources == []  # no double promotion
+    assert prior.status == "reviewed" and prior.review_action == "auto_approved"
+
+
+@pytest.mark.asyncio
+async def test_rerun_duplicate_from_multiple_providers_still_deduped():
+    author = _author()
+    prior_run = SyvaiRun(id=uuid4(), author_id=author.id, domain="source_discovery", status="review_needed")
+    prior = _prior_candidate(
+        "https://en.wikipedia.org/wiki/Anne_Bront%C3%AB",
+        author_id=author.id,
+        run_id=prior_run.id,
+        review_action="rejected",
+        status="reviewed",
+    )
+    session = FakeDiscoverySession(candidates=[prior])
+    fresh = _high("https://www.loc.gov/item/annebronte0001")
+
+    outcome = await run_discovery(
+        session, author, [OkProvider([_wikipedia(), fresh]), OkProvider([_wikipedia()])]
+    )
+
+    assert outcome.error is None
+    assert sorted(c.normalized_url for c in outcome.candidates) == [
+        "https://www.loc.gov/item/annebronte0001"
+    ]
+    assert outcome.duplicate_skipped >= 2  # prior-run URL + within-run duplicate
+
+
+@pytest.mark.asyncio
+async def test_rerun_idempotent_no_candidate_duplication():
+    author = _author()
+
+    first_session = FakeDiscoverySession()
+    first = await run_discovery(first_session, author, [OkProvider([_wikipedia()])])
+    assert first.error is None
+    assert len(first.candidates) == 1
+
+    prior_candidate = first.candidates[0]
+    second_session = FakeDiscoverySession(candidates=[prior_candidate], runs=[first.run])
+    second = await run_discovery(second_session, author, [OkProvider([_wikipedia()])])
+
+    assert second.error is None
+    assert second.candidates == []
+    assert second.duplicate_skipped == 1
+    assert not any(isinstance(c, SourceCandidate) for c in second_session.added)
+
+
+# ---------------------------------------------------------------------------
 # Offline Anne replay: >=2 distinct families, Wikipedia needs_review, no truth
 # injection, no live network, no live OpenAI.
 # ---------------------------------------------------------------------------

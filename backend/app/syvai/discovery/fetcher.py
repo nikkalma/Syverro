@@ -41,6 +41,10 @@ class FetcherConfig:
     timeout_seconds: float = 15.0
     max_bytes: int = 500_000
     user_agent: str = "SyverroSyvAI/0.2 (+https://syverro.com)"
+    # Per-adapter host allow-list (0.3A). When set, every request host — and
+    # every redirect target host — must be exactly in this set. None disables
+    # the extra allow-list (used by generic/standalone fetcher tests).
+    allowed_hosts: frozenset[str] | None = None
 
 
 @dataclass
@@ -123,6 +127,14 @@ class SafeFetcher:
                 parsed_host = httpx.URL(current).host
                 if not parsed_host:
                     raise FetchError(f"invalid URL: {current}", code="invalid_url")
+                if (
+                    self.config.allowed_hosts is not None
+                    and parsed_host not in self.config.allowed_hosts
+                ):
+                    raise FetchError(
+                        f"host not allow-listed for this adapter: {parsed_host}",
+                        code="host_not_allowed",
+                    )
                 self._validate_host(parsed_host)
 
                 async with client.stream("GET", current, headers=headers) as response:

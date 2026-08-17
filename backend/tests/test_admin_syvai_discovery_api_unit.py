@@ -294,12 +294,12 @@ async def _run_endpoint(session, author, *, configured=True):
 
     if configured:
         provider_patch = patch(
-            "app.api.admin_syvai_discovery.build_discovery_provider",
-            return_value=provider,
+            "app.api.admin_syvai_discovery.build_discovery_providers",
+            return_value=[provider],
         )
     else:
         provider_patch = patch(
-            "app.api.admin_syvai_discovery.build_discovery_provider",
+            "app.api.admin_syvai_discovery.build_discovery_providers",
             side_effect=ConfigurationError("SyvAI source discovery is not enabled: set SYVAI_DISCOVERY_ENABLED=true"),
         )
 
@@ -326,6 +326,9 @@ async def test_trigger_run_endpoint_returns_candidates():
     assert response["run"]["provider"] == "fake-discovery"
     assert len(response["candidates"]) >= 1
     assert len(response["created_sources"]) >= 1
+    assert response["providers_attempted"] == 1
+    assert response["providers_succeeded"] == 1
+    assert response["providers_failed"] == 0
     assert session.committed is True
 
 

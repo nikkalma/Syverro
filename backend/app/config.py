@@ -46,6 +46,14 @@ class Settings:
             "1", "true", "yes", "on",
         }
         self.SYVAI_DISCOVERY_PROVIDER = os.getenv("SYVAI_DISCOVERY_PROVIDER", "wikipedia")
+        # Bounded multi-authority (0.3A): ordered, credential-free provider set.
+        # SYVAI_DISCOVERY_PROVIDERS wins when set; otherwise falls back to the
+        # legacy single-provider setting, then the default three.
+        self.SYVAI_DISCOVERY_PROVIDERS = (
+            os.getenv("SYVAI_DISCOVERY_PROVIDERS")
+            or os.getenv("SYVAI_DISCOVERY_PROVIDER")
+            or "wikipedia,loc,archive"
+        )
         self.SYVAI_DISCOVERY_MAX_CANDIDATES = int(
             os.getenv("SYVAI_DISCOVERY_MAX_CANDIDATES", "5")
         )

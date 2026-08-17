@@ -30,7 +30,7 @@ from app.services.security_audit import add_security_event
 from app.syvai.discovery import (
     DOMAIN,
     approve_candidate,
-    build_discovery_provider,
+    build_discovery_providers,
     discovery_metrics,
     discovery_provider_status,
     reject_candidate,
@@ -130,11 +130,11 @@ async def trigger_discovery_run(
     author = await get_author_or_404(db, author_id)
 
     try:
-        provider = build_discovery_provider()
+        providers = build_discovery_providers()
     except ConfigurationError as exc:
         raise HTTPException(status_code=503, detail=str(exc))
 
-    outcome = await run_discovery(db, author, provider)
+    outcome = await run_discovery(db, author, providers)
     if outcome.error:
         raise HTTPException(status_code=502, detail=outcome.error)
 
@@ -145,6 +145,9 @@ async def trigger_discovery_run(
         "duplicate_skipped": outcome.duplicate_skipped,
         "family_skipped": outcome.family_skipped,
         "unparseable_skipped": outcome.unparseable_skipped,
+        "providers_attempted": outcome.providers_attempted,
+        "providers_succeeded": outcome.providers_succeeded,
+        "providers_failed": outcome.providers_failed,
         "message": "Source discovery completed",
     }
 

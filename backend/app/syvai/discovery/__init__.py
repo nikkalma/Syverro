@@ -7,10 +7,12 @@ is confined to this package and gated by configuration.
 
 from app.syvai.discovery.fetcher import FetcherConfig, FetchedPage, SafeFetcher
 from app.syvai.discovery.providers import (
+    ArchiveDiscoveryProvider,
     FakeDiscoveryProvider,
+    LocDiscoveryProvider,
     SourceDiscoveryProvider,
     WikipediaDiscoveryProvider,
-    build_discovery_provider,
+    build_discovery_providers,
     discovery_provider_status,
 )
 from app.syvai.discovery.service import (
@@ -24,15 +26,17 @@ from app.syvai.discovery.service import (
 
 __all__ = [
     "DOMAIN",
+    "ArchiveDiscoveryProvider",
     "DiscoveryOutcome",
     "FakeDiscoveryProvider",
     "FetcherConfig",
     "FetchedPage",
+    "LocDiscoveryProvider",
     "SafeFetcher",
     "SourceDiscoveryProvider",
     "WikipediaDiscoveryProvider",
     "approve_candidate",
-    "build_discovery_provider",
+    "build_discovery_providers",
     "discovery_metrics",
     "discovery_provider_status",
     "reject_candidate",

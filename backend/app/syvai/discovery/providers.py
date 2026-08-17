@@ -35,6 +35,17 @@ LOC_SEARCH_URL = "https://www.loc.gov/search/"
 ARCHIVE_ALLOWED_HOSTS = {"archive.org"}
 ARCHIVE_SEARCH_URL = "https://archive.org/advancedsearch.php"
 
+# Installed provider adapters eligible for 0.3E source-registry routing. This
+# is the ONLY adapter->provider mapping; ``app.syvai.registry`` routes through
+# these names and a guard test keeps the registry's ``INSTALLED_ADAPTERS`` in
+# lock-step with this dict. Registry rows can never name a network path that is
+# not expressed here.
+ADAPTER_TO_PROVIDER = {
+    "wikipedia-discovery": "wikipedia",
+    "loc-discovery": "loc",
+    "archive-discovery": "archive",
+}
+
 
 @dataclass
 class SourceDiscoveryProvider(Protocol):
@@ -639,13 +650,24 @@ def _configured_provider_names() -> list[str]:
     return [name for name in names if name]
 
 
-def build_discovery_providers() -> list[SourceDiscoveryProvider]:
-    """Build the configured ordered provider set; raises when not configured."""
-    if not settings.SYVAI_DISCOVERY_ENABLED:
+def build_discovery_providers(
+    provider_names: list[str] | None = None,
+    *,
+    require_enabled: bool = True,
+) -> list[SourceDiscoveryProvider]:
+    """Build the provider set for a source-discovery run.
+
+    With ``provider_names=None`` the configured environment order is used
+    (0.2A/0.3A behavior). 0.3E routing passes an explicit ``provider_names``
+    list so the source registry decides WHERE research is allowed; the master
+    ``SYVAI_DISCOVERY_ENABLED`` gate still applies unless ``require_enabled``
+    is disabled by an explicitly online caller.
+    """
+    if require_enabled and not settings.SYVAI_DISCOVERY_ENABLED:
         raise ConfigurationError(
             "SyvAI source discovery is not enabled: set SYVAI_DISCOVERY_ENABLED=true"
         )
-    names = _configured_provider_names()
+    names = provider_names if provider_names is not None else _configured_provider_names()
     if not names:
         raise ConfigurationError("no discovery providers configured")
     providers = [_build_provider(name) for name in names]

@@ -22,11 +22,14 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.deps import get_current_user, get_db
 from app.models.author import Author
+from app.models.author_citizenship import AuthorCitizenship
+from app.models.author_residence import AuthorResidence
 from app.models.source import Source
 from app.models.source_candidate import SourceCandidate
 from app.models.syvai_run import SyvaiRun
 from app.models.user import User
 from app.services.security_audit import add_security_event
+from app.syvai.registry import beta_routing_metrics
 from app.syvai.discovery import (
     DOMAIN,
     approve_candidate,
@@ -264,6 +267,67 @@ async def reject_source_candidate(
         raise HTTPException(status_code=409, detail=str(exc))
 
     return {"candidate": _candidate_dict(rejected), "rejected": True}
+
+
+# ============================================================
+# ROUTING (0.3E Beta source registry)
+# ============================================================
+
+
+@router.get("/{author_id}/discovery/routing")
+async def get_author_routing(
+    author_id: str,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Read-only Beta routing report for ``author``.
+
+    Returns the author's structured geographic context, the research domains
+    derivable from existing Author fields, the approved source pool per domain
+    (SOURCE_POOL_READY / PARTIAL / MISSING), and runtime-derived proposal
+    metrics. Never triggers research and never writes.
+    """
+    await check_admin(current_user)
+    author = await get_author_or_404(db, author_id)
+
+    citizenships_result = await db.execute(
+        select(AuthorCitizenship).where(AuthorCitizenship.author_id == author.id)
+    )
+    citizenships = citizenships_result.scalars().all()
+
+    residences_result = await db.execute(
+        select(AuthorResidence).where(AuthorResidence.author_id == author.id)
+    )
+    residences = residences_result.scalars().all()
+
+    metrics = await beta_routing_metrics(
+        db,
+        author,
+        citizenships=citizenships,
+        residences=residences,
+    )
+    discovery = await discovery_metrics(db, str(author.id))
+    discovery_summary = {
+        key: discovery.get(key)
+        for key in (
+            "candidates_total",
+            "candidates_pending",
+            "providers_attempted",
+            "providers_succeeded",
+            "providers_failed",
+            "human_actions_per_author",
+            "distinct_family_count",
+        )
+    }
+
+    return {
+        "author_id": metrics["author_id"],
+        "geographic_context": metrics["geographic_context"],
+        "research_domains": metrics["research_domains"],
+        "pools": metrics["pools"],
+        "proposals": metrics["proposals"],
+        "source_discovery": discovery_summary,
+    }
 
 
 # ============================================================

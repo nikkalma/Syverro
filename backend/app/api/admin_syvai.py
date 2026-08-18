@@ -1,18 +1,18 @@
-"""SyvAI admin endpoints for the 0.1A timeline vertical slice.
+"""SyvAI admin endpoints for the timeline vertical slice and the 0.4B fill runs.
 
 - POST /admin/authors/{author_id}/ai/timeline  — run one grounded research run
-- GET  /admin/authors/{author_id}/ai/runs       — list runs (telemetry/review)
+- POST /admin/authors/{author_id}/ai/fill      — run one grounded fill domain
+- GET  /admin/authors/{author_id}/ai/runs      — list runs (telemetry/review)
 - POST /admin/authors/{author_id}/proposals/{proposal_id}/apply
                                                — explicit, audited apply of an
-                                                 accepted timeline proposal
+                                                 accepted/auto-approved proposal
 
-Public visibility is never touched here: applying a proposal only creates or
-updates a TimelineEvent inside the existing Sapphire editorial lifecycle.
+Public visibility is never touched here: applying a proposal only writes
+canonical editorial data inside the existing Sapphire lifecycle (see
+``app.syvai.apply_author`` for the single Apply boundary).
 """
 
-import json
 import logging
-from datetime import datetime, timezone
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, Request
@@ -26,18 +26,11 @@ from app.models.ai_proposal_source import AIProposalSource
 from app.models.author import Author
 from app.models.source import Source
 from app.models.syvai_run import SyvaiRun
-from app.models.timeline_event import TimelineEvent
 from app.models.user import User
-from app.services.security_audit import add_security_event
 from app.syvai.core_fill import run_domain_research
 from app.syvai.errors import ConfigurationError
 from app.syvai.pipeline import run_timeline_research
 from app.syvai.provider import OpenAICompatibleProvider, ProviderConfig
-from app.syvai.validators import (
-    align_date_precision,
-    normalize_date_value,
-    parse_date,
-)
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/admin/authors", tags=["admin-syvai"])
@@ -278,153 +271,42 @@ async def apply_author_proposal(
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
+    """Explicit, audited Apply of an accepted/auto-approved proposal.
+
+    0.6B: a single canonical Apply boundary. TIMELINE keeps its dedicated
+    contract (accepted-only, primary-source selection, idempotent). Author
+    field proposals (IDENTITY / BIOGRAPHY / LITERARY_CONTEXT) apply through the
+    shared safe-Apply service: eligible, conflict-guarded, merge-on-lists,
+    audited, idempotent.
+    """
+    from app.syvai.apply_author import ApplyError, apply_author_field_proposal
+    from app.syvai.apply_author import apply_timeline_proposal
+
     await check_admin(current_user)
-    await get_author_or_404(db, author_id)
+    author = await get_author_or_404(db, author_id)
     proposal = await get_proposal_or_404(db, author_id, proposal_id)
 
-    if proposal.field_name != "timeline_event":
-        raise HTTPException(
-            status_code=400,
-            detail="Apply is only supported for timeline_event proposals",
-        )
-    if proposal.status != "accepted":
-        raise HTTPException(
-            status_code=400,
-            detail="Only accepted proposals can be applied",
-        )
-
-    # Idempotency: an already-applied proposal returns the same event without
-    # mutating anything.
-    if proposal.applied_at and proposal.timeline_event_id:
-        existing = await db.execute(
-            select(TimelineEvent).where(
-                TimelineEvent.id == proposal.timeline_event_id,
-                TimelineEvent.author_id == author_id,
-            )
-        )
-        event = existing.scalar_one_or_none()
-        if event:
-            return {
-                "applied": True,
-                "already_applied": True,
-                "timeline_event_id": str(event.id),
-            }
-        return {
-            "applied": True,
-            "already_applied": True,
-            "timeline_event_id": str(proposal.timeline_event_id),
-        }
-
-    payload_text = proposal.edited_value or proposal.suggested_value
+    endpoint = f"/admin/authors/{author_id}/proposals/{proposal_id}/apply"
     try:
-        payload = json.loads(payload_text)
-    except json.JSONDecodeError as exc:
-        raise HTTPException(
-            status_code=400,
-            detail="Proposal payload is not valid JSON; edit it before applying",
-        ) from exc
-
-    event_type = str(payload.get("event_type") or "").strip()
-    date_value = str(payload.get("date_value") or "").strip()
-    label = str(payload.get("label") or "").strip()
-    description = payload.get("description")
-    date_precision = str(payload.get("date_precision") or "").strip()
-
-    if not event_type or not label or not date_value:
-        raise HTTPException(
-            status_code=400,
-            detail="Proposal is missing required fields; edit it before applying",
-        )
-    if parse_date(date_value) is None:
-        raise HTTPException(
-            status_code=400,
-            detail="Proposal date is invalid; edit it before applying",
-        )
-    # 0.4B Phase 8: derive an inconsistent/empty precision label
-    # deterministically from the value granularity (never discard a grounded
-    # fact because redundant metadata disagrees).
-    date_precision = align_date_precision(date_value, date_precision)
-
-    normalized_date = normalize_date_value(date_value)
-
-    source_ids = [link.source_id for link in proposal.sources or []]
-    primary_source_id = None
-    if source_ids:
-        sources_result = await db.execute(select(Source).where(Source.id.in_(source_ids)))
-        sources = sources_result.scalars().all()
-        if sources:
-            tier_order = {"high": 0, "medium": 1, "low": 2, "unknown": 3}
-            sources.sort(
-                key=lambda source: tier_order.get(
-                    next(
-                        (link.reliability_tier for link in proposal.sources if link.source_id == source.id),
-                        "unknown",
-                    ),
-                    3,
-                )
+        if proposal.field_name == "timeline_event":
+            result = await apply_timeline_proposal(
+                db,
+                proposal=proposal,
+                author_id=author_id,
+                actor_id=current_user.id,
+                endpoint=endpoint,
+                request=request,
             )
-            primary_source_id = sources[0].id
-
-    matched_event = None
-    if proposal.current_value:
-        try:
-            current_payload = json.loads(proposal.current_value)
-        except json.JSONDecodeError:
-            current_payload = None
-        if current_payload and current_payload.get("id"):
-            matched = await db.execute(
-                select(TimelineEvent).where(
-                    TimelineEvent.id == current_payload["id"],
-                    TimelineEvent.author_id == author_id,
-                )
+        else:
+            result = await apply_author_field_proposal(
+                db,
+                proposal=proposal,
+                author=author,
+                actor_id=current_user.id,
+                endpoint=endpoint,
+                request=request,
             )
-            matched_event = matched.scalar_one_or_none()
-
-    if matched_event:
-        matched_event.event_type = event_type
-        matched_event.date_value = normalized_date
-        matched_event.date_precision = date_precision
-        matched_event.label = label
-        matched_event.description = description
-        matched_event.source_id = primary_source_id
-        matched_event.extraction_source = "ai"
-        matched_event.confidence = proposal.confidence
-        matched_event.status = "verified"
-        event = matched_event
-    else:
-        event = TimelineEvent(
-            author_id=author_id,
-            event_type=event_type,
-            date_value=normalized_date,
-            date_precision=date_precision,
-            label=label,
-            description=description,
-            source_id=primary_source_id,
-            extraction_source="ai",
-            confidence=proposal.confidence,
-            status="verified",
-        )
-        db.add(event)
-    await db.flush()
-
-    proposal.timeline_event_id = event.id
-    proposal.applied_at = datetime.now(timezone.utc)
-
-    add_security_event(
-        db,
-        event_type="ai_proposal_apply",
-        endpoint=f"/admin/authors/{author_id}/proposals/{proposal_id}/apply",
-        method="POST",
-        status_code=200,
-        actor_id=current_user.id,
-        target_id=proposal.id,
-        request=request,
-        details={"timeline_event_id": str(event.id), "field_name": proposal.field_name},
-    )
+    except ApplyError as exc:
+        raise HTTPException(status_code=400, detail=str(exc))
     await db.commit()
-
-    return {
-        "applied": True,
-        "already_applied": False,
-        "timeline_event_id": str(event.id),
-    }
+    return result

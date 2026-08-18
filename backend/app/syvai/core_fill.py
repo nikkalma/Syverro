@@ -55,10 +55,12 @@ from app.syvai.evidence import (
     EvidenceVerification,
     build_field_material_requirements,
     verify_evidence,
+    verify_field_explicit_evidence,
 )
 from app.syvai.field_claims import FieldClaim, parse_field_claims
 from app.syvai.field_specs import (
     DOMAIN_LITERARY_CONTEXT,
+    EXPLICIT_STATEMENT_FIELDS,
     FILL_DOMAINS,
     REGISTRY_DOMAIN,
     TAXONOMY_FIELDS,
@@ -291,6 +293,11 @@ async def _persist_one_item(
     material = _field_material(spec, item.label, item.value)
     verifications: dict[str, EvidenceVerification] = {}
     grounded_source_count = 0
+    # 0.6B Phase 2: for fields that must be explicitly stated, a failed
+    # fragment check may be supplemented by a deterministic explicit-statement
+    # check against the full stored citation (value tokens must be literally
+    # present in the trusted source text — never inferred from a proxy).
+    explicit_capable = spec.name in EXPLICIT_STATEMENT_FIELDS
     for matched in matched_sources:
         source_id = matched["id"]
         source_row = source_by_id.get(source_id)
@@ -300,6 +307,11 @@ async def _persist_one_item(
             citation,
             material=material,
         )
+        if not verification.is_grounded and explicit_capable:
+            verification = verify_field_explicit_evidence(
+                str(item.value) if item.value is not None else None,
+                citation,
+            )
         verifications[source_id] = verification
         if verification.is_grounded:
             grounded_source_count += 1

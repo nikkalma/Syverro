@@ -410,3 +410,124 @@ async def test_conflicting_trusted_sources_do_not_inflate_corroboration():
     proposal = outcome.proposals[0]
     assert proposal.review_band == "auto_approved"
     assert proposal.corroboration["independent_grounded_source_count"] == 1
+
+
+# ============================================================
+# 0.6B Phase 2 — field-specific explicit evidence
+# ============================================================
+
+
+@pytest.mark.asyncio
+async def test_explicit_occupation_in_citation_but_not_fragment_is_grounded():
+    # The value is explicitly stated in the FULL trusted citation even though
+    # the model's fragment omitted it -> deterministic explicit-statement check
+    # grounds the claim (0.6B Phase 2).
+    source = make_source(
+        title="Bio",
+        citation="George Eliot was a novelist, poet, and translator.",
+    )
+    claims = [
+        {
+            "field_name": "occupations",
+            "value": "novelist",
+            "label": "Occupation",
+            "sources": [
+                {"title": "Bio", "source_type": "biography", "evidence": "she was a"},
+            ],
+        }
+    ]
+    outcome, _, _ = await run_fill(DOMAIN_BIOGRAPHY, claims, sources=[source])
+    assert outcome.proposals[0].review_band == "auto_approved"
+    assert outcome.proposals[0].review_reason == "new_grounded"
+
+
+@pytest.mark.asyncio
+async def test_explicit_occupation_in_citation_but_no_fragment_stays_review():
+    # Explicit value must still be present in the trusted source text; an
+    # invented value never auto-approves.
+    source = make_source(title="Bio", citation="George Eliot was a novelist, poet, and translator.")
+    claims = [
+        {
+            "field_name": "occupations",
+            "value": "astronaut",
+            "label": "Occupation",
+            "sources": [
+                {"title": "Bio", "source_type": "biography", "evidence": "she was a"},
+            ],
+        }
+    ]
+    outcome, _, _ = await run_fill(DOMAIN_BIOGRAPHY, claims, sources=[source])
+    assert outcome.proposals[0].review_band == "quality_review"
+    assert outcome.proposals[0].review_reason == "ungrounded"
+
+
+@pytest.mark.asyncio
+async def test_explicit_language_in_citation_but_not_fragment_is_grounded():
+    source = make_source(title="Bio", citation="As an English writer, Eliot was celebrated widely.")
+    claims = [
+        {
+            "field_name": "languages",
+            "value": "English",
+            "label": "Language",
+            "sources": [
+                {"title": "Bio", "source_type": "biography", "evidence": "Eliot was"},
+            ],
+        }
+    ]
+    outcome, _, _ = await run_fill(DOMAIN_IDENTITY, claims, sources=[source])
+    assert outcome.proposals[0].review_band == "auto_approved"
+
+
+@pytest.mark.asyncio
+async def test_explicit_language_not_in_citation_stays_review():
+    # 'French' is never stated in the source -> no inference from nationality.
+    source = make_source(title="Bio", citation="As an English writer, Eliot was celebrated widely.")
+    claims = [
+        {
+            "field_name": "languages",
+            "value": "French",
+            "label": "Language",
+            "sources": [
+                {"title": "Bio", "source_type": "biography", "evidence": "Eliot was"},
+            ],
+        }
+    ]
+    outcome, _, _ = await run_fill(DOMAIN_IDENTITY, claims, sources=[source])
+    assert outcome.proposals[0].review_band == "quality_review"
+    assert outcome.proposals[0].review_reason == "ungrounded"
+
+
+@pytest.mark.asyncio
+async def test_explicit_gender_stated_in_source_is_grounded():
+    source = make_source(title="Bio", citation="Wilde was a male playwright.")
+    claims = [
+        {
+            "field_name": "gender",
+            "value": "male",
+            "label": "Gender",
+            "sources": [
+                {"title": "Bio", "source_type": "biography", "evidence": "Wilde was a"},
+            ],
+        }
+    ]
+    outcome, _, _ = await run_fill(DOMAIN_IDENTITY, claims, sources=[source])
+    assert outcome.proposals[0].review_band == "auto_approved"
+
+
+# ============================================================
+# 0.6B Phase 3 — taxonomy determinism (case/spacing/aliases)
+# ============================================================
+
+
+def test_taxonomy_match_nomalizes_spacing_and_punctuation():
+    assert match_taxonomy("  Science ;Fiction ", {"Science Fiction"}) == "science-fiction"
+    assert match_taxonomy("science fiction", {"Science Fiction"}) == "science-fiction"
+
+
+def test_taxonomy_match_resolves_deterministic_variants():
+    # Phase 3: unambiguous variant/abbreviation maps to an EXISTING canonical
+    # label only — never creates a node, never resolves an unknown concept.
+    assert match_taxonomy("sci-fi", {"Science Fiction", "Fantasy"}) == "science-fiction"
+    assert match_taxonomy("nonfiction", {"Non-Fiction"}) == "non-fiction"
+    assert match_taxonomy("invented movement", {"Science Fiction"}) is None
+    assert match_taxonomy("sci-fi", {"Fantasy"}) is None  # no canonical target exists

@@ -9,6 +9,7 @@ the dashboard moderation counts, and the legacy Book cleanup contract
 
 from __future__ import annotations
 
+import asyncio
 from types import SimpleNamespace
 from unittest.mock import AsyncMock, Mock, patch
 from uuid import uuid4
@@ -25,6 +26,7 @@ from app.api.admin_moderation import (
     _proposal_dict,
     _queueable_proposal_or_http,
     _queue_filter,
+    bulk_apply_proposals,
     check_admin,
     moderation_counts,
     review_proposal_bulk_action,
@@ -35,6 +37,7 @@ from app.services.legacy_book_cleanup import (
     apply_legacy_cleanup,
     legacy_candidate_books,
 )
+from app.syvai.apply_author import ApplyError
 
 
 def _proposal(**overrides):
@@ -400,3 +403,130 @@ def test_legacy_cleanup_is_idempotent():
     assert book.moderation_reason == "legacy_cleanup"
     assert book.is_published is False
     assert book.moderation_status == "pending"
+
+
+# ============================================================
+# 0.6B — SAFE BULK APPLY (per-item failure reporting)
+# ============================================================
+
+
+class FakeApplySession:
+    def __init__(self):
+        self.commits = 0
+        self.rollbacks = 0
+
+    async def commit(self):
+        self.commits += 1
+
+    async def rollback(self):
+        self.rollbacks += 1
+
+
+async def _bulk_apply(proposal_ids, *, fail_on_entity=None, fail_error=None):
+    """Run bulk_apply with patched loaders + apply service."""
+    import types as _types
+
+    def fake_load(db, proposal_id):
+        return _types.SimpleNamespace(
+            id=uuid4(),
+            entity_type="author",
+            entity_id=str(proposal_id),
+            field_name="nationality",
+        )
+
+    async def fake_author(db, proposal):
+        return _types.SimpleNamespace(id=proposal.entity_id)
+
+    async def fake_apply(db, *, proposal, author, actor_id, endpoint, request):
+        if fail_on_entity is not None and str(proposal.entity_id) == fail_on_entity:
+            raise ApplyError(fail_error or "Rejected proposals cannot be applied")
+        return {"applied": True, "already_applied": False, "field": proposal.field_name}
+
+    body = SimpleNamespace(proposal_ids=list(proposal_ids))
+    request = SimpleNamespace(state=SimpleNamespace(request_id="req-bulk"))
+    current_user = SimpleNamespace(id=uuid4(), role="admin")
+    with patch(
+        "app.api.admin_moderation._load_proposal_passthrough", new=AsyncMock(side_effect=fake_load)
+    ), patch(
+        "app.api.admin_moderation._load_author_for_proposal", new=AsyncMock(side_effect=fake_author)
+    ), patch(
+        "app.api.admin_moderation.apply_author_field_proposal", new=AsyncMock(side_effect=fake_apply)
+    ), patch("app.api.admin_moderation.add_security_event", new=Mock()):
+        return await bulk_apply_proposals(body, request, current_user, db=FakeApplySession())
+
+
+@pytest.mark.asyncio
+async def test_bulk_apply_applies_all_eligible_items():
+    response = await _bulk_apply(["p-1", "p-2", "p-3"])
+    assert response["succeeded"] == 3
+    assert response["failed"] == 0
+    assert all(r["ok"] for r in response["results"])
+    assert response["results"][0]["field"] == "nationality"
+
+
+@pytest.mark.asyncio
+async def test_bulk_apply_isolates_one_bad_item_and_reports_error():
+    response = await _bulk_apply(["ok-1", "bad-1", "ok-2"], fail_on_entity="bad-1")
+    assert response["succeeded"] == 2
+    assert response["failed"] == 1
+    failed = [r for r in response["results"] if not r["ok"]]
+    assert failed[0]["id"] == "bad-1"
+    assert failed[0]["error"] == "Rejected proposals cannot be applied"
+
+
+@pytest.mark.asyncio
+async def test_bulk_apply_with_service_failure_rolls_back_isolation():
+    import types as _types
+
+    async def fake_load(db, proposal_id):
+        return _types.SimpleNamespace(
+            id=uuid4(), entity_type="author", entity_id="bad", field_name="nationality"
+        )
+
+    async def fake_author(db, proposal):
+        return _types.SimpleNamespace(id=proposal.entity_id)
+
+    async def fake_apply(db, *, proposal, author, actor_id, endpoint, request):
+        raise ApplyError("Rejected proposals cannot be applied")
+
+    body = SimpleNamespace(proposal_ids=["bad"])
+    request = SimpleNamespace(state=SimpleNamespace(request_id="req-bulk"))
+    current_user = SimpleNamespace(id=uuid4(), role="admin")
+    session = FakeApplySession()
+    with patch(
+        "app.api.admin_moderation._load_proposal_passthrough", new=AsyncMock(side_effect=fake_load)
+    ), patch(
+        "app.api.admin_moderation._load_author_for_proposal", new=AsyncMock(side_effect=fake_author)
+    ), patch(
+        "app.api.admin_moderation.apply_author_field_proposal", new=AsyncMock(side_effect=fake_apply)
+    ), patch("app.api.admin_moderation.add_security_event", new=Mock()):
+        response = await bulk_apply_proposals(body, request, current_user, db=session)
+
+    assert response["succeeded"] == 0
+    assert response["failed"] == 1
+    assert session.rollbacks == 1
+    assert response["results"][0]["error"] == "Rejected proposals cannot be applied"
+
+
+@pytest.mark.asyncio
+async def test_bulk_apply_empty_operations_is_noop():
+    body = SimpleNamespace(proposal_ids=[])
+    request = SimpleNamespace(state=SimpleNamespace(request_id="req-bulk"))
+    current_user = SimpleNamespace(id=uuid4(), role="admin")
+    with patch("app.api.admin_moderation.add_security_event", new=Mock()):
+        response = await bulk_apply_proposals(
+            body, request, current_user, db=FakeApplySession()
+        )
+    assert response["succeeded"] == 0
+    assert response["failed"] == 0
+
+
+@pytest.mark.asyncio
+async def test_bulk_apply_denies_non_admin():
+    from fastapi import HTTPException
+
+    body = SimpleNamespace(proposal_ids=[])
+    request = SimpleNamespace(state=SimpleNamespace(request_id="req-bulk"))
+    current_user = SimpleNamespace(id=uuid4(), role="user")
+    with pytest.raises(HTTPException, match="Admin access"):
+        await bulk_apply_proposals(body, request, current_user, db=FakeApplySession())

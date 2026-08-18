@@ -88,12 +88,34 @@ def normalize_list_items(items: list[str]) -> list[str]:
     return result
 
 
+# Deterministic variant forms of existing canonical genre names. Only
+# unambiguous abbreviations/compounds that normalize to a REAL canonical label
+# are listed; nothing here creates a taxonomy node and nothing semantic is
+# inferred. Keys are casefolded exact forms, values are the canonical label.
+_TAXONOMY_VARIANTS = {
+    "sci-fi": "Science Fiction",
+    "sci fi": "Science Fiction",
+    "scifi": "Science Fiction",
+    "nonfiction": "Non-Fiction",
+    "self help": "Self Development",
+    "self-help": "Self Development",
+    "selfhelp": "Self Development",
+    "spiritual practice": "Spiritual Practices",
+}
+
+
 def match_taxonomy(item: str, canonical_names: set[str]) -> str | None:
     """Resolve a proposed literary label against canonical taxonomy names.
 
-    Deterministic slug-equality match. Returns the canonical slug when found,
-    else None (the proposal must then remain review-required). Never creates
-    taxonomy rows.
+    Deterministic, in priority order:
+
+      1. normalized (slug) equality with a canonical name — handles
+         case/spacing/punctuation variance (existing behavior);
+      2. deterministic variant/alias forms (0.6B Phase 3) mapped to a canonical
+         label that actually exists in ``canonical_names``.
+
+    Returns the canonical slug when found, else None (the proposal must then
+    remain review-required). Never creates taxonomy rows.
     """
     key = _slugify(item)
     if not key:
@@ -101,6 +123,12 @@ def match_taxonomy(item: str, canonical_names: set[str]) -> str | None:
     for name in canonical_names:
         if _slugify(name) == key:
             return key
+
+    variant = _TAXONOMY_VARIANTS.get(item.strip().casefold())
+    if variant:
+        variant_slug = _slugify(variant)
+        if any(_slugify(name) == variant_slug for name in canonical_names):
+            return variant_slug
     return None
 
 

@@ -28,6 +28,11 @@ from app.models.source import Source
 from app.models.syvai_run import SyvaiRun
 from app.models.user import User
 from app.services.security_audit import add_security_event
+from app.syvai.apply_author import (
+    ApplyError,
+    apply_author_field_proposal,
+    apply_timeline_proposal,
+)
 from app.syvai.validators import (
     REVIEW_BANDS_NEEDING_HUMAN,
     REVIEW_BAND_POLICY,
@@ -441,6 +446,115 @@ async def review_proposal_bulk_action(
         "results": results,
         "succeeded": sum(1 for r in results if r.get("ok")),
         "failed": sum(1 for r in results if not r.get("ok")),
+    }
+
+
+# ============================================================
+# SAFE BULK APPLY
+# ============================================================
+
+
+class BulkApplyRequest(BaseModel):
+    """Proposal ids to apply. Only eligible (accepted or auto-approved,
+    non-conflicting, canonical-taxonomy) proposals are applied; every item is
+    reported explicitly."""
+
+    proposal_ids: list[str] = Field(default_factory=list)
+
+
+async def _load_proposal_passthrough(db: AsyncSession, proposal_id: str) -> AIProposal:
+    """Load any proposal row regardless of band/status (invalid id -> 400)."""
+    try:
+        parsed = UUID(str(proposal_id))
+    except ValueError:
+        raise HTTPException(status_code=400, detail="Invalid proposal id")
+    result = await db.execute(select(AIProposal).where(AIProposal.id == parsed))
+    proposal = result.scalar_one_or_none()
+    if not proposal:
+        raise HTTPException(status_code=404, detail="Proposal not found")
+    return proposal
+
+
+async def _load_author_for_proposal(db: AsyncSession, proposal: AIProposal) -> Author:
+    if proposal.entity_type != "author":
+        raise ApplyError(f"Bulk apply only supports author proposals (got {proposal.entity_type!r})")
+    if not proposal.entity_id:
+        raise ApplyError("Proposal has no entity_id")
+    result = await db.execute(
+        select(Author).where(Author.id == proposal.entity_id)
+    )
+    author = result.scalar_one_or_none()
+    if not author:
+        raise ApplyError("Author record for the proposal was not found")
+    return author
+
+
+@router.post("/bulk-apply", response_model=dict)
+async def bulk_apply_proposals(
+    body: BulkApplyRequest,
+    request: Request,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Apply many eligible proposals with per-item failure reporting.
+
+    Only non-conflicting auto-approved or human-accepted proposals are written;
+    field conflicts, unresolved taxonomy, rejected, invalid or still-pending
+    items fail individually and never block the rest. No auto-publish: applying
+    writes canonical editorial data only, with a full audit trail.
+    """
+    await check_admin(current_user)
+
+    results = []
+    for proposal_id in body.proposal_ids:
+        ok, error, applied, field = False, None, False, None
+        try:
+            proposal = await _load_proposal_passthrough(db, proposal_id)
+            if proposal.field_name == "timeline_event":
+                await apply_timeline_proposal(
+                    db,
+                    proposal=proposal,
+                    author_id=str(proposal.entity_id),
+                    actor_id=current_user.id,
+                    endpoint="/admin/moderation/bulk-apply",
+                    request=request,
+                )
+            else:
+                author = await _load_author_for_proposal(db, proposal)
+                await apply_author_field_proposal(
+                    db,
+                    proposal=proposal,
+                    author=author,
+                    actor_id=current_user.id,
+                    endpoint="/admin/moderation/bulk-apply",
+                    request=request,
+                )
+            await db.commit()
+            ok, field = True, proposal.field_name
+        except ApplyError as exc:
+            await db.rollback()
+            error = str(exc)
+        except HTTPException as exc:
+            await db.rollback()
+            error = exc.detail
+        except Exception as exc:  # noqa: BLE001
+            logger.warning("bulk apply failed for %s: %s", proposal_id, exc)
+            await db.rollback()
+            error = "failed to apply proposal"
+
+        results.append(
+            {
+                "id": proposal_id,
+                "ok": ok,
+                "field": field,
+                "error": error,
+            }
+        )
+
+    return {
+        "results": results,
+        "succeeded": sum(1 for r in results if r["ok"]),
+        "failed": sum(1 for r in results if not r["ok"]),
     }
 
 

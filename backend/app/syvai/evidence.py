@@ -357,3 +357,41 @@ def verify_evidence(
     return EvidenceVerification(
         GROUNDING_GROUNDED, "evidence supports all asserted material details"
     )
+
+
+def verify_field_explicit_evidence(
+    value: str | None,
+    citation: str | None,
+) -> EvidenceVerification:
+    """Deterministic explicit-statement check for Phase 2 fields.
+
+    A proposed value is grounded for a source only when EVERY material token of
+    the value appears in the source's FULL stored citation text. This is a
+    stricter, value-level replacement for the fragment-based check: it never
+    infers a value from a proxy (name, birthplace, nationality) — the value must
+    be literally present in the trusted source text. Used only for fields in
+    ``EXPLICIT_STATEMENT_FIELDS`` and only when fragment grounding failed.
+    """
+    if not value or not value.strip():
+        return EvidenceVerification(GROUNDING_PARTIAL, "no claim value to verify")
+    if not citation or not citation.strip():
+        return EvidenceVerification(
+            GROUNDING_UNGROUNDED, "source text unavailable for verification"
+        )
+
+    normalized_citation = normalize_evidence(citation)
+    required = _significant_tokens(value, min_len=3)
+    if not required:
+        return EvidenceVerification(
+            GROUNDING_PARTIAL, "value has no material tokens to verify"
+        )
+
+    missing = sorted(token for token in required if token not in normalized_citation)
+    if missing:
+        return EvidenceVerification(
+            GROUNDING_PARTIAL,
+            "value not explicitly stated in the source text: " + ", ".join(missing),
+        )
+    return EvidenceVerification(
+        GROUNDING_GROUNDED, "value explicitly stated in the source text"
+    )

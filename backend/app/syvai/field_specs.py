@@ -49,6 +49,27 @@ TAXONOMY_FIELDS = frozenset(
     }
 )
 
+# SyvAI 0.6B — fields whose proposed values must be EXPLICITLY STATED in the
+# trusted source text (never inferred from a proxy like name, birthplace or
+# nationality). For these fields grounding may supplement the model's returned
+# fragment with a deterministic explicit-statement check against the full
+# stored citation. Values that are not literally present stay in human review.
+# Dates/places (active_years, citizenship, residence) keep the existing
+# material-detail rules and are intentionally NOT in this set.
+EXPLICIT_STATEMENT_FIELDS = frozenset(
+    {
+        "gender",
+        "languages",
+        "occupations",
+        "nationality",
+        "native_name",
+        "birth_name",
+        "pen_names",
+        "pseudonyms",
+        "writing_languages",
+    }
+)
+
 
 @dataclass(frozen=True)
 class FieldSpec:

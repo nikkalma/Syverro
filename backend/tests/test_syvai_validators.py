@@ -16,6 +16,7 @@ from app.syvai.validators import (
     REVIEW_REASON_UNGROUNDED,
     REVIEW_REASON_UNSUPPORTED,
     ExistingEvent,
+    align_date_precision,
     date_granularity,
     labels_similar,
     normalize_date_value,
@@ -129,7 +130,7 @@ def test_before_birth_is_invalid():
     assert result.review_band == REVIEW_BAND_AUTO_REJECTED
 
 
-def test_precision_finer_than_value_is_invalid():
+def test_precision_label_is_normalized_to_value_granularity():
     result = validate_timeline_claim(
         _claim(date_value="1831", date_precision="full"),
         author_birth_date="1816-04-21",
@@ -137,7 +138,16 @@ def test_precision_finer_than_value_is_invalid():
         existing_events=REFERENCE_EVENTS,
         source_count=1,
     )
-    assert result.validation_state == "invalid"
+    assert result.validation_state == "validated"
+    assert result.review_band == REVIEW_BAND_AUTO_APPROVED
+    assert result.review_reason == REVIEW_REASON_NEW_GROUNDED
+
+
+def test_align_date_precision_normalizes_all_forms():
+    assert align_date_precision("1831", "full") == "year"
+    assert align_date_precision("1831-05", "full") == "month"
+    assert align_date_precision("1831-05-29", "year") == "full"
+    assert align_date_precision("1831", "approximate") == "approximate"
 
 
 def test_posthumous_event_is_needs_review():

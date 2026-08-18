@@ -168,6 +168,7 @@ class MaterialRequirements:
     evidence fragment must support for full grounding."""
 
     year: str | None = None
+    extra_years: frozenset[str] = frozenset()
     place_tokens: frozenset[str] = frozenset()
     entity_tokens: frozenset[str] = frozenset()
     distinctive_tokens: frozenset[str] = frozenset()
@@ -195,6 +196,62 @@ def build_material_requirements(
         place_tokens=_significant_tokens(place, min_len=3),
         entity_tokens=entity_tokens,
         distinctive_tokens=frozenset(extract_detail_tokens(label, description or "", place or "")),
+    )
+
+
+def build_field_material_requirements(
+    *,
+    label: str | None,
+    description: str | None = None,
+    value: str | None = None,
+    place: str | None = None,
+    date_values: tuple[str | None, str | None] | None = None,
+) -> MaterialRequirements:
+    """Derive material-detail requirements for a 0.4B field claim.
+
+    Extends the timeline material model for the new value kinds:
+
+      * ``value``      — the proposed field value contributes identity /
+                         occupation / movement / name tokens;
+      * ``date_values``— up to two asserted date values (e.g. active years,
+                         citizenship/residence from/to dates) contribute
+                         ``extra_years`` so both bounds must appear in the
+                         evidence;
+      * ``place``      — residence places contribute place tokens.
+
+    Deterministic and author-independent; no provider calls.
+    """
+    primary_date = date_values[0] if date_values and date_values[0] else None
+    material = build_material_requirements(
+        label=label or "",
+        description=description,
+        place=place,
+        date_value=primary_date,
+    )
+
+    extra_years: set[str] = set()
+    if date_values:
+        for date_value in date_values:
+            if not date_value:
+                continue
+            match = _YEAR_RE.search(date_value)
+            if match:
+                extra_years.add(match.group(0))
+    if material.year and material.year in extra_years:
+        extra_years.discard(material.year)
+
+    entity_tokens = material.entity_tokens
+    distinctive_tokens = set(material.distinctive_tokens)
+    if value:
+        entity_tokens = entity_tokens | _significant_tokens(value, min_len=3)
+        distinctive_tokens |= extract_detail_tokens(value)
+
+    return MaterialRequirements(
+        year=material.year,
+        extra_years=frozenset(extra_years),
+        place_tokens=material.place_tokens,
+        entity_tokens=entity_tokens,
+        distinctive_tokens=frozenset(distinctive_tokens),
     )
 
 
@@ -259,6 +316,11 @@ def verify_evidence(
     if material.year and material.year not in normalized_fragment:
         missing.append(f"claim year {material.year}")
 
+    if material.extra_years:
+        absent_years = sorted(year for year in material.extra_years if year not in normalized_fragment)
+        if absent_years:
+            missing.append("date detail: " + ", ".join(absent_years))
+
     if material.place_tokens:
         absent_place = sorted(_missing_tokens(material.place_tokens, normalized_fragment))
         if absent_place:
@@ -276,6 +338,7 @@ def verify_evidence(
 
     requirements_exist = bool(
         material.year
+        or material.extra_years
         or material.place_tokens
         or material.entity_tokens
         or material.distinctive_tokens

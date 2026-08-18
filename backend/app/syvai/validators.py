@@ -117,6 +117,32 @@ def date_granularity(value: str) -> str:
     return "unknown"
 
 
+def align_date_precision(date_value: str | None, precision: str | None) -> str:
+    """Deterministically align a date precision label with the value.
+
+    SyvAI 0.4B Phase 8: a model may return a redundant or inconsistent
+    precision label (e.g. ``YYYY`` with ``"full"``). When the value structure
+    is unambiguous the label is derived FROM the value instead of discarding a
+    grounded fact because of disagreeing metadata:
+
+        YYYY-MM-DD -> full
+        YYYY-MM    -> month
+        YYYY       -> year
+
+    ``approximate`` is preserved (policy), and an empty/unknown label is
+    completed from the granularity. Date *factual* validation is unchanged —
+    malformed or impossible dates are still rejected by ``parse_date``.
+    """
+    if precision == "approximate":
+        return "approximate"
+    granularity = date_granularity(date_value) if date_value else "unknown"
+    if precision in (None, "") or precision not in DATE_PRECISION_VALUES:
+        return granularity if granularity != "unknown" else "year"
+    if granularity in ("full", "month", "year") and precision != granularity:
+        return granularity
+    return precision
+
+
 def date_key(value: str) -> str:
     """A comparable key: ``1847`` < ``1847-10`` < ``1847-10-16``."""
     return normalize_date_value(value)
@@ -171,6 +197,8 @@ REVIEW_REASON_DATE_CONFLICT = "date_conflict"
 REVIEW_REASON_UNSUPPORTED = "unsupported_claim"
 REVIEW_REASON_UNGROUNDED = "ungrounded"
 REVIEW_REASON_POSTHUMOUS = "posthumous_event"
+REVIEW_REASON_FIELD_CONFLICT = "field_conflict"
+REVIEW_REASON_UNRESOLVED_TAXONOMY = "unresolved_taxonomy"
 
 # Bands whose proposals genuinely require a human decision.
 REVIEW_BANDS_NEEDING_HUMAN = {REVIEW_BAND_QUALITY, REVIEW_BAND_POLICY}
@@ -269,12 +297,16 @@ def validate_timeline_claim(
     do not perform evidence verification are unchanged.
     """
     issues: list[str] = []
-    precision_mismatch = False
     result = ValidationResult(
         validation_state="validated",
         conflict_state="new",
         issues=issues,
     )
+
+    # 0.4B Phase 8: normalize an inconsistent/empty precision label from the
+    # unambiguous value granularity BEFORE validation, so a redundant "full"
+    # on a year-only value never discards a grounded fact.
+    claim.date_precision = align_date_precision(claim.date_value, claim.date_precision)
 
     # --- 1. Required fields & date format ---
     if not claim.label.strip():
@@ -299,10 +331,11 @@ def validate_timeline_claim(
         needed = _precision_granularity_order(claim.date_precision)
         actual = _precision_granularity_order(date_granularity(claim.date_value))
         if needed > actual:
+            # Unreachable after align_date_precision; kept as a soft guard so a
+            # pre-aligned claim can never upgrade to a harder blocker by accident.
             issues.append(
                 f"date_precision '{claim.date_precision}' requires finer date_value '{claim.date_value}'"
             )
-            precision_mismatch = True
 
     # --- 2. Chronology vs author lifespan ---
     if parsed is not None and author_birth_date:
@@ -346,7 +379,7 @@ def validate_timeline_claim(
         "invalid date_precision",
         "event precedes author birth date",
     }
-    if any(issue in hard_blockers for issue in issues) or precision_mismatch:
+    if any(issue in hard_blockers for issue in issues):
         result.validation_state = "invalid"
     elif result.conflict_state == "conflict":
         result.validation_state = "conflict"

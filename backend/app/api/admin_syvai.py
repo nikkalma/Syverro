@@ -16,6 +16,7 @@ from datetime import datetime, timezone
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, Request
+from pydantic import BaseModel, Field
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -28,13 +29,24 @@ from app.models.syvai_run import SyvaiRun
 from app.models.timeline_event import TimelineEvent
 from app.models.user import User
 from app.services.security_audit import add_security_event
+from app.syvai.core_fill import run_domain_research
 from app.syvai.errors import ConfigurationError
 from app.syvai.pipeline import run_timeline_research
 from app.syvai.provider import OpenAICompatibleProvider, ProviderConfig
-from app.syvai.validators import date_granularity, normalize_date_value, parse_date
+from app.syvai.validators import (
+    align_date_precision,
+    normalize_date_value,
+    parse_date,
+)
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/admin/authors", tags=["admin-syvai"])
+
+
+class FillRequest(BaseModel):
+    domain: str = Field(
+        description="One of the 0.4B fill domains: identity, biography, literary_context"
+    )
 
 
 async def check_admin(user: User) -> User:
@@ -142,6 +154,54 @@ async def run_author_timeline_research(
         "run": _run_dict(outcome.run),
         "proposals": proposals,
         "message": "Timeline research completed",
+    }
+
+
+@router.post("/{author_id}/ai/fill")
+async def run_author_fill_research(
+    author_id: str,
+    body: FillRequest,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Run one grounded Author core fill run (identity | biography | literary_context).
+
+    0.4B: generation is safe-first — a skipped run (SOURCE_POOL_MISSING or
+    NO_TRUSTED_SOURCE) is returned normally so Studio can see why no call ran;
+    a provider/structure failure returns 502. Nothing is applied here.
+    """
+    from app.syvai.field_specs import FILL_DOMAINS
+
+    await check_admin(current_user)
+    author = await get_author_or_404(db, author_id)
+
+    if body.domain not in FILL_DOMAINS:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Unsupported fill domain '{body.domain}'; expected one of {', '.join(FILL_DOMAINS)}",
+        )
+
+    try:
+        provider = OpenAICompatibleProvider(ProviderConfig.from_env())
+    except ConfigurationError as exc:
+        raise HTTPException(status_code=503, detail=str(exc))
+
+    outcome = await run_domain_research(db, author, provider, body.domain)
+    if outcome.error and outcome.run.status == "failed":
+        raise HTTPException(status_code=502, detail=outcome.error)
+
+    proposals = [
+        _proposal_dict(proposal, await _proposal_sources(db, proposal.id))
+        for proposal in outcome.proposals
+    ]
+    message = (
+        f"{body.domain} research {outcome.run.status}" if outcome.error
+        else f"{body.domain} research completed"
+    )
+    return {
+        "run": _run_dict(outcome.run),
+        "proposals": proposals,
+        "message": message,
     }
 
 
@@ -280,8 +340,10 @@ async def apply_author_proposal(
             status_code=400,
             detail="Proposal date is invalid; edit it before applying",
         )
-    if date_precision not in {"full", "month", "year", "approximate"}:
-        date_precision = date_granularity(date_value)
+    # 0.4B Phase 8: derive an inconsistent/empty precision label
+    # deterministically from the value granularity (never discard a grounded
+    # fact because redundant metadata disagrees).
+    date_precision = align_date_precision(date_value, date_precision)
 
     normalized_date = normalize_date_value(date_value)
 

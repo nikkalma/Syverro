@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Users, BookOpen, PenLine, Tags, UserCheck, UserPlus, AlertCircle } from 'lucide-react';
+import { Users, BookOpen, PenLine, Tags, UserCheck, UserPlus, AlertCircle, ShieldAlert } from 'lucide-react';
 import { useAdminStore } from '../../../store/adminStore';
 import { AdminDashboardStats } from '../../../types/admin';
 import { getLocaleData, getBrowserLocale } from '../../../locales';
@@ -118,6 +118,12 @@ export default function StudioHome() {
             onClick={() => navigate(card.to)}
           />
         ))}
+        <StatCard
+          label={`${t.admin.moderation.aiReview.requiresReview} · ${t.admin.moderation.aiReview.quality} ${stats?.moderation_review_quality ?? 0} / ${t.admin.moderation.aiReview.policy} ${stats?.moderation_review_policy ?? 0}`}
+          value={stats?.moderation_review_total ?? 0}
+          icon={<ShieldAlert size={18} />}
+          onClick={() => navigate(studioPath('moderation'))}
+        />
       </div>
 
       <div>

@@ -172,6 +172,10 @@ class AdminStatsResponse(BaseModel):
     new_users_24h: int
     new_books_24h: int
     users_by_role: Dict[str, int]
+    moderation_review_total: int = 0
+    moderation_review_quality: int = 0
+    moderation_review_policy: int = 0
+    moderation_review_under_review: int = 0
 
 
 # ============================================================

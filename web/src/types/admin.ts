@@ -430,12 +430,14 @@ export interface AIProposalSource {
   source_type: string;
   reliability_score: string;
   reliability_tier?: string | null;
+  snippet?: string | null;
 }
 
 export interface AIProposal {
   id: string;
   entity_type: string;
   entity_id?: string | null;
+  entity_name?: string | null;
   field_name: string;
   current_value?: string | null;
   suggested_value: string;
@@ -448,12 +450,48 @@ export interface AIProposal {
   review_band?: string | null;
   review_reason?: string | null;
   run_id?: string | null;
+  run_domain?: string | null;
+  source_count?: number | null;
   applied_at?: string | null;
   timeline_event_id?: string | null;
   created_at: string;
   reviewed_at?: string | null;
   reviewed_by?: string | null;
   sources?: AIProposalSource[];
+}
+
+export interface ReviewQueueCounts {
+  total: number;
+  under_review: number;
+  by_band: { quality_review: number; policy_review: number };
+  by_reason: Record<string, number>;
+  by_entity_type: Record<string, number>;
+}
+
+export interface ReviewActionRequest {
+  action: 'approve' | 'reject';
+  edited_value?: string | null;
+  note?: string | null;
+}
+
+export interface ReviewBulkOperation {
+  proposal_id: string;
+  action: 'approve' | 'reject';
+  edited_value?: string | null;
+}
+
+export interface ReviewBulkResultItem {
+  id: string;
+  ok: boolean;
+  action?: string;
+  status?: string;
+  error?: string;
+}
+
+export interface ReviewBulkResult {
+  results: ReviewBulkResultItem[];
+  succeeded: number;
+  failed: number;
 }
 
 export interface SyvaiRun {
@@ -864,6 +902,10 @@ export interface AdminDashboardStats {
   new_users_24h: number;
   new_books_24h: number;
   users_by_role: Record<AdminRole, number>;
+  moderation_review_total?: number;
+  moderation_review_quality?: number;
+  moderation_review_policy?: number;
+  moderation_review_under_review?: number;
 }
 
 // ============================================================

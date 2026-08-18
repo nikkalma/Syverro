@@ -822,6 +822,38 @@ export interface LocaleData {
       publish: string;
       archive: string;
       createdDate: string;
+      aiReview: {
+        booksTab: string;
+        aiTab: string;
+        queueTab: string;
+        historyTab: string;
+        queueEmpty: string;
+        historyEmpty: string;
+        requiresReview: string;
+        underReview: string;
+        entity: string;
+        field: string;
+        run: string;
+        reviewedAt: string;
+        quality: string;
+        policy: string;
+        allBands: string;
+        allEntities: string;
+        selectAll: string;
+        selected: string;
+        bulkApprove: string;
+        bulkReject: string;
+        editedPreferred: string;
+        current: string;
+        suggested: string;
+        evidence: string;
+        noEvidence: string;
+        openDetail: string;
+        reviewResultSucceeded: string;
+        reviewResultFailed: string;
+        bulkFailed: string;
+        historyBand: string;
+      };
     };
     metadata: {
       title: string;

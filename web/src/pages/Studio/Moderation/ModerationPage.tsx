@@ -1,11 +1,12 @@
 import { useEffect, useState } from 'react';
 import { AdminBook, MODERATION_PIPELINE, MODERATION_STATUS_LABELS, MODERATION_STATUS_COLORS } from '../../../types/admin';
 import { useAdminStore } from '../../../store/adminStore';
-import { RefreshCw, CheckCircle, XCircle, Eye, Clock, BookOpen, Shield, X, Package, Send, PenLine } from 'lucide-react';
+import { RefreshCw, CheckCircle, XCircle, Eye, Clock, BookOpen, Shield, X, Package, Send, PenLine, Bot } from 'lucide-react';
 import { PUBLICATION_TYPE_COLORS, METADATA_STATUS_LABELS, METADATA_STATUS_COLORS } from '../../../types/admin';
 import { getLocaleData, getBrowserLocale } from '../../../locales';
 import type { LocaleData } from '../../../locales';
 import { apiClient } from '../../../shared/api/client';
+import AIReview from './AIReview';
 
 type TabFilter = 'pending' | 'approved' | 'draft' | 'published' | 'archived' | 'all';
 
@@ -85,6 +86,8 @@ export default function ModerationPage() {
   const [isDetailOpen, setIsDetailOpen] = useState(false);
   const [rejectReason, setRejectReason] = useState('');
   const [actionLoading, setActionLoading] = useState(false);
+  const [section, setSection] = useState<'books' | 'ai'>('books');
+  const aiReview = t.admin.moderation.aiReview;
 
   const fetchBooks = async () => {
     setLoading(true);
@@ -146,6 +149,31 @@ export default function ModerationPage() {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+      <div style={{ display: 'flex', gap: '4px', borderBottom: '1px solid var(--border)', paddingBottom: '4px', flexWrap: 'wrap' }}>
+        <button onClick={() => setSection('books')} style={{
+          padding: '8px 16px', background: section === 'books' ? 'var(--primary)' : 'transparent',
+          border: 'none', borderRadius: '8px 8px 0 0',
+          color: section === 'books' ? '#FFFFFF' : 'var(--text-secondary)', cursor: 'pointer',
+          fontSize: '13px', display: 'flex', alignItems: 'center', gap: '6px',
+          fontFamily: 'Inter, sans-serif', fontWeight: section === 'books' ? '500' : '400',
+        }}>
+          <BookOpen size={14} /> {aiReview.booksTab}
+        </button>
+        <button onClick={() => setSection('ai')} style={{
+          padding: '8px 16px', background: section === 'ai' ? 'var(--primary)' : 'transparent',
+          border: 'none', borderRadius: '8px 8px 0 0',
+          color: section === 'ai' ? '#FFFFFF' : 'var(--text-secondary)', cursor: 'pointer',
+          fontSize: '13px', display: 'flex', alignItems: 'center', gap: '6px',
+          fontFamily: 'Inter, sans-serif', fontWeight: section === 'ai' ? '500' : '400',
+        }}>
+          <Bot size={14} /> {aiReview.aiTab}
+        </button>
+      </div>
+
+      {section === 'ai' ? (
+        <AIReview />
+      ) : (
+        <>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
         <h1 style={{ fontSize: '24px', fontWeight: '400', color: 'var(--text-primary)', margin: 0, display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
           <Shield size={18} /> {t.admin.moderation.title}
@@ -455,6 +483,8 @@ export default function ModerationPage() {
             </div>
           </div>
         </div>
+      )}
+        </>
       )}
 
       <style>{`

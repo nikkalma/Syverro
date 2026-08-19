@@ -10,3 +10,4 @@ export { default as Seo } from './sections/Seo';
 export { default as Sources } from './sections/Sources';
 export { default as AIProposals } from './sections/AIProposals';
 export { default as Publications } from './sections/Publications';
+export { default as SourceDiscovery } from './sections/SourceDiscovery';

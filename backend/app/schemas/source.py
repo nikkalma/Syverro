@@ -13,6 +13,9 @@ class SourceBase(BaseModel):
     language: Optional[str] = None
     reliability_score: Optional[str] = "3"
     source_origin: Optional[str] = "manual"
+    authority_tier: Optional[str] = None
+    review_status: Optional[str] = "pending"
+    normalized_url: Optional[str] = None
 
 
 class SourceCreate(SourceBase):
@@ -28,6 +31,9 @@ class SourceUpdate(BaseModel):
     language: Optional[str] = None
     reliability_score: Optional[str] = None
     source_origin: Optional[str] = None
+    authority_tier: Optional[str] = None
+    review_status: Optional[str] = None
+    normalized_url: Optional[str] = None
 
 
 class SourceResponse(SourceBase):

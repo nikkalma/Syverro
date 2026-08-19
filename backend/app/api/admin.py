@@ -35,6 +35,7 @@ from app.schemas.admin import (
 )
 from app.schemas.author import AuthorAwardCreate, AuthorAwardResponse
 from app.schemas.user import UserResponse
+from app.api.admin_moderation import moderation_counts
 import logging
 import re
 from datetime import datetime, timedelta
@@ -251,6 +252,8 @@ async def get_stats(
         del users_by_role_raw["owner"]
     users_by_role = users_by_role_raw
 
+    moderation = await moderation_counts(db)
+
     return AdminStatsResponse(
         total_users=total_users,
         total_books=total_books,
@@ -260,6 +263,10 @@ async def get_stats(
         new_users_24h=new_users_24h,
         new_books_24h=new_books_24h,
         users_by_role=users_by_role,
+        moderation_review_total=moderation["total"],
+        moderation_review_quality=moderation["by_band"].get("quality_review", 0),
+        moderation_review_policy=moderation["by_band"].get("policy_review", 0),
+        moderation_review_under_review=moderation["under_review"],
     )
 
 # ============================================================
@@ -1452,6 +1459,19 @@ async def update_author(
             raise HTTPException(status_code=400, detail="Slug already in use")
 
     update_data = data.model_dump(exclude_unset=True, exclude={"awards"})
+
+    # Publication is an explicit, audited action. Prevent a silent metadata_status
+    # -> "golden" via the generic update path (the canonical action is
+    # POST /admin/authors/{id}/promote, which runs the readiness gate + audit).
+    if author.metadata_status != "golden" and update_data.get("metadata_status") == "golden":
+        raise HTTPException(
+            status_code=400,
+            detail=(
+                "Promoting an Author to golden requires the explicit publication "
+                "action: POST /admin/authors/{id}/promote"
+            ),
+        )
+
     for key, value in update_data.items():
         if hasattr(author, key):
             setattr(author, key, value)

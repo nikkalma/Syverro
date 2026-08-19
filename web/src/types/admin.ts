@@ -423,19 +423,194 @@ export interface AuthorResidenceCreate {
 // AI PROPOSALS
 // ============================================================
 
+export interface AIProposalSource {
+  id: string;
+  title: string;
+  url?: string | null;
+  source_type: string;
+  reliability_score: string;
+  reliability_tier?: string | null;
+  snippet?: string | null;
+}
+
 export interface AIProposal {
   id: string;
   entity_type: string;
   entity_id?: string | null;
+  entity_name?: string | null;
   field_name: string;
   current_value?: string | null;
   suggested_value: string;
+  edited_value?: string | null;
   source_type: string;
   confidence: number;
   status: string;
+  validation_state?: string | null;
+  conflict_state?: string | null;
+  review_band?: string | null;
+  review_reason?: string | null;
+  run_id?: string | null;
+  run_domain?: string | null;
+  source_count?: number | null;
+  applied_at?: string | null;
+  timeline_event_id?: string | null;
   created_at: string;
   reviewed_at?: string | null;
   reviewed_by?: string | null;
+  sources?: AIProposalSource[];
+}
+
+export interface ReviewQueueCounts {
+  total: number;
+  under_review: number;
+  by_band: { quality_review: number; policy_review: number };
+  by_reason: Record<string, number>;
+  by_entity_type: Record<string, number>;
+}
+
+export interface ReviewActionRequest {
+  action: 'approve' | 'reject';
+  edited_value?: string | null;
+  note?: string | null;
+}
+
+export interface ReviewBulkOperation {
+  proposal_id: string;
+  action: 'approve' | 'reject';
+  edited_value?: string | null;
+}
+
+export interface ReviewBulkResultItem {
+  id: string;
+  ok: boolean;
+  action?: string;
+  status?: string;
+  error?: string;
+}
+
+export interface ReviewBulkResult {
+  results: ReviewBulkResultItem[];
+  succeeded: number;
+  failed: number;
+}
+
+export interface BulkApplyResultItem {
+  id: string;
+  ok: boolean;
+  field?: string | null;
+  error?: string | null;
+}
+
+export interface BulkApplyResult {
+  results: BulkApplyResultItem[];
+  succeeded: number;
+  failed: number;
+}
+
+export interface AuthorPublicationReadiness {
+  ready: boolean;
+  metadata_status: string;
+  missing_required_fields: string[];
+  blocking_reasons: string[];
+  warnings: string[];
+}
+
+export interface AuthorPromoteResult {
+  author_id: string;
+  slug?: string | null;
+  already_golden: boolean;
+  metadata_status: string;
+  readiness: AuthorPublicationReadiness;
+}
+
+export interface SyvaiRun {
+  id: string;
+  author_id: string;
+  domain: string;
+  status: string;
+  provider: string;
+  model?: string | null;
+  input_tokens?: number | null;
+  output_tokens?: number | null;
+  total_tokens?: number | null;
+  duration_ms?: number | null;
+  estimated_cost_usd?: number | null;
+  calls: number;
+  source_count: number;
+  error?: string | null;
+  created_at: string;
+  finished_at?: string | null;
+  proposal_count?: number;
+}
+
+// ============================================================
+// SOURCE DISCOVERY (SyvAI 0.2A)
+// ============================================================
+
+export interface DiscoveryStatus {
+  enabled: boolean;
+  provider?: string | null;
+  configured: boolean;
+  status: 'OK' | 'NOT_CONFIGURED';
+}
+
+export interface DiscoveryRun {
+  id: string;
+  author_id: string;
+  domain: string;
+  status: string;
+  provider: string;
+  model?: string | null;
+  duration_ms?: number | null;
+  calls: number;
+  source_count: number;
+  error?: string | null;
+  created_at?: string | null;
+  finished_at?: string | null;
+}
+
+export interface SourceCandidate {
+  id: string;
+  author_id: string;
+  run_id?: string | null;
+  source_id?: string | null;
+  url: string;
+  normalized_url: string;
+  title?: string | null;
+  source_type?: string | null;
+  authority_tier: string;
+  quality_score?: number | null;
+  assessment: string;
+  assessment_reason?: string | null;
+  provider?: string | null;
+  origin?: string | null;
+  evidence?: string | null;
+  status: string;
+  review_action?: string | null;
+  reviewed_at?: string | null;
+  reviewed_by?: string | null;
+  created_at?: string | null;
+}
+
+export interface DiscoveryRunResponse {
+  run: DiscoveryRun;
+  candidates: SourceCandidate[];
+  created_sources: string[];
+  duplicate_skipped: number;
+  family_skipped: number;
+  unparseable_skipped: number;
+  message: string;
+}
+
+export interface DiscoveryMetrics {
+  author_id: string;
+  candidates_total: number;
+  candidates_pending: number;
+  by_assessment: Record<string, number>;
+  by_review_action: Record<string, number>;
+  auto_approved_sources: number;
+  human_actions_per_author: number;
+  formula: string;
 }
 
 export interface AIProposalCreate {
@@ -756,6 +931,10 @@ export interface AdminDashboardStats {
   new_users_24h: number;
   new_books_24h: number;
   users_by_role: Record<AdminRole, number>;
+  moderation_review_total?: number;
+  moderation_review_quality?: number;
+  moderation_review_policy?: number;
+  moderation_review_under_review?: number;
 }
 
 // ============================================================

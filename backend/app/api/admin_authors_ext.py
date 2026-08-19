@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Request
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, delete
 from app.core.deps import get_current_user, get_db
@@ -10,9 +10,17 @@ from app.models.author_residence import AuthorResidence
 from app.models.ai_proposal import AIProposal
 from app.models.source import Source, AuthorSourceLink
 from app.schemas.source import SourceCreate, SourceUpdate
+from app.models.ai_proposal_source import AIProposalSource
 from app.models.timeline_event import TimelineEvent
 from app.models.author_knowledge_relation import AuthorKnowledgeRelation
 from app.models.author_publication import AuthorPublication
+from app.models.source_candidate import SourceCandidate
+from app.services.author_publication import (
+    AuthorPublicationBlocked,
+    author_golden_readiness,
+    promote_author_to_golden,
+)
+from app.services.security_audit import add_security_event
 from app.schemas.author_quote import AuthorQuoteCreate, AuthorQuoteUpdate, AuthorQuoteResponse
 from app.schemas.author_citizenship import AuthorCitizenshipCreate, AuthorCitizenshipUpdate, AuthorCitizenshipResponse
 from app.schemas.author_residence import AuthorResidenceCreate, AuthorResidenceUpdate, AuthorResidenceResponse
@@ -40,6 +48,75 @@ async def get_author_or_404(db: AsyncSession, author_id: str) -> Author:
     if not author:
         raise HTTPException(status_code=404, detail="Author not found")
     return author
+
+
+async def _publications_count(db: AsyncSession, author_id) -> int:
+    return (
+        await db.scalar(
+            select(func.count()).select_from(AuthorPublication)
+            .where(AuthorPublication.author_id == author_id)
+        )
+    ) or 0
+
+
+# ============================================================
+# AUTHOR PUBLICATION (explicit editorial publish, draft -> golden)
+# ============================================================
+
+
+@router.get("/{author_id}/publication-readiness", response_model=dict)
+async def get_author_publication_readiness(
+    author_id: str,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Structured golden-readiness evaluation for an Author (read-only)."""
+    await check_admin(current_user)
+    author = await get_author_or_404(db, author_id)
+    return author_golden_readiness(
+        author, publications_count=await _publications_count(db, author.id)
+    )
+
+
+@router.post("/{author_id}/promote", response_model=dict)
+async def promote_author_to_public(
+    author_id: str,
+    request: Request,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Explicit editorial publication action: promote one Author to golden.
+
+    * refuses with 409 + structured readiness detail when the Author is not ready;
+    * is idempotent when already golden;
+    * writes an ``author_promote_golden`` audit event;
+    * never publishes Books and never changes unrelated Author fields;
+    * is never invoked automatically by Apply.
+    """
+    await check_admin(current_user)
+    author = await get_author_or_404(db, author_id)
+
+    endpoint = f"/admin/authors/{author_id}/promote"
+    try:
+        result = await promote_author_to_golden(
+            db,
+            author=author,
+            actor_id=current_user.id,
+            request=request,
+            endpoint=endpoint,
+            publications_count=await _publications_count(db, author.id),
+        )
+    except AuthorPublicationBlocked as exc:
+        raise HTTPException(status_code=409, detail=exc.readiness)
+    await db.commit()
+
+    return {
+        "author_id": str(author.id),
+        "slug": author.slug,
+        "already_golden": result.get("already_golden", False),
+        "metadata_status": author.metadata_status,
+        "readiness": result.get("readiness"),
+    }
 
 
 # ============================================================
@@ -350,6 +427,19 @@ async def get_author_sources(
     )
     source_ids.update(row[0] for row in kr_result if row[0])
 
+    pub_result = await db.execute(
+        select(AuthorPublication.source_id).where(AuthorPublication.author_id == author.id)
+    )
+    source_ids.update(row[0] for row in pub_result if row[0])
+
+    discovery_result = await db.execute(
+        select(SourceCandidate.source_id).where(
+            SourceCandidate.author_id == author.id,
+            SourceCandidate.review_action.in_(("approved", "auto_approved")),
+        )
+    )
+    source_ids.update(row[0] for row in discovery_result if row[0])
+
     if not source_ids:
         return {"data": []}
 
@@ -368,6 +458,9 @@ async def get_author_sources(
             "language": s.language,
             "reliability_score": s.reliability_score,
             "source_origin": s.source_origin,
+            "authority_tier": s.authority_tier,
+            "review_status": s.review_status,
+            "normalized_url": s.normalized_url,
             "created_at": s.created_at.isoformat() if s.created_at else None,
         } for s in sources],
     }
@@ -446,6 +539,7 @@ async def delete_author_source(
 async def get_author_proposals(
     author_id: str,
     status_filter: Optional[str] = None,
+    band_filter: Optional[str] = None,
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db)
 ):
@@ -454,10 +548,32 @@ async def get_author_proposals(
     query = select(AIProposal).where(AIProposal.entity_id == author_id)
     if status_filter:
         query = query.where(AIProposal.status == status_filter)
+    if band_filter:
+        query = query.where(AIProposal.review_band == band_filter)
     query = query.order_by(AIProposal.created_at.desc())
 
     result = await db.execute(query)
     proposals = result.scalars().all()
+
+    proposal_ids = [proposal.id for proposal in proposals]
+    source_links = {}
+    if proposal_ids:
+        links_result = await db.execute(
+            select(AIProposalSource, Source)
+            .join(Source, Source.id == AIProposalSource.source_id)
+            .where(AIProposalSource.proposal_id.in_(proposal_ids))
+        )
+        for link, source in links_result.all():
+            source_links.setdefault(str(link.proposal_id), []).append({
+                "id": str(source.id),
+                "title": source.title,
+                "url": source.url,
+                "source_type": source.source_type,
+                "reliability_score": source.reliability_score,
+                "reliability_tier": link.reliability_tier,
+                "snippet": link.snippet,
+            })
+
     return {
         "data": [{
             "id": str(p.id),
@@ -466,12 +582,21 @@ async def get_author_proposals(
             "field_name": p.field_name,
             "current_value": p.current_value,
             "suggested_value": p.suggested_value,
+            "edited_value": p.edited_value,
             "source_type": p.source_type,
             "confidence": p.confidence,
             "status": p.status,
+            "validation_state": p.validation_state,
+            "conflict_state": p.conflict_state,
+            "review_band": p.review_band,
+            "review_reason": p.review_reason,
+            "run_id": str(p.run_id) if p.run_id else None,
+            "applied_at": p.applied_at.isoformat() if p.applied_at else None,
+            "timeline_event_id": str(p.timeline_event_id) if p.timeline_event_id else None,
             "created_at": p.created_at.isoformat() if p.created_at else None,
             "reviewed_at": p.reviewed_at.isoformat() if p.reviewed_at else None,
             "reviewed_by": str(p.reviewed_by) if p.reviewed_by else None,
+            "sources": source_links.get(str(p.id), []),
         } for p in proposals],
     }
 
@@ -513,6 +638,12 @@ async def update_author_proposal(
         proposal.status = data.status
         proposal.reviewed_at = datetime.utcnow()
         proposal.reviewed_by = current_user.id
+    if data.validation_state is not None:
+        proposal.validation_state = data.validation_state
+    if data.conflict_state is not None:
+        proposal.conflict_state = data.conflict_state
+    if data.edited_value is not None:
+        proposal.edited_value = data.edited_value
     await db.commit()
     return {"message": "Proposal updated"}
 

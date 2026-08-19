@@ -213,11 +213,20 @@ export interface LocaleData {
       readinessDescription: string;
       lifecycleSeparate: string;
     };
-    studioCleanup: {
+studioCleanup: {
       metadataStatus: string;
       demote: string;
       promoteTo: string;
       missing: string;
+      publicationReadiness: string;
+      readyToPublish: string;
+      notReadyToPublish: string;
+      blockersLabel: string;
+      warningsLabel: string;
+      promoteToGolden: string;
+      publishing: string;
+      alreadyGolden: string;
+      missingRequired: string;
       statuses: { draft: string; identity_complete: string; editorial_complete: string; knowledge_complete: string; review_ready: string; golden: string };
       present: string;
       verified: string;
@@ -246,6 +255,21 @@ export interface LocaleData {
       reject: string;
       accept: string;
       failedUpdate: string;
+      runResearch: string;
+      runningResearch: string;
+      runs: string;
+      noRuns: string;
+      sources: string;
+      apply: string;
+      applied: string;
+      validationValidated: string;
+      validationNeedsReview: string;
+      validationConflict: string;
+      validationInvalid: string;
+      conflictDuplicate: string;
+      conflictNearDuplicate: string;
+      conflictConflict: string;
+      conflictNew: string;
       searchOrCreatePlace: string;
       searchOrCreateSource: string;
       searchOrCreateTaxonomy: string;
@@ -444,6 +468,7 @@ export interface LocaleData {
             sources: string;
             publications: string;
             ai: string;
+            discovery: string;
           };
         publications: {
           title: string;
@@ -696,6 +721,32 @@ export interface LocaleData {
           errorDelete: string;
           sourceTypes: { website: string; book: string; interview: string; archive: string; journal: string; encyclopedia: string; other: string };
         };
+        discovery: {
+          title: string;
+          description: string;
+          notConfigured: string;
+          notConfiguredHint: string;
+          statusLabel: string;
+          providerLabel: string;
+          run: string;
+          running: string;
+          totalCandidates: string;
+          pendingCandidates: string;
+          autoApprovedSources: string;
+          humanActions: string;
+          runs: string;
+          candidatesWord: string;
+          noRuns: string;
+          noCandidates: string;
+          noFilteredCandidates: string;
+          approve: string;
+          reject: string;
+          errorLoad: string;
+          errorRun: string;
+          errorReview: string;
+          assessments: { auto_usable: string; needs_review: string; rejected: string };
+          authorityTiers: { high: string; medium: string; low: string; unknown: string };
+        };
       };
     };
     genres: {
@@ -780,6 +831,40 @@ export interface LocaleData {
       publish: string;
       archive: string;
       createdDate: string;
+      aiReview: {
+        booksTab: string;
+        aiTab: string;
+        queueTab: string;
+        historyTab: string;
+        queueEmpty: string;
+        historyEmpty: string;
+        requiresReview: string;
+        underReview: string;
+        entity: string;
+        field: string;
+        run: string;
+        reviewedAt: string;
+        quality: string;
+        policy: string;
+        allBands: string;
+        allEntities: string;
+        selectAll: string;
+        selected: string;
+        bulkApprove: string;
+        bulkReject: string;
+        bulkApply: string;
+        openAuthor: string;
+        editedPreferred: string;
+        current: string;
+        suggested: string;
+        evidence: string;
+        noEvidence: string;
+        openDetail: string;
+        reviewResultSucceeded: string;
+        reviewResultFailed: string;
+        bulkFailed: string;
+        historyBand: string;
+      };
     };
     metadata: {
       title: string;

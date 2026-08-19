@@ -33,6 +33,49 @@ class Settings:
                 self.ENVIRONMENT,
             )
         self.SECRET_KEY = configured_secret
+        # --- SyvAI provider settings ---
+        # Real API keys are read from the environment only; nothing is committed.
+        self.SYVAI_OPENAI_API_KEY = os.getenv("SYVAI_OPENAI_API_KEY", "")
+        self.SYVAI_OPENAI_BASE_URL = os.getenv("SYVAI_OPENAI_BASE_URL", "https://api.openai.com/v1")
+        self.SYVAI_OPENAI_MODEL = os.getenv("SYVAI_OPENAI_MODEL", "gpt-4o-mini")
+        self.SYVAI_PROVIDER_TIMEOUT_SECONDS = float(os.getenv("SYVAI_PROVIDER_TIMEOUT_SECONDS", "60"))
+        self.SYVAI_PROVIDER_TEMPERATURE = float(os.getenv("SYVAI_PROVIDER_TEMPERATURE", "0"))
+        self.SYVAI_PROVIDER_MAX_TOKENS = int(os.getenv("SYVAI_PROVIDER_MAX_TOKENS", "4096"))
+        # --- SyvAI 0.2A source-discovery settings (env-only, fail-safe) ---
+        self.SYVAI_DISCOVERY_ENABLED = os.getenv("SYVAI_DISCOVERY_ENABLED", "").lower() in {
+            "1", "true", "yes", "on",
+        }
+        self.SYVAI_DISCOVERY_PROVIDER = os.getenv("SYVAI_DISCOVERY_PROVIDER", "wikipedia")
+        # Bounded multi-authority (0.3A): ordered, credential-free provider set.
+        # SYVAI_DISCOVERY_PROVIDERS wins when set; otherwise falls back to the
+        # legacy single-provider setting, then the default three.
+        self.SYVAI_DISCOVERY_PROVIDERS = (
+            os.getenv("SYVAI_DISCOVERY_PROVIDERS")
+            or os.getenv("SYVAI_DISCOVERY_PROVIDER")
+            or "wikipedia,loc,archive"
+        )
+        self.SYVAI_DISCOVERY_MAX_CANDIDATES = int(
+            os.getenv("SYVAI_DISCOVERY_MAX_CANDIDATES", "5")
+        )
+        self.SYVAI_DISCOVERY_MAX_PER_FAMILY = int(
+            os.getenv("SYVAI_DISCOVERY_MAX_PER_FAMILY", "2")
+        )
+        # 0.3C: hard per-run cap on provider item/metadata detail requests
+        # (enrichment). Detail fetch is strictly optional; search candidates
+        # never depend on it.
+        self.SYVAI_DISCOVERY_DETAIL_MAX_PER_RUN = int(
+            os.getenv("SYVAI_DISCOVERY_DETAIL_MAX_PER_RUN", "6")
+        )
+        self.SYVAI_DISCOVERY_TIMEOUT_SECONDS = float(
+            os.getenv("SYVAI_DISCOVERY_TIMEOUT_SECONDS", "15")
+        )
+        self.SYVAI_DISCOVERY_MAX_PAGE_BYTES = int(
+            os.getenv("SYVAI_DISCOVERY_MAX_PAGE_BYTES", "500000")
+        )
+        self.SYVAI_DISCOVERY_USER_AGENT = os.getenv(
+            "SYVAI_DISCOVERY_USER_AGENT", "SyverroSyvAI/0.2 (+https://syverro.com)"
+        )
+
         self.TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN", "")
         self.TELEGRAM_AUTH_MAX_AGE_SECONDS = int(
             os.getenv("TELEGRAM_AUTH_MAX_AGE_SECONDS", "300")

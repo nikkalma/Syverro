@@ -374,6 +374,7 @@ class GoldenAuthorMetadata(BaseModel):
     atmospheres: List[str] = []
     literary_movements: List[str] = []
     languages: List[str] = []
+    writing_languages: List[str] = []
 
 
 class GoldenAuthorResponse(BaseModel):

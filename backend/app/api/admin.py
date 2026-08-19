@@ -1459,6 +1459,19 @@ async def update_author(
             raise HTTPException(status_code=400, detail="Slug already in use")
 
     update_data = data.model_dump(exclude_unset=True, exclude={"awards"})
+
+    # Publication is an explicit, audited action. Prevent a silent metadata_status
+    # -> "golden" via the generic update path (the canonical action is
+    # POST /admin/authors/{id}/promote, which runs the readiness gate + audit).
+    if author.metadata_status != "golden" and update_data.get("metadata_status") == "golden":
+        raise HTTPException(
+            status_code=400,
+            detail=(
+                "Promoting an Author to golden requires the explicit publication "
+                "action: POST /admin/authors/{id}/promote"
+            ),
+        )
+
     for key, value in update_data.items():
         if hasattr(author, key):
             setattr(author, key, value)

@@ -672,6 +672,8 @@ export const uk: LocaleData = {
     },
     studioCleanup: {
       metadataStatus: 'Статус метаданих', demote: 'Знизити статус', promoteTo: 'Підвищити до', missing: 'Не заповнено',
+      publicationReadiness: 'Готовність до публікації', readyToPublish: 'Готово до публікації', notReadyToPublish: 'Не готово до публікації', blockersLabel: 'Блокуючі поля', warningsLabel: 'Попередження',
+      promoteToGolden: 'Опублікувати (Golden)', publishing: 'Публікація…', alreadyGolden: 'Уже опубліковано', missingRequired: 'Відсутні обов’язкові поля',
       statuses: { draft: 'Чернетка', identity_complete: 'Ідентичність заповнена', editorial_complete: 'Редакційні дані заповнені', knowledge_complete: 'Знання заповнені', review_ready: 'Готово до перевірки', golden: 'Еталонний запис' },
       present: 'Дотепер', verified: 'Перевірено', unverified: 'Не перевірено', searchBooks: 'Знайти книгу для зв’язку…', searching: 'Пошук…', link: 'Пов’язати', unlink: 'Відв’язати', timelineLabelPlaceholder: 'Наприклад, публікація твору', timelineDescriptionPlaceholder: 'Необов’язковий опис або контекст', url: 'Посилання', mediaCaptionPlaceholder: 'Джерело фотографії або підпис', addImageUrl: 'Додати посилання на зображення…',
       aiTitle: 'Пропозиції ШІ', aiDescription: 'Пропозиції ШІ для збагачення даних. Кожна зміна потребує схвалення куратора.', proposed: 'Запропоновано', accepted: 'Прийнято', rejected: 'Відхилено', loadingSuggestions: 'Завантаження пропозицій…', noFilteredSuggestions: 'Пропозицій із таким статусом немає.', noSuggestions: 'Пропозицій ШІ поки немає.', confidence: 'впевненість', currentValue: 'Поточне значення', suggestedValue: 'Запропоноване значення', empty: 'Не заповнено', reject: 'Відхилити', accept: 'Прийняти', failedUpdate: 'Не вдалося оновити пропозицію', runResearch: 'Запустити дослідження', runningResearch: 'Виконується…', runs: 'Запуски', noRuns: 'Досліджень поки немає', sources: 'Джерела', apply: 'Застосувати до таймлайна', applied: 'Застосовано', validationValidated: 'Перевірено', validationNeedsReview: 'Потребує перевірки', validationConflict: 'Конфлікт', validationInvalid: 'Некоректно', conflictDuplicate: 'Дублікат', conflictNearDuplicate: 'Майже дублікат', conflictConflict: 'Конфлікт', conflictNew: 'Нове',
@@ -1266,6 +1268,8 @@ export const uk: LocaleData = {
         selected: 'вибрано',
         bulkApprove: 'Схвалити вибрані',
         bulkReject: 'Відхилити вибрані',
+        bulkApply: 'Застосувати вибрані',
+        openAuthor: 'Відкрити автора',
         editedPreferred: "Змінити й схвалити (необов'язково)",
         current: 'Поточне',
         suggested: 'Запропоноване',

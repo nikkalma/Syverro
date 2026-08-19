@@ -672,6 +672,8 @@ export const en: LocaleData = {
     },
     studioCleanup: {
       metadataStatus: 'Metadata status', demote: 'Demote', promoteTo: 'Promote to', missing: 'Missing',
+      publicationReadiness: 'Publication readiness', readyToPublish: 'Ready to publish', notReadyToPublish: 'Not ready to publish', blockersLabel: 'Blockers', warningsLabel: 'Warnings',
+      promoteToGolden: 'Promote to Golden', publishing: 'Publishing…', alreadyGolden: 'Already published', missingRequired: 'Missing required fields',
       statuses: { draft: 'Draft', identity_complete: 'Identity complete', editorial_complete: 'Editorial complete', knowledge_complete: 'Knowledge complete', review_ready: 'Review ready', golden: 'Golden' },
       present: 'Present', verified: 'Verified', unverified: 'Unverified', searchBooks: 'Search books to link…', searching: 'Searching…', link: 'Link', unlink: 'Unlink',
       timelineLabelPlaceholder: 'For example, publication of War and Peace', timelineDescriptionPlaceholder: 'Optional description or context',
@@ -1268,6 +1270,8 @@ export const en: LocaleData = {
         selected: 'selected',
         bulkApprove: 'Approve selected',
         bulkReject: 'Reject selected',
+        bulkApply: 'Apply selected',
+        openAuthor: 'Open author',
         editedPreferred: 'Edit then approve (optional)',
         current: 'Current',
         suggested: 'Suggested',

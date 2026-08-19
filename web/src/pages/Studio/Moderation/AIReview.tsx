@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useState } from 'react';
-import { CheckCircle, Clock, Eye, RefreshCw, ShieldAlert, XCircle } from 'lucide-react';
+import { ArrowUpRight, CheckCircle, Clock, Eye, RefreshCw, ShieldAlert, XCircle } from 'lucide-react';
 import { apiClient } from '../../../shared/api/client';
 import { getLocaleData, getBrowserLocale } from '../../../locales';
-import type { AIProposal, ReviewBulkResult, ReviewQueueCounts } from '../../../types/admin';
+import type { AIProposal, BulkApplyResult, ReviewBulkResult, ReviewQueueCounts } from '../../../types/admin';
 
 const BAND_COLORS: Record<string, string> = {
   auto_approved: '#4CAF50',
@@ -98,6 +98,7 @@ export default function AIReview() {
   const [error, setError] = useState<string | null>(null);
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [bulkResult, setBulkResult] = useState<ReviewBulkResult | null>(null);
+  const [bulkApplyResult, setBulkApplyResult] = useState<BulkApplyResult | null>(null);
   const [detail, setDetail] = useState<AIProposal | null>(null);
   const [editedValue, setEditedValue] = useState('');
   const [actionLoading, setActionLoading] = useState(false);
@@ -145,6 +146,7 @@ export default function AIReview() {
   const refresh = useCallback(() => {
     setSelected(new Set());
     setBulkResult(null);
+    setBulkApplyResult(null);
     if (view === 'queue') {
       fetchQueue();
       fetchCounts();
@@ -218,6 +220,21 @@ export default function AIReview() {
     }
   };
 
+  const runBulkApply = async () => {
+    if (selected.size === 0) return;
+    setError(null);
+    setBulkApplyResult(null);
+    try {
+      const res = await apiClient.post('/admin/moderation/bulk-apply', {
+        proposal_ids: Array.from(selected),
+      });
+      refresh();
+      setBulkApplyResult(res.data);
+    } catch (err: any) {
+      setError(err?.response?.data?.detail || err.message);
+    }
+  };
+
   const totalPages = Math.max(1, Math.ceil(total / limit));
   const bandOptions = ['quality_review', 'policy_review'];
   const entityOptions = counts
@@ -250,13 +267,33 @@ export default function AIReview() {
         </button>
       </div>
 
-      {view === 'queue' && counts && (
-        <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-          <Chip color="#EF5350">{ai.quality}: {counts.by_band.quality_review}</Chip>
-          <Chip color="#5B86A1">{ai.policy}: {counts.by_band.policy_review}</Chip>
-          <Chip color="#FFA726">{ai.underReview}: {counts.under_review}</Chip>
-        </div>
-      )}
+{view === 'queue' && counts && (
+          <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+            <Chip color="#EF5350">{ai.quality}: {counts.by_band.quality_review}</Chip>
+            <Chip color="#5B86A1">{ai.policy}: {counts.by_band.policy_review}</Chip>
+            <Chip color="#FFA726">{ai.underReview}: {counts.under_review}</Chip>
+          </div>
+        )}
+
+        {view === 'history' && (
+          <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', alignItems: 'center' }}>
+            <span style={{ marginLeft: 'auto', display: 'inline-flex', gap: '8px', alignItems: 'center' }}>
+              <label style={{ fontSize: '12px', color: 'var(--text-secondary)', display: 'inline-flex', alignItems: 'center', gap: '4px', cursor: 'pointer' }}>
+                <input type="checkbox" checked={proposals.length > 0 && proposals.every((p) => selected.has(p.id))}
+                  onChange={toggleSelectAll} />
+                {ai.selectAll}
+              </label>
+              <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>{selected.size} {ai.selected}</span>
+              <button onClick={runBulkApply} disabled={selected.size === 0} style={{
+                padding: '6px 14px', borderRadius: '8px', fontSize: '12px', cursor: selected.size === 0 ? 'not-allowed' : 'pointer',
+                background: 'var(--primary)', border: 'none', color: '#fff', opacity: selected.size === 0 ? 0.5 : 1,
+                display: 'inline-flex', alignItems: 'center', gap: '4px',
+              }}>
+                <CheckCircle size={13} /> {ai.bulkApply}
+              </button>
+            </span>
+          </div>
+        )}
 
       {view === 'queue' && (
         <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', alignItems: 'center' }}>
@@ -318,6 +355,37 @@ export default function AIReview() {
         </div>
       )}
 
+      {bulkApplyResult && (
+        <div style={{
+          padding: '10px 14px', borderRadius: '8px', fontSize: '13px',
+          background: bulkApplyResult.failed === 0 ? 'rgba(76,175,80,0.1)' : 'rgba(255,167,38,0.1)',
+          border: `1px solid ${bulkApplyResult.failed === 0 ? 'rgba(76,175,80,0.3)' : 'rgba(255,167,38,0.3)'}`,
+          color: bulkApplyResult.failed === 0 ? 'var(--success)' : 'var(--warning)',
+        }}>
+          {bulkApplyResult.succeeded} {ai.reviewResultSucceeded} · {bulkApplyResult.failed} {ai.reviewResultFailed}
+          <div style={{ marginTop: '6px', fontSize: '12px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+            {bulkApplyResult.results.map((r) => {
+              const proposal = proposals.find((p) => p.id === r.id);
+              return (
+                <div key={r.id} style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
+                  <span style={{ color: r.ok ? 'var(--success)' : 'var(--error)' }}>
+                    {r.ok ? '✓' : '✗'} {r.field || r.id}
+                  </span>
+                  {!r.ok && r.error && <span style={{ color: 'var(--text-muted)' }}>{r.error}</span>}
+                  {r.ok && proposal?.entity_type === 'author' && proposal.entity_id && (
+                    <a href={`/studio/authors/${proposal.entity_id}`} style={{
+                      color: 'var(--primary)', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: '4px',
+                    }}>
+                      {ai.openAuthor} <ArrowUpRight size={12} />
+                    </a>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
       {error && (
         <div style={{
           padding: '10px 14px', borderRadius: '8px', fontSize: '13px',
@@ -352,12 +420,10 @@ export default function AIReview() {
                 opacity: view === 'history' && p.status === 'rejected' ? 0.6 : 1,
               }}>
                 <div style={{ display: 'flex', gap: '8px', alignItems: 'flex-start', flexWrap: 'wrap' }}>
-                  {view === 'queue' && (
-                    <input type="checkbox" checked={selected.has(p.id)} onChange={() => toggleSelect(p.id)} />
-                  )}
+                  <input type="checkbox" checked={selected.has(p.id)} onChange={() => toggleSelect(p.id)} />
                   <div style={{ fontSize: '13px', fontWeight: 500, color: 'var(--text-primary)' }}>
                     {p.entity_name || p.entity_id || '—'}
-                    {view === 'history' && p.entity_name && <span style={{ color: 'var(--text-muted)', fontWeight: 400 }}> ({p.entity_id})</span>}
+                    {p.entity_name && <span style={{ color: 'var(--text-muted)', fontWeight: 400 }}> ({p.entity_id})</span>}
                   </div>
                   <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
                     {ai.entity}: {p.entity_type} · {ai.field}: {p.field_name}

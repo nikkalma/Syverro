@@ -673,6 +673,8 @@ export const ru: LocaleData = {
     },
     studioCleanup: {
       metadataStatus: 'Статус метаданных', demote: 'Понизить статус', promoteTo: 'Повысить до', missing: 'Не заполнено',
+      publicationReadiness: 'Готовность к публикации', readyToPublish: 'Готово к публикации', notReadyToPublish: 'Не готово к публикации', blockersLabel: 'Блокирующие поля', warningsLabel: 'Предупреждения',
+      promoteToGolden: 'Опубликовать (Golden)', publishing: 'Публикация…', alreadyGolden: 'Уже опубликовано', missingRequired: 'Отсутствуют обязательные поля',
       statuses: { draft: 'Черновик', identity_complete: 'Идентичность заполнена', editorial_complete: 'Редакционные данные заполнены', knowledge_complete: 'Знания заполнены', review_ready: 'Готово к проверке', golden: 'Эталонная запись' },
       present: 'По настоящее время', verified: 'Проверено', unverified: 'Не проверено', searchBooks: 'Найти книгу для связи…', searching: 'Поиск…', link: 'Связать', unlink: 'Отвязать',
       timelineLabelPlaceholder: 'Например, публикация романа «Война и мир»', timelineDescriptionPlaceholder: 'Необязательное описание или контекст',
@@ -1269,6 +1271,8 @@ export const ru: LocaleData = {
         selected: 'выбрано',
         bulkApprove: 'Одобрить выбранные',
         bulkReject: 'Отклонить выбранные',
+        bulkApply: 'Применить выбранные',
+        openAuthor: 'Открыть автора',
         editedPreferred: 'Изменить и одобрить (необязательно)',
         current: 'Текущее',
         suggested: 'Предложенное',

@@ -672,6 +672,8 @@ export const be: LocaleData = {
     },
     studioCleanup: {
       metadataStatus: 'Статус метаданых', demote: 'Панізіць статус', promoteTo: 'Павысіць да', missing: 'Не запоўнена',
+      publicationReadiness: 'Гатоўнасць да публікацыі', readyToPublish: 'Гатова да публікацыі', notReadyToPublish: 'Не гатова да публікацыі', blockersLabel: 'Блакіруючыя палі', warningsLabel: 'Папярэджанні',
+      promoteToGolden: 'Апублікаваць (Golden)', publishing: 'Публікацыя…', alreadyGolden: 'Ужо апублікавана', missingRequired: 'Адсутнічаюць абавязковыя палі',
       statuses: { draft: 'Чарнавік', identity_complete: 'Ідэнтычнасць запоўнена', editorial_complete: 'Рэдакцыйныя даныя запоўнены', knowledge_complete: 'Веды запоўнены', review_ready: 'Гатова да праверкі', golden: 'Эталонны запіс' },
       present: 'Да цяперашняга часу', verified: 'Праверана', unverified: 'Не праверана', searchBooks: 'Знайсці кнігу для сувязі…', searching: 'Пошук…', link: 'Звязаць', unlink: 'Адвязаць', timelineLabelPlaceholder: 'Напрыклад, публікацыя твора', timelineDescriptionPlaceholder: 'Неабавязковае апісанне або кантэкст', url: 'Спасылка', mediaCaptionPlaceholder: 'Крыніца фатаграфіі або подпіс', addImageUrl: 'Дадаць спасылку на выяву…',
       aiTitle: 'Прапановы ШІ', aiDescription: 'Прапановы ШІ для ўзбагачэння даных. Кожная змена патрабуе ўхвалення куратара.', proposed: 'Прапанавана', accepted: 'Прынята', rejected: 'Адхілена', loadingSuggestions: 'Загрузка прапаноў…', noFilteredSuggestions: 'Прапаноў з такім статусам няма.', noSuggestions: 'Прапаноў ШІ пакуль няма.', confidence: 'упэўненасць', currentValue: 'Бягучае значэнне', suggestedValue: 'Прапанаванае значэнне', empty: 'Не запоўнена', reject: 'Адхіліць', accept: 'Прыняць', failedUpdate: 'Не ўдалося абнавіць прапанову', runResearch: 'Запусціць даследаванне', runningResearch: 'Выконваецца…', runs: 'Запускі', noRuns: 'Даследаванняў пакуль няма', sources: 'Крыніцы', apply: 'Прымяніць да таймлайна', applied: 'Прыменена', validationValidated: 'Праверана', validationNeedsReview: 'Патрабуе праверкі', validationConflict: 'Канфлікт', validationInvalid: 'Некарэктна', conflictDuplicate: 'Дублікат', conflictNearDuplicate: 'Амаль дублікат', conflictConflict: 'Канфлікт', conflictNew: 'Новае',
@@ -1266,6 +1268,8 @@ export const be: LocaleData = {
         selected: 'выбрана',
         bulkApprove: 'Ухваліць выбраныя',
         bulkReject: 'Адхіліць выбраныя',
+        bulkApply: 'Прымяніць выбраныя',
+        openAuthor: 'Адкрыць аўтара',
         editedPreferred: 'Змяніць і ўхваліць (неабавязкова)',
         current: 'Бягучае',
         suggested: 'Прапанаванае',

@@ -672,6 +672,8 @@ export const kk: LocaleData = {
     },
     studioCleanup: {
       metadataStatus: 'Метадеректер күйі', demote: 'Күйді төмендету', promoteTo: 'Көтеру', missing: 'Толтырылмаған',
+      publicationReadiness: 'Жариялау дайындығы', readyToPublish: 'Жариялауға дайын', notReadyToPublish: 'Жариялауға дайын емес', blockersLabel: 'Блоктайтын өрістер', warningsLabel: 'Ескертулер',
+      promoteToGolden: 'Жариялау (Golden)', publishing: 'Жариялануда…', alreadyGolden: 'Әлдеқашан жарияланған', missingRequired: 'Міндетті өрістер жоқ',
       statuses: { draft: 'Жоба', identity_complete: 'Сәйкестік толтырылған', editorial_complete: 'Редакциялық деректер толтырылған', knowledge_complete: 'Білім толтырылған', review_ready: 'Тексеруге дайын', golden: 'Эталон жазба' },
       present: 'Қазіргі уақытқа дейін', verified: 'Тексерілген', unverified: 'Тексерілмеген', searchBooks: 'Байланыстыру үшін кітап іздеу…', searching: 'Іздеу…', link: 'Байланыстыру', unlink: 'Ажырату', timelineLabelPlaceholder: 'Мысалы, шығарманың жариялануы', timelineDescriptionPlaceholder: 'Қосымша сипаттама немесе контекст', url: 'Сілтеме', mediaCaptionPlaceholder: 'Фотосурет көзі немесе қолтаңба', addImageUrl: 'Сурет сілтемесін қосу…',
       aiTitle: 'ЖИ ұсыныстары', aiDescription: 'Деректерді байытуға арналған ЖИ ұсыныстары. Әр өзгерісті куратор мақұлдайды.', proposed: 'Ұсынылды', accepted: 'Қабылданды', rejected: 'Қабылданбады', loadingSuggestions: 'Ұсыныстар жүктелуде…', noFilteredSuggestions: 'Бұл күйдегі ұсыныстар жоқ.', noSuggestions: 'ЖИ ұсыныстары әзірге жоқ.', confidence: 'сенімділік', currentValue: 'Ағымдағы мән', suggestedValue: 'Ұсынылған мән', empty: 'Толтырылмаған', reject: 'Қабылдамау', accept: 'Қабылдау', failedUpdate: 'Ұсынысты жаңарту мүмкін болмады', runResearch: 'Зерттеуді бастау', runningResearch: 'Орындалуда…', runs: 'Жүргізулер', noRuns: 'Әзірге зерттеулер жоқ', sources: 'Дереккөздер', apply: 'Таймлайнға қолдану', applied: 'Қолданылды', validationValidated: 'Тексерілді', validationNeedsReview: 'Тексеру қажет', validationConflict: 'Қайшылық', validationInvalid: 'Қате', conflictDuplicate: 'Дубликат', conflictNearDuplicate: 'Жуық дубликат', conflictConflict: 'Қайшылық', conflictNew: 'Жаңа',
@@ -1266,6 +1268,8 @@ export const kk: LocaleData = {
         selected: 'таңдалды',
         bulkApprove: 'Таңдалғанды мақұлдау',
         bulkReject: 'Таңдалғанды қабылдамау',
+        bulkApply: 'Таңдалғанды қолдану',
+        openAuthor: 'Авторды ашу',
         editedPreferred: 'Өзгертіп мақұлдау (міндетті емес)',
         current: 'Ағымдағы',
         suggested: 'Ұсынылған',

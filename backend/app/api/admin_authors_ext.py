@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Request
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, delete
 from app.core.deps import get_current_user, get_db
@@ -15,6 +15,12 @@ from app.models.timeline_event import TimelineEvent
 from app.models.author_knowledge_relation import AuthorKnowledgeRelation
 from app.models.author_publication import AuthorPublication
 from app.models.source_candidate import SourceCandidate
+from app.services.author_publication import (
+    AuthorPublicationBlocked,
+    author_golden_readiness,
+    promote_author_to_golden,
+)
+from app.services.security_audit import add_security_event
 from app.schemas.author_quote import AuthorQuoteCreate, AuthorQuoteUpdate, AuthorQuoteResponse
 from app.schemas.author_citizenship import AuthorCitizenshipCreate, AuthorCitizenshipUpdate, AuthorCitizenshipResponse
 from app.schemas.author_residence import AuthorResidenceCreate, AuthorResidenceUpdate, AuthorResidenceResponse
@@ -42,6 +48,75 @@ async def get_author_or_404(db: AsyncSession, author_id: str) -> Author:
     if not author:
         raise HTTPException(status_code=404, detail="Author not found")
     return author
+
+
+async def _publications_count(db: AsyncSession, author_id) -> int:
+    return (
+        await db.scalar(
+            select(func.count()).select_from(AuthorPublication)
+            .where(AuthorPublication.author_id == author_id)
+        )
+    ) or 0
+
+
+# ============================================================
+# AUTHOR PUBLICATION (explicit editorial publish, draft -> golden)
+# ============================================================
+
+
+@router.get("/{author_id}/publication-readiness", response_model=dict)
+async def get_author_publication_readiness(
+    author_id: str,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Structured golden-readiness evaluation for an Author (read-only)."""
+    await check_admin(current_user)
+    author = await get_author_or_404(db, author_id)
+    return author_golden_readiness(
+        author, publications_count=await _publications_count(db, author.id)
+    )
+
+
+@router.post("/{author_id}/promote", response_model=dict)
+async def promote_author_to_public(
+    author_id: str,
+    request: Request,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Explicit editorial publication action: promote one Author to golden.
+
+    * refuses with 409 + structured readiness detail when the Author is not ready;
+    * is idempotent when already golden;
+    * writes an ``author_promote_golden`` audit event;
+    * never publishes Books and never changes unrelated Author fields;
+    * is never invoked automatically by Apply.
+    """
+    await check_admin(current_user)
+    author = await get_author_or_404(db, author_id)
+
+    endpoint = f"/admin/authors/{author_id}/promote"
+    try:
+        result = await promote_author_to_golden(
+            db,
+            author=author,
+            actor_id=current_user.id,
+            request=request,
+            endpoint=endpoint,
+            publications_count=await _publications_count(db, author.id),
+        )
+    except AuthorPublicationBlocked as exc:
+        raise HTTPException(status_code=409, detail=exc.readiness)
+    await db.commit()
+
+    return {
+        "author_id": str(author.id),
+        "slug": author.slug,
+        "already_golden": result.get("already_golden", False),
+        "metadata_status": author.metadata_status,
+        "readiness": result.get("readiness"),
+    }
 
 
 # ============================================================

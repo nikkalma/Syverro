@@ -374,5 +374,6 @@ async def get_author(
             atmospheres=_merge_lists(relation_taxonomy["atmospheres"], author.atmospheres),
             literary_movements=_merge_lists(relation_taxonomy["literary_movements"], author.literary_movements),
             languages=author.languages or [],
+            writing_languages=author.writing_languages or [],
         ),
     )

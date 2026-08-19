@@ -494,6 +494,35 @@ export interface ReviewBulkResult {
   failed: number;
 }
 
+export interface BulkApplyResultItem {
+  id: string;
+  ok: boolean;
+  field?: string | null;
+  error?: string | null;
+}
+
+export interface BulkApplyResult {
+  results: BulkApplyResultItem[];
+  succeeded: number;
+  failed: number;
+}
+
+export interface AuthorPublicationReadiness {
+  ready: boolean;
+  metadata_status: string;
+  missing_required_fields: string[];
+  blocking_reasons: string[];
+  warnings: string[];
+}
+
+export interface AuthorPromoteResult {
+  author_id: string;
+  slug?: string | null;
+  already_golden: boolean;
+  metadata_status: string;
+  readiness: AuthorPublicationReadiness;
+}
+
 export interface SyvaiRun {
   id: string;
   author_id: string;

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useAuthorEditor } from './AuthorEditorContext';
 import {
   AUTHOR_STATUS_PIPELINE,
@@ -8,7 +8,8 @@ import {
   getNextStatus,
   getPrevStatus,
 } from './metadataStatus';
-import type { AdminAuthorUpdate } from '../../../../types/admin';
+import type { AdminAuthorUpdate, AuthorPromoteResult, AuthorPublicationReadiness } from '../../../../types/admin';
+import { apiClient } from '../../../../shared/api/client';
 import { getLocaleData, getBrowserLocale } from '../../../../locales';
 
 export default function MetadataStatusControl() {
@@ -33,21 +34,65 @@ export default function MetadataStatusControl() {
   };
   const [promoting, setPromoting] = useState(false);
   const [validationErrors, setValidationErrors] = useState<string[]>([]);
+  const [readiness, setReadiness] = useState<AuthorPublicationReadiness | null>(null);
+  const [readinessError, setReadinessError] = useState<string | null>(null);
+  const [promoteError, setPromoteError] = useState<string | null>(null);
+
+  const loadReadiness = useCallback(async () => {
+    if (!author) return;
+    try {
+      const res = await apiClient.get(`/admin/authors/${author.id}/publication-readiness`);
+      setReadiness(res.data);
+      setReadinessError(null);
+    } catch (err: any) {
+      setReadinessError(err?.response?.data?.detail || err.message || 'Failed to load publication readiness');
+      setReadiness(null);
+    }
+  }, [author]);
+
+  useEffect(() => {
+    loadReadiness();
+  }, [loadReadiness, author?.metadata_status]);
 
   if (!author) return null;
 
   const currentStatus = author.metadata_status || 'draft';
   const nextStatus = getNextStatus(currentStatus);
   const prevStatus = getPrevStatus(currentStatus);
+  const isGolden = currentStatus === 'golden';
 
   const handlePromote = async () => {
     if (!nextStatus) return;
+    setValidationErrors([]);
+    setPromoteError(null);
+
+    // The golden step is publication: route through the canonical backend
+    // promote action (backend readiness gate + audit), never through PUT.
+    if (nextStatus === 'golden') {
+      setPromoting(true);
+      try {
+        const res = await apiClient.post<AuthorPromoteResult>(`/admin/authors/${author.id}/promote`);
+        if (res.data.readiness) setReadiness(res.data.readiness);
+        await updateAuthor({});
+      } catch (err: any) {
+        const detail = err?.response?.data?.detail;
+        if (detail && typeof detail === 'object' && Array.isArray(detail.blocking_reasons)) {
+          setReadiness(detail);
+          setPromoteError(detail.blocking_reasons.join(', '));
+        } else {
+          setPromoteError(typeof detail === 'string' ? detail : (err.message || 'Failed to publish'));
+        }
+      } finally {
+        setPromoting(false);
+      }
+      return;
+    }
+
     const { valid, errors } = validateStatusPromotion(author, nextStatus);
     if (!valid) {
       setValidationErrors(errors.map((e) => `${copy.missing}: ${fieldLabels[e.field] || e.label}`));
       return;
     }
-    setValidationErrors([]);
     setPromoting(true);
     try {
       const data: AdminAuthorUpdate = { metadata_status: nextStatus };
@@ -60,6 +105,7 @@ export default function MetadataStatusControl() {
   const handleDemote = async () => {
     if (!prevStatus) return;
     setValidationErrors([]);
+    setPromoteError(null);
     setPromoting(true);
     try {
       const data: AdminAuthorUpdate = { metadata_status: prevStatus };
@@ -75,6 +121,11 @@ export default function MetadataStatusControl() {
   const bg = AUTHOR_STATUS_BG[currentStatus as keyof typeof AUTHOR_STATUS_BG] || 'rgba(151,166,186,0.12)';
 
   const pipelineIdx = AUTHOR_STATUS_PIPELINE.indexOf(currentStatus as any);
+  const blockColor = readiness?.ready ? '#4CAF50' : '#EF5350';
+  const blockBg = readiness?.ready
+    ? 'rgba(76,175,80,0.1)'
+    : 'rgba(220,38,38,0.08)';
+  const isPromoteTargetGolden = nextStatus === 'golden';
 
   return (
     <div style={{
@@ -107,6 +158,50 @@ export default function MetadataStatusControl() {
         ))}
       </div>
 
+      {!isGolden && (
+        <div style={{
+          padding: '10px 12px', borderRadius: '8px', fontSize: '12px',
+          background: blockBg, border: `1px solid ${blockColor}33`,
+          color: blockColor, display: 'flex', flexDirection: 'column', gap: '6px',
+        }}>
+          <div style={{ fontWeight: 500 }}>
+            {copy.publicationReadiness}: {readiness?.ready ? copy.readyToPublish : (readiness ? copy.notReadyToPublish : '…')}
+          </div>
+          {readiness && (
+            <>
+              {readiness.missing_required_fields.length > 0 && (
+                <div>
+                  <span style={{ fontWeight: 500 }}>{copy.missingRequired}: </span>
+                  {readiness.missing_required_fields.join(', ')}
+                </div>
+              )}
+              {readiness.warnings.length > 0 && (
+                <div>
+                  <span style={{ fontWeight: 500 }}>{copy.warningsLabel}: </span>
+                  {readiness.warnings.join(' · ')}
+                </div>
+              )}
+            </>
+          )}
+          {readinessError && <div style={{ color: 'var(--error)' }}>{readinessError}</div>}
+          {promoteError && (
+            <div style={{ color: 'var(--error)' }}>
+              {copy.notReadyToPublish}: {promoteError}
+            </div>
+          )}
+        </div>
+      )}
+
+      {isGolden && (
+        <div style={{
+          padding: '8px 12px', borderRadius: '8px', fontSize: '12px',
+          background: 'rgba(76,175,80,0.1)', border: '1px solid rgba(76,175,80,0.3)',
+          color: 'var(--success)',
+        }}>
+          {copy.alreadyGolden}
+        </div>
+      )}
+
       <div style={{ display: 'flex', gap: '6px' }}>
         {prevStatus && (
           <button type="button" onClick={handleDemote} disabled={promoting}
@@ -119,14 +214,16 @@ export default function MetadataStatusControl() {
           </button>
         )}
         {nextStatus && (
-          <button type="button" onClick={handlePromote} disabled={promoting}
+          <button type="button" onClick={handlePromote} disabled={promoting || (isPromoteTargetGolden && !readiness?.ready)}
             style={{
               flex: 1, padding: '6px 12px', fontSize: '12px', fontWeight: 500,
-              background: color, border: 'none',
+              background: isPromoteTargetGolden ? '#4CAF50' : color, border: 'none',
               borderRadius: '8px', color: '#fff', cursor: 'pointer',
-              opacity: promoting ? 0.6 : 1,
+              opacity: (promoting || (isPromoteTargetGolden && !readiness?.ready)) ? 0.6 : 1,
             }}>
-            {promoting ? t.admin.common.saving : `${copy.promoteTo} ${statusLabels[nextStatus]}`}
+            {promoting
+              ? (isPromoteTargetGolden ? copy.publishing : t.admin.common.saving)
+              : (isPromoteTargetGolden ? copy.promoteToGolden : `${copy.promoteTo} ${statusLabels[nextStatus]}`)}
           </button>
         )}
       </div>

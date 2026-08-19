@@ -672,6 +672,8 @@ export const sr: LocaleData = {
     },
     studioCleanup: {
       metadataStatus: 'Статус метаподатака', demote: 'Смањи статус', promoteTo: 'Унапреди на', missing: 'Није попуњено',
+      publicationReadiness: 'Спремност за објављивање', readyToPublish: 'Спремно за објављивање', notReadyToPublish: 'Није спремно за објављивање', blockersLabel: 'Блокирајућа поља', warningsLabel: 'Упозорења',
+      promoteToGolden: 'Објави (Golden)', publishing: 'Објављивање…', alreadyGolden: 'Већ објављено', missingRequired: 'Недостају обавезна поља',
       statuses: { draft: 'Нацрт', identity_complete: 'Идентитет је попуњен', editorial_complete: 'Уреднички подаци су попуњени', knowledge_complete: 'Знање је попуњено', review_ready: 'Спремно за проверу', golden: 'Референтни запис' },
       present: 'До данас', verified: 'Проверено', unverified: 'Није проверено', searchBooks: 'Пронађи књигу за повезивање…', searching: 'Претрага…', link: 'Повежи', unlink: 'Прекини везу', timelineLabelPlaceholder: 'На пример, објављивање дела', timelineDescriptionPlaceholder: 'Опциони опис или контекст', url: 'Веза', mediaCaptionPlaceholder: 'Извор фотографије или потпис', addImageUrl: 'Додај везу слике…',
       aiTitle: 'Предлози ВИ', aiDescription: 'Предлози ВИ за обогаћивање података. Сваку измену одобрава кустос.', proposed: 'Предложено', accepted: 'Прихваћено', rejected: 'Одбијено', loadingSuggestions: 'Учитавање предлога…', noFilteredSuggestions: 'Нема предлога са овим статусом.', noSuggestions: 'Још нема предлога ВИ.', confidence: 'поузданост', currentValue: 'Тренутна вредност', suggestedValue: 'Предложена вредност', empty: 'Није попуњено', reject: 'Одбиј', accept: 'Прихвати', failedUpdate: 'Предлог није могуће ажурирати', runResearch: 'Покрени истраживање', runningResearch: 'Извршава се…', runs: 'Покретања', noRuns: 'Још нема истраживања', sources: 'Извори', apply: 'Примени на тајмлајн', applied: 'Примењено', validationValidated: 'Проверено', validationNeedsReview: 'Захтева преглед', validationConflict: 'Конфликт', validationInvalid: 'Неисправно', conflictDuplicate: 'Дупликат', conflictNearDuplicate: 'Скоро дупликат', conflictConflict: 'Конфликт', conflictNew: 'Ново',
@@ -1266,6 +1268,8 @@ export const sr: LocaleData = {
         selected: 'izabrano',
         bulkApprove: 'Odobri izabrane',
         bulkReject: 'Odbij izabrane',
+        bulkApply: 'Primeni izabrane',
+        openAuthor: 'Otvori autora',
         editedPreferred: 'Izmeni pa odobri (opciono)',
         current: 'Trenutno',
         suggested: 'Predloženo',

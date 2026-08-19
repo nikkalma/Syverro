@@ -213,11 +213,20 @@ export interface LocaleData {
       readinessDescription: string;
       lifecycleSeparate: string;
     };
-    studioCleanup: {
+studioCleanup: {
       metadataStatus: string;
       demote: string;
       promoteTo: string;
       missing: string;
+      publicationReadiness: string;
+      readyToPublish: string;
+      notReadyToPublish: string;
+      blockersLabel: string;
+      warningsLabel: string;
+      promoteToGolden: string;
+      publishing: string;
+      alreadyGolden: string;
+      missingRequired: string;
       statuses: { draft: string; identity_complete: string; editorial_complete: string; knowledge_complete: string; review_ready: string; golden: string };
       present: string;
       verified: string;
@@ -843,6 +852,8 @@ export interface LocaleData {
         selected: string;
         bulkApprove: string;
         bulkReject: string;
+        bulkApply: string;
+        openAuthor: string;
         editedPreferred: string;
         current: string;
         suggested: string;

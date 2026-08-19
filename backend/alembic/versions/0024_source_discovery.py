@@ -9,8 +9,8 @@ The pipeline (``load_trusted_sources`` -> timeline prompt -> validators ->
 proposals) is untouched; discovery only produces new ``sources`` rows that
 the existing pipeline will later consume.
 
-Revision ID: 0023_source_discovery
-Revises: 0022_syvai_review_bands
+Revision ID: 0024_source_discovery
+Revises: 0023_syvai_review_bands
 """
 
 from typing import Sequence, Union
@@ -19,8 +19,8 @@ from alembic import op
 import sqlalchemy as sa
 
 
-revision: str = "0023_source_discovery"
-down_revision: Union[str, None] = "0022_syvai_review_bands"
+revision: str = "0024_source_discovery"
+down_revision: Union[str, None] = "0023_syvai_review_bands"
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 

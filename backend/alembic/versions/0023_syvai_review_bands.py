@@ -5,8 +5,8 @@ vs auto_approved vs auto_rejected) so the review queue can be filtered by why
 a claim needs attention and the benchmark can measure human intervention from
 persisted state.
 
-Revision ID: 0022_syvai_review_bands
-Revises: 0021_syvai_timeline_foundation
+Revision ID: 0023_syvai_review_bands
+Revises: 0022_syvai_timeline_foundation
 """
 
 from typing import Sequence, Union
@@ -15,8 +15,8 @@ from alembic import op
 import sqlalchemy as sa
 
 
-revision: str = "0022_syvai_review_bands"
-down_revision: Union[str, None] = "0021_syvai_timeline_foundation"
+revision: str = "0023_syvai_review_bands"
+down_revision: Union[str, None] = "0022_syvai_timeline_foundation"
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 

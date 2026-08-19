@@ -1,7 +1,7 @@
 """SyvAI 0.1A foundation: runs, proposal evidence, timeline apply linkage.
 
-Revision ID: 0021_syvai_timeline_foundation
-Revises: 0020_security_audit_logs
+Revision ID: 0022_syvai_timeline_foundation
+Revises: 0021_author_source_links
 """
 
 from typing import Sequence, Union
@@ -11,8 +11,8 @@ import sqlalchemy as sa
 from sqlalchemy.dialects import postgresql
 
 
-revision: str = "0021_syvai_timeline_foundation"
-down_revision: Union[str, None] = "0020_security_audit_logs"
+revision: str = "0022_syvai_timeline_foundation"
+down_revision: Union[str, None] = "0021_author_source_links"
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 

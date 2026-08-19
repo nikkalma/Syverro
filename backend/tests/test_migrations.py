@@ -65,7 +65,7 @@ async def migration_engine():
 def test_expected_head_is_syvai_source_discovery_revision():
     from app.migrations import expected_head
 
-    assert expected_head() == "0023_source_discovery"
+    assert expected_head() == "0024_source_discovery"
 
 
 @pytest.mark.asyncio
@@ -106,7 +106,7 @@ async def test_empty_database_bootstraps_to_head(migration_engine):
             }
         )
 
-assert revision == "0023_source_discovery"
+    assert revision == "0024_source_discovery"
     assert {
         "email_verified",
         "email_verification_token_hash",
@@ -223,7 +223,7 @@ async def test_revision_0017_is_upgraded_before_backend_start(migration_engine):
             }
         )
 
-assert revision == "0023_source_discovery"
+    assert revision == "0024_source_discovery"
     assert "email_verified" in columns
 
 

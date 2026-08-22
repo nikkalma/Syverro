@@ -17,6 +17,7 @@ from __future__ import annotations
 
 import unicodedata
 from dataclasses import dataclass
+from typing import Sequence
 
 from app.syvai.discovery.urls import normalize_url, registrable_domain
 
@@ -171,6 +172,7 @@ def assess_candidate(
     query_terms: list[str],
     existing_normalized: set[str] | None = None,
     metadata_fields: dict[str, str] | None = None,
+    extra_exact_titles: Sequence[str] | None = None,
 ) -> Assessment:
     """Classify a normalized candidate URL into an assessment bucket."""
     normalized = normalize_url(url) or ""
@@ -202,6 +204,11 @@ def assess_candidate(
             normalized_url=normalized,
         )
 
+    # Langlink-resolved identity titles count as exact-match targets so a
+    # cross-script author's canonical EN article can score full relevance;
+    # thresholds and buckets themselves are untouched.
+    if extra_exact_titles:
+        query_terms = [*query_terms, *(title for title in extra_exact_titles if title)]
     relevance = _title_relevance(title, url, query_terms, metadata_fields)
     score = round(
         0.4 * AUTHORITY_WEIGHT.get(authority_tier, 0.3)

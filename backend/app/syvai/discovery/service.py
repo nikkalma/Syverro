@@ -35,7 +35,15 @@ from app.syvai.discovery.assessment import (
 )
 from app.syvai.discovery.authority import authority_tier_for_url
 from app.syvai.discovery.dedupe import RawCandidate, _existing_normalized, dedupe_candidates
+from app.syvai.discovery.evidence import build_structured_evidence
+from app.syvai.discovery.langlinks import (
+    REASON_HTTP_ERROR,
+    ResolvedIdentity,
+    UnresolvedIdentity,
+    resolve_en_identity,
+)
 from app.syvai.discovery.providers import SourceDiscoveryProvider
+from app.syvai.discovery.query_terms import search_variants
 from app.syvai.discovery.urls import normalize_url, registrable_domain
 from app.syvai.errors import (
     ConfigurationError,
@@ -71,11 +79,8 @@ class DiscoveryOutcome:
 
 
 def _author_query_terms(author) -> list[str]:
-    terms: list[str] = []
-    for name in (getattr(author, "display_name", None), getattr(author, "name", None)):
-        if name and name not in terms:
-            terms.append(name)
-    return terms or []
+    """Bounded normalized query variants (display_name first, then name)."""
+    return search_variants(author)
 
 
 def _sanitize_error(exc: BaseException) -> str:
@@ -138,12 +143,51 @@ async def run_discovery(
     db.add(run)
     await db.flush()
 
+    # --- Phase: deterministic identity bootstrap (no LLM, bounded) ---
+    # Resolves the author's normalized query variants to a concrete
+    # ru.wikipedia article and its EN langlink. Outputs feed providers as
+    # extra search variants, assessment as exact-match titles, and the merge
+    # as one direct EN-wiki candidate. Never mutates canonical data.
+    resolved: ResolvedIdentity | None = None
+    unresolved: UnresolvedIdentity | None = None
+    if getattr(settings, "SYVAI_DISCOVERY_LANGLINKS_BOOTSTRAP", False):
+        try:
+            outcome = await resolve_en_identity(_author_query_terms(author))
+        except Exception as exc:  # noqa: BLE001 - isolation boundary
+            logger.warning("syvai discovery langlink bootstrap error: %s", _sanitize_error(exc))
+            outcome = UnresolvedIdentity(reason=REASON_HTTP_ERROR, detail="bootstrap_error")
+        if isinstance(outcome, ResolvedIdentity):
+            resolved = outcome
+            logger.info(
+                "syvai discovery langlink identity author=%s variant=%r ru=%r en=%r",
+                getattr(author, "id", "?"),
+                resolved.source_variant,
+                resolved.ru_title,
+                resolved.en_title,
+            )
+        else:
+            unresolved = outcome
+            logger.info(
+                "syvai discovery langlink unresolved author=%s reason=%s %s",
+                getattr(author, "id", "?"),
+                unresolved.reason,
+                unresolved.detail,
+            )
+    identity_terms = tuple(resolved.romanized_terms) if resolved else ()
+
+    def _merged_query_terms() -> list[str]:
+        terms = _author_query_terms(author)
+        for term in identity_terms:
+            if term not in terms:
+                terms.append(term)
+        return terms
+
     # --- Phase: provider fan-out with failure isolation ---
     results: list[tuple[str, list[RawCandidate] | None, str | None]] = []
     for provider in provider_list:
         provider_name = getattr(provider, "name", "?")
         try:
-            terms = _author_query_terms(author)
+            terms = _merged_query_terms()
             raw = await provider.discover(author, terms)
             results.append((provider_name, raw, None))
         except Exception as exc:  # noqa: BLE001 - isolation boundary
@@ -165,8 +209,29 @@ async def run_discovery(
 
     try:
         if succeeded:
-            # Deterministic merge: providers are already in configured order.
+            # Deterministic merge: bootstrap identity candidate first (it wins
+            # attribution when a provider surfaces the same URL), then the
+            # providers in configured order.
             ordered: list[tuple[str, RawCandidate]] = []
+            if resolved is not None and resolved.en_url:
+                ordered.append(
+                    (
+                        "wikipedia-langlinks",
+                        RawCandidate(
+                            url=resolved.en_url,
+                            title=resolved.en_title,
+                            source_type="encyclopedia",
+                            origin="langlinks_bootstrap",
+                            evidence=build_structured_evidence(
+                                {
+                                    "bootstrap_variant": resolved.source_variant,
+                                    "ru_title": resolved.ru_title,
+                                    "en_langlink": resolved.en_title or "",
+                                }
+                            ),
+                        ),
+                    )
+                )
             for provider_name, raw, _ in succeeded:
                 for candidate in raw or []:
                     ordered.append((provider_name, candidate))
@@ -217,6 +282,7 @@ async def run_discovery(
                     query_terms=terms,
                     existing_normalized=existing_normalized,
                     metadata_fields=candidate.metadata_fields,
+                    extra_exact_titles=identity_terms or None,
                 )
                 row = SourceCandidate(
                     author_id=author.id,

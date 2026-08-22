@@ -76,6 +76,9 @@ services:
       SYVAI_DISCOVERY_TIMEOUT_SECONDS: ${SYVAI_DISCOVERY_TIMEOUT_SECONDS:-15}
       SYVAI_DISCOVERY_MAX_PAGE_BYTES: ${SYVAI_DISCOVERY_MAX_PAGE_BYTES:-500000}
       SYVAI_DISCOVERY_USER_AGENT: ${SYVAI_DISCOVERY_USER_AGENT:-SyverroSyvAI/0.2 (+https://syverro.com)}
+      # Deterministic ru.wikipedia -> EN identity bootstrap (no LLM). Operator
+      # decision; default off.
+      SYVAI_DISCOVERY_LANGLINKS_BOOTSTRAP: ${SYVAI_DISCOVERY_LANGLINKS_BOOTSTRAP:-}
     ports:
       - "127.0.0.1:8000:8000"
     healthcheck:

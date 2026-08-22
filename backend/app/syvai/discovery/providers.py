@@ -35,6 +35,18 @@ LOC_SEARCH_URL = "https://www.loc.gov/search/"
 ARCHIVE_ALLOWED_HOSTS = {"archive.org"}
 ARCHIVE_SEARCH_URL = "https://archive.org/advancedsearch.php"
 
+
+def _bounded_terms(query_terms: list[str] | None) -> list[str]:
+    """Normalized, deduplicated, bounded search variants (query_terms contract)."""
+    from app.syvai.discovery.query_terms import MAX_VARIANTS
+
+    terms: list[str] = []
+    for term in query_terms or []:
+        text = str(term).strip()
+        if text and text not in terms:
+            terms.append(text)
+    return terms[:MAX_VARIANTS]
+
 # Installed provider adapters eligible for 0.3E source-registry routing. This
 # is the ONLY adapter->provider mapping; ``app.syvai.registry`` routes through
 # these names and a guard test keeps the registry's ``INSTALLED_ADAPTERS`` in
@@ -174,7 +186,30 @@ class WikipediaDiscoveryProvider:
         return f"{WIKIPEDIA_API_URL}?{params}"
 
     async def discover(self, author, query_terms: list[str]) -> list[RawCandidate]:
-        url = self._search_url(query_terms, self._max_candidates)
+        """Fan out over bounded query variants; a failing variant never aborts
+        the others. Raises only when every variant failed and nothing was found."""
+        results: list[RawCandidate] = []
+        failures = 0
+        attempts = 0
+        first_error: ProviderError | None = None
+        for term in _bounded_terms(query_terms):
+            attempts += 1
+            try:
+                results.extend(await self._search_once(term))
+            except ProviderError as exc:
+                failures += 1
+                if first_error is None:
+                    first_error = exc
+                logger.info("wikipedia discovery variant %r failed: %s", term, exc)
+            if len(results) >= self._max_candidates:
+                break
+        results = results[: self._max_candidates]
+        if not results and attempts and failures == attempts:
+            raise first_error  # type: ignore[misc]
+        return results
+
+    async def _search_once(self, term: str) -> list[RawCandidate]:
+        url = self._search_url([term], self._max_candidates)
         host = url.split("/")[2] if url.startswith(("http://", "https://")) else ""
         if host not in WIKIPEDIA_ALLOWED_HOSTS:
             raise ProviderError("discovery provider URL is not allow-listed")
@@ -281,8 +316,8 @@ class LocDiscoveryProvider:
             enriched.append(rebuilt if rebuilt is not None else candidate)
         return enriched
 
-    async def discover(self, author, query_terms: list[str]) -> list[RawCandidate]:
-        url = self._search_url(query_terms, self._max_candidates)
+    async def _search_once(self, term: str) -> list[RawCandidate]:
+        url = self._search_url([term], self._max_candidates)
         host = url.split("/")[2] if url.startswith(("http://", "https://")) else ""
         if host not in LOC_ALLOWED_HOSTS:
             raise ProviderError("loc discovery provider URL is not allow-listed")
@@ -337,7 +372,30 @@ class LocDiscoveryProvider:
             )
             if len(results) >= self._max_candidates:
                 break
-        return await self._enrich_loc(author, results)
+        return results
+
+    async def discover(self, author, query_terms: list[str]) -> list[RawCandidate]:
+        """Fan out over bounded query variants; enrich the merged set once."""
+        merged: list[RawCandidate] = []
+        failures = 0
+        attempts = 0
+        first_error: ProviderError | None = None
+        for term in _bounded_terms(query_terms):
+            attempts += 1
+            try:
+                merged.extend(await self._search_once(term))
+            except ProviderError as exc:
+                failures += 1
+                if first_error is None:
+                    first_error = exc
+                logger.info("loc discovery variant %r failed: %s", term, exc)
+                continue
+            if len(merged) >= self._max_candidates:
+                break
+        merged = merged[: self._max_candidates]
+        if not merged and attempts and failures == attempts:
+            raise first_error  # type: ignore[misc]
+        return await self._enrich_loc(author, merged)
 
 
 # ---------------------------------------------------------------------------
@@ -412,8 +470,8 @@ class ArchiveDiscoveryProvider:
             enriched.append(rebuilt if rebuilt is not None else candidate)
         return enriched
 
-    async def discover(self, author, query_terms: list[str]) -> list[RawCandidate]:
-        url = self._search_url(query_terms, self._max_candidates)
+    async def _search_once(self, term: str) -> list[RawCandidate]:
+        url = self._search_url([term], self._max_candidates)
         host = url.split("/")[2] if url.startswith(("http://", "https://")) else ""
         if host not in ARCHIVE_ALLOWED_HOSTS:
             raise ProviderError("archive discovery provider URL is not allow-listed")
@@ -459,7 +517,30 @@ class ArchiveDiscoveryProvider:
             )
             if len(results) >= self._max_candidates:
                 break
-        return await self._enrich_archive(author, results)
+        return results
+
+    async def discover(self, author, query_terms: list[str]) -> list[RawCandidate]:
+        """Fan out over bounded query variants; enrich the merged set once."""
+        merged: list[RawCandidate] = []
+        failures = 0
+        attempts = 0
+        first_error: ProviderError | None = None
+        for term in _bounded_terms(query_terms):
+            attempts += 1
+            try:
+                merged.extend(await self._search_once(term))
+            except ProviderError as exc:
+                failures += 1
+                if first_error is None:
+                    first_error = exc
+                logger.info("archive discovery variant %r failed: %s", term, exc)
+                continue
+            if len(merged) >= self._max_candidates:
+                break
+        merged = merged[: self._max_candidates]
+        if not merged and attempts and failures == attempts:
+            raise first_error  # type: ignore[misc]
+        return await self._enrich_archive(author, merged)
 
 
 # ---------------------------------------------------------------------------

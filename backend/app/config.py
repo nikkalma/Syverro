@@ -75,6 +75,14 @@ class Settings:
         self.SYVAI_DISCOVERY_USER_AGENT = os.getenv(
             "SYVAI_DISCOVERY_USER_AGENT", "SyverroSyvAI/0.2 (+https://syverro.com)"
         )
+        # Deterministic ru.wikipedia -> EN identity bootstrap for cross-script
+        # authors. Default OFF so unit tests and offline runs never touch the
+        # network; production enables it explicitly via env.
+        self.SYVAI_DISCOVERY_LANGLINKS_BOOTSTRAP = os.getenv(
+            "SYVAI_DISCOVERY_LANGLINKS_BOOTSTRAP", ""
+        ).lower() in {
+            "1", "true", "yes", "on",
+        }
 
         self.TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN", "")
         self.TELEGRAM_AUTH_MAX_AGE_SECONDS = int(

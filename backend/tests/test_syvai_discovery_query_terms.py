@@ -63,11 +63,41 @@ class TestSearchVariants:
             "Александр Дюма",
         ]
 
-    def test_l_engle_apostrophe_normalized(self):
+    def test_l_engle_dual_forms_emitted(self):
+        # Editorial U+2019 is normalized internally but BOTH spellings are
+        # emitted, because ru.wikipedia titles use ’ and exact-title lookup
+        # does not unify apostrophe families ("Л'Энгль" missed the page).
         author = _author(name="Л\u2019Энгль, Мадлен")
         assert search_variants(author) == [
             "Л'Энгль, Мадлен",
+            "Л\u2019Энгль, Мадлен",
             "Мадлен Л'Энгль",
+            "Мадлен Л\u2019Энгль",
+        ]
+
+    def test_modifier_letter_apostrophe_expands_generically(self):
+        # Any apostrophe family member funnels into the same dual emission.
+        author = _author(name="О\u02bcКоннор, Флэннери")
+        variants = search_variants(author)
+        assert variants[:2] == ["О'Коннор, Флэннери", "О\u2019Коннор, Флэннери"]
+        assert all(v.count("'") + v.count("\u2019") >= 1 for v in variants)
+
+    def test_apostrophe_expansion_bounded_and_deduplicated(self):
+        author = _author(
+            display_name="O'Brien, Sean",
+            name="Обрайен, Шон О'",
+        )
+        variants = search_variants(author)
+        assert len(variants) <= MAX_VARIANTS
+        assert len(variants) == len(set(variants))
+        assert variants[0] == "O'Brien, Sean"
+
+    def test_no_apostrophe_authors_unaffected(self):
+        assert search_variants(_author(name="Хан Ган")) == ["Хан Ган"]
+        assert search_variants(_author(name="Дюма, Александр (отец)")) == [
+            "Дюма, Александр (отец)",
+            "Дюма, Александр",
+            "Александр Дюма",
         ]
 
     def test_han_kang_unchanged(self):

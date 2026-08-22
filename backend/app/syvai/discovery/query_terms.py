@@ -15,8 +15,13 @@ import re
 import unicodedata
 
 # Curly/modifier apostrophes unified to ASCII ' so "Л’Энгль" and "Л'Энгль"
-# are the same string everywhere (queries, matching, dedupe).
+# are the same string internally (matching, dedupe). External surfaces still
+# need both spellings: MediaWiki exact-title lookup does NOT unify these
+# families and ru titles canonically use ’ ("Л’Энгль, Мадлен").
 _APOSTROPHE_CHARS = {"\u2019", "\u02bc", "\u2018", "\u201b"}
+
+# Both spellings emitted for every variant containing an apostrophe.
+_APOSTROPHE_FORMS = ("'", "\u2019")
 
 # Editorial qualifiers such as "(отец)" / "(сын)" are search noise; they are
 # stripped for SEARCH VARIANTS only and never mutate canonical data.
@@ -56,12 +61,22 @@ def _inverted(text: str) -> str:
     return f"{rest} {last}"
 
 
+def _apostrophe_forms(text: str) -> list[str]:
+    """Emit a variant in every apostrophe spelling ("Л'Энгль" ->
+    ["Л'Энгль", "Л’Энгль"]). Identity when no apostrophe is present."""
+    if "'" not in text:
+        return [text]
+    return [text.replace("'", form) for form in _APOSTROPHE_FORMS]
+
+
 def search_variants(author) -> list[str]:
     """Ordered, deduplicated, bounded query variants for one author.
 
     Order mirrors ``_author_query_terms`` priority (display_name first, then
     name); for each base form: normalized form, then qualifier-stripped form,
-    then natural-order inversion of the stripped form.
+    then natural-order inversion of the stripped form. Every variant that
+    contains an apostrophe is finally expanded to both spellings, so the
+    editorial ’ form survives normalization for exact-title lookups.
     """
     bases: list[str] = []
     for name in (getattr(author, "display_name", None), getattr(author, "name", None)):
@@ -78,4 +93,10 @@ def search_variants(author) -> list[str]:
         if inverted and inverted not in variants:
             variants.append(inverted)
 
-    return variants[:MAX_VARIANTS]
+    expanded: list[str] = []
+    for variant in variants:
+        for form in _apostrophe_forms(variant):
+            if form not in expanded:
+                expanded.append(form)
+
+    return expanded[:MAX_VARIANTS]

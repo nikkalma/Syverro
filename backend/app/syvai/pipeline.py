@@ -41,13 +41,12 @@ from app.syvai.evidence import (
     PROVENANCE_SYNTHETIC,
     PROVENANCE_UNVERIFIED,
     EvidenceVerification,
-    build_material_requirements,
-    verify_evidence,
 )
 from app.syvai.provider import Provider, ProviderResult
 from app.syvai.prompts.timeline_v4 import build_timeline_prompt
 from app.syvai.timeline_claims import TimelineClaim, parse_timeline_claims
 from app.syvai.timeline_minimization import minimize_timeline_claim
+from app.syvai.timeline_entailment import verify_timeline_evidence
 from app.syvai.timeline_research import (
     build_research_input,
     load_existing_events,
@@ -188,22 +187,18 @@ async def _persist_proposals(
         # 0.2C/0.2D: verify every returned evidence fragment against the
         # stored citation text AND against the claim's own material details
         # before the claim can be considered grounded.
-        material = build_material_requirements(
-            label=claim.label,
-            description=claim.description,
-            place=claim.place,
-            date_value=claim.date_value,
-        )
         verifications: dict[str, EvidenceVerification] = {}
         grounded_source_count = 0
         for matched in matched_sources:
             source_id = matched["id"]
             source_row = source_by_id.get(source_id)
             citation = source_row.citation if source_row else None
-            verification = verify_evidence(
+            verification, _component_verdicts = verify_timeline_evidence(
+                claim,
                 ref_evidence.get(source_id),
                 citation,
-                material=material,
+                source_title=source_row.title if source_row else matched.get("title"),
+                fallback_subject=author.name,
             )
             verifications[source_id] = verification
             if verification.is_grounded:

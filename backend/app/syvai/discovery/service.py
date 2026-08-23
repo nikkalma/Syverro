@@ -37,13 +37,15 @@ from app.syvai.discovery.authority import authority_tier_for_url
 from app.syvai.discovery.dedupe import RawCandidate, _existing_normalized, dedupe_candidates
 from app.syvai.discovery.evidence import build_structured_evidence
 from app.syvai.discovery.langlinks import (
+    REASON_AMBIGUOUS,
     REASON_HTTP_ERROR,
     ResolvedIdentity,
     UnresolvedIdentity,
     resolve_en_identity,
 )
 from app.syvai.discovery.providers import SourceDiscoveryProvider
-from app.syvai.discovery.query_terms import search_variants
+from app.syvai.discovery.query_terms import base_search_variants, search_variants
+from app.syvai.discovery.ruwiki_fallback import search_fallback_resolve
 from app.syvai.discovery.urls import normalize_url, registrable_domain
 from app.syvai.errors import (
     ConfigurationError,
@@ -173,6 +175,50 @@ async def run_discovery(
                 unresolved.reason,
                 unresolved.detail,
             )
+            # --- Phase-2: bounded ru.wikipedia search fallback (design FINAL).
+            # Fires ONLY on explicit bootstrap non-resolution; an ambiguous
+            # Phase-1 outcome means concrete conflicting articles already
+            # exist, so more searching can never disambiguate deterministically.
+            if (
+                getattr(settings, "SYVAI_DISCOVERY_RUWIKI_SEARCH_FALLBACK", False)
+                and outcome.reason != REASON_AMBIGUOUS
+            ):
+                try:
+                    fallback = await search_fallback_resolve(
+                        base_search_variants(author),
+                        birth_date=getattr(author, "birth_date", None),
+                        death_date=getattr(author, "death_date", None),
+                    )
+                except Exception as exc:  # noqa: BLE001 - isolation boundary
+                    logger.warning(
+                        "syvai discovery search-fallback error: %s", _sanitize_error(exc)
+                    )
+                    fallback = UnresolvedIdentity(reason=REASON_HTTP_ERROR, detail="fallback_error")
+                if isinstance(fallback, ResolvedIdentity):
+                    resolved = fallback
+                    unresolved = None
+                    logger.info(
+                        "syvai discovery search-fallback identity author=%s variant=%r ru=%r en=%r bind=%s",
+                        getattr(author, "id", "?"),
+                        resolved.source_variant,
+                        resolved.ru_title,
+                        resolved.en_title,
+                        (resolved.fallback or {}).get("corroboration"),
+                    )
+                else:
+                    unresolved = UnresolvedIdentity(
+                        reason=fallback.reason,
+                        detail=(
+                            f"bootstrap[{outcome.reason}]: {outcome.detail}; "
+                            f"fallback: {fallback.detail}"
+                        )[:500],
+                    )
+                    logger.info(
+                        "syvai discovery search-fallback unresolved author=%s reason=%s %s",
+                        getattr(author, "id", "?"),
+                        unresolved.reason,
+                        unresolved.detail,
+                    )
     identity_terms = tuple(resolved.romanized_terms) if resolved else ()
 
     def _merged_query_terms() -> list[str]:
@@ -214,6 +260,19 @@ async def run_discovery(
             # providers in configured order.
             ordered: list[tuple[str, RawCandidate]] = []
             if resolved is not None and resolved.en_url:
+                evidence_payload = {
+                    "bootstrap_variant": resolved.source_variant,
+                    "ru_title": resolved.ru_title,
+                    "en_langlink": resolved.en_title or "",
+                }
+                if resolved.method != "exact_title":
+                    # Phase-2 provenance: how the identity was bound.
+                    evidence_payload["identity_method"] = resolved.method
+                    fallback = resolved.fallback or {}
+                    evidence_payload["bind_corroboration"] = str(
+                        fallback.get("corroboration") or ""
+                    )
+                    evidence_payload["identity_qid"] = str(fallback.get("qid") or "")
                 ordered.append(
                     (
                         "wikipedia-langlinks",
@@ -221,14 +280,10 @@ async def run_discovery(
                             url=resolved.en_url,
                             title=resolved.en_title,
                             source_type="encyclopedia",
-                            origin="langlinks_bootstrap",
-                            evidence=build_structured_evidence(
-                                {
-                                    "bootstrap_variant": resolved.source_variant,
-                                    "ru_title": resolved.ru_title,
-                                    "en_langlink": resolved.en_title or "",
-                                }
-                            ),
+                            origin="langlinks_bootstrap"
+                            if resolved.method == "exact_title"
+                            else "ruwiki_search_fallback",
+                            evidence=build_structured_evidence(evidence_payload),
                         ),
                     )
                 )

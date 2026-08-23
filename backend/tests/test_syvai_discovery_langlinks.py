@@ -87,6 +87,7 @@ async def test_resolves_via_normalization_and_redirect_with_provenance():
         "ru_title": "Адамс, Дуглас",
         "en_title": "Douglas Adams",
         "en_url": "https://en.wikipedia.org/wiki/Douglas_Adams",
+        "method": "exact_title",
     }
     # ONE request carrying ALL variants (bounded, deterministic).
     assert len(fetcher.urls) == 1
@@ -337,3 +338,94 @@ async def test_bootstrap_on_injects_direct_en_candidate_as_needs_review(monkeypa
     assert row.authority_tier == "medium"
     assert row.assessment == "needs_review"  # medium tier can never auto-approve
     assert "bootstrap_variant" in (row.evidence or "")
+
+
+# ---------------------------------------------------------------------------
+# Phase-2 ru.wikipedia search-fallback service wiring
+# ---------------------------------------------------------------------------
+
+
+def _fallback_resolved():
+    return ResolvedIdentity(
+        source_variant="Л'Энгль, Мадлен",
+        ru_title="Л’Энгл, Мадлен",
+        en_title="Madeleine L'Engle",
+        en_url="https://en.wikipedia.org/wiki/Madeleine_L%27Engle",
+        romanized_terms=("Madeleine L'Engle",),
+        method="search_fallback",
+        fallback={"corroboration": "alias_fold", "qid": "Q257261"},
+    )
+
+
+@pytest.mark.asyncio
+async def test_search_fallback_disabled_by_default_never_called(monkeypatch):
+    from app.syvai.discovery import service as discovery_service
+
+    async def _must_not_run(*args, **kwargs):  # pragma: no cover - guard
+        raise AssertionError("search fallback must be offline when disabled")
+
+    async def _unresolved(variants, **kwargs):
+        return UnresolvedIdentity(reason=REASON_NO_LANGLINK, detail="missing")
+
+    monkeypatch.setattr(discovery_service, "resolve_en_identity", _unresolved)
+    monkeypatch.setattr(discovery_service, "search_fallback_resolve", _must_not_run)
+    session = FakeDiscoverySession()
+
+    with patch.object(settings, "SYVAI_DISCOVERY_LANGLINKS_BOOTSTRAP", True), patch.object(
+        settings, "SYVAI_DISCOVERY_RUWIKI_SEARCH_FALLBACK", False
+    ):
+        outcome = await run_discovery(session, _author(), FakeDiscoveryProvider())
+
+    assert outcome.error is None
+
+
+@pytest.mark.asyncio
+async def test_ambiguous_bootstrap_never_reaches_fallback(monkeypatch):
+    """Concrete conflicting articles exist already; searching cannot help."""
+    from app.syvai.discovery import service as discovery_service
+
+    async def _must_not_run(*args, **kwargs):  # pragma: no cover - guard
+        raise AssertionError("ambiguous bootstrap must skip the fallback")
+
+    async def _ambiguous(variants, **kwargs):
+        return UnresolvedIdentity(reason=REASON_AMBIGUOUS, detail="two pages")
+
+    monkeypatch.setattr(discovery_service, "resolve_en_identity", _ambiguous)
+    monkeypatch.setattr(discovery_service, "search_fallback_resolve", _must_not_run)
+    session = FakeDiscoverySession()
+
+    with patch.object(settings, "SYVAI_DISCOVERY_LANGLINKS_BOOTSTRAP", True), patch.object(
+        settings, "SYVAI_DISCOVERY_RUWIKI_SEARCH_FALLBACK", True
+    ):
+        outcome = await run_discovery(session, _author(), FakeDiscoveryProvider())
+
+    assert outcome.error is None
+
+
+@pytest.mark.asyncio
+async def test_fallback_resolution_feeds_candidate_with_provenance(monkeypatch):
+    from app.syvai.discovery import service as discovery_service
+
+    async def _unresolved(variants, **kwargs):
+        return UnresolvedIdentity(reason=REASON_NO_LANGLINK, detail="missing")
+
+    async def _resolved_via_fallback(variants, **kwargs):
+        return _fallback_resolved()
+
+    monkeypatch.setattr(discovery_service, "resolve_en_identity", _unresolved)
+    monkeypatch.setattr(discovery_service, "search_fallback_resolve", _resolved_via_fallback)
+    session = FakeDiscoverySession()
+
+    with patch.object(settings, "SYVAI_DISCOVERY_LANGLINKS_BOOTSTRAP", True), patch.object(
+        settings, "SYVAI_DISCOVERY_RUWIKI_SEARCH_FALLBACK", True
+    ):
+        outcome = await run_discovery(session, _author(), FakeDiscoveryProvider())
+
+    rows = [c for c in outcome.candidates if c.provider == "wikipedia-langlinks"]
+    assert len(rows) == 1
+    row = rows[0]
+    assert row.origin == "ruwiki_search_fallback"
+    evidence = row.evidence or ""
+    assert "search_fallback" in evidence
+    assert "alias_fold" in evidence
+    assert "Q257261" in evidence

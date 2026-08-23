@@ -83,6 +83,18 @@ class Settings:
         ).lower() in {
             "1", "true", "yes", "on",
         }
+        # Phase-2 ru.wikipedia SEARCH fallback with mandatory structured
+        # Wikidata BIND (RUWIKIPEDIA_FALLBACK_DESIGN_FINAL). Default OFF so
+        # unit tests and offline runs never touch the network; production
+        # enables it explicitly via env. Strict fail-closed request budget.
+        self.SYVAI_DISCOVERY_RUWIKI_SEARCH_FALLBACK = os.getenv(
+            "SYVAI_DISCOVERY_RUWIKI_SEARCH_FALLBACK", ""
+        ).lower() in {
+            "1", "true", "yes", "on",
+        }
+        self.SYVAI_DISCOVERY_FALLBACK_MAX_REQUESTS = int(
+            os.getenv("SYVAI_DISCOVERY_FALLBACK_MAX_REQUESTS", "6")
+        )
 
         self.TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN", "")
         self.TELEGRAM_AUTH_MAX_AGE_SECONDS = int(

@@ -79,6 +79,10 @@ services:
       # Deterministic ru.wikipedia -> EN identity bootstrap (no LLM). Operator
       # decision; default off.
       SYVAI_DISCOVERY_LANGLINKS_BOOTSTRAP: ${SYVAI_DISCOVERY_LANGLINKS_BOOTSTRAP:-}
+      # Phase-2 ru.wikipedia search fallback with mandatory structured Wikidata
+      # BIND (fail-closed request budget). Operator decision; default off.
+      SYVAI_DISCOVERY_RUWIKI_SEARCH_FALLBACK: ${SYVAI_DISCOVERY_RUWIKI_SEARCH_FALLBACK:-}
+      SYVAI_DISCOVERY_FALLBACK_MAX_REQUESTS: ${SYVAI_DISCOVERY_FALLBACK_MAX_REQUESTS:-6}
     ports:
       - "127.0.0.1:8000:8000"
     healthcheck:

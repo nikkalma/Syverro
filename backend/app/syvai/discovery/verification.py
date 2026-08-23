@@ -12,8 +12,8 @@ from typing import Any
 
 from app.syvai.discovery.assessment import _identity_matches
 
-IDENTITY_VERIFIER_VERSION = "identity_v1"
-CONTENT_INSPECTOR_VERSION = "content_v1"
+IDENTITY_VERIFIER_VERSION = "identity_v2"
+CONTENT_INSPECTOR_VERSION = "content_v2"
 
 CAPABILITIES = (
     "IDENTITY", "BIOGRAPHY", "DATES", "PLACES", "OCCUPATIONS",
@@ -69,6 +69,29 @@ def verify_candidate_identity(
             },
             "conflict_checks": ["resolved_identity_unambiguous"],
             "reason": "Candidate is the resolved article in the deterministic identity chain.",
+        })
+        return provenance
+
+    resolved_terms = list(getattr(resolved_identity, "romanized_terms", ()) or ())
+    resolved_creator = _creator_matches(metadata_fields, resolved_terms)
+    if resolved_identity is not None and resolved_creator:
+        key, value = resolved_creator
+        matched_term = next(term for term in resolved_terms if _identity_matches(value, term))
+        provenance.update({
+            "state": "verified",
+            "method": "structured_creator_resolved_identity_term",
+            "matched_entity": value,
+            "matched_identifier": (getattr(resolved_identity, "fallback", None) or {}).get("qid"),
+            "matched_title": title,
+            "matched_identity_term": matched_term,
+            "resolution_provenance": {
+                "metadata_path": key,
+                "identity_source_variant": getattr(resolved_identity, "source_variant", None),
+                "resolved_title": getattr(resolved_identity, "en_title", None),
+                "origin": origin,
+            },
+            "conflict_checks": ["creator_matches_deterministically_resolved_identity_term"],
+            "reason": "Creator metadata matches a term exported by the deterministic Author identity resolution.",
         })
         return provenance
 
@@ -150,7 +173,9 @@ def inspect_content_capabilities(
         sentences = [part.strip() for part in re.split(r"(?<=[.!?])\s+", text) if part.strip()]
         for span in sentences:
             low = span.casefold()
-            if any(word in low for word in (" biography", " biographical", " biography:", "born ", "was born", "родил", "биограф")):
+            if any(word in low for word in (" biography", " biographical", " biography:", "born ", "was born", "родил", "биограф")) or re.search(
+                r"\b(?:was|is)\s+(?:an?\s+)?(?:english\s+)?(?:writer|novelist|poet|playwright)\b", low
+            ):
                 add("BIOGRAPHY", span=span)
             if re.search(r"\b(?:1[0-9]{3}|20[0-9]{2})\b", span):
                 add("DATES", span=span)
@@ -160,7 +185,9 @@ def inspect_content_capabilities(
                 add("OCCUPATIONS", span=span)
             if any(word in low for word in (" language", "wrote in", "язык", "писал на")):
                 add("LANGUAGES", span=span)
-            if any(word in low for word in (" literary movement", "critical introduction", "literary criticism", "романтизм", "литературн")):
+            if any(word in low for word in (" literary movement", "critical introduction", "literary criticism", "романтизм", "литературн")) or re.search(
+                r"\bliterary\s+(?:realism|romanticism|modernism|naturalism)\b", low
+            ):
                 add("LITERARY_CONTEXT", span=span)
             if re.search(r"\b(?:1[0-9]{3}|20[0-9]{2})\b", span) and any(word in low for word in ("published", "award", "born", "died", "издан", "родил", "умер")):
                 add("TIMELINE", span=span)

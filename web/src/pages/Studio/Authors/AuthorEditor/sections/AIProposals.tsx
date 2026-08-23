@@ -62,8 +62,20 @@ const REASON_LABELS: Record<string, string> = {
   near_duplicate_ambiguous: 'ambiguous near-duplicate',
   date_conflict: 'conflicts with curated timeline',
   unsupported_claim: 'no supporting source evidence',
+  ungrounded: 'evidence requires review; see source verification below',
   posthumous_event: 'posthumous event (policy)',
 };
+
+const EVIDENCE_STATE_COLORS: Record<string, string> = {
+  direct_grounded: '#4CAF50',
+  partial: '#FFA726',
+  synthetic: '#A855F7',
+  ungrounded: '#EF5350',
+};
+
+function evidenceStateLabel(state: string): string {
+  return state.replace(/_/g, ' ').toUpperCase();
+}
 
 function parseClaim(value?: string | null): Record<string, any> | null {
   if (!value) return null;
@@ -422,21 +434,43 @@ export default function AIProposals() {
                     {copy.sources}
                   </div>
                   {p.sources.map((s) => (
-                    <span key={s.id} style={{
-                      display: 'inline-flex', alignItems: 'center', gap: '6px',
-                      padding: '2px 8px', margin: '0 4px 4px 0', borderRadius: '4px',
+                    <div key={s.id} style={{
+                      padding: '8px', marginBottom: '6px', borderRadius: '6px',
                       background: 'var(--surface)', border: '1px solid var(--border-soft)', fontSize: '11px',
                     }}>
-                      <span style={{
-                        padding: '1px 5px', borderRadius: '3px', fontSize: '9px', fontWeight: 600,
-                        textTransform: 'uppercase',
-                        background: `${TIER_COLORS[s.reliability_tier || 'unknown']}1f`,
-                        color: TIER_COLORS[s.reliability_tier || 'unknown'],
-                      }}>
-                        {s.reliability_tier || 'unknown'}
-                      </span>
-                      {s.title}
-                    </span>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
+                        <strong>{s.title}</strong>
+                        <span style={{
+                          padding: '1px 5px', borderRadius: '3px', fontSize: '9px', fontWeight: 600,
+                          textTransform: 'uppercase',
+                          background: `${TIER_COLORS[s.reliability_tier || 'unknown']}1f`,
+                          color: TIER_COLORS[s.reliability_tier || 'unknown'],
+                        }}>
+                          {s.reliability_tier || 'unknown'}
+                        </span>
+                        <span style={{
+                          padding: '1px 5px', borderRadius: '3px', fontSize: '9px', fontWeight: 600,
+                          background: `${EVIDENCE_STATE_COLORS[s.verification_state] || '#97A6BA'}1f`,
+                          color: EVIDENCE_STATE_COLORS[s.verification_state] || '#97A6BA',
+                        }}>
+                          {evidenceStateLabel(s.verification_state)}
+                        </span>
+                      </div>
+                      <div style={{ marginTop: '5px', color: 'var(--text-secondary)' }}>
+                        Provenance: {s.provenance_type.replace(/_/g, ' ')} · Synthetic: {s.synthesis_involved ? 'yes' : 'no'}
+                      </div>
+                      {s.snippet && (
+                        <div style={{ marginTop: '5px', color: '#4CAF50' }}>
+                          <strong>Supported source span:</strong> {s.snippet}
+                        </div>
+                      )}
+                      {s.verification_reason && s.verification_state !== 'direct_grounded' && (
+                        <div style={{ marginTop: '5px', color: s.verification_state === 'partial' ? '#FFA726' : '#EF5350' }}>
+                          <strong>{s.verification_state === 'partial' ? 'Unsupported components:' : 'Verification issue:'}</strong>{' '}
+                          {s.verification_reason}
+                        </div>
+                      )}
+                    </div>
                   ))}
                 </div>
               )}

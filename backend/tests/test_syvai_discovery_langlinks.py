@@ -324,7 +324,11 @@ async def test_bootstrap_on_strictly_verifies_direct_resolved_en_identity(monkey
     async def _fake_resolve(variants, **kwargs):
         return resolved
 
+    async def _fake_content(_resolved):
+        return "Anne Brontë (1820–1849) was an English novelist and poet."
+
     monkeypatch.setattr(discovery_service, "resolve_en_identity", _fake_resolve)
+    monkeypatch.setattr(discovery_service, "fetch_resolved_document_content", _fake_content)
     session = FakeDiscoverySession()
 
     with patch.object(settings, "SYVAI_DISCOVERY_LANGLINKS_BOOTSTRAP", True):
@@ -414,8 +418,12 @@ async def test_fallback_resolution_feeds_candidate_with_provenance(monkeypatch):
     async def _resolved_via_fallback(variants, **kwargs):
         return _fallback_resolved()
 
+    async def _fake_content(_resolved):
+        return "Madeleine L'Engle (1918–2007) was an American writer."
+
     monkeypatch.setattr(discovery_service, "resolve_en_identity", _unresolved)
     monkeypatch.setattr(discovery_service, "search_fallback_resolve", _resolved_via_fallback)
+    monkeypatch.setattr(discovery_service, "fetch_resolved_document_content", _fake_content)
     session = FakeDiscoverySession()
 
     with patch.object(settings, "SYVAI_DISCOVERY_LANGLINKS_BOOTSTRAP", True), patch.object(

@@ -62,10 +62,10 @@ async def migration_engine():
         await engine.dispose()
 
 
-def test_expected_head_is_syvai_source_discovery_revision():
+def test_expected_head_is_proposal_source_verification_revision():
     from app.migrations import expected_head
 
-    assert expected_head() == "0024_source_discovery"
+    assert expected_head() == "0025_proposal_source_verification"
 
 
 @pytest.mark.asyncio
@@ -105,8 +105,13 @@ async def test_empty_database_bootstraps_to_head(migration_engine):
                 column["name"] for column in inspect(sync_conn).get_columns("source_candidates")
             }
         )
+        proposal_source_columns = await conn.run_sync(
+            lambda sync_conn: {
+                column["name"] for column in inspect(sync_conn).get_columns("ai_proposal_sources")
+            }
+        )
 
-    assert revision == "0024_source_discovery"
+    assert revision == "0025_proposal_source_verification"
     assert {
         "email_verified",
         "email_verification_token_hash",
@@ -159,6 +164,12 @@ async def test_empty_database_bootstraps_to_head(migration_engine):
         "reviewed_at",
         "reviewed_by",
     } <= candidate_columns
+    assert {
+        "verification_state",
+        "verification_reason",
+        "provenance_type",
+        "synthesis_involved",
+    } <= proposal_source_columns
 
     assert _run_migration_command("check").returncode == 0
 
@@ -223,7 +234,7 @@ async def test_revision_0017_is_upgraded_before_backend_start(migration_engine):
             }
         )
 
-    assert revision == "0024_source_discovery"
+    assert revision == "0025_proposal_source_verification"
     assert "email_verified" in columns
 
 

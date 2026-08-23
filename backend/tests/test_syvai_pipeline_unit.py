@@ -207,7 +207,9 @@ async def test_run_timeline_research_persists_proposals_and_links_sources():
     assert sources[0].proposal_id == proposal.id
     assert str(sources[0].source_id) == str(source.id)
     assert sources[0].reliability_tier == "high"
-    assert sources[0].snippet == "Enrolled at Roe Head School in Mirfield in 1831"
+    assert sources[0].snippet == "Charlotte Brontë enrolled at Roe Head School in Mirfield in 1831."
+    assert sources[0].verification_state == "direct_grounded"
+    assert sources[0].provenance_type == "source_span"
 
     assert outcome.run.provider == "fake"
     assert outcome.run.total_tokens == 150

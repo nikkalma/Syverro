@@ -9,6 +9,7 @@ from app.models.genre import Genre
 from app.models.place import Place
 from app.models.source import Source
 from app.models.author_citizenship import AuthorCitizenship
+from app.models.ai_proposal_source import AIProposalSource
 from app.syvai.core_fill import run_domain_research
 from app.syvai.field_validators import match_taxonomy, normalize_list_items, validate_field_claim
 from app.syvai.field_specs import (
@@ -272,6 +273,47 @@ async def test_biography_active_years_conflict_routes_to_review():
 
 
 @pytest.mark.asyncio
+async def test_voynich_split_range_is_synthetic_not_direct_grounded():
+    life = make_source(title="Creator", citation="Войнич, Этель Лилиан (1864-1960).")
+    edition = make_source(
+        title="Овод edition",
+        citation="Школьное издание романа Овод, опубликовано в 1973 году.",
+        url="https://example.com/edition",
+    )
+    claims = [{
+        "field_name": "active_years",
+        "value": {"from_year": 1864, "to_year": 1973},
+        "label": "Active years",
+        "sources": [
+            {"title": "Creator", "source_type": "catalog", "evidence": "Войнич, Этель Лилиан (1864-1960)."},
+            {"title": "Овод edition", "source_type": "book", "evidence": "опубликовано в 1973 году."},
+        ],
+    }]
+    outcome, session, _ = await run_fill(DOMAIN_BIOGRAPHY, claims, sources=[life, edition])
+    links = [item for item in session.added if isinstance(item, AIProposalSource)]
+    assert outcome.proposals[0].review_band == "quality_review"
+    assert all(link.verification_state == "synthetic" for link in links)
+    assert all(link.synthesis_involved for link in links)
+
+
+@pytest.mark.asyncio
+async def test_dumas_unsupported_romanticism_stays_ungrounded():
+    source = make_source(title="Audiobook", citation="Аудиокнига по роману Александра Дюма.")
+    claims = [{
+        "field_name": "literary_movements",
+        "value": "романтизм",
+        "label": "Литературное движение",
+        "sources": [{"title": "Audiobook", "source_type": "audio", "evidence": "Аудиокнига по роману Александра Дюма."}],
+    }]
+    outcome, session, _ = await run_fill(
+        DOMAIN_LITERARY_CONTEXT, claims, sources=[source], genres=["романтизм"]
+    )
+    link = next(item for item in session.added if isinstance(item, AIProposalSource))
+    assert outcome.proposals[0].review_band == "quality_review"
+    assert link.verification_state != "direct_grounded"
+
+
+@pytest.mark.asyncio
 async def test_literary_context_known_taxonomy_match():
     source = make_source(title="Criticism", citation="She is associated with modernism.")
     claims = [
@@ -437,8 +479,8 @@ async def test_explicit_occupation_in_citation_but_not_fragment_is_grounded():
         }
     ]
     outcome, _, _ = await run_fill(DOMAIN_BIOGRAPHY, claims, sources=[source])
-    assert outcome.proposals[0].review_band == "auto_approved"
-    assert outcome.proposals[0].review_reason == "new_grounded"
+    assert outcome.proposals[0].review_band == "quality_review"
+    assert outcome.proposals[0].review_reason == "ungrounded"
 
 
 @pytest.mark.asyncio
@@ -475,7 +517,7 @@ async def test_explicit_language_in_citation_but_not_fragment_is_grounded():
         }
     ]
     outcome, _, _ = await run_fill(DOMAIN_IDENTITY, claims, sources=[source])
-    assert outcome.proposals[0].review_band == "auto_approved"
+    assert outcome.proposals[0].review_band == "quality_review"
 
 
 @pytest.mark.asyncio
@@ -511,7 +553,49 @@ async def test_explicit_gender_stated_in_source_is_grounded():
         }
     ]
     outcome, _, _ = await run_fill(DOMAIN_IDENTITY, claims, sources=[source])
-    assert outcome.proposals[0].review_band == "auto_approved"
+    assert outcome.proposals[0].review_band == "quality_review"
+
+
+@pytest.mark.asyncio
+async def test_absent_model_quote_is_never_persisted_as_source_evidence():
+    source = make_source(title="Bootstrap", citation="Ethel Lilian Voynich identity mapping.")
+    claims = [{
+        "field_name": "nationality",
+        "value": "British",
+        "label": "Nationality",
+        "sources": [{
+            "title": "Bootstrap",
+            "source_type": "bootstrap",
+            "evidence": "Ethel Voynich was a British author",
+        }],
+    }]
+    outcome, session, _ = await run_fill(DOMAIN_IDENTITY, claims, sources=[source])
+    link = next(item for item in session.added if isinstance(item, AIProposalSource))
+    assert outcome.proposals[0].review_band == "quality_review"
+    assert link.snippet is None
+    assert link.verification_state == "ungrounded"
+    assert link.provenance_type == "unverified_model"
+
+
+@pytest.mark.asyncio
+async def test_direct_persisted_snippet_is_exact_source_content():
+    citation = "Mary Ann Evans was the real name of George Eliot."
+    source = make_source(title="Britannica", citation=citation)
+    claims = [{
+        "field_name": "native_name",
+        "value": "Mary Ann Evans",
+        "label": "Native name",
+        "sources": [{
+            "title": "Britannica",
+            "source_type": "encyclopedia",
+            "evidence": "Mary Ann Evans",
+        }],
+    }]
+    _, session, _ = await run_fill(DOMAIN_IDENTITY, claims, sources=[source])
+    link = next(item for item in session.added if isinstance(item, AIProposalSource))
+    assert link.snippet == citation
+    assert link.verification_state == "direct_grounded"
+    assert link.provenance_type == "source_span"
 
 
 # ============================================================
@@ -522,6 +606,19 @@ async def test_explicit_gender_stated_in_source_is_grounded():
 def test_taxonomy_match_nomalizes_spacing_and_punctuation():
     assert match_taxonomy("  Science ;Fiction ", {"Science Fiction"}) == "science-fiction"
     assert match_taxonomy("science fiction", {"Science Fiction"}) == "science-fiction"
+
+
+def test_gender_unknown_is_treated_as_empty_existing_value():
+    result = validate_field_claim(
+        spec=FIELD_SPECS["gender"],
+        value="female",
+        label="Gender",
+        description=None,
+        existing_value="unknown",
+        source_count=1,
+        grounded_source_count=1,
+    )
+    assert result.validation.conflict_state == "new"
 
 
 def test_taxonomy_match_resolves_deterministic_variants():

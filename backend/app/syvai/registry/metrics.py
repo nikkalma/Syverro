@@ -43,7 +43,10 @@ def _grounding_counts(proposals, sources_by_id) -> dict[str, int]:
     corroborated = 0
     for proposal in proposals:
         links = [link for link in proposal.sources]
-        grounded_links = [link for link in links if link.snippet]
+        grounded_links = [
+            link for link in links
+            if link.verification_state == "direct_grounded"
+        ]
         if grounded_links:
             grounded += 1
         source_rows = [sources_by_id.get(link.source_id) for link in grounded_links]

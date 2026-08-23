@@ -4,6 +4,22 @@ import { apiClient } from '../../../shared/api/client';
 import { getLocaleData, getBrowserLocale } from '../../../locales';
 import type { AIProposal, BulkApplyResult, ReviewBulkResult, ReviewQueueCounts } from '../../../types/admin';
 
+export function evidencePresentation(state: string) {
+  const label = ({
+    direct_grounded: 'DIRECT GROUNDED',
+    partial: 'PARTIAL',
+    synthetic: 'SYNTHETIC',
+    ungrounded: 'UNGROUNDED',
+  } as Record<string, string>)[state] || 'UNVERIFIED';
+  const color = ({
+    direct_grounded: '#4caf50',
+    partial: '#ffa726',
+    synthetic: '#ab47bc',
+    ungrounded: '#ef5350',
+  } as Record<string, string>)[state] || '#97A6BA';
+  return { label, color };
+}
+
 const BAND_COLORS: Record<string, string> = {
   auto_approved: '#4CAF50',
   auto_rejected: '#97A6BA',
@@ -552,7 +568,9 @@ export default function AIReview() {
                 <div style={{ fontSize: '13px', color: 'var(--text-muted)', fontStyle: 'italic' }}>{ai.noEvidence}</div>
               ) : (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                  {detail.sources.map((s) => (
+                  {detail.sources.map((s) => {
+                    const { label: evidenceLabel, color: evidenceColor } = evidencePresentation(s.verification_state);
+                    return (
                     <a key={s.id} href={s.url || '#'} target="_blank" rel="noreferrer" style={{ textDecoration: 'none' }}>
                       <div style={{
                         padding: '8px 12px', background: 'var(--chip)', borderRadius: '8px',
@@ -564,12 +582,28 @@ export default function AIReview() {
                             background: `${TIER_COLORS[s.reliability_tier || 'unknown']}1f`, color: TIER_COLORS[s.reliability_tier || 'unknown'],
                             marginRight: '6px',
                           }}>{s.reliability_tier || 'unknown'}</span>
+                          <span style={{
+                            padding: '1px 6px', borderRadius: '4px', fontSize: '9px', fontWeight: 700,
+                            background: `${evidenceColor}1f`, color: evidenceColor, marginRight: '6px',
+                          }}>{evidenceLabel}</span>
                           {s.title}
                         </div>
-                        {s.snippet && <div style={{ color: 'var(--text-muted)' }}>{s.snippet}</div>}
+                        {s.snippet && s.provenance_type === 'source_span' && (
+                          <div style={{ color: 'var(--text-muted)' }}>“{s.snippet}”</div>
+                        )}
+                        {s.synthesis_involved && (
+                          <div style={{ color: evidenceColor }}>Uses multiple source fragments; not a direct quotation.</div>
+                        )}
+                        {!s.snippet && (
+                          <div style={{ color: 'var(--text-muted)', fontStyle: 'italic' }}>No verified source-derived span</div>
+                        )}
+                        {s.verification_reason && (
+                          <div style={{ color: 'var(--text-secondary)', marginTop: '2px' }}>{s.verification_reason}</div>
+                        )}
                       </div>
                     </a>
-                  ))}
+                    );
+                  })}
                 </div>
               )}
             </div>

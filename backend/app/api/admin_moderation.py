@@ -195,6 +195,23 @@ def _base_query():
     return select(AIProposal)
 
 
+def _serialize_proposal_source(link: AIProposalSource, source: Source) -> dict:
+    """Serialize evidence without ever exposing an unverified model quote."""
+    return {
+        "id": str(source.id),
+        "title": source.title,
+        "url": source.url,
+        "source_type": source.source_type,
+        "reliability_score": source.reliability_score,
+        "reliability_tier": link.reliability_tier,
+        "snippet": link.snippet if link.provenance_type != "unverified_model" else None,
+        "verification_state": link.verification_state,
+        "verification_reason": link.verification_reason,
+        "provenance_type": link.provenance_type,
+        "synthesis_involved": link.synthesis_involved,
+    }
+
+
 async def _queueable_proposal_or_http(
     db: AsyncSession,
     proposal_id: str,
@@ -310,18 +327,7 @@ async def get_review_queue_detail(
         .join(Source, Source.id == AIProposalSource.source_id)
         .where(AIProposalSource.proposal_id == proposal.id)
     )
-    sources = [
-        {
-            "id": str(source.id),
-            "title": source.title,
-            "url": source.url,
-            "source_type": source.source_type,
-            "reliability_score": source.reliability_score,
-            "reliability_tier": link.reliability_tier,
-            "snippet": link.snippet,
-        }
-        for link, source in sources_result.all()
-    ]
+    sources = [_serialize_proposal_source(link, source) for link, source in sources_result.all()]
 
     item = _enrich([proposal], domains=domains, counts=counts, names=names)[0]
     item["sources"] = sources

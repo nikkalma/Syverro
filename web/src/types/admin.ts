@@ -431,6 +431,10 @@ export interface AIProposalSource {
   reliability_score: string;
   reliability_tier?: string | null;
   snippet?: string | null;
+  verification_state: 'direct_grounded' | 'partial' | 'synthetic' | 'ungrounded';
+  verification_reason?: string | null;
+  provenance_type: 'source_span' | 'multi_fragment' | 'unverified_model';
+  synthesis_involved: boolean;
 }
 
 export interface AIProposal {

@@ -1,4 +1,4 @@
-from sqlalchemy import Column, String, Integer, Float, DateTime, ForeignKey
+from sqlalchemy import Column, String, Integer, Float, DateTime, ForeignKey, JSON
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.sql import func
 from app.database import Base
@@ -22,5 +22,7 @@ class SyvaiRun(Base):
     calls = Column(Integer, nullable=True)
     source_count = Column(Integer, nullable=True)
     error = Column(String, nullable=True)
+    corpus_manifest = Column(JSON, nullable=True)
+    routing_reason = Column(String, nullable=True)
     created_at = Column(DateTime, server_default=func.now(), nullable=False)
     finished_at = Column(DateTime, nullable=True)

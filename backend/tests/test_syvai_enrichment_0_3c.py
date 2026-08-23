@@ -290,8 +290,10 @@ async def test_loc_enrichment_promotes_family_candidate(monkeypatch):
     assert len(candidate.evidence or "") <= 700
 
     outcome = await run_discovery(FakeDiscoverySession(), _author(), [provider])
-    assert any(c.assessment == ASSESSMENT_AUTO_USABLE for c in outcome.candidates)
-    assert any(c.review_action == "auto_approved" for c in outcome.candidates)
+    assert all(c.assessment == ASSESSMENT_NEEDS_REVIEW for c in outcome.candidates)
+    assert not any(c.review_action == "auto_approved" for c in outcome.candidates)
+    assert all(c.assessment == ASSESSMENT_NEEDS_REVIEW for c in outcome.candidates)
+    assert not any(c.review_action == "auto_approved" for c in outcome.candidates)
     # discover() runs twice (probe + run): search+detail each, all on the
     # allow-listed host, no third-party host ever contacted.
     assert calls[0] == "/search" and calls[1] == "/item/annecompanion"
@@ -411,7 +413,8 @@ async def test_archive_enrichment_recovers_correct_entity(monkeypatch):
     assert results[0].metadata_fields.get("creator") == "Brontë, Anne, 1820-1849"
 
     outcome = await run_discovery(FakeDiscoverySession(), _author(), [provider])
-    assert any(c.review_action == "auto_approved" for c in outcome.candidates)
+    assert all(c.assessment == ASSESSMENT_NEEDS_REVIEW for c in outcome.candidates)
+    assert not any(c.review_action == "auto_approved" for c in outcome.candidates)
     assert "/metadata/tenantwildfell1848" in calls
     assert len(calls) == 4  # search + metadata, twice (discover probe + run)
 
@@ -441,7 +444,8 @@ async def test_archive_wrong_entity_audio_stays_review():
 
     assert results[0].metadata_fields.get("creator") == "Louise C. Wilson"
     outcome = await run_discovery(FakeDiscoverySession(), _author(), [provider])
-    assert all(c.assessment == ASSESSMENT_NEEDS_REVIEW for c in outcome.candidates)
+    assert all(c.assessment == "rejected" for c in outcome.candidates)
+    assert all(c.identity_verification["state"] == "rejected" for c in outcome.candidates)
 
 
 @pytest.mark.asyncio

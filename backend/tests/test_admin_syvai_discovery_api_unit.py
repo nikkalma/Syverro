@@ -79,7 +79,7 @@ def _author():
 
 
 @pytest.mark.asyncio
-async def test_run_discovery_persists_candidates_and_auto_creates_sources():
+async def test_run_discovery_does_not_auto_promote_score_only_candidates():
     session = FakeDiscoverySession()
     author = _author()
     provider = FakeDiscoveryProvider()
@@ -92,20 +92,16 @@ async def test_run_discovery_persists_candidates_and_auto_creates_sources():
     assert outcome.run.provider == "fake-discovery"
     assert session.committed is True
     assert len(outcome.candidates) == 5  # fixture: spam-tld stays as rejected candidate
-    # Only Britannica (high, curated) auto-approves. Both Wikipedia pages are
-    # medium authority now and land in needs_review for the human.
-    assert len(outcome.created_sources) == 1
+    # Authority, lexical relevance, and evidence length are ranking signals,
+    # not deterministic Author identity proof.
+    assert len(outcome.created_sources) == 0
 
     rows = [obj for obj in session.added if isinstance(obj, SourceCandidate)]
     sources = [obj for obj in session.added if isinstance(obj, Source)]
     assert len(rows) == 5
-    assert len(sources) == 1
+    assert len(sources) == 0
     auto_rows = [r for r in rows if r.review_action == "auto_approved"]
-    assert len(auto_rows) == 1
-    assert all(r.source_id is not None for r in auto_rows)
-    assert all(s.source_origin == "syvai_discovery" for s in sources)
-    assert all(s.review_status == "auto_approved" for s in sources)
-    assert all(s.authority_tier == "high" for s in sources)
+    assert len(auto_rows) == 0
     wikipedia_rows = [r for r in rows if "wikipedia.org" in (r.url or "")]
     assert all(r.review_action == "auto_approved" for r in wikipedia_rows) is False
     assert outcome.duplicate_skipped == 0
@@ -325,7 +321,7 @@ async def test_trigger_run_endpoint_returns_candidates():
     assert response["run"]["domain"] == "source_discovery"
     assert response["run"]["provider"] == "fake-discovery"
     assert len(response["candidates"]) >= 1
-    assert len(response["created_sources"]) >= 1
+    assert response["created_sources"] == []
     assert response["providers_attempted"] == 1
     assert response["providers_succeeded"] == 1
     assert response["providers_failed"] == 0

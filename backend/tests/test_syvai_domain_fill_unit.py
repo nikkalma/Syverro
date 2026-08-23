@@ -19,6 +19,7 @@ from app.syvai.field_specs import (
     FIELD_SPECS,
 )
 from app.syvai.provider import FakeProvider
+from app.syvai.corpus import CorpusSnapshot
 
 
 class FakeRow:
@@ -132,12 +133,30 @@ async def run_fill(domain, claims, *, sources, author=None, genres=None, citizen
         residences=residences,
     )
     provider = FakeProvider(json.dumps({"fields": claims}))
+    capabilities = {
+        DOMAIN_IDENTITY: ["IDENTITY"],
+        DOMAIN_BIOGRAPHY: ["BIOGRAPHY"],
+        DOMAIN_LITERARY_CONTEXT: ["LITERARY_CONTEXT"],
+    }[domain]
+    verified = [{
+        "id": str(source.id), "title": source.title, "url": source.url,
+        "source_type": source.source_type, "citation": source.citation,
+        "language": source.language, "reliability_score": source.reliability_score,
+        "trust_state": "HUMAN_VERIFIED", "content_capabilities": capabilities,
+        "capability_evidence": {}, "identity_verification": None, "candidate_id": None,
+    } for source in sources]
+    snapshot = CorpusSnapshot(
+        author_id=str((author or SimpleNamespace(id="test")).id),
+        verified_sources=verified, candidates=[],
+        capability_coverage={capabilities[0]: [source["id"] for source in verified]},
+        needs_review_count=0, rejected_count=0, legacy_auto_count=0,
+    )
     outcome = await run_domain_research(
         session,
         author or make_author(),
         provider,
         domain,
-        route_result=SimpleNamespace(state="SOURCE_POOL_READY"),
+        route_result=SimpleNamespace(corpus_snapshot=snapshot),
     )
     return outcome, session, provider
 

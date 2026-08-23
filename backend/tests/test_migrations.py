@@ -62,10 +62,10 @@ async def migration_engine():
         await engine.dispose()
 
 
-def test_expected_head_is_proposal_source_verification_revision():
+def test_expected_head_is_curated_corpus_revision():
     from app.migrations import expected_head
 
-    assert expected_head() == "0025_evidence_provenance"
+    assert expected_head() == "0026_curated_corpus"
 
 
 @pytest.mark.asyncio

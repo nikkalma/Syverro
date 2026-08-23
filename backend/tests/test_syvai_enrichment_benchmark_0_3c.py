@@ -364,6 +364,7 @@ async def _run_author(fixture: Fixture, budget: int, monkeypatch) -> dict:
         _build_adapters(fixture, budget, monkeypatch),
     )
     auto = {c.normalized_url for c in outcome.candidates if c.assessment == ASSESSMENT_AUTO_USABLE}
+    recovered = {c.normalized_url for c in outcome.candidates if c.assessment != "rejected"}
     wrong_auto = [u for u in auto if u in fixture.wrong_entity_ids]
     return {
         "author": fixture.author,
@@ -371,6 +372,7 @@ async def _run_author(fixture: Fixture, budget: int, monkeypatch) -> dict:
         "loc_auto": {u for u in auto if "loc.gov" in u},
         "archive_auto": {u for u in auto if "archive.org" in u},
         "wrong_entity_auto_approved": wrong_auto,
+        "recovered": recovered,
         "candidates_total": len(outcome.candidates),
         "recovered_enrichment": len(set(fixture.loc_auto_expected + fixture.archive_auto_expected) & auto),
     }
@@ -385,17 +387,15 @@ async def test_enrichment_benchmark_per_author(fixture, monkeypatch):
     assert enriched["wrong_entity_auto_approved"] == [], fixture.author
     assert baseline["wrong_entity_auto_approved"] == [], fixture.author
 
-    # Enrichment effect: every archive work-title-only item is recovered.
+    # Enrichment recovers inspectable candidates, but name-only creator data no
+    # longer grants strict corpus trust.
     for url in fixture.archive_auto_expected:
-        assert url in enriched["archive_auto"], f"{fixture.author}: archive {url} not recovered"
-        assert url not in baseline["archive_auto"], (
-            f"{fixture.author}: {url} auto-approved even without enrichment (baseline must not)"
-        )
+        assert url in enriched["recovered"], f"{fixture.author}: archive {url} not recovered"
 
-    # NFKC effect: correct LOC items auto-approve with enrichment (and the
-    # NFKC-visible NFD-title one does too).
+    # Correct LOC items remain available for human identity review.
     for url in fixture.loc_auto_expected:
-        assert url in enriched["loc_auto"], f"{fixture.author}: LOC {url} not auto"
+        assert url in enriched["recovered"], f"{fixture.author}: LOC {url} not recovered"
+    assert enriched["auto_usable"] == set()
 
     # Shared config: identical adapters + defaults for every author (enforced by
     # construction above); no per-author tuning.
@@ -409,7 +409,7 @@ async def test_enrichment_benchmark_aggregate(monkeypatch):
     for fixture in FIXTURES:
         enriched = await _run_author(fixture, budget=6, monkeypatch=monkeypatch)
         total_wrong_auto += len(enriched["wrong_entity_auto_approved"])
-        total_recovered += len(set(fixture.loc_auto_expected + fixture.archive_auto_expected) & enriched["auto_usable"])
+        total_recovered += len(set(fixture.loc_auto_expected + fixture.archive_auto_expected) & enriched["recovered"])
     # Zero wrong-entity auto-approval across all three authors.
     assert total_wrong_auto == 0
     # Every author gains genuinely relevant high-authority recovery.

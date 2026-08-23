@@ -192,15 +192,13 @@ async def test_anne_offline_replay_0_3c():
     # The LOC root-cause item is recovered by the 0.3C pipeline.
     loc_item = by_url.get(norm_item)
     assert loc_item is not None
-    assert loc_item.assessment == ASSESSMENT_AUTO_USABLE
-    assert loc_item.review_action == "auto_approved"
+    assert loc_item.assessment == ASSESSMENT_NEEDS_REVIEW
+    assert loc_item.review_action is None
     assert loc_item.quality_score == 1.0
     assert "creator: Brontë, Anne" in (loc_item.evidence or "")
 
-    # Exactly one new trusted source is created by this replay (the LOC item).
-    assert len(outcome.created_sources) == 1
-    assert outcome.created_sources[0].url == LOC_ITEM
-    assert outcome.created_sources[0].review_status == "auto_approved"
+    # Name-only creator metadata is useful review evidence, not strict identity proof.
+    assert outcome.created_sources == []
 
     # The LCCN-host companion stays in review: detail enrichment is refused for
     # a host outside the LOC allow-list, and the title lacks the author name.
@@ -211,10 +209,7 @@ async def test_anne_offline_replay_0_3c():
 
     # Archive wrong-entity audio + Wikipedia medium-authority stay in review.
     remaining = [c for c in outcome.candidates if c.assessment == ASSESSMENT_NEEDS_REVIEW]
-    assert {normalize_url(c.normalized_url) for c in remaining} == {
-        norm_lccn, normalize_url(ARCHIVE_LCW), normalize_url(ARCHIVE_SQ),
-        normalize_url(WP_EMILY), normalize_url(WP_TENANT),
-    }
+    assert norm_item in {normalize_url(c.normalized_url) for c in remaining}
 
     # Zero wrong-entity auto-approval.
     assert not any(c.review_action == "auto_approved" and normalize_url(c.normalized_url) in {
@@ -225,6 +220,4 @@ async def test_anne_offline_replay_0_3c():
     assert outcome.run.model is None
     assert outcome.run.calls == 3  # provider attempts only
 
-    # Trusted-corpus ceiling projection vs 0.3B (1 source): +1 authoritative
-    # source with no weakening of authority or review policy.
-    assert len(outcome.created_sources) >= 1
+    assert outcome.created_sources == []

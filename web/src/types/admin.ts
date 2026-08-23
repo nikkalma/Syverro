@@ -589,11 +589,29 @@ export interface SourceCandidate {
   provider?: string | null;
   origin?: string | null;
   evidence?: string | null;
+  corpus_state: 'AUTO_VERIFIED' | 'AUTO_VERIFIED_LEGACY' | 'HUMAN_VERIFIED' | 'NEEDS_REVIEW' | 'REJECTED';
+  identity_verification?: Record<string, any> | null;
+  content_capabilities: string[];
+  capability_evidence: Record<string, Array<Record<string, any>>>;
+  provenance_chain?: Record<string, any> | null;
   status: string;
   review_action?: string | null;
   reviewed_at?: string | null;
   reviewed_by?: string | null;
   created_at?: string | null;
+}
+
+export interface ResearchCorpusSummary {
+  author_id: string;
+  verified_sources: Array<{
+    id: string; title: string; url?: string | null; trust_state: string;
+    content_capabilities: string[]; capability_evidence: Record<string, Array<Record<string, any>>>;
+  }>;
+  needs_review_count: number;
+  rejected_count: number;
+  legacy_auto_unverified_count: number;
+  capability_coverage: Record<string, string[]>;
+  domains: Record<string, { available: boolean; reason?: string | null }>;
 }
 
 export interface DiscoveryRunResponse {

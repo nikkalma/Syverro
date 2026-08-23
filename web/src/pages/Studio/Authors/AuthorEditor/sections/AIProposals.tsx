@@ -210,7 +210,7 @@ export default function AIProposals() {
               background: 'var(--accent)', border: 'none', color: '#fff',
               opacity: running ? 0.6 : 1, whiteSpace: 'nowrap', marginLeft: '12px',
             }}>
-            {running ? copy.runningResearch : copy.runResearch}
+            {running ? copy.runningResearch : 'Fill with SyvAI'}
           </button>
         </div>
 

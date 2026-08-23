@@ -67,7 +67,6 @@ from app.syvai.field_specs import (
     DOMAIN_LITERARY_CONTEXT,
     EXPLICIT_STATEMENT_FIELDS,
     FILL_DOMAINS,
-    REGISTRY_DOMAIN,
     TAXONOMY_FIELDS,
     VALUE_TYPE_ENTITY,
     VALUE_TYPE_LIST,
@@ -82,8 +81,9 @@ from app.syvai.pipeline import (
     _sanitize_error,
 )
 from app.syvai.provider import Provider
-from app.syvai.prompts.core_fill_v1 import build_domain_prompt
-from app.syvai.timeline_research import build_research_input, load_trusted_sources
+from app.syvai.prompts.core_fill_v2 import build_domain_prompt
+from app.syvai.timeline_research import build_research_input
+from app.syvai.corpus import build_author_corpus
 from app.syvai.validators import (
     REVIEW_BAND_AUTO_REJECTED,
     REVIEW_BANDS_NEEDING_HUMAN,
@@ -525,8 +525,6 @@ async def run_domain_research(
     if domain not in FILL_DOMAINS:
         raise ValueError(f"unsupported fill domain '{domain}'")
 
-    from app.syvai.registry.routing import SOURCE_POOL_MISSING, route_author
-
     started = time.monotonic()
     run = SyvaiRun(
         author_id=author.id,
@@ -539,21 +537,21 @@ async def run_domain_research(
     await db.flush()
 
     try:
-        if route_result is None:
-            route_result = route_author(author, REGISTRY_DOMAIN[domain])
-        if getattr(route_result, "state", SOURCE_POOL_MISSING) == SOURCE_POOL_MISSING:
-            run.status = "skipped"
-            run.error = f"SOURCE_POOL_MISSING for domain '{domain}'"
-            run.finished_at = datetime.now(timezone.utc).replace(tzinfo=None)
-            await db.commit()
-            await db.refresh(run)
-            return RunOutcome(run=run, proposals=[], error=run.error)
-
-        trusted_sources = await load_trusted_sources(db, author)
+        corpus = (
+            route_result.corpus_snapshot
+            if route_result is not None and hasattr(route_result, "corpus_snapshot")
+            else await build_author_corpus(db, author.id)
+        )
+        trusted_sources = corpus.sources_for_domain(domain)
+        manifest = corpus.manifest(domain, trusted_sources)
+        run.corpus_manifest = manifest
+        run.routing_reason = manifest["routing_reason"]
         run.source_count = len(trusted_sources)
-        if not trusted_sources:
+        await db.flush()  # immutable input decision exists before any provider call
+        if manifest["permitted_domain"] is None:
             run.status = "skipped"
-            run.error = "NO_TRUSTED_SOURCE"
+            run.error = manifest["routing_reason"]
+            run.duration_ms = int((time.monotonic() - started) * 1000)
             run.finished_at = datetime.now(timezone.utc).replace(tzinfo=None)
             await db.commit()
             await db.refresh(run)
@@ -561,6 +559,8 @@ async def run_domain_research(
 
         research = build_research_input(author, trusted_sources)
         system_prompt, user_prompt = build_domain_prompt(domain, research)
+        run.corpus_manifest = {**manifest, "provider_called": True}
+        await db.flush()
         result: Any = await provider.complete(system_prompt, user_prompt)
 
         field_claims = parse_field_claims(result.text)

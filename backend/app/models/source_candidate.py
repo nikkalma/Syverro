@@ -1,4 +1,4 @@
-from sqlalchemy import Column, String, Text, Float, DateTime, ForeignKey, UniqueConstraint
+from sqlalchemy import Column, String, Text, Float, DateTime, ForeignKey, UniqueConstraint, JSON
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.sql import func
 from app.database import Base
@@ -38,6 +38,9 @@ class SourceCandidate(Base):
     provider = Column(String, nullable=True)
     origin = Column(String, nullable=True)
     evidence = Column(Text, nullable=True)
+    identity_verification = Column(JSON, nullable=True)
+    content_capabilities = Column(JSON, nullable=True)
+    capability_evidence = Column(JSON, nullable=True)
     status = Column(String, server_default="pending", nullable=False, index=True)
     review_action = Column(String, nullable=True)
     reviewed_at = Column(DateTime(timezone=True), nullable=True)

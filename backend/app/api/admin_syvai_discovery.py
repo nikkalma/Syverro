@@ -41,6 +41,7 @@ from app.syvai.discovery import (
 )
 from app.syvai.discovery.service import _resolve_candidate_or_none
 from app.syvai.errors import ConfigurationError, DiscoveryError
+from app.syvai.corpus import build_author_corpus, corpus_state, corpus_summary
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/admin/authors", tags=["admin-syvai-discovery"])
@@ -77,6 +78,16 @@ def _candidate_dict(candidate: SourceCandidate) -> dict:
         "provider": candidate.provider,
         "origin": candidate.origin,
         "evidence": candidate.evidence,
+        "corpus_state": corpus_state(candidate),
+        "identity_verification": candidate.identity_verification,
+        "content_capabilities": candidate.content_capabilities or [],
+        "capability_evidence": candidate.capability_evidence or {},
+        "provenance_chain": {
+            "provider": candidate.provider,
+            "origin": candidate.origin,
+            "run_id": str(candidate.run_id) if candidate.run_id else None,
+            "identity": candidate.identity_verification,
+        },
         "status": candidate.status,
         "review_action": candidate.review_action,
         "reviewed_at": candidate.reviewed_at.isoformat() if candidate.reviewed_at else None,
@@ -344,3 +355,15 @@ async def get_discovery_metrics(
     await check_admin(current_user)
     await get_author_or_404(db, author_id)
     return await discovery_metrics(db, author_id)
+
+
+@router.get("/{author_id}/research-corpus")
+async def get_research_corpus(
+    author_id: str,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Return the Author-specific, generation-eligible curated corpus."""
+    await check_admin(current_user)
+    author = await get_author_or_404(db, author_id)
+    return corpus_summary(await build_author_corpus(db, author.id))

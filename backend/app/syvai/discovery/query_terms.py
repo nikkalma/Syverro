@@ -69,14 +69,14 @@ def _apostrophe_forms(text: str) -> list[str]:
     return [text.replace("'", form) for form in _APOSTROPHE_FORMS]
 
 
-def search_variants(author) -> list[str]:
-    """Ordered, deduplicated, bounded query variants for one author.
+def base_search_variants(author) -> list[str]:
+    """Pre-apostrophe-expansion query variants for one author.
 
-    Order mirrors ``_author_query_terms`` priority (display_name first, then
-    name); for each base form: normalized form, then qualifier-stripped form,
-    then natural-order inversion of the stripped form. Every variant that
-    contains an apostrophe is finally expanded to both spellings, so the
-    editorial ’ form survives normalization for exact-title lookups.
+    Same deterministic assembly as ``search_variants`` (display_name first,
+    then name; per base: normalized, qualifier-stripped, inversion) but before
+    the dual-spelling apostrophe expansion. Consumers that search rather than
+    exact-match (ru.wikipedia CirrusSearch handles apostrophe families natively)
+    use this list to avoid wasting request budget on spelling duplicates.
     """
     bases: list[str] = []
     for name in (getattr(author, "display_name", None), getattr(author, "name", None)):
@@ -93,8 +93,20 @@ def search_variants(author) -> list[str]:
         if inverted and inverted not in variants:
             variants.append(inverted)
 
+    return variants[:MAX_VARIANTS]
+
+
+def search_variants(author) -> list[str]:
+    """Ordered, deduplicated, bounded query variants for one author.
+
+    Order mirrors ``_author_query_terms`` priority (display_name first, then
+    name); for each base form: normalized form, then qualifier-stripped form,
+    then natural-order inversion of the stripped form. Every variant that
+    contains an apostrophe is finally expanded to both spellings, so the
+    editorial ’ form survives normalization for exact-title lookups.
+    """
     expanded: list[str] = []
-    for variant in variants:
+    for variant in base_search_variants(author):
         for form in _apostrophe_forms(variant):
             if form not in expanded:
                 expanded.append(form)

@@ -65,14 +65,23 @@ class ResolvedIdentity:
     en_title: str | None
     en_url: str | None
     romanized_terms: tuple[str, ...]
+    # ``exact_title`` (Phase-1 multi-title langlinks) or
+    # ``search_fallback`` (Phase-2 bounded ru.wikipedia search with mandatory
+    # structured BIND; carries its evidence block in ``fallback``).
+    method: str = "exact_title"
+    fallback: dict | None = None
 
     def provenance(self) -> dict:
-        return {
+        provenance = {
             "source_variant": self.source_variant,
             "ru_title": self.ru_title,
             "en_title": self.en_title,
             "en_url": self.en_url,
+            "method": self.method,
         }
+        if self.fallback is not None:
+            provenance["fallback"] = self.fallback
+        return provenance
 
 
 @dataclass(frozen=True)

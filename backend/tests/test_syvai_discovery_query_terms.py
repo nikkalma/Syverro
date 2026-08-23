@@ -6,6 +6,7 @@ from types import SimpleNamespace
 
 from app.syvai.discovery.query_terms import (
     MAX_VARIANTS,
+    base_search_variants,
     normalize_name,
     search_variants,
     strip_qualifier,
@@ -123,3 +124,33 @@ class TestSearchVariants:
 
     def test_no_names(self):
         assert search_variants(_author()) == []
+
+
+class TestBaseSearchVariants:
+    """Pre-apostrophe-expansion list consumed by the search fallback."""
+
+    def test_l_engle_single_spelling_per_base(self):
+        # CirrusSearch handles apostrophe families; the fallback must not
+        # waste its request budget on spelling duplicates.
+        author = _author(name="Л\u2019Энгль, Мадлен")
+        assert base_search_variants(author) == [
+            "Л'Энгль, Мадлен",
+            "Мадлен Л'Энгль",
+        ]
+
+    def test_dumas_chain_keeps_qualifier_first(self):
+        assert base_search_variants(_author(name="Дюма, Александр (отец)")) == [
+            "Дюма, Александр (отец)",
+            "Дюма, Александр",
+            "Александр Дюма",
+        ]
+
+    def test_expanded_is_superset_of_base(self):
+        author = _author(name="Л\u2019Энгль, Мадлен")
+        expanded = search_variants(author)
+        for variant in base_search_variants(author):
+            assert variant in expanded
+
+    def test_bounded(self):
+        author = _author(display_name="A, B (x)", name="B, A (y)")
+        assert len(base_search_variants(author)) <= MAX_VARIANTS

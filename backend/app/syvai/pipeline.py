@@ -45,8 +45,9 @@ from app.syvai.evidence import (
     verify_evidence,
 )
 from app.syvai.provider import Provider, ProviderResult
-from app.syvai.prompts.timeline_v3 import build_timeline_prompt
+from app.syvai.prompts.timeline_v4 import build_timeline_prompt
 from app.syvai.timeline_claims import TimelineClaim, parse_timeline_claims
+from app.syvai.timeline_minimization import minimize_timeline_claim
 from app.syvai.timeline_research import (
     build_research_input,
     load_existing_events,
@@ -176,6 +177,11 @@ async def _persist_proposals(
                 matched_sources.append(matched)
                 seen_source_ids.add(matched["id"])
                 ref_evidence[matched["id"]] = ref.evidence
+
+        claim = minimize_timeline_claim(
+            claim,
+            [ref_evidence.get(source["id"]) for source in matched_sources],
+        )
 
         reliabilities = [source.get("reliability_score") for source in matched_sources]
 

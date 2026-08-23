@@ -585,6 +585,53 @@ async def test_metrics_per_provider_families_and_run_counts():
     assert metrics["providers_failed"] == 0
 
 
+@pytest.mark.asyncio
+async def test_metrics_auto_approved_sources_are_author_scoped():
+    author_id = uuid4()
+    other_source = Source(
+        id=uuid4(),
+        title="Another Author",
+        source_type="encyclopedia",
+        url="https://example.org/other",
+        source_origin="syvai_discovery",
+        review_status="auto_approved",
+    )
+    current_candidate = SourceCandidate(
+        id=uuid4(), author_id=author_id, run_id=uuid4(),
+        url="https://example.org/current",
+        normalized_url="https://example.org/current",
+        title="Current Author", authority_tier="medium", assessment="needs_review",
+        status="pending", provider="wikipedia-discovery",
+    )
+    session = FakeDiscoverySession(sources=[other_source], candidates=[current_candidate])
+
+    metrics = await discovery_metrics(session, str(author_id))
+
+    assert metrics["candidates_total"] == 1
+    assert metrics["auto_approved_sources"] == 0
+
+
+@pytest.mark.asyncio
+async def test_metrics_pending_excludes_terminally_rejected_candidates():
+    author_id = uuid4()
+    rows = [
+        SourceCandidate(
+            id=uuid4(), author_id=author_id, run_id=uuid4(),
+            url="https://example.org/wrong", normalized_url="https://example.org/wrong",
+            title="Wrong person", authority_tier="high", assessment="rejected",
+            status="pending", provider="archive-discovery",
+        ),
+        SourceCandidate(
+            id=uuid4(), author_id=author_id, run_id=uuid4(),
+            url="https://example.org/review", normalized_url="https://example.org/review",
+            title="Needs review", authority_tier="medium", assessment="needs_review",
+            status="pending", provider="wikipedia-discovery",
+        ),
+    ]
+    metrics = await discovery_metrics(FakeDiscoverySession(candidates=rows), str(author_id))
+    assert metrics["candidates_pending"] == 1
+
+
 # ---------------------------------------------------------------------------
 # 0.3A corrective: re-running discovery must never re-insert a URL already
 # persisted as a SourceCandidate for the author (uq_source_candidates_author_

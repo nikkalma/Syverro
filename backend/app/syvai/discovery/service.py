@@ -41,6 +41,7 @@ from app.syvai.discovery.langlinks import (
     REASON_HTTP_ERROR,
     ResolvedIdentity,
     UnresolvedIdentity,
+    fetch_resolved_document_content,
     resolve_en_identity,
 )
 from app.syvai.discovery.providers import SourceDiscoveryProvider
@@ -230,6 +231,9 @@ async def run_discovery(
                         unresolved.detail,
                     )
     identity_terms = tuple(resolved.romanized_terms) if resolved else ()
+    resolved_document_content: str | None = None
+    if resolved is not None:
+        resolved_document_content = await fetch_resolved_document_content(resolved)
 
     def _merged_query_terms() -> list[str]:
         terms = _author_query_terms(author)
@@ -293,7 +297,7 @@ async def run_discovery(
                             origin="langlinks_bootstrap"
                             if resolved.method == "exact_title"
                             else "ruwiki_search_fallback",
-                            evidence=build_structured_evidence(evidence_payload),
+                            evidence=(resolved_document_content or build_structured_evidence(evidence_payload)),
                         ),
                     )
                 )
@@ -612,13 +616,11 @@ async def discovery_metrics(db: AsyncSession, author_id: str) -> dict:
     )
     human_actions += proposals_result.scalar() or 0
 
-    sources_result = await db.execute(
-        select(Source).where(
-            Source.source_origin == "syvai_discovery",
-            Source.review_status == "auto_approved",
-        )
+    auto_sources = sum(
+        1
+        for candidate in candidates
+        if candidate.review_action == "auto_approved" and candidate.source_id is not None
     )
-    auto_sources = sources_result.scalars().all()
 
     # Provider success/failure, derived from runs + the candidates they produced.
     runs_result = await db.execute(
@@ -640,10 +642,14 @@ async def discovery_metrics(db: AsyncSession, author_id: str) -> dict:
     return {
         "author_id": str(author_id),
         "candidates_total": len(candidates),
-        "candidates_pending": sum(1 for c in candidates if c.status == "pending"),
+        "candidates_pending": sum(
+            1
+            for candidate in candidates
+            if candidate.status == "pending" and candidate.assessment == ASSESSMENT_NEEDS_REVIEW
+        ),
         "by_assessment": by_assessment,
         "by_review_action": by_action,
-        "auto_approved_sources": len(auto_sources),
+        "auto_approved_sources": auto_sources,
         "human_actions_per_author": human_actions,
         "formula": "approved + rejected candidates + reviewed AI proposals",
         "providers": sorted(candidates_per_provider),

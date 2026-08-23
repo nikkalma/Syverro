@@ -33,6 +33,7 @@ from typing import Sequence
 from urllib.parse import quote, urlencode
 
 from app.config import settings
+from app.syvai.discovery.evidence import extract_evidence
 from app.syvai.discovery.fetcher import FetcherConfig, SafeFetcher
 
 logger = logging.getLogger(__name__)
@@ -41,6 +42,8 @@ logger = logging.getLogger(__name__)
 # discovery providers: exact-match per request and per redirect hop).
 RUWIKI_ALLOWED_HOSTS = {"ru.wikipedia.org"}
 RUWIKI_API_URL = "https://ru.wikipedia.org/w/api.php"
+ENWIKI_ALLOWED_HOSTS = {"en.wikipedia.org"}
+ENWIKI_API_URL = "https://en.wikipedia.org/w/api.php"
 
 # MediaWiki accepts up to 50 titles per read request for non-bots; the variant
 # bound from query_terms is far below that, so one request always suffices.
@@ -101,6 +104,45 @@ def _bootstrap_fetcher() -> SafeFetcher:
             allowed_hosts=frozenset(RUWIKI_ALLOWED_HOSTS),
         )
     )
+
+
+def _enwiki_fetcher() -> SafeFetcher:
+    return SafeFetcher(
+        FetcherConfig(
+            timeout_seconds=settings.SYVAI_DISCOVERY_TIMEOUT_SECONDS,
+            max_bytes=settings.SYVAI_DISCOVERY_MAX_PAGE_BYTES,
+            user_agent=settings.SYVAI_DISCOVERY_USER_AGENT,
+            allowed_hosts=frozenset(ENWIKI_ALLOWED_HOSTS),
+        )
+    )
+
+
+async def fetch_resolved_document_content(
+    resolved: ResolvedIdentity,
+    *,
+    fetcher: SafeFetcher | None = None,
+) -> str | None:
+    """Fetch the resolved article lead as bounded document content."""
+    if not resolved.en_title:
+        return None
+    params = urlencode({
+        "action": "query",
+        "format": "json",
+        "formatversion": 2,
+        "prop": "extracts",
+        "exintro": 1,
+        "explaintext": 1,
+        "titles": resolved.en_title,
+    })
+    try:
+        page = await (fetcher or _enwiki_fetcher()).fetch(f"{ENWIKI_API_URL}?{params}")
+        data = json.loads(page.text)
+    except Exception:  # noqa: BLE001 - best-effort content inspection boundary
+        return None
+    pages = data.get("query", {}).get("pages", []) or []
+    if len(pages) != 1 or pages[0].get("missing"):
+        return None
+    return extract_evidence(pages[0].get("extract") or "") or None
 
 
 def _request_url(variants: Sequence[str]) -> str:

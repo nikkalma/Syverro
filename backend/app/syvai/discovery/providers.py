@@ -217,7 +217,7 @@ class WikipediaDiscoveryProvider:
         try:
             page = await self._fetcher.fetch(url)
         except Exception as exc:  # noqa: BLE001 - wrap into provider taxonomy
-            raise ProviderError(f"wikipedia discovery fetch failed: {exc}") from exc
+            raise ProviderError(f"wikipedia discovery fetch failed: {type(exc).__name__}: {exc}") from exc
 
         import json
 
@@ -325,7 +325,7 @@ class LocDiscoveryProvider:
         try:
             page = await self._fetcher.fetch(url)
         except Exception as exc:  # noqa: BLE001 - wrap into provider taxonomy
-            raise ProviderError(f"loc discovery fetch failed: {exc}") from exc
+            raise ProviderError(f"loc discovery fetch failed: {type(exc).__name__}: {exc}") from exc
 
         try:
             data = json.loads(page.text)
@@ -479,7 +479,7 @@ class ArchiveDiscoveryProvider:
         try:
             page = await self._fetcher.fetch(url)
         except Exception as exc:  # noqa: BLE001 - wrap into provider taxonomy
-            raise ProviderError(f"archive discovery fetch failed: {exc}") from exc
+            raise ProviderError(f"archive discovery fetch failed: {type(exc).__name__}: {exc}") from exc
 
         try:
             data = json.loads(page.text)

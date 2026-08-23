@@ -31,6 +31,17 @@ WEB_IMAGE="${REQUESTED_WEB_IMAGE:-${WEB_IMAGE:-ghcr.io/nikkalma/syverro-web:${IM
 
 export IMAGE_TAG BACKEND_IMAGE WEB_IMAGE
 
+# Stale release pins in .env are a silent-rollback hazard: any ad-hoc
+# `docker compose up` outside this script resolves images from .env, not
+# from the tags CI deployed. Surface the drift now; refresh after success.
+for key in IMAGE_TAG BACKEND_IMAGE WEB_IMAGE; do
+  pinned="$(sed -n "s/^${key}=//p" .env | tail -n 1)"
+  current="${!key}"
+  if [[ -n "$pinned" && "$pinned" != "$current" ]]; then
+    echo "NOTE: .env ${key} pin (${pinned}) differs from requested (${current}); refreshing after deploy."
+  fi
+done
+
 echo "Pulling images..."
 echo "  backend: ${BACKEND_IMAGE}"
 echo "  web:     ${WEB_IMAGE}"
@@ -56,6 +67,18 @@ for i in $(seq 1 30); do
   if curl -fsS http://127.0.0.1:8000/health >/dev/null 2>&1; then
     curl -fsS http://127.0.0.1:8000/health
     echo
+    sync_env_pin() {
+      local key="$1" val="$2"
+      if grep -q "^${key}=" .env; then
+        sed -i "s|^${key}=.*|${key}=${val}|" .env
+      else
+        printf '%s=%s\n' "$key" "$val" >> .env
+      fi
+    }
+    sync_env_pin IMAGE_TAG "$IMAGE_TAG"
+    sync_env_pin BACKEND_IMAGE "$BACKEND_IMAGE"
+    sync_env_pin WEB_IMAGE "$WEB_IMAGE"
+    echo "Release pins in .env refreshed to ${IMAGE_TAG}."
     echo "Deploy OK"
     exit 0
   fi

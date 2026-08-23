@@ -287,6 +287,12 @@ async def run_discovery(
                         fallback.get("corroboration") or ""
                     )
                     evidence_payload["identity_qid"] = str(fallback.get("qid") or "")
+                identity_evidence = build_structured_evidence(evidence_payload)
+                candidate_evidence = identity_evidence
+                if resolved_document_content:
+                    candidate_evidence = (
+                        f"{identity_evidence} document_content: {resolved_document_content}"
+                    )[:700]
                 ordered.append(
                     (
                         "wikipedia-langlinks",
@@ -297,7 +303,7 @@ async def run_discovery(
                             origin="langlinks_bootstrap"
                             if resolved.method == "exact_title"
                             else "ruwiki_search_fallback",
-                            evidence=(resolved_document_content or build_structured_evidence(evidence_payload)),
+                            evidence=candidate_evidence,
                         ),
                     )
                 )
@@ -361,8 +367,15 @@ async def run_discovery(
                     resolved_identity=resolved,
                     candidate_url=candidate.url,
                 )
+                inspection_evidence = (
+                    resolved_document_content
+                    if resolved is not None
+                    and candidate.url == resolved.en_url
+                    and provider_name == "wikipedia-langlinks"
+                    else candidate.evidence
+                )
                 capabilities, capability_evidence = inspect_content_capabilities(
-                    evidence=candidate.evidence,
+                    evidence=inspection_evidence,
                     metadata_fields={**(candidate.metadata_fields or {}), "title": candidate.title},
                 )
                 if identity_verification["state"] == "verified" and "IDENTITY" not in capabilities:

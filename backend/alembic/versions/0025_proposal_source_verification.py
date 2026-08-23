@@ -1,6 +1,6 @@
 """Persist proposal-source epistemic verification state.
 
-Revision ID: 0025_proposal_source_verification
+Revision ID: 0025_evidence_provenance
 Revises: 0024_source_discovery
 """
 
@@ -10,7 +10,7 @@ from alembic import op
 import sqlalchemy as sa
 
 
-revision: str = "0025_proposal_source_verification"
+revision: str = "0025_evidence_provenance"
 down_revision: Union[str, None] = "0024_source_discovery"
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None

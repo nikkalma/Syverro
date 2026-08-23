@@ -45,13 +45,13 @@ from app.syvai.evidence import (
     verify_evidence,
 )
 from app.syvai.provider import Provider, ProviderResult
-from app.syvai.prompts.timeline_v2 import build_timeline_prompt
+from app.syvai.prompts.timeline_v3 import build_timeline_prompt
 from app.syvai.timeline_claims import TimelineClaim, parse_timeline_claims
 from app.syvai.timeline_research import (
     build_research_input,
     load_existing_events,
-    load_trusted_sources,
 )
+from app.syvai.corpus import build_author_corpus
 from app.syvai.validators import (
     REVIEW_BAND_AUTO_REJECTED,
     REVIEW_BANDS_NEEDING_HUMAN,
@@ -294,6 +294,8 @@ async def run_timeline_research(
     db: AsyncSession,
     author: Author,
     provider: Provider,
+    *,
+    corpus_snapshot=None,
 ) -> RunOutcome:
     """Execute one grounded timeline research run for ``author``.
 
@@ -312,11 +314,26 @@ async def run_timeline_research(
     await db.flush()
 
     try:
-        trusted_sources = await load_trusted_sources(db, author)
+        corpus = corpus_snapshot or await build_author_corpus(db, author.id)
+        trusted_sources = corpus.sources_for_domain("timeline")
+        manifest = corpus.manifest("timeline", trusted_sources)
+        run.corpus_manifest = manifest
+        run.routing_reason = manifest["routing_reason"]
         run.source_count = len(trusted_sources)
+        await db.flush()
+        if manifest["permitted_domain"] is None:
+            run.status = "skipped"
+            run.error = manifest["routing_reason"]
+            run.duration_ms = int((time.monotonic() - started) * 1000)
+            run.finished_at = datetime.now(timezone.utc).replace(tzinfo=None)
+            await db.commit()
+            await db.refresh(run)
+            return RunOutcome(run=run, proposals=[], error=run.error)
         research = build_research_input(author, trusted_sources)
         system_prompt, user_prompt = build_timeline_prompt(research)
 
+        run.corpus_manifest = {**manifest, "provider_called": True}
+        await db.flush()
         result: ProviderResult = await provider.complete(system_prompt, user_prompt)
         claims = parse_timeline_claims(result.text)
 

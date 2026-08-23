@@ -16,10 +16,11 @@ from app.syvai.pipeline import (
     _match_source,
     _reliability_tier,
     _sanitize_error,
-    run_timeline_research,
+    run_timeline_research as _run_timeline_research,
 )
 from app.syvai.provider import FakeProvider
 from app.syvai.validators import ExistingEvent
+from app.syvai.corpus import CorpusSnapshot
 
 
 def _author():
@@ -105,6 +106,24 @@ class FakeSession:
 
     async def refresh(self, obj):
         self.refreshed.append(obj)
+
+
+async def run_timeline_research(session, author, provider):
+    verified = [{
+        "id": str(source.id), "title": source.title, "url": source.url,
+        "source_type": source.source_type, "citation": source.citation,
+        "language": source.language, "reliability_score": source.reliability_score,
+        "trust_state": "HUMAN_VERIFIED", "content_capabilities": ["TIMELINE"],
+        "capability_evidence": {}, "identity_verification": None, "candidate_id": None,
+    } for source in session.sources]
+    snapshot = CorpusSnapshot(
+        str(author.id), verified, [],
+        {"TIMELINE": [source["id"] for source in verified]} if verified else {},
+        0, 0, 0,
+    )
+    return await _run_timeline_research(
+        session, author, provider, corpus_snapshot=snapshot,
+    )
 
 
 CLAIM_JSON = {
@@ -218,15 +237,17 @@ async def test_run_timeline_research_persists_proposals_and_links_sources():
 
 
 @pytest.mark.asyncio
-async def test_run_timeline_research_no_sources_marks_needs_review():
+async def test_run_timeline_research_no_sources_skips_without_provider_call():
     author = _author()
     session = FakeSession(sources=[])
     provider = FakeProvider(json.dumps({"events": [CLAIM_JSON]}))
 
     outcome = await run_timeline_research(session, author, provider)
 
-    assert outcome.run.status == "review_needed"
-    assert outcome.proposals[0].validation_state == "needs_review"
+    assert outcome.run.status == "skipped"
+    assert outcome.error == "INSUFFICIENT_CORPUS:NO_VERIFIED_SOURCES"
+    assert outcome.proposals == []
+    assert provider.calls == []
     source_links = [obj for obj in session.added if isinstance(obj, AIProposalSource)]
     assert source_links == []
 
@@ -340,7 +361,7 @@ async def test_ungrounded_evidence_keeps_human_review():
 @pytest.mark.asyncio
 async def test_run_timeline_research_records_structured_output_failure():
     author = _author()
-    session = FakeSession(sources=[])
+    session = FakeSession(sources=[_source()])
     provider = FakeProvider("not json")
 
     outcome = await run_timeline_research(session, author, provider)
@@ -366,7 +387,7 @@ async def test_run_timeline_research_no_sources_in_run_telemetry():
 @pytest.mark.asyncio
 async def test_run_timeline_research_commit_even_on_failure():
     author = _author()
-    session = FakeSession(sources=[])
+    session = FakeSession(sources=[_source()])
     provider = FakeProvider(json.dumps({"events": [CLAIM_JSON]}))
 
     class FailingProvider:

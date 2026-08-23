@@ -62,10 +62,10 @@ async def migration_engine():
         await engine.dispose()
 
 
-def test_expected_head_is_proposal_source_verification_revision():
+def test_expected_head_is_curated_corpus_revision():
     from app.migrations import expected_head
 
-    assert expected_head() == "0025_evidence_provenance"
+    assert expected_head() == "0026_curated_corpus"
 
 
 @pytest.mark.asyncio
@@ -111,7 +111,7 @@ async def test_empty_database_bootstraps_to_head(migration_engine):
             }
         )
 
-    assert revision == "0025_evidence_provenance"
+    assert revision == "0026_curated_corpus"
     assert {
         "email_verified",
         "email_verification_token_hash",
@@ -141,6 +141,8 @@ async def test_empty_database_bootstraps_to_head(migration_engine):
         "duration_ms",
         "estimated_cost_usd",
         "error",
+        "corpus_manifest",
+        "routing_reason",
     } <= run_columns
     assert {
         "authority_tier",
@@ -148,6 +150,10 @@ async def test_empty_database_bootstraps_to_head(migration_engine):
         "normalized_url",
         "discovered_by",
         "discovered_at",
+        "content_capabilities",
+        "capability_evidence",
+        "content_inspected_at",
+        "content_inspector_version",
     } <= source_columns
     assert {
         "author_id",
@@ -163,6 +169,9 @@ async def test_empty_database_bootstraps_to_head(migration_engine):
         "review_action",
         "reviewed_at",
         "reviewed_by",
+        "identity_verification",
+        "content_capabilities",
+        "capability_evidence",
     } <= candidate_columns
     assert {
         "verification_state",
@@ -214,7 +223,11 @@ async def test_revision_0017_is_upgraded_before_backend_start(migration_engine):
                 "DROP COLUMN review_status, "
                 "DROP COLUMN normalized_url, "
                 "DROP COLUMN discovered_by, "
-                "DROP COLUMN discovered_at"
+                "DROP COLUMN discovered_at, "
+                "DROP COLUMN content_capabilities, "
+                "DROP COLUMN capability_evidence, "
+                "DROP COLUMN content_inspected_at, "
+                "DROP COLUMN content_inspector_version"
             )
         )
         await conn.execute(
@@ -234,7 +247,7 @@ async def test_revision_0017_is_upgraded_before_backend_start(migration_engine):
             }
         )
 
-    assert revision == "0025_evidence_provenance"
+    assert revision == "0026_curated_corpus"
     assert "email_verified" in columns
 
 

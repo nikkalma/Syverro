@@ -1,4 +1,4 @@
-from sqlalchemy import Column, String, Text, DateTime, ForeignKey
+from sqlalchemy import Column, String, Text, DateTime, ForeignKey, JSON
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.sql import func
 from app.database import Base
@@ -22,6 +22,10 @@ class Source(Base):
     normalized_url = Column(String, nullable=True, index=True)
     discovered_by = Column(String, nullable=True)
     discovered_at = Column(DateTime(timezone=True), nullable=True)
+    content_capabilities = Column(JSON, nullable=True)
+    capability_evidence = Column(JSON, nullable=True)
+    content_inspected_at = Column(DateTime(timezone=True), nullable=True)
+    content_inspector_version = Column(String, nullable=True)
     created_at = Column(DateTime, server_default=func.now(), nullable=False)
 
 

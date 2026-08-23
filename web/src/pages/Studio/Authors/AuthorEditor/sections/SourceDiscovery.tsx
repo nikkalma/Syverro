@@ -3,15 +3,9 @@ import { useAuthorEditor } from '../AuthorEditorContext';
 import EditorSectionCard from '../../../../../components/Studio/shared/EditorSectionCard';
 import { apiClient } from '../../../../../shared/api/client';
 import type {
-  DiscoveryRun, DiscoveryRunResponse, DiscoveryMetrics, DiscoveryStatus, SourceCandidate,
+  DiscoveryRun, DiscoveryRunResponse, DiscoveryMetrics, DiscoveryStatus, SourceCandidate, ResearchCorpusSummary,
 } from '../../../../../types/admin';
 import { getLocaleData, getBrowserLocale } from '../../../../../locales';
-
-const ASSESSMENT_LABELS: Record<string, string> = {
-  auto_usable: 'Auto-usable',
-  needs_review: 'Needs review',
-  rejected: 'Rejected',
-};
 
 const ASSESSMENT_COLORS: Record<string, string> = {
   auto_usable: '#4CAF50',
@@ -39,6 +33,16 @@ const REVIEW_ACTION_COLORS: Record<string, string> = {
   auto_approved: '#5B86A1',
 };
 
+const CORPUS_LABELS: Record<string, string> = {
+  VERIFIED: 'Verified', NEEDS_REVIEW: 'Needs review', REJECTED: 'Rejected',
+};
+
+function corpusGroup(candidate: SourceCandidate): string {
+  if (candidate.corpus_state === 'AUTO_VERIFIED' || candidate.corpus_state === 'HUMAN_VERIFIED') return 'VERIFIED';
+  if (candidate.corpus_state === 'REJECTED') return 'REJECTED';
+  return 'NEEDS_REVIEW';
+}
+
 export default function SourceDiscovery() {
   const { author } = useAuthorEditor();
   const t = getLocaleData(getBrowserLocale());
@@ -48,6 +52,7 @@ export default function SourceDiscovery() {
   const [runs, setRuns] = useState<DiscoveryRun[]>([]);
   const [candidates, setCandidates] = useState<SourceCandidate[]>([]);
   const [metrics, setMetrics] = useState<DiscoveryMetrics | null>(null);
+  const [corpus, setCorpus] = useState<ResearchCorpusSummary | null>(null);
   const [loading, setLoading] = useState(true);
   const [running, setRunning] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -61,14 +66,16 @@ export default function SourceDiscovery() {
     try {
       const statusRes = await apiClient.get<DiscoveryStatus>(`/admin/authors/${author.id}/discovery/status`);
       setStatus(statusRes.data);
-      const [candidatesRes, runsRes, metricsRes] = await Promise.all([
+      const [candidatesRes, runsRes, metricsRes, corpusRes] = await Promise.all([
         apiClient.get<{ data: SourceCandidate[] }>(`/admin/authors/${author.id}/discovery/candidates`),
         apiClient.get<{ data: DiscoveryRun[] }>(`/admin/authors/${author.id}/discovery/runs`),
         apiClient.get<DiscoveryMetrics>(`/admin/authors/${author.id}/discovery/metrics`),
+        apiClient.get<ResearchCorpusSummary>(`/admin/authors/${author.id}/research-corpus`),
       ]);
       setCandidates(candidatesRes.data?.data || []);
       setRuns(runsRes.data?.data || []);
       setMetrics(metricsRes.data);
+      setCorpus(corpusRes.data);
     } catch (e: any) {
       setError(e?.response?.data?.detail || e.message || copy.errorLoad);
     } finally {
@@ -111,13 +118,14 @@ export default function SourceDiscovery() {
   if (!author) return null;
 
   const filtered = candidates.filter((c) => {
-    if (assessmentFilter && c.assessment !== assessmentFilter) return false;
+    if (assessmentFilter && corpusGroup(c) !== assessmentFilter) return false;
     if (statusFilter && c.status !== statusFilter) return false;
     return true;
   });
 
   const assessmentCounts = candidates.reduce<Record<string, number>>((acc, c) => {
-    acc[c.assessment] = (acc[c.assessment] || 0) + 1;
+    const group = corpusGroup(c);
+    acc[group] = (acc[group] || 0) + 1;
     return acc;
   }, {});
 
@@ -148,7 +156,7 @@ export default function SourceDiscovery() {
               background: 'var(--accent)', border: 'none', color: '#fff',
               opacity: running || !configured ? 0.6 : 1, whiteSpace: 'nowrap',
             }}>
-            {running ? copy.running : copy.run}
+            {running ? copy.running : 'Find Sources'}
           </button>
         </div>
 
@@ -170,6 +178,21 @@ export default function SourceDiscovery() {
                 <div style={{ fontSize: '16px', fontWeight: 600, color: m.color }}>{m.value}</div>
               </div>
             ))}
+          </div>
+        )}
+
+        {corpus && (
+          <div style={{ padding: '12px', borderRadius: '8px', marginBottom: '16px', background: 'var(--surface)', border: '1px solid var(--border-soft)' }}>
+            <div style={{ fontSize: '13px', fontWeight: 600, marginBottom: '8px' }}>
+              Research corpus: {corpus.verified_sources.length} verified sources
+            </div>
+            <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+              {Object.entries(corpus.domains).map(([domain, state]) => (
+                <span key={domain} title={state.reason || undefined} style={{ padding: '3px 8px', borderRadius: '12px', fontSize: '11px', background: state.available ? 'rgba(76,175,80,0.15)' : 'rgba(151,166,186,0.15)', color: state.available ? '#4CAF50' : 'var(--text-muted)' }}>
+                  {domain}: {state.available ? 'available' : state.reason}
+                </span>
+              ))}
+            </div>
           </div>
         )}
 
@@ -215,15 +238,15 @@ export default function SourceDiscovery() {
               }}>
               {t.admin.common.all} ({candidates.length})
             </button>
-            {Object.keys(ASSESSMENT_LABELS).map((a) => (
+            {Object.keys(CORPUS_LABELS).map((a) => (
               <button key={a} type="button" onClick={() => setAssessmentFilter(a)}
                 style={{
                   padding: '4px 12px', borderRadius: '16px', fontSize: '12px', cursor: 'pointer',
-                  background: assessmentFilter === a ? ASSESSMENT_COLORS[a] : 'var(--surface-hover)',
+                  background: assessmentFilter === a ? (a === 'VERIFIED' ? '#4CAF50' : a === 'REJECTED' ? '#EF5350' : '#FFA726') : 'var(--surface-hover)',
                   border: '1px solid var(--border-soft)',
                   color: assessmentFilter === a ? '#fff' : 'var(--text-secondary)',
                 }}>
-                {copy.assessments[a as keyof typeof copy.assessments] || ASSESSMENT_LABELS[a]} ({assessmentCounts[a] || 0})
+                {CORPUS_LABELS[a]} ({assessmentCounts[a] || 0})
               </button>
             ))}
           </div>
@@ -251,7 +274,7 @@ export default function SourceDiscovery() {
                 background: `${ASSESSMENT_COLORS[c.assessment] || '#97A6BA'}1f`,
                 color: ASSESSMENT_COLORS[c.assessment] || '#97A6BA',
               }}>
-                {copy.assessments[c.assessment as keyof typeof copy.assessments] || ASSESSMENT_LABELS[c.assessment] || c.assessment}
+                {c.corpus_state.replace(/_/g, ' ')}
               </span>
               <span style={{
                 padding: '2px 8px', borderRadius: '4px', fontSize: '10px',
@@ -302,7 +325,23 @@ export default function SourceDiscovery() {
               </div>
             )}
 
-            {c.status === 'pending' && (
+            {c.identity_verification && (
+              <div style={{ fontSize: '11px', color: 'var(--text-secondary)', marginBottom: '8px' }}>
+                Identity: {String(c.identity_verification.method || 'unresolved')} — {String(c.identity_verification.reason || '')}
+              </div>
+            )}
+
+            {c.content_capabilities.length > 0 && (
+              <div style={{ display: 'flex', gap: '5px', flexWrap: 'wrap', marginBottom: '8px' }}>
+                {c.content_capabilities.map((capability) => (
+                  <span key={capability} title={JSON.stringify(c.capability_evidence[capability] || [])} style={{ padding: '2px 7px', borderRadius: '10px', fontSize: '10px', background: 'rgba(91,134,161,0.15)', color: '#5B86A1' }}>
+                    {capability}
+                  </span>
+                ))}
+              </div>
+            )}
+
+            {c.corpus_state === 'NEEDS_REVIEW' && c.status === 'pending' && (
               <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
                 <button type="button" onClick={() => reviewCandidate(c.id, 'reject')}
                   style={{

@@ -218,6 +218,9 @@ def _run_dict(run: SyvaiRun) -> dict:
         "calls": run.calls,
         "source_count": run.source_count,
         "error": run.error,
+        "routing_reason": run.routing_reason,
+        "corpus_manifest": run.corpus_manifest,
+        "provider_called": bool((run.corpus_manifest or {}).get("provider_called")),
         "created_at": run.created_at.isoformat() if run.created_at else None,
         "finished_at": run.finished_at.isoformat() if run.finished_at else None,
     }

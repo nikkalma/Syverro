@@ -337,7 +337,7 @@ async def test_matrix_c_wikipedia_fails_authority_ok():
     assert outcome.providers_succeeded == 1
     assert len(outcome.candidates) == 1
     assert outcome.candidates[0].provider == "stub-ok"
-    assert outcome.created_sources  # high-authority auto-approval still fires
+    assert outcome.created_sources == []  # authority/score alone cannot establish identity
     assert "stub failure" in (outcome.run.error or "")
 
 
@@ -400,7 +400,7 @@ async def test_matrix_g_cross_adapter_duplicate_deduped():
     outcome = await run_discovery(session, _author(), [OkProvider([duplicate]), OkProvider([duplicate])])
     assert len(outcome.candidates) == 1
     assert outcome.duplicate_skipped >= 1
-    assert len(outcome.created_sources) == 1
+    assert outcome.created_sources == []
 
 
 @pytest.mark.asyncio
@@ -828,8 +828,8 @@ async def test_anne_offline_replay_multi_authority():
     # No truth injection: discovery never reads a "Documented Sources" table;
     # assessment is deterministic on URL + title + evidence only.
     assert outcome.run.status in {"review_needed", "completed"}
-    assert any(c.review_action == "auto_approved" for c in outcome.candidates)  # loc/archive auto
-    assert all("loc.gov" not in c.normalized_url or c.review_action == "auto_approved" for c in outcome.candidates)
+    assert not any(c.review_action == "auto_approved" for c in outcome.candidates)
+    assert all(c.identity_verification["state"] != "verified" for c in outcome.candidates)
 
 
 def registrable(url):

@@ -47,6 +47,12 @@ from app.syvai.discovery.providers import SourceDiscoveryProvider
 from app.syvai.discovery.query_terms import base_search_variants, search_variants
 from app.syvai.discovery.ruwiki_fallback import search_fallback_resolve
 from app.syvai.discovery.urls import normalize_url, registrable_domain
+from app.syvai.discovery.verification import (
+    CONTENT_INSPECTOR_VERSION,
+    inspect_content_capabilities,
+    inspected_at,
+    verify_candidate_identity,
+)
 from app.syvai.errors import (
     ConfigurationError,
     DiscoveryError,
@@ -111,6 +117,10 @@ def _promote_to_source(
         discovered_by=provider_name,
         discovered_at=datetime.now(timezone.utc),
         reliability_score=_AUTO_RELIABILITY.get(candidate.authority_tier, "3"),
+        content_capabilities=candidate.content_capabilities or [],
+        capability_evidence=candidate.capability_evidence or {},
+        content_inspected_at=inspected_at(),
+        content_inspector_version=CONTENT_INSPECTOR_VERSION,
     )
 
 
@@ -339,6 +349,40 @@ async def run_discovery(
                     metadata_fields=candidate.metadata_fields,
                     extra_exact_titles=identity_terms or None,
                 )
+                identity_verification = verify_candidate_identity(
+                    query_terms=terms,
+                    title=candidate.title,
+                    metadata_fields=candidate.metadata_fields,
+                    origin=candidate.origin,
+                    resolved_identity=resolved,
+                    candidate_url=candidate.url,
+                )
+                capabilities, capability_evidence = inspect_content_capabilities(
+                    evidence=candidate.evidence,
+                    metadata_fields={**(candidate.metadata_fields or {}), "title": candidate.title},
+                )
+                if identity_verification["state"] == "verified" and "IDENTITY" not in capabilities:
+                    capabilities.append("IDENTITY")
+                    capabilities.sort()
+                    capability_evidence["IDENTITY"] = [{
+                        "kind": "structured_metadata",
+                        "path": "identity_verification.matched_title",
+                        "value": str(identity_verification.get("matched_title") or identity_verification.get("matched_entity") or "resolved identity"),
+                    }]
+                # Ranking remains useful for review ordering, but can never
+                # independently grant Author-specific corpus trust.
+                if identity_verification["state"] == "rejected":
+                    assessment_name = "rejected"
+                    assessment_reason = "identity_mismatch"
+                elif identity_verification["state"] == "verified" and assessment.assessment != "rejected":
+                    assessment_name = ASSESSMENT_AUTO_USABLE
+                    assessment_reason = "deterministic_identity_verified"
+                elif assessment.assessment == ASSESSMENT_AUTO_USABLE and identity_verification["state"] != "verified":
+                    assessment_name = ASSESSMENT_NEEDS_REVIEW
+                    assessment_reason = "identity_not_deterministically_verified"
+                else:
+                    assessment_name = assessment.assessment
+                    assessment_reason = assessment.reason
                 row = SourceCandidate(
                     author_id=author.id,
                     run_id=run.id,
@@ -348,16 +392,19 @@ async def run_discovery(
                     source_type=candidate.source_type,
                     authority_tier=tier,
                     quality_score=assessment.quality_score,
-                    assessment=assessment.assessment,
-                    assessment_reason=assessment.reason,
+                    assessment=assessment_name,
+                    assessment_reason=assessment_reason,
                     provider=provider_name,
                     origin=candidate.origin,
                     evidence=candidate.evidence,
+                    identity_verification=identity_verification,
+                    content_capabilities=capabilities,
+                    capability_evidence=capability_evidence,
                 )
                 db.add(row)
                 await db.flush()
 
-                if assessment.assessment == ASSESSMENT_AUTO_USABLE:
+                if assessment_name == ASSESSMENT_AUTO_USABLE and identity_verification["state"] == "verified":
                     source = _promote_to_source(row, provider_name=provider_name, review_status="auto_approved")
                     db.add(source)
                     await db.flush()
@@ -470,6 +517,11 @@ async def approve_candidate(
         candidate.source_id = source.id
     else:
         candidate.source_id = existing.id
+        if not existing.content_capabilities:
+            existing.content_capabilities = candidate.content_capabilities or []
+            existing.capability_evidence = candidate.capability_evidence or {}
+            existing.content_inspected_at = inspected_at()
+            existing.content_inspector_version = CONTENT_INSPECTOR_VERSION
 
     candidate.status = "reviewed"
     candidate.review_action = "approved"

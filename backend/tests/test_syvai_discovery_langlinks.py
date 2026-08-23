@@ -311,7 +311,7 @@ async def test_bootstrap_disabled_by_default_never_called(monkeypatch):
 
 
 @pytest.mark.asyncio
-async def test_bootstrap_on_injects_direct_en_candidate_as_needs_review(monkeypatch):
+async def test_bootstrap_on_strictly_verifies_direct_resolved_en_identity(monkeypatch):
     resolved = ResolvedIdentity(
         source_variant="Anne Brontë",
         ru_title="Бронте, Анна",
@@ -336,7 +336,9 @@ async def test_bootstrap_on_injects_direct_en_candidate_as_needs_review(monkeypa
     assert row.origin == "langlinks_bootstrap"
     assert row.url == "https://en.wikipedia.org/wiki/Anne_Bront%C3%AB"
     assert row.authority_tier == "medium"
-    assert row.assessment == "needs_review"  # medium tier can never auto-approve
+    assert row.assessment == "auto_usable"
+    assert row.review_action == "auto_approved"
+    assert row.identity_verification["method"] == "wikipedia_langlink"
     assert "bootstrap_variant" in (row.evidence or "")
 
 

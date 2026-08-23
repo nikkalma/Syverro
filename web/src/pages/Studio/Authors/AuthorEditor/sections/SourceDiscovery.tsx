@@ -55,6 +55,7 @@ export default function SourceDiscovery() {
   const [corpus, setCorpus] = useState<ResearchCorpusSummary | null>(null);
   const [loading, setLoading] = useState(true);
   const [running, setRunning] = useState(false);
+  const [reinspectingSourceId, setReinspectingSourceId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [assessmentFilter, setAssessmentFilter] = useState<string | undefined>(undefined);
   const [statusFilter, setStatusFilter] = useState<string | undefined>(undefined);
@@ -112,6 +113,20 @@ export default function SourceDiscovery() {
       await fetchAll();
     } catch (e: any) {
       setError(e?.response?.data?.detail || e.message || copy.errorReview);
+    }
+  };
+
+  const reinspectSource = async (sourceId: string) => {
+    if (!author || reinspectingSourceId) return;
+    setReinspectingSourceId(sourceId);
+    setError(null);
+    try {
+      await apiClient.post(`/admin/authors/${author.id}/sources/${sourceId}/reinspect`);
+      await fetchAll();
+    } catch (e: any) {
+      setError(e?.response?.data?.detail || e.message || 'Source content reinspection failed');
+    } finally {
+      setReinspectingSourceId(null);
     }
   };
 
@@ -260,7 +275,12 @@ export default function SourceDiscovery() {
           </p>
         )}
 
-        {filtered.map((c) => (
+        {filtered.map((c) => {
+          const corpusSource = corpus?.verified_sources.find((source) => source.id === c.source_id);
+          const capabilities = corpusSource?.stored_content_capabilities || c.content_capabilities;
+          const capabilityEvidence = corpusSource?.capability_evidence || c.capability_evidence;
+          const stale = corpusSource?.reinspection_required ?? c.reinspection_required ?? false;
+          return (
           <div key={c.id} style={{
             padding: '12px 16px', marginBottom: '8px',
             background: 'var(--surface-hover)', borderRadius: '8px',
@@ -331,10 +351,31 @@ export default function SourceDiscovery() {
               </div>
             )}
 
-            {c.content_capabilities.length > 0 && (
+            {stale && c.source_id && (
+              <div style={{
+                display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px',
+                padding: '8px', borderRadius: '6px', marginBottom: '8px',
+                background: 'rgba(255,167,38,0.1)', border: '1px solid rgba(255,167,38,0.3)',
+                fontSize: '11px', color: 'var(--text-secondary)',
+              }}>
+                <span>
+                  <strong>Content inspection outdated</strong>{' '}
+                  {corpusSource?.content_inspector_version || c.content_inspector_version || 'unversioned'}
+                  {' → '}{corpusSource?.current_inspector_version || c.current_inspector_version}
+                  <br />Identity verification remains unchanged.
+                </span>
+                <button type="button" onClick={() => reinspectSource(c.source_id!)}
+                  disabled={reinspectingSourceId === c.source_id}
+                  style={{ padding: '5px 10px', borderRadius: '6px', border: 'none', background: '#FFA726', color: '#111', cursor: 'pointer' }}>
+                  {reinspectingSourceId === c.source_id ? 'Re-inspecting…' : 'Re-inspect'}
+                </button>
+              </div>
+            )}
+
+            {capabilities.length > 0 && (
               <div style={{ display: 'flex', gap: '5px', flexWrap: 'wrap', marginBottom: '8px' }}>
-                {c.content_capabilities.map((capability) => (
-                  <span key={capability} title={JSON.stringify(c.capability_evidence[capability] || [])} style={{ padding: '2px 7px', borderRadius: '10px', fontSize: '10px', background: 'rgba(91,134,161,0.15)', color: '#5B86A1' }}>
+                {capabilities.map((capability) => (
+                  <span key={capability} title={JSON.stringify(capabilityEvidence[capability] || [])} style={{ padding: '2px 7px', borderRadius: '10px', fontSize: '10px', background: 'rgba(91,134,161,0.15)', color: '#5B86A1' }}>
                     {capability}
                   </span>
                 ))}
@@ -361,7 +402,8 @@ export default function SourceDiscovery() {
               </div>
             )}
           </div>
-        ))}
+          );
+        })}
 
         {error && (
           <div style={{ padding: '10px', borderRadius: '6px', background: 'rgba(220,38,38,0.1)', border: '1px solid rgba(220,38,38,0.3)', color: 'var(--error)', fontSize: '13px' }}>

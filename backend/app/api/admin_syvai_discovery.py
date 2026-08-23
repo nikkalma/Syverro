@@ -40,8 +40,10 @@ from app.syvai.discovery import (
     run_discovery,
 )
 from app.syvai.discovery.service import _resolve_candidate_or_none
+from app.syvai.discovery.verification import CONTENT_INSPECTOR_VERSION
 from app.syvai.errors import ConfigurationError, DiscoveryError
 from app.syvai.corpus import build_author_corpus, corpus_state, corpus_summary
+from app.syvai.discovery.reinspection import reinspect_source_content
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/admin/authors", tags=["admin-syvai-discovery"])
@@ -61,7 +63,7 @@ async def get_author_or_404(db: AsyncSession, author_id: str) -> Author:
     return author
 
 
-def _candidate_dict(candidate: SourceCandidate) -> dict:
+def _candidate_dict(candidate: SourceCandidate, source: Source | None = None) -> dict:
     return {
         "id": str(candidate.id),
         "author_id": str(candidate.author_id),
@@ -93,6 +95,9 @@ def _candidate_dict(candidate: SourceCandidate) -> dict:
         "reviewed_at": candidate.reviewed_at.isoformat() if candidate.reviewed_at else None,
         "reviewed_by": str(candidate.reviewed_by) if candidate.reviewed_by else None,
         "created_at": candidate.created_at.isoformat() if candidate.created_at else None,
+        "content_inspector_version": source.content_inspector_version if source else None,
+        "current_inspector_version": CONTENT_INSPECTOR_VERSION,
+        "reinspection_required": bool(source and source.content_inspector_version != CONTENT_INSPECTOR_VERSION),
     }
 
 
@@ -205,7 +210,7 @@ async def list_discovery_candidates(
     await check_admin(current_user)
     await get_author_or_404(db, author_id)
 
-    query = select(SourceCandidate).where(SourceCandidate.author_id == author_id)
+    query = select(SourceCandidate, Source).outerjoin(Source, Source.id == SourceCandidate.source_id).where(SourceCandidate.author_id == author_id)
     if status:
         query = query.where(SourceCandidate.status == status)
     if assessment:
@@ -213,8 +218,41 @@ async def list_discovery_candidates(
     query = query.order_by(SourceCandidate.created_at.desc())
 
     result = await db.execute(query)
-    candidates = result.scalars().all()
-    return {"data": [_candidate_dict(c) for c in candidates]}
+    candidates = result.all()
+    return {"data": [_candidate_dict(c, s) for c, s in candidates]}
+
+
+@router.post("/{author_id}/sources/{source_id}/reinspect")
+async def reinspect_author_source(
+    author_id: str,
+    source_id: str,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    await check_admin(current_user)
+    await get_author_or_404(db, author_id)
+    linked = await db.execute(select(SourceCandidate.id).where(
+        SourceCandidate.author_id == author_id,
+        SourceCandidate.source_id == source_id,
+        SourceCandidate.review_action.in_(("approved", "auto_approved")),
+    ).limit(1))
+    if linked.scalar_one_or_none() is None:
+        raise HTTPException(status_code=404, detail="Verified Author Source not found")
+    try:
+        result = await reinspect_source_content(db, source_id, actor_id=current_user.id)
+    except DiscoveryError as exc:
+        await db.rollback()
+        raise HTTPException(status_code=422, detail=str(exc))
+    return {
+        "source_id": result.source_id,
+        "previous_inspector_version": result.previous_inspector_version,
+        "current_inspector_version": result.current_inspector_version,
+        "capabilities_before": result.capabilities_before,
+        "capabilities_after": result.capabilities_after,
+        "capability_evidence": result.capability_evidence,
+        "changed": result.changed,
+        "status": result.status,
+    }
 
 
 async def _get_pending_candidate_or_404(

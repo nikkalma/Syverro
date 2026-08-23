@@ -11,6 +11,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.models.source import Source
 from app.models.source_candidate import SourceCandidate
 from app.syvai.discovery.verification import CONTENT_INSPECTOR_VERSION, IDENTITY_VERIFIER_VERSION
+from app.syvai.discovery.reinspection import reinspection_required
 
 AUTO_VERIFIED = "AUTO_VERIFIED"
 AUTO_VERIFIED_LEGACY = "AUTO_VERIFIED_LEGACY"
@@ -40,13 +41,19 @@ def corpus_state(candidate: SourceCandidate) -> str:
 
 
 def _source_dict(source: Source, *, state: str, candidate: SourceCandidate | None = None) -> dict:
+    stale = reinspection_required(source)
     return {
         "id": str(source.id), "title": source.title, "url": source.url,
         "source_type": source.source_type, "citation": source.citation,
         "language": source.language, "reliability_score": source.reliability_score,
         "trust_state": state,
-        "content_capabilities": list(source.content_capabilities or []),
+        # Fail closed: obsolete capability semantics cannot authorize Fill.
+        "content_capabilities": [] if stale else list(source.content_capabilities or []),
+        "stored_content_capabilities": list(source.content_capabilities or []),
         "capability_evidence": source.capability_evidence or {},
+        "content_inspector_version": source.content_inspector_version,
+        "current_inspector_version": CONTENT_INSPECTOR_VERSION,
+        "reinspection_required": stale,
         "identity_verification": candidate.identity_verification if candidate else None,
         "candidate_id": str(candidate.id) if candidate else None,
     }

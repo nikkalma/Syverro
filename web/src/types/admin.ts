@@ -570,6 +570,9 @@ export interface DiscoveryRun {
   source_count: number;
   error?: string | null;
   created_at?: string | null;
+  content_inspector_version?: string | null;
+  current_inspector_version?: string;
+  reinspection_required?: boolean;
   finished_at?: string | null;
 }
 
@@ -606,6 +609,10 @@ export interface ResearchCorpusSummary {
   verified_sources: Array<{
     id: string; title: string; url?: string | null; trust_state: string;
     content_capabilities: string[]; capability_evidence: Record<string, Array<Record<string, any>>>;
+    stored_content_capabilities: string[];
+    content_inspector_version?: string | null;
+    current_inspector_version: string;
+    reinspection_required: boolean;
   }>;
   needs_review_count: number;
   rejected_count: number;

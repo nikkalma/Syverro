@@ -128,7 +128,7 @@ def test_extract_detail_tokens_skips_stopwords_and_short_tokens():
     tokens = extract_detail_tokens("The death of Anne Brontë in Scarborough", "in 1849")
     assert "death" in tokens
     assert "scarborough" in tokens
-    assert "bront" in tokens
+    assert "brontë" in tokens
     assert "the" not in tokens
     assert "in" not in tokens
 
@@ -299,3 +299,42 @@ def test_year_must_be_the_claims_own_year():
         material=wrong_year,
     )
     assert result.state == GROUNDING_PARTIAL
+
+
+def test_explicit_fallback_zero_tokens_is_ungrounded():
+    from app.syvai.evidence import verify_field_explicit_evidence
+
+    result = verify_field_explicit_evidence("---", "A stored source sentence.")
+    assert result.state == GROUNDING_UNGROUNDED
+    assert result.source_span is None
+
+
+def test_explicit_fallback_zero_matches_is_ungrounded():
+    from app.syvai.evidence import verify_field_explicit_evidence
+
+    result = verify_field_explicit_evidence("British", "Ethel Voynich identity mapping.")
+    assert result.state == GROUNDING_UNGROUNDED
+    assert result.source_span is None
+
+
+def test_cyrillic_direct_statement_is_unicode_grounded():
+    material = _requirements(label="Литературное движение романтизм")
+    citation = "Александр Дюма был представителем литературного движения романтизм."
+    fragment = "Александр Дюма был представителем литературного движения романтизм."
+    result = verify_evidence(fragment, citation, material=material)
+    assert result.state == GROUNDING_GROUNDED
+    assert result.source_span == citation
+
+
+def test_adams_citizenship_lexical_recombination_is_not_grounded():
+    from app.syvai.evidence import build_field_material_requirements
+
+    material = build_field_material_requirements(
+        label="Citizenship",
+        value="English",
+        date_values=("1952", "2001"),
+    )
+    citation = "Douglas Adams (1952–2001) was an English humorist and writer."
+    result = verify_evidence(citation, citation, material=material)
+    assert result.state == GROUNDING_PARTIAL
+    assert not result.is_grounded

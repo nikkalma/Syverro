@@ -571,7 +571,11 @@ async def get_author_proposals(
                 "source_type": source.source_type,
                 "reliability_score": source.reliability_score,
                 "reliability_tier": link.reliability_tier,
-                "snippet": link.snippet,
+                "snippet": link.snippet if link.provenance_type != "unverified_model" else None,
+                "verification_state": link.verification_state,
+                "verification_reason": link.verification_reason,
+                "provenance_type": link.provenance_type,
+                "synthesis_involved": link.synthesis_involved,
             })
 
     return {

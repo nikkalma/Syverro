@@ -48,6 +48,15 @@ GROUNDING_PARTIAL = "partially_grounded"
 GROUNDING_UNGROUNDED = "ungrounded"
 GROUNDING_NO_EVIDENCE = "no_evidence"
 
+EVIDENCE_DIRECT_GROUNDED = "direct_grounded"
+EVIDENCE_PARTIAL = "partial"
+EVIDENCE_SYNTHETIC = "synthetic"
+EVIDENCE_UNGROUNDED = "ungrounded"
+
+PROVENANCE_DIRECT = "source_span"
+PROVENANCE_SYNTHETIC = "multi_fragment"
+PROVENANCE_UNVERIFIED = "unverified_model"
+
 MIN_EVIDENCE_CHARS = 6
 MAX_EVIDENCE_CHARS = 700
 
@@ -99,7 +108,7 @@ def extract_detail_tokens(*texts: str) -> set[str]:
     for text in texts:
         if not text:
             continue
-        for raw in re.split(r"[^A-Za-z0-9]+", text):
+        for raw in re.findall(r"[^\W_]+", text, flags=re.UNICODE):
             token = raw.casefold()
             if len(token) >= 4 and token not in _STOPWORDS and not token.isdigit():
                 tokens.add(token)
@@ -111,7 +120,7 @@ def _significant_tokens(text: str | None, min_len: int = 3) -> frozenset[str]:
     if not text:
         return frozenset()
     tokens: set[str] = set()
-    for raw in re.split(r"[^A-Za-z0-9]+", text):
+    for raw in re.findall(r"[^\W_]+", text, flags=re.UNICODE):
         token = raw.casefold()
         if len(token) >= min_len and token not in _STOPWORDS and not token.isdigit():
             tokens.add(token)
@@ -172,6 +181,7 @@ class MaterialRequirements:
     place_tokens: frozenset[str] = frozenset()
     entity_tokens: frozenset[str] = frozenset()
     distinctive_tokens: frozenset[str] = frozenset()
+    structured: bool = False
 
 
 def build_material_requirements(
@@ -252,17 +262,19 @@ def build_field_material_requirements(
         place_tokens=material.place_tokens,
         entity_tokens=entity_tokens,
         distinctive_tokens=frozenset(distinctive_tokens),
+        structured=date_values is not None,
     )
 
 
 def _missing_tokens(tokens: frozenset[str], normalized_fragment: str) -> set[str]:
-    return {token for token in tokens if token not in normalized_fragment}
+    return {token for token in tokens if not _token_in_text(token, normalized_fragment)}
 
 
 @dataclass(frozen=True)
 class EvidenceVerification:
     state: str
     reason: str
+    source_span: str | None = None
 
     @property
     def is_grounded(self) -> bool:
@@ -270,8 +282,35 @@ class EvidenceVerification:
 
     @property
     def is_persistable(self) -> bool:
-        """Fragments we are willing to store as the verified snippet."""
-        return self.state in {GROUNDING_GROUNDED, GROUNDING_PARTIAL}
+        """Only source-derived spans may be persisted as evidence."""
+        return bool(self.source_span) and self.state in {
+            GROUNDING_GROUNDED,
+            GROUNDING_PARTIAL,
+        }
+
+    @property
+    def verification_state(self) -> str:
+        if self.state == GROUNDING_GROUNDED:
+            return EVIDENCE_DIRECT_GROUNDED
+        if self.state == GROUNDING_PARTIAL:
+            return EVIDENCE_PARTIAL
+        return EVIDENCE_UNGROUNDED
+
+
+def _source_span(fragment: str, citation: str) -> str | None:
+    """Return exact immutable source text containing a normalized fragment."""
+    target = normalize_evidence(fragment)
+    if not target:
+        return None
+    spans = [part.strip() for part in re.split(r"(?<=[.!?…])\s+|[\r\n]+", citation)]
+    for span in spans:
+        if target in normalize_evidence(span):
+            return span
+    return citation.strip() if target in normalize_evidence(citation) else None
+
+
+def _token_in_text(token: str, text: str) -> bool:
+    return token in set(re.findall(r"[^\W_]+", text.casefold(), flags=re.UNICODE))
 
 
 def verify_evidence(
@@ -304,8 +343,8 @@ def verify_evidence(
         )
 
     normalized_fragment = normalize_evidence(fragment)
-    normalized_citation = normalize_evidence(citation)
-    if not normalized_fragment or normalized_fragment not in normalized_citation:
+    source_span = _source_span(fragment, citation)
+    if not normalized_fragment or not source_span:
         return EvidenceVerification(
             GROUNDING_UNGROUNDED, "evidence not present in the source text"
         )
@@ -313,11 +352,11 @@ def verify_evidence(
     material = material if material is not None else MaterialRequirements()
     missing: list[str] = []
 
-    if material.year and material.year not in normalized_fragment:
+    if material.year and not _token_in_text(material.year, normalized_fragment):
         missing.append(f"claim year {material.year}")
 
     if material.extra_years:
-        absent_years = sorted(year for year in material.extra_years if year not in normalized_fragment)
+        absent_years = sorted(year for year in material.extra_years if not _token_in_text(year, normalized_fragment))
         if absent_years:
             missing.append("date detail: " + ", ".join(absent_years))
 
@@ -332,7 +371,7 @@ def verify_evidence(
             missing.append("named detail: " + ", ".join(absent_entities))
 
     if material.distinctive_tokens and not any(
-        token in normalized_fragment for token in material.distinctive_tokens
+        _token_in_text(token, normalized_fragment) for token in material.distinctive_tokens
     ):
         missing.append("distinctive claim detail")
 
@@ -346,16 +385,25 @@ def verify_evidence(
 
     if not requirements_exist:
         return EvidenceVerification(
-            GROUNDING_PARTIAL, "evidence matches the source text but supports no material detail"
+            GROUNDING_PARTIAL, "evidence matches the source text but supports no material detail", source_span
         )
     if missing:
         return EvidenceVerification(
             GROUNDING_PARTIAL,
             "evidence matches the source text but leaves material detail unsupported: "
             + "; ".join(missing),
+            source_span,
+        )
+    # Multiple dates or a place/date combination are structured assertions.
+    # Lexical co-occurrence cannot prove their semantic relationship.
+    if material.structured:
+        return EvidenceVerification(
+            GROUNDING_PARTIAL,
+            "structured claim requires semantic review; lexical co-occurrence is insufficient",
+            source_span,
         )
     return EvidenceVerification(
-        GROUNDING_GROUNDED, "evidence supports all asserted material details"
+        GROUNDING_GROUNDED, "evidence supports all asserted material details", source_span
     )
 
 
@@ -373,7 +421,7 @@ def verify_field_explicit_evidence(
     ``EXPLICIT_STATEMENT_FIELDS`` and only when fragment grounding failed.
     """
     if not value or not value.strip():
-        return EvidenceVerification(GROUNDING_PARTIAL, "no claim value to verify")
+        return EvidenceVerification(GROUNDING_UNGROUNDED, "no claim value to verify")
     if not citation or not citation.strip():
         return EvidenceVerification(
             GROUNDING_UNGROUNDED, "source text unavailable for verification"
@@ -383,15 +431,32 @@ def verify_field_explicit_evidence(
     required = _significant_tokens(value, min_len=3)
     if not required:
         return EvidenceVerification(
-            GROUNDING_PARTIAL, "value has no material tokens to verify"
+            GROUNDING_UNGROUNDED, "value has no material tokens to verify"
         )
 
-    missing = sorted(token for token in required if token not in normalized_citation)
+    missing = sorted(token for token in required if not _token_in_text(token, normalized_citation))
     if missing:
         return EvidenceVerification(
-            GROUNDING_PARTIAL,
+            GROUNDING_UNGROUNDED,
             "value not explicitly stated in the source text: " + ", ".join(missing),
         )
+    # A fallback may locate supporting source text for human review, but it
+    # cannot prove the semantics of a field that the model quote failed to
+    # establish. Persist the actual source sentence, never the model quote.
+    supporting_span = next(
+        (
+            span.strip()
+            for span in re.split(r"(?<=[.!?…])\s+|[\r\n]+", citation)
+            if all(_token_in_text(token, normalize_evidence(span)) for token in required)
+        ),
+        None,
+    )
+    if not supporting_span:
+        return EvidenceVerification(
+            GROUNDING_UNGROUNDED, "value tokens do not occur in one source span"
+        )
     return EvidenceVerification(
-        GROUNDING_GROUNDED, "value explicitly stated in the source text"
+        GROUNDING_PARTIAL,
+        "value occurs in a source-derived span but field semantics require human review",
+        supporting_span,
     )

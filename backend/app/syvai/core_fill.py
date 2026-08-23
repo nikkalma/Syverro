@@ -52,6 +52,11 @@ from app.syvai.confidence import compute_confidence
 from app.syvai.corroboration import corroborate_sources
 from app.syvai.errors import ConfigurationError, ProviderError, StructuredOutputError
 from app.syvai.evidence import (
+    EVIDENCE_PARTIAL,
+    EVIDENCE_SYNTHETIC,
+    PROVENANCE_DIRECT,
+    PROVENANCE_SYNTHETIC,
+    PROVENANCE_UNVERIFIED,
     EvidenceVerification,
     build_field_material_requirements,
     verify_evidence,
@@ -370,20 +375,32 @@ async def _persist_one_item(
     )
     proposal.corroboration = corroboration.to_dict()
 
+    partial_count = sum(
+        verification.verification_state == EVIDENCE_PARTIAL
+        for verification in verifications.values()
+    )
+    synthetic_claim = grounded_source_count == 0 and partial_count > 1
+
     for matched in matched_sources:
         source_id = matched["id"]
         verification = verifications[source_id]
-        evidence_text = ref_evidence.get(source_id)
-        snippet = (
-            evidence_text.strip()
-            if verification.is_persistable and evidence_text
-            else None
-        )
+        state = EVIDENCE_SYNTHETIC if synthetic_claim and verification.is_persistable else verification.verification_state
+        snippet = verification.source_span if verification.is_persistable else None
         db.add(
             AIProposalSource(
                 proposal_id=proposal.id,
                 source_id=source_id,
                 snippet=snippet,
+                verification_state=state,
+                verification_reason=verification.reason,
+                provenance_type=(
+                    PROVENANCE_SYNTHETIC
+                    if state == EVIDENCE_SYNTHETIC
+                    else PROVENANCE_DIRECT
+                    if snippet
+                    else PROVENANCE_UNVERIFIED
+                ),
+                synthesis_involved=state == EVIDENCE_SYNTHETIC,
                 reliability_tier=_reliability_tier(
                     source_by_id.get(source_id).reliability_score
                     if source_by_id.get(source_id) else None

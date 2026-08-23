@@ -110,7 +110,11 @@ async def _proposal_sources(db: AsyncSession, proposal_id: UUID) -> list[dict]:
             "source_type": source.source_type,
             "reliability_score": source.reliability_score,
             "reliability_tier": link.reliability_tier,
-            "snippet": link.snippet,
+            "snippet": link.snippet if link.provenance_type != "unverified_model" else None,
+            "verification_state": link.verification_state,
+            "verification_reason": link.verification_reason,
+            "provenance_type": link.provenance_type,
+            "synthesis_involved": link.synthesis_involved,
         }
         for link, source in result.all()
     ]

@@ -263,6 +263,8 @@ def validate_field_claim(
                 else:
                     conflict_state = "conflict"
         else:
+            if spec.name == "gender" and isinstance(existing_value, str) and existing_value.strip().casefold() == "unknown":
+                existing_value = None
             existing_norm = _norm_key(str(existing_value)) if existing_value not in (None,) else ""
             if isinstance(existing_value, str) and existing_value.strip():
                 existing_norm = _norm_key(existing_value)

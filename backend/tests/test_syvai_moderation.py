@@ -24,6 +24,7 @@ from app.api.admin_moderation import (
     _apply_review_action,
     _history_filter,
     _proposal_dict,
+    _serialize_proposal_source,
     _queueable_proposal_or_http,
     _queue_filter,
     bulk_apply_proposals,
@@ -32,6 +33,8 @@ from app.api.admin_moderation import (
     review_proposal_bulk_action,
 )
 from app.models.ai_proposal import AIProposal
+from app.models.ai_proposal_source import AIProposalSource
+from app.models.source import Source
 from app.models.book import Book
 from app.services.legacy_book_cleanup import (
     apply_legacy_cleanup,
@@ -58,6 +61,25 @@ def _proposal(**overrides):
     }
     values.update(overrides)
     return AIProposal(**values)
+
+
+def test_moderation_source_exposes_state_and_hides_unverified_quote():
+    source = Source(id=uuid4(), title="Stored source", source_type="book", url="https://example.com")
+    link = AIProposalSource(
+        source_id=source.id,
+        proposal_id=uuid4(),
+        snippet="model-authored text",
+        verification_state="ungrounded",
+        verification_reason="evidence not present in source",
+        provenance_type="unverified_model",
+        synthesis_involved=False,
+    )
+    payload = _serialize_proposal_source(link, source)
+    assert payload["snippet"] is None
+    assert payload["verification_state"] == "ungrounded"
+    assert payload["verification_reason"] == "evidence not present in source"
+    assert payload["provenance_type"] == "unverified_model"
+    assert payload["synthesis_involved"] is False
 
 
 class FakeScalarSession:

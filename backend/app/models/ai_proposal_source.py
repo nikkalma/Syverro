@@ -1,4 +1,4 @@
-from sqlalchemy import Column, String, Text, Float, DateTime, ForeignKey, UniqueConstraint
+from sqlalchemy import Boolean, Column, String, Text, ForeignKey, UniqueConstraint
 from sqlalchemy.orm import relationship
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.sql import func
@@ -15,5 +15,9 @@ class AIProposalSource(Base):
     source_id = Column(UUID(as_uuid=True), ForeignKey("sources.id", ondelete="CASCADE"), nullable=False, index=True)
     snippet = Column(Text, nullable=True)
     reliability_tier = Column(String, nullable=True)
+    verification_state = Column(String, server_default="ungrounded", nullable=False)
+    verification_reason = Column(Text, nullable=True)
+    provenance_type = Column(String, server_default="unverified_model", nullable=False)
+    synthesis_involved = Column(Boolean, server_default="false", nullable=False)
 
     source = relationship("Source", lazy="joined")

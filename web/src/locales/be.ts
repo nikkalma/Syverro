@@ -853,6 +853,7 @@ export const be: LocaleData = {
       birthDateFuture: 'Birth date cannot be in the future',
       invalidDeathDate: 'Invalid death date',
       deathBeforeBirth: 'Death date cannot be before birth date',
+      metadataStatus: 'Lifecycle', attention: 'Editorial attention', readinessLabel: 'Readiness', activity: 'SyvAI activity', allMetadataStatuses: 'All lifecycle statuses', sourcesNeeded: 'Sources needed', sourcesToReview: 'sources to review', corpusReady: 'Corpus ready', proposalsToReview: 'proposals to review', changesReadyToApply: 'changes ready to apply', changesApplied: 'AI changes applied', noSyvaiActivity: 'No SyvAI activity', researchBlocked: 'Research blocked', publicationReady: 'Ready for editorial review', missing: 'Missing', missingCount: 'required fields missing', lastSyvai: 'Last SyvAI', publicPreview: 'Public preview',
       editor: {
         sections: {
           overview: 'Overview',

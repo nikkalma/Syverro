@@ -856,6 +856,7 @@ export const ru: LocaleData = {
       birthDateFuture: 'Дата рождения не может быть в будущем',
       invalidDeathDate: 'Некорректная дата смерти',
       deathBeforeBirth: 'Дата смерти не может быть раньше даты рождения',
+      metadataStatus: 'Этап', attention: 'Требует внимания', readinessLabel: 'Готовность', activity: 'Активность SyvAI', allMetadataStatuses: 'Все этапы', sourcesNeeded: 'Нужны источники', sourcesToReview: 'источника на проверке', corpusReady: 'Корпус готов', proposalsToReview: 'предложения на проверке', changesReadyToApply: 'изменения готовы к Apply', changesApplied: 'изменения ИИ применены', noSyvaiActivity: 'SyvAI ещё не запускался', researchBlocked: 'Исследование заблокировано', publicationReady: 'Готово к редакционной проверке', missing: 'Не хватает', missingCount: 'обязательных полей', lastSyvai: 'Последний SyvAI', publicPreview: 'Публичный просмотр',
       editor: {
         sections: {
           overview: 'Обзор',

@@ -1,10 +1,23 @@
 // src/pages/Admin/Authors/AuthorsTable.tsx
 
-import { Pencil, Trash2, AlertCircle, PenLine, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Pencil, Trash2, AlertCircle, PenLine, ChevronLeft, ChevronRight, ExternalLink } from 'lucide-react';
 import { AdminAuthor, getAuthorDisplayName } from '../../../types/admin';
 import { useAdminStore } from '../../../store/adminStore';
 import { authorUrl } from '../../../shared/utils/authorUrl';
 import { getLocaleData, getBrowserLocale } from '../../../locales';
+import {
+  authorEditorialSignals,
+  conciseBlockedReason,
+  formatMetadataStatus,
+  formatRelativeActivity,
+  isResearchBlocked,
+  type AuthorSignal,
+} from './authorEditorialStatus';
+
+const SIGNAL_COLORS: Record<AuthorSignal['kind'], string> = {
+  'sources-needed': '#EF5350', 'sources-review': '#FFA726', 'corpus-ready': '#4CAF50',
+  'proposals-review': '#FFA726', 'changes-ready': '#5B86A1', 'changes-applied': '#4CAF50',
+};
 
 interface AuthorsTableProps {
   authors: AdminAuthor[];
@@ -42,7 +55,7 @@ export default function AuthorsTable({
         <table className="studio-table">
           <thead>
             <tr style={{ borderBottom: '1px solid var(--border)' }}>
-              {[t.admin.authors.photo, t.admin.authors.name, t.admin.authors.country, t.admin.authors.books, t.admin.authors.date, t.admin.authors.actions].map((h) => (
+              {[t.admin.authors.photo, t.admin.authors.name, t.admin.authors.metadataStatus, t.admin.authors.attention, t.admin.authors.readinessLabel, t.admin.authors.activity, t.admin.authors.actions].map((h) => (
                 <th key={h}>
                   {h}
                 </th>
@@ -52,9 +65,9 @@ export default function AuthorsTable({
           <tbody>
             {[...Array(5)].map((_, i) => (
               <tr key={i} style={{ borderBottom: '1px solid var(--border)' }}>
-                {[...Array(6)].map((_, j) => (
+                {[...Array(7)].map((_, j) => (
                   <td key={j}>
-                    <div style={{ height: '20px', background: 'var(--chip)', borderRadius: '4px', width: j === 0 ? '40px' : j === 5 ? '60%' : '80%' }} />
+                    <div style={{ height: '20px', background: 'var(--chip)', borderRadius: '4px', width: j === 0 ? '40px' : j === 6 ? '60%' : '80%' }} />
                   </td>
                 ))}
               </tr>
@@ -122,9 +135,10 @@ export default function AuthorsTable({
           <tr style={{ borderBottom: '1px solid var(--border)' }}>
             <th>{t.admin.authors.photo}</th>
             <th>{t.admin.authors.name}</th>
-            <th>{t.admin.authors.country}</th>
-            <th>{t.admin.authors.books}</th>
-            <th>{t.admin.authors.date}</th>
+            <th>{t.admin.authors.metadataStatus}</th>
+            <th>{t.admin.authors.attention}</th>
+            <th>{t.admin.authors.readinessLabel}</th>
+            <th>{t.admin.authors.activity}</th>
             <th>{t.admin.authors.actions}</th>
           </tr>
         </thead>
@@ -160,22 +174,50 @@ export default function AuthorsTable({
                   )}
                 </div>
               </td>
-              <td style={{ padding: '12px 16px', color: 'var(--text-primary)', fontSize: '14px', fontWeight: '500' }}>
-                <a href={authorUrl(author)} target="_blank" rel="noopener noreferrer"
-                  style={{ color: 'var(--primary)', textDecoration: 'none', cursor: 'pointer' }}
-                  onMouseEnter={(e) => (e.currentTarget.style.textDecoration = 'underline')}
-                  onMouseLeave={(e) => (e.currentTarget.style.textDecoration = 'none')}>
+              <td style={{ padding: '12px 16px', color: 'var(--text-primary)', fontSize: '14px', fontWeight: '500', minWidth: '180px' }}>
+                <button type="button" onClick={() => onEdit(author)}
+                  style={{ color: 'var(--primary)', background: 'none', border: 0, padding: 0, font: 'inherit', textAlign: 'left', cursor: 'pointer' }}>
                   {getAuthorDisplayName(author)}
-                </a>
+                </button>
+                {author.sort_name && author.sort_name !== getAuthorDisplayName(author) && <div style={{ marginTop: '3px', color: 'var(--text-muted)', fontSize: '12px', fontWeight: 400 }}>{author.sort_name}</div>}
+                <div style={{ marginTop: '3px', color: 'var(--text-muted)', fontSize: '11px', fontWeight: 400 }}>{author.country || '—'} · {author.book_count || 0} {t.admin.authors.books.toLowerCase()}</div>
               </td>
-              <td style={{ padding: '12px 16px', color: 'var(--text-secondary)', fontSize: '13px' }}>
-                {author.country || '—'}
+              <td style={{ minWidth: '130px' }}>
+                <span style={{ padding: '4px 9px', borderRadius: '10px', background: 'var(--chip)', border: '1px solid var(--border)', color: 'var(--text-secondary)', fontSize: '10px', fontWeight: 600 }}>
+                  {formatMetadataStatus(author.metadata_status || 'draft')}
+                </span>
               </td>
-              <td style={{ padding: '12px 16px', color: 'var(--primary)', fontSize: '13px' }}>
-                {author.book_count || 0}
+              <td style={{ minWidth: '230px' }}>
+                <div style={{ display: 'flex', gap: '5px', flexWrap: 'wrap' }}>
+                  {authorEditorialSignals(author).map((signal) => {
+                    const labels: Record<AuthorSignal['kind'], string> = {
+                      'sources-needed': t.admin.authors.sourcesNeeded,
+                      'sources-review': `${signal.count} ${t.admin.authors.sourcesToReview}`,
+                      'corpus-ready': t.admin.authors.corpusReady,
+                      'proposals-review': `${signal.count} ${t.admin.authors.proposalsToReview}`,
+                      'changes-ready': `${signal.count} ${t.admin.authors.changesReadyToApply}`,
+                      'changes-applied': `${signal.count} ${t.admin.authors.changesApplied}`,
+                    };
+                    const color = SIGNAL_COLORS[signal.kind];
+                    return <span key={signal.kind} style={{ padding: '3px 7px', borderRadius: '9px', background: `${color}1f`, color, fontSize: '10px' }}>{labels[signal.kind]}</span>;
+                  })}
+                </div>
               </td>
-              <td style={{ padding: '12px 16px', color: 'var(--primary)', fontSize: '12px' }}>
-                {new Date(author.created_at).toLocaleDateString('ru-RU')}
+              <td style={{ minWidth: '190px', color: 'var(--text-secondary)', fontSize: '12px' }}>
+                {author.publication_ready ? (
+                  <span style={{ color: 'var(--success)' }}>{t.admin.authors.publicationReady}</span>
+                ) : (author.missing_required_fields || []).length <= 2 ? (
+                  <span>{t.admin.authors.missing}: {(author.missing_required_fields || []).join(', ') || '—'}</span>
+                ) : (
+                  <span title={(author.missing_required_fields || []).join(', ')}>{(author.missing_required_fields || []).length} {t.admin.authors.missingCount}</span>
+                )}
+              </td>
+              <td style={{ minWidth: '180px', color: 'var(--text-secondary)', fontSize: '12px' }}>
+                {!author.last_syvai_run_at ? t.admin.authors.noSyvaiActivity : isResearchBlocked(author) ? (
+                  <span style={{ color: 'var(--error)' }}>{t.admin.authors.researchBlocked}{conciseBlockedReason(author.last_syvai_run_reason) ? `: ${conciseBlockedReason(author.last_syvai_run_reason)}` : ''}</span>
+                ) : (
+                  <span>{t.admin.authors.lastSyvai}: {author.last_syvai_run_domain?.replace(/_/g, ' ') || '—'} · {formatRelativeActivity(author.last_syvai_run_at)}</span>
+                )}
               </td>
               <td>
                 <div style={{ display: 'flex', gap: '6px' }}>
@@ -191,7 +233,7 @@ export default function AuthorsTable({
                       fontFamily: 'Inter, sans-serif',
                       textDecoration: 'none',
                     }}>
-                    {t.admin.common.view}
+                    <ExternalLink size={12} aria-label={t.admin.authors.publicPreview} />
                   </a>
                   {canManage && (
                     <>

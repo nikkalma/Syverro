@@ -15,6 +15,8 @@ from app.services.book_service import (
 from app.services.book_slug import generate_unique_book_slug
 from app.services.metadata_service import recalculate_metadata_status
 from app.services.knowledge_graph import sync_author_graph_fields
+from app.services.author_editorial_summary import author_editorial_summaries
+from app.services.author_publication import AUTHOR_STATUS_PIPELINE
 from app.models.user import User
 from app.models.refresh_session import RefreshSession
 from app.models.security_audit_log import SecurityAuditLog
@@ -1121,6 +1123,7 @@ async def get_authors(
     limit: int = 20,
     search: Optional[str] = None,
     country: Optional[str] = None,
+    metadata_status: Optional[str] = None,
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db)
 ):
@@ -1137,19 +1140,23 @@ async def get_authors(
         query = query.where(Author.nationality == country)
         count_query = count_query.where(Author.nationality == country)
 
+    if metadata_status:
+        if metadata_status not in AUTHOR_STATUS_PIPELINE:
+            raise HTTPException(status_code=400, detail="Invalid metadata_status")
+        query = query.where(Author.metadata_status == metadata_status)
+        count_query = count_query.where(Author.metadata_status == metadata_status)
+
     total = await db.scalar(count_query) or 0
     
     query = query.order_by(Author.sort_name.asc().nullslast(), Author.name).offset((page - 1) * limit).limit(limit)
     result = await db.execute(query)
     authors = result.scalars().all()
 
-    # Считаем книги для каждого автора (via M:N book_authors)
+    summaries = await author_editorial_summaries(db, authors)
+
     authors_data = []
     for author in authors:
-        book_count = await get_author_book_count(db, author.id)
-        publications_count = await db.scalar(
-            select(func.count()).select_from(AuthorPublication).where(AuthorPublication.author_id == author.id)
-        ) or 0
+        summary = summaries[str(author.id)]
         authors_data.append({
             "id": str(author.id),
             "name": author.name,
@@ -1194,8 +1201,7 @@ async def get_authors(
             "ethnic_origin": author.ethnic_origin,
             "cultural_identity": author.cultural_identity,
             "creation_type": author.creation_type or "individual_author",
-            "book_count": book_count,
-            "publications_count": publications_count,
+            **summary,
             "created_at": author.created_at,
             "updated_at": author.updated_at,
         })

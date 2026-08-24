@@ -38,6 +38,7 @@ import {
   AuthorEditorLayout,
   Overview,
   Identity,
+  Biography,
   Timeline,
   Works,
   Quotes,
@@ -47,6 +48,7 @@ import {
   Publications,
   AIProposals,
   SourceDiscovery,
+  Readiness,
 } from "./pages/Studio/Authors/AuthorEditor";
 import EntityWorkspace from "./pages/Studio/Entities/EntityWorkspace";
 import EntityOverview from "./pages/Studio/Entities/sections/Overview";
@@ -140,12 +142,11 @@ export default function App() {
           <Route path="authors" element={<StudioAuthorsLayout />}>
             <Route index element={<Navigate to="list" replace />} />
             <Route path="list" element={<AuthorList />} />
-            <Route path="new" element={<Navigate to={studioDomain ? '/authors/list' : '/studio/authors/list'} replace />} />
-
             <Route path=":id/edit" element={<AuthorEditorLayout />}>
               <Route index element={<Navigate to="overview" replace />} />
               <Route path="overview" element={<Overview />} />
               <Route path="identity" element={<Identity />} />
+              <Route path="biography" element={<Biography />} />
               <Route path="timeline" element={<Timeline />} />
               <Route path="works" element={<Works />} />
               <Route path="quotes" element={<Quotes />} />
@@ -155,6 +156,7 @@ export default function App() {
               <Route path="publications" element={<Publications />} />
               <Route path="ai" element={<AIProposals />} />
               <Route path="discovery" element={<SourceDiscovery />} />
+              <Route path="readiness" element={<Readiness />} />
             </Route>
           </Route>
         </Route>

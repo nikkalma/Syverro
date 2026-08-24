@@ -1,19 +1,10 @@
 import { getLocaleData, getBrowserLocale } from '../../../../locales';
 import { AuthorEditorProvider, useAuthorEditor, SECTION_PATHS } from './AuthorEditorContext';
-import { type AdminAuthor, getAuthorDisplayName } from '../../../../types/admin';
+import { getAuthorDisplayName } from '../../../../types/admin';
 import EntityWorkspaceLayout from '../../../../components/Studio/shared/EntityWorkspaceLayout';
-import MetadataStatusControl from './MetadataStatusControl';
 import { studioPath } from '../../../../shared/utils/studioRoutes';
-
-function computeCompletion(author: AdminAuthor): number {
-  const fields = [
-    author.name, author.slug, author.display_name, author.nationality,
-    author.birth_date, author.photo, author.about_summary,
-    author.occupations?.length, author.languages?.length,
-  ];
-  const filled = fields.filter((f) => f !== null && f !== undefined && f !== '' && f !== 0);
-  return Math.round((filled.length / fields.length) * 100);
-}
+import AuthorEditorNavigation from './AuthorEditorNavigation';
+import AuthorWorkflowSummary from './AuthorWorkflowSummary';
 
 function EditorContent() {
   const { author, loading, error } = useAuthorEditor();
@@ -32,12 +23,12 @@ function EditorContent() {
   if (author?.occupations?.length) identityParts.push(author.occupations.slice(0, 2).join(', '));
   if (author?.birth_date) identityParts.push(`b. ${author.birth_date}`);
   if (author?.death_date) identityParts.push(`d. ${author.death_date}`);
+  const basePath = studioPath(`authors/${author?.id}/edit`);
 
   return (
     <EntityWorkspaceLayout
       name={author ? getAuthorDisplayName(author) : ''}
       photoUrl={author?.photo}
-      completionPercent={author ? computeCompletion(author) : undefined}
       lastUpdated={lastUpdated}
       statusLabel={author?.creation_type === 'auto' ? t.admin.authors.editor.autoImported : t.admin.authors.editor.curated}
       identitySummary={identityParts.join(' · ') || undefined}
@@ -47,13 +38,12 @@ function EditorContent() {
         path: p,
         label: (t.admin.authors.editor.sections as Record<string, string>)[p],
       }))}
-      basePath={studioPath(`authors/${author?.id}/edit`)}
+      basePath={basePath}
       loading={loading}
       error={error}
       notFoundLabel={t.admin.authors.editAuthor}
-      preview={<>
-        <MetadataStatusControl />
-      </>}
+      workflowSummary={<AuthorWorkflowSummary />}
+      navigation={<AuthorEditorNavigation basePath={basePath} />}
     />
   );
 }

@@ -1,31 +1,36 @@
 import { createContext, useContext, useState, useEffect, useCallback, type ReactNode } from 'react';
 import { useParams } from 'react-router-dom';
-import type { AdminAuthor, AdminAuthorUpdate } from '../../../../types/admin';
+import type { AdminAuthor, AdminAuthorUpdate, AuthorEditorialSummary } from '../../../../types/admin';
 import { apiClient } from '../../../../shared/api/client';
 
 interface AuthorEditorContextType {
   author: AdminAuthor | null;
+  summary: AuthorEditorialSummary | null;
   loading: boolean;
   saving: boolean;
   error: string | null;
   saveError: string | null;
   refresh: () => void;
+  refreshSummary: () => void;
   updateAuthor: (data: AdminAuthorUpdate) => Promise<void>;
 }
 
 const AuthorEditorContext = createContext<AuthorEditorContextType>({
   author: null,
+  summary: null,
   loading: true,
   saving: false,
   error: null,
   saveError: null,
   refresh: () => {},
+  refreshSummary: () => {},
   updateAuthor: async () => {},
 });
 
 export function AuthorEditorProvider({ children }: { children: ReactNode }) {
   const { id } = useParams<{ id: string }>();
   const [author, setAuthor] = useState<AdminAuthor | null>(null);
+  const [summary, setSummary] = useState<AuthorEditorialSummary | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -51,8 +56,12 @@ export function AuthorEditorProvider({ children }: { children: ReactNode }) {
     setSaveError(null);
     try {
       await apiClient.put(`/admin/authors/${id}`, data);
-      const res = await apiClient.get(`/admin/authors/${id}`);
+      const [res, summaryRes] = await Promise.all([
+        apiClient.get(`/admin/authors/${id}`),
+        apiClient.get(`/admin/authors/${id}/editorial-summary`).catch(() => null),
+      ]);
       setAuthor(res.data);
+      setSummary(summaryRes?.data || null);
     } catch (err: any) {
       const msg = err?.response?.data?.detail || err.message || 'Failed to save';
       setSaveError(msg);
@@ -62,12 +71,23 @@ export function AuthorEditorProvider({ children }: { children: ReactNode }) {
     }
   }, [id]);
 
+  const fetchSummary = useCallback(async () => {
+    if (!id) return;
+    try {
+      const res = await apiClient.get(`/admin/authors/${id}/editorial-summary`);
+      setSummary(res.data);
+    } catch {
+      setSummary(null);
+    }
+  }, [id]);
+
   useEffect(() => {
     fetchAuthor();
-  }, [fetchAuthor]);
+    fetchSummary();
+  }, [fetchAuthor, fetchSummary]);
 
   return (
-    <AuthorEditorContext.Provider value={{ author, loading, saving, error, saveError, refresh: fetchAuthor, updateAuthor }}>
+    <AuthorEditorContext.Provider value={{ author, summary, loading, saving, error, saveError, refresh: fetchAuthor, refreshSummary: fetchSummary, updateAuthor }}>
       {children}
     </AuthorEditorContext.Provider>
   );
@@ -78,6 +98,6 @@ export function useAuthorEditor() {
 }
 
 export const SECTION_PATHS = [
-  'overview', 'identity', 'timeline', 'works',
-  'quotes', 'media', 'seo', 'sources', 'publications', 'ai', 'discovery',
+  'overview', 'identity', 'biography', 'timeline', 'works',
+  'publications', 'quotes', 'media', 'seo', 'discovery', 'sources', 'ai', 'readiness',
 ] as const;

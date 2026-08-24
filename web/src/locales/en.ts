@@ -868,7 +868,7 @@ export const en: LocaleData = {
           sources: 'Sources',
           seo: 'SEO',
           publications: 'Bibliography',
-          ai: 'AI',
+          ai: 'Author proposals',
           discovery: 'Source Discovery',
         },
         publications: {
@@ -1251,7 +1251,7 @@ export const en: LocaleData = {
       createdDate: 'Created',
       aiReview: {
         booksTab: 'Books',
-        aiTab: 'AI proposals',
+        aiTab: 'Authors',
         queueTab: 'Review queue',
         historyTab: 'History',
         queueEmpty: 'No proposals awaiting a human decision',

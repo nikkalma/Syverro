@@ -866,7 +866,7 @@ export const kk: LocaleData = {
           sources: 'Sources',
           seo: 'SEO',
           publications: 'Bibliography',
-          ai: 'AI',
+          ai: 'Автор ұсыныстары',
           discovery: 'Source Discovery',
         },
         publications: {
@@ -1249,7 +1249,7 @@ export const kk: LocaleData = {
       createdDate: 'Created',
       aiReview: {
         booksTab: 'Кітаптар',
-        aiTab: 'AI ұсыныстар',
+        aiTab: 'Авторлар',
         queueTab: 'Қарау кезегі',
         historyTab: 'Тарих',
         queueEmpty: 'Адам шешімін қажет ететін ұсыныстар жоқ',

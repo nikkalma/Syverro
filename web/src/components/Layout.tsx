@@ -14,6 +14,7 @@ import {
   Crown,
 } from 'lucide-react';
 import Sidebar from './Sidebar';
+import { studioPath } from '../shared/utils/studioRoutes';
 
 interface LayoutProps {
   children: ReactNode;
@@ -217,7 +218,7 @@ export default function Layout({ children, hideSidebar }: LayoutProps) {
 
                   {isAdmin && (
                     <div
-                      onClick={() => { setIsDropdownOpen(false); navigate('/admin'); }}
+                      onClick={() => { setIsDropdownOpen(false); navigate(studioPath()); }}
                       style={{
                         padding: '10px 20px',
                         color: 'var(--primary)',

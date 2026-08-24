@@ -869,7 +869,7 @@ export const ru: LocaleData = {
           sources: 'Источники',
           seo: 'Публикация',
           publications: 'Библиография',
-          ai: 'ИИ',
+          ai: 'Предложения автора',
           discovery: 'Поиск источников',
         },
         publications: {
@@ -1252,7 +1252,7 @@ export const ru: LocaleData = {
       createdDate: 'Дата создания',
       aiReview: {
         booksTab: 'Книги',
-        aiTab: 'AI-предложения',
+        aiTab: 'Авторы',
         queueTab: 'Очередь проверки',
         historyTab: 'История',
         queueEmpty: 'Нет предложений, требующих решения редактора',

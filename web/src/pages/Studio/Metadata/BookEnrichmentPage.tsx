@@ -5,6 +5,7 @@ import { METADATA_STATUS_LABELS, METADATA_STATUS_COLORS, ENRICHMENT_FIELD_LABELS
 import { Save, ArrowLeft, RefreshCw, AlertCircle, CheckCircle, X, Plus, UserPlus, Link2 } from 'lucide-react';
 import { getLocaleData, getBrowserLocale } from '../../../locales';
 import { apiClient } from '../../../shared/api/client';
+import { studioPath } from '../../../shared/utils/studioRoutes';
 
 const inputStyle: React.CSSProperties = {
   width: '100%', padding: '10px 14px',
@@ -295,7 +296,7 @@ export default function BookEnrichmentPage() {
     <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', maxWidth: '900px' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: '16px', flexWrap: 'wrap' }}>
         <button
-          onClick={() => navigate('/admin/metadata')}
+          onClick={() => navigate(studioPath(`books/${id}/workspace`))}
           style={{
             padding: '8px', background: 'var(--chip)',
             border: '1px solid var(--border)', borderRadius: '8px',

@@ -866,7 +866,7 @@ export const be: LocaleData = {
           sources: 'Sources',
           seo: 'SEO',
           publications: 'Bibliography',
-          ai: 'AI',
+          ai: 'Прапановы аўтара',
           discovery: 'Source Discovery',
         },
         publications: {
@@ -1249,7 +1249,7 @@ export const be: LocaleData = {
       createdDate: 'Created',
       aiReview: {
         booksTab: 'Кнігі',
-        aiTab: 'AI-прапановы',
+        aiTab: 'Аўтары',
         queueTab: 'Чарга праверкі',
         historyTab: 'Гісторыя',
         queueEmpty: 'Няма прапановаў, якія патрабуюць рашэння рэдактара',

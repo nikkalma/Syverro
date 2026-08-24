@@ -3,6 +3,7 @@ import { ArrowUpRight, CheckCircle, Clock, Eye, RefreshCw, ShieldAlert, XCircle 
 import { apiClient } from '../../../shared/api/client';
 import { getLocaleData, getBrowserLocale } from '../../../locales';
 import type { AIProposal, BulkApplyResult, ReviewBulkResult, ReviewQueueCounts } from '../../../types/admin';
+import { studioPath } from '../../../shared/utils/studioRoutes';
 
 export function evidencePresentation(state: string) {
   const label = ({
@@ -389,7 +390,7 @@ export default function AIReview() {
                   </span>
                   {!r.ok && r.error && <span style={{ color: 'var(--text-muted)' }}>{r.error}</span>}
                   {r.ok && proposal?.entity_type === 'author' && proposal.entity_id && (
-                    <a href={`/studio/authors/${proposal.entity_id}`} style={{
+                    <a href={studioPath(`authors/${proposal.entity_id}/edit/ai`)} style={{
                       color: 'var(--primary)', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: '4px',
                     }}>
                       {ai.openAuthor} <ArrowUpRight size={12} />

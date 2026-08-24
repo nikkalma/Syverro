@@ -1,77 +1,32 @@
 import { useEffect, useState } from 'react';
-import { AdminBook, MODERATION_PIPELINE, MODERATION_STATUS_LABELS, MODERATION_STATUS_COLORS } from '../../../types/admin';
+import { AdminBook } from '../../../types/admin';
 import { useAdminStore } from '../../../store/adminStore';
-import { RefreshCw, CheckCircle, XCircle, Eye, Clock, BookOpen, Shield, X, Package, Send, PenLine, Bot } from 'lucide-react';
+import { RefreshCw, CheckCircle, XCircle, Eye, Clock, BookOpen, Shield, X, PenLine, Lock } from 'lucide-react';
 import { PUBLICATION_TYPE_COLORS, METADATA_STATUS_LABELS, METADATA_STATUS_COLORS } from '../../../types/admin';
 import { getLocaleData, getBrowserLocale } from '../../../locales';
 import type { LocaleData } from '../../../locales';
 import { apiClient } from '../../../shared/api/client';
 import AIReview from './AIReview';
+import {
+  BOOK_MODERATION_ENDPOINTS,
+  BOOK_MODERATION_FILTERS,
+  bookModerationActions,
+  type BookModerationAction,
+  type BookModerationFilter,
+  type BookModerationStatus,
+} from './bookModeration';
 
-type TabFilter = 'pending' | 'approved' | 'draft' | 'published' | 'archived' | 'all';
-
-const getStatusLabels = (t: LocaleData) => ({
-  draft: t.admin.moderation.draft,
+export const getBookStatusLabels = (t: LocaleData): Record<BookModerationStatus, string> => ({
   pending: t.admin.moderation.pending,
   approved: t.admin.moderation.approved,
-  published: t.admin.moderation.published,
-  archived: t.admin.moderation.archived,
+  rejected: t.admin.moderation.rejected,
 });
 
 const STATUS_COLORS: Record<string, { bg: string; color: string; border: string }> = {
-  draft: { bg: 'var(--chip)', color: 'var(--text-secondary)', border: 'var(--text-secondary)' },
   pending: { bg: 'var(--chip)', color: 'var(--warning)', border: 'var(--warning)' },
   approved: { bg: 'var(--chip)', color: 'var(--success)', border: 'var(--success)' },
-  published: { bg: 'var(--primary-soft)', color: 'var(--primary)', border: 'var(--primary)' },
-  archived: { bg: 'var(--chip)', color: 'var(--error)', border: 'var(--error)' },
+  rejected: { bg: 'var(--chip)', color: 'var(--error)', border: 'var(--error)' },
 };
-
-function PipelineVisualization({ currentStatus }: { currentStatus: string }) {
-  const allStages = [...MODERATION_PIPELINE, 'archived' as const];
-  const currentIdx = allStages.indexOf(currentStatus as any);
-
-  return (
-    <div style={{
-      display: 'flex', alignItems: 'center', gap: '4px',
-      padding: '12px 16px', background: 'var(--glass-bg)',
-      borderRadius: '8px', border: '1px solid var(--border-soft)',
-      flexWrap: 'wrap',
-    }}>
-      {allStages.map((stage, idx) => {
-        const isPast = currentIdx >= idx;
-        const isCurrent = currentStatus === stage;
-        const stageColor = MODERATION_STATUS_COLORS[stage] || 'var(--text-secondary)';
-        return (
-          <div key={stage} style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-            <div style={{
-              display: 'flex', alignItems: 'center', gap: '6px',
-              padding: '4px 10px', borderRadius: '6px',
-              background: isCurrent ? `${stageColor}20` : 'transparent',
-              border: isCurrent ? `1px solid ${stageColor}40` : '1px solid transparent',
-            }}>
-              <div style={{
-                width: '8px', height: '8px', borderRadius: '50%',
-                background: isPast ? stageColor : 'var(--text-muted)',
-                flexShrink: 0,
-              }} />
-              <span style={{
-                fontSize: '11px', fontWeight: isCurrent ? '600' : '400',
-                color: isPast ? stageColor : '#4A6B80',
-              }}>
-                {MODERATION_STATUS_LABELS[stage] || stage}
-              </span>
-            </div>
-            {idx < allStages.length - 1 && (
-              <span style={{
-                fontSize: '10px', color: currentIdx > idx ? stageColor : 'var(--text-muted)',
-              }}>▸</span>
-            )}
-          </div>
-        );
-      })}
-    </div>
-  );
-}
 
 export default function ModerationPage() {
   const locale = getBrowserLocale();
@@ -80,13 +35,13 @@ export default function ModerationPage() {
 
   const [books, setBooks] = useState<AdminBook[]>([]);
   const [total, setTotal] = useState(0);
-  const [activeTab, setActiveTab] = useState<TabFilter>('pending');
+  const [activeTab, setActiveTab] = useState<BookModerationFilter>('pending');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedBook, setSelectedBook] = useState<AdminBook | null>(null);
   const [isDetailOpen, setIsDetailOpen] = useState(false);
   const [rejectReason, setRejectReason] = useState('');
   const [actionLoading, setActionLoading] = useState(false);
-  const [section, setSection] = useState<'books' | 'ai'>('books');
+  const [section, setSection] = useState<'books' | 'authors'>('books');
   const aiReview = t.admin.moderation.aiReview;
 
   const fetchBooks = async () => {
@@ -109,11 +64,11 @@ export default function ModerationPage() {
   useEffect(() => { setPage(1); }, [activeTab, searchQuery]);
   useEffect(() => { fetchBooks(); }, [page, limit, activeTab, searchQuery]);
 
-  const handleAction = async (bookId: string, action: string) => {
+  const handleAction = async (bookId: string, action: BookModerationAction) => {
     setActionLoading(true);
     try {
       const body = action === 'reject' ? { reason: rejectReason || null } : {};
-      await apiClient.post(`/admin/moderation/books/${bookId}/${action}`, body);
+      await apiClient.post(`/admin/moderation/books/${bookId}/${BOOK_MODERATION_ENDPOINTS[action]}`, body);
       setIsDetailOpen(false);
       setSelectedBook(null);
       setRejectReason('');
@@ -138,14 +93,13 @@ export default function ModerationPage() {
 
   const totalPages = Math.ceil(total / limit);
 
-  const tabs: { key: TabFilter; label: string; icon: React.ReactNode }[] = [
-    { key: 'draft', label: getStatusLabels(t).draft, icon: <Clock size={14} /> },
-    { key: 'pending', label: getStatusLabels(t).pending, icon: <Clock size={14} /> },
-    { key: 'approved', label: getStatusLabels(t).approved, icon: <CheckCircle size={14} /> },
-    { key: 'published', label: getStatusLabels(t).published, icon: <CheckCircle size={14} /> },
-    { key: 'archived', label: getStatusLabels(t).archived, icon: <XCircle size={14} /> },
-    { key: 'all', label: t.admin.common.all, icon: <RefreshCw size={14} /> },
-  ];
+  const statusLabels = getBookStatusLabels(t);
+  const tabs: { key: BookModerationFilter; label: string; icon: React.ReactNode }[] =
+    BOOK_MODERATION_FILTERS.map((key) => ({
+      key,
+      label: key === 'all' ? t.admin.common.all : statusLabels[key],
+      icon: key === 'pending' ? <Clock size={14} /> : key === 'approved' ? <CheckCircle size={14} /> : key === 'rejected' ? <XCircle size={14} /> : <RefreshCw size={14} />,
+    }));
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
@@ -159,18 +113,18 @@ export default function ModerationPage() {
         }}>
           <BookOpen size={14} /> {aiReview.booksTab}
         </button>
-        <button onClick={() => setSection('ai')} style={{
-          padding: '8px 16px', background: section === 'ai' ? 'var(--primary)' : 'transparent',
+        <button onClick={() => setSection('authors')} style={{
+          padding: '8px 16px', background: section === 'authors' ? 'var(--primary)' : 'transparent',
           border: 'none', borderRadius: '8px 8px 0 0',
-          color: section === 'ai' ? '#FFFFFF' : 'var(--text-secondary)', cursor: 'pointer',
+          color: section === 'authors' ? '#FFFFFF' : 'var(--text-secondary)', cursor: 'pointer',
           fontSize: '13px', display: 'flex', alignItems: 'center', gap: '6px',
-          fontFamily: 'Inter, sans-serif', fontWeight: section === 'ai' ? '500' : '400',
+          fontFamily: 'Inter, sans-serif', fontWeight: section === 'authors' ? '500' : '400',
         }}>
-          <Bot size={14} /> {aiReview.aiTab}
+          <PenLine size={14} /> {aiReview.aiTab}
         </button>
       </div>
 
-      {section === 'ai' ? (
+      {section === 'authors' ? (
         <AIReview />
       ) : (
         <>
@@ -234,7 +188,7 @@ export default function ModerationPage() {
           <table className="studio-table">
             <thead>
               <tr style={{ borderBottom: '1px solid var(--border)' }}>
-                {[t.admin.books.cover, t.admin.books.name, t.admin.books.author, t.admin.moderation.type, t.admin.books.status, t.admin.moderation.pipeline, t.admin.moderation.createdDate, t.admin.books.actions].map((h) => (
+                {[t.admin.books.cover, t.admin.books.name, t.admin.books.author, t.admin.moderation.type, t.admin.workspace.moderation, t.admin.workspace.preview, t.admin.moderation.createdDate, t.admin.books.actions].map((h) => (
                   <th key={h}>{h}</th>
                 ))}
               </tr>
@@ -270,11 +224,18 @@ export default function ModerationPage() {
                         padding: '4px 12px', borderRadius: '12px', fontSize: '12px', fontWeight: '500',
                         background: sc.bg, color: sc.color, border: `1px solid ${sc.border}`,
                       }}>
-                        {MODERATION_STATUS_LABELS[book.moderation_status as keyof typeof MODERATION_STATUS_LABELS] || book.moderation_status}
+                        {statusLabels[book.moderation_status] || book.moderation_status}
                       </span>
                     </td>
-                    <td style={{ padding: '12px 16px', maxWidth: '300px' }}>
-                      <PipelineVisualization currentStatus={book.moderation_status} />
+                    <td>
+                      <span style={{
+                        padding: '4px 12px', borderRadius: '12px', fontSize: '12px', fontWeight: '500',
+                        background: book.is_published ? 'rgba(76,175,80,0.12)' : 'var(--chip)',
+                        color: book.is_published ? 'var(--success)' : 'var(--text-muted)',
+                        border: `1px solid ${book.is_published ? 'rgba(76,175,80,0.35)' : 'var(--border)'}`,
+                      }}>
+                        {book.is_published ? t.admin.workspace.visible : t.admin.workspace.hidden}
+                      </span>
                     </td>
                     <td style={{ padding: '12px 16px', color: 'var(--primary)', fontSize: '12px' }}>
                       {new Date(book.created_at).toLocaleDateString('ru-RU')}
@@ -332,10 +293,6 @@ export default function ModerationPage() {
             maxWidth: '600px', width: '100%', border: '1px solid var(--border)',
             maxHeight: '80vh', overflowY: 'auto',
           }} onClick={(e) => e.stopPropagation()}>
-            <div style={{ marginBottom: '16px' }}>
-              <PipelineVisualization currentStatus={selectedBook.moderation_status} />
-            </div>
-
             <div style={{ display: 'flex', gap: '16px', marginBottom: '20px' }}>
               {selectedBook.cover && (
                 <img src={selectedBook.cover} alt={selectedBook.title}
@@ -355,7 +312,15 @@ export default function ModerationPage() {
                     color: STATUS_COLORS[selectedBook.moderation_status]?.color || STATUS_COLORS.pending.color,
                     border: `1px solid ${STATUS_COLORS[selectedBook.moderation_status]?.border || STATUS_COLORS.pending.border}`,
                   }}>
-                    {MODERATION_STATUS_LABELS[selectedBook.moderation_status as keyof typeof MODERATION_STATUS_LABELS] || selectedBook.moderation_status}
+                    {statusLabels[selectedBook.moderation_status] || selectedBook.moderation_status}
+                  </span>
+                  <span style={{
+                    padding: '4px 12px', borderRadius: '12px', fontSize: '12px', fontWeight: '500',
+                    background: selectedBook.is_published ? 'rgba(76,175,80,0.12)' : 'var(--chip)',
+                    color: selectedBook.is_published ? 'var(--success)' : 'var(--text-muted)',
+                    border: `1px solid ${selectedBook.is_published ? 'rgba(76,175,80,0.35)' : 'var(--border)'}`,
+                  }}>
+                    {t.admin.workspace.preview}: {selectedBook.is_published ? t.admin.workspace.visible : t.admin.workspace.hidden}
                   </span>
                   <span style={{
                     padding: '4px 10px', borderRadius: '10px', fontSize: '11px', fontWeight: '500',
@@ -438,15 +403,7 @@ export default function ModerationPage() {
                 color: 'var(--text-secondary)', fontSize: '14px', cursor: 'pointer', fontFamily: 'Inter, sans-serif',
               }}>{t.admin.common.close}</button>
 
-              {selectedBook.moderation_status === 'draft' && (
-                <button onClick={() => handleAction(selectedBook.id, 'submit')} disabled={actionLoading} style={{
-                  padding: '10px 20px', background: 'var(--primary)', border: 'none', borderRadius: '8px',
-                  color: '#fff', fontSize: '14px', fontWeight: '500', cursor: 'pointer',
-                  fontFamily: 'Inter, sans-serif', opacity: actionLoading ? 0.6 : 1,
-                }}> <Send size={12} /> {t.admin.moderation.submit} </button>
-              )}
-
-              {selectedBook.moderation_status === 'pending' && (
+              {bookModerationActions(selectedBook).length > 0 && (
                 <>
                   <button onClick={() => handleAction(selectedBook.id, 'reject')} disabled={actionLoading} style={{
                     padding: '10px 20px', background: 'var(--error)', border: 'none', borderRadius: '8px',
@@ -454,6 +411,14 @@ export default function ModerationPage() {
                     fontFamily: 'Inter, sans-serif', opacity: actionLoading ? 0.6 : 1,
                     display: 'inline-flex', alignItems: 'center', gap: '4px',
                   }}> <> <X size={12} /> {t.admin.moderation.reject} </></button>
+                  {bookModerationActions(selectedBook).includes('personal-only') && (
+                    <button onClick={() => handleAction(selectedBook.id, 'personal-only')} disabled={actionLoading} style={{
+                      padding: '10px 20px', background: 'var(--chip)', border: '1px solid var(--border)', borderRadius: '8px',
+                      color: 'var(--text-secondary)', fontSize: '14px', fontWeight: '500', cursor: 'pointer',
+                      fontFamily: 'Inter, sans-serif', opacity: actionLoading ? 0.6 : 1,
+                      display: 'inline-flex', alignItems: 'center', gap: '4px',
+                    }}><Lock size={13} /> {t.admin.moderation.personalOnly}</button>
+                  )}
                   <button onClick={() => handleAction(selectedBook.id, 'approve')} disabled={actionLoading} style={{
                     padding: '10px 20px', background: 'var(--success)', border: 'none', borderRadius: '8px',
                     color: '#fff', fontSize: '14px', fontWeight: '500', cursor: 'pointer',
@@ -461,24 +426,6 @@ export default function ModerationPage() {
                     display: 'inline-flex', alignItems: 'center', gap: '4px',
                   }}> <> <CheckCircle size={14} /> {t.admin.moderation.approve}</></button>
                 </>
-              )}
-
-              {selectedBook.moderation_status === 'approved' && (
-                <button onClick={() => handleAction(selectedBook.id, 'publish')} disabled={actionLoading} style={{
-                  padding: '10px 20px', background: 'var(--success)', border: 'none', borderRadius: '8px',
-                  color: '#fff', fontSize: '14px', fontWeight: '500', cursor: 'pointer',
-                  fontFamily: 'Inter, sans-serif', opacity: actionLoading ? 0.6 : 1,
-                  display: 'inline-flex', alignItems: 'center', gap: '4px',
-                }}> <> <BookOpen size={12} /> {t.admin.moderation.publish} </></button>
-              )}
-
-              {selectedBook.moderation_status === 'published' && (
-                <button onClick={() => handleAction(selectedBook.id, 'archive')} disabled={actionLoading} style={{
-                  padding: '10px 20px', background: 'var(--warning)', border: 'none', borderRadius: '8px',
-                  color: '#fff', fontSize: '14px', fontWeight: '500', cursor: 'pointer',
-                  fontFamily: 'Inter, sans-serif', opacity: actionLoading ? 0.6 : 1,
-                  display: 'inline-flex', alignItems: 'center', gap: '4px',
-                }}> <> <Package size={12} /> {t.admin.moderation.archive} </></button>
               )}
             </div>
           </div>

@@ -84,7 +84,7 @@ export interface AdminBook {
   publication_type: 'official' | 'unofficial';
   metadata_status: 'draft' | 'incomplete' | 'review_ready' | 'complete';
   is_published: boolean;
-  moderation_status: 'draft' | 'pending' | 'approved' | 'published' | 'archived';
+  moderation_status: 'pending' | 'approved' | 'rejected';
   moderation_reason?: string | null;
   moderated_by?: string | null;
   moderated_at?: string | null;
@@ -136,7 +136,7 @@ export interface AdminBookCreate {
 
 export interface AdminBookUpdate extends Partial<AdminBookCreate> {
   is_published?: boolean;
-  moderation_status?: 'draft' | 'pending' | 'approved' | 'published' | 'archived';
+  moderation_status?: 'pending' | 'approved' | 'rejected';
   metadata_status?: 'draft' | 'incomplete' | 'review_ready' | 'complete';
 }
 
@@ -1050,54 +1050,19 @@ export function canModerateFull(role: AdminRole): boolean {
   return role === 'owner' || role === 'admin';
 }
 
-export type ModerationStatus = 'draft' | 'pending' | 'approved' | 'published' | 'archived';
-
-export const MODERATION_PIPELINE: ModerationStatus[] = ['draft', 'pending', 'approved', 'published'];
-
-export const MODERATION_PIPELINE_ARCHIVED: ModerationStatus = 'archived';
+export type ModerationStatus = 'pending' | 'approved' | 'rejected';
 
 export const MODERATION_STATUS_LABELS: Record<ModerationStatus, string> = {
-  draft: 'Черновик',
   pending: 'На модерации',
   approved: 'Одобрено',
-  published: 'Опубликована',
-  archived: 'Архивирована',
+  rejected: 'Отклонено',
 };
 
 export const MODERATION_STATUS_COLORS: Record<ModerationStatus, string> = {
-  draft: '#97A6BA',
   pending: '#FFA726',
   approved: '#4CAF50',
-  published: '#5B86A1',
-  archived: '#EF5350',
+  rejected: '#EF5350',
 };
-
-export function getNextModerationStatus(current: ModerationStatus): ModerationStatus | null {
-  if (current === 'archived') return null;
-  const idx = MODERATION_PIPELINE.indexOf(current);
-  if (idx === -1 || idx >= MODERATION_PIPELINE.length - 1) return null;
-  return MODERATION_PIPELINE[idx + 1];
-}
-
-export function getModerationActions(current: ModerationStatus): { label: string; nextStatus: ModerationStatus; color: string }[] {
-  const actions: { label: string; nextStatus: ModerationStatus; color: string }[] = [];
-  const next = getNextModerationStatus(current);
-  if (next) {
-    const labels: Record<string, string> = {
-      pending: '📨 Отправить на модерацию',
-      approved: '✅ Одобрить',
-      published: '📗 Опубликовать',
-    };
-    actions.push({ label: labels[next] || next, nextStatus: next, color: '#4CAF50' });
-  }
-  if (current !== 'archived' && current !== 'draft') {
-    actions.push({ label: '⏮ Вернуть в черновик', nextStatus: 'draft', color: '#FFA726' });
-  }
-  if (current === 'published') {
-    actions.push({ label: '📦 Архивировать', nextStatus: 'archived', color: '#EF5350' });
-  }
-  return actions;
-}
 
 export type PublicationType = 'official' | 'unofficial';
 

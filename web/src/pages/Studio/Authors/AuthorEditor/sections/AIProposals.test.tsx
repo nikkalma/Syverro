@@ -46,6 +46,7 @@ describe('Author proposal epistemic explanation', () => {
 
     render(<AIProposals />);
 
+    expect(await screen.findByText('Author proposals')).toBeInTheDocument();
     expect(await screen.findByText('PARTIAL')).toBeInTheDocument();
     expect(screen.getByText(/Supported source span:/)).toBeInTheDocument();
     expect(screen.getByText(/Unsupported components:/)).toBeInTheDocument();

@@ -1,6 +1,6 @@
 // src/pages/Admin/Books/BooksTable.tsx
 
-import { Megaphone, Clock, BookOpen, Package, Pencil, Trash2, AlertCircle, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Clock, BookOpen, EyeOff, Pencil, Trash2, AlertCircle, ChevronLeft, ChevronRight } from 'lucide-react';
 import { AdminBook, MODERATION_STATUS_COLORS } from '../../../types/admin';
 import { useAdminStore } from '../../../store/adminStore';
 import { getLocaleData, getBrowserLocale } from '../../../locales';
@@ -233,14 +233,14 @@ export default function BooksTable({
                 <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
                   {canManage && (
                     <>
-                      <button
+                      {book.moderation_status === 'approved' ? <button
                         onClick={() => onTogglePublish(book.id, book.is_published)}
                         style={{
                           padding: '4px 10px',
                           background: 'var(--chip)',
                           border: '1px solid var(--border)',
                           borderRadius: '6px',
-                          color: book.moderation_status === 'published' ? '#FFA726' : 'var(--success)',
+                          color: book.is_published ? '#FFA726' : 'var(--success)',
                           fontSize: '11px',
                           cursor: 'pointer',
                           fontFamily: 'Inter, sans-serif',
@@ -249,12 +249,14 @@ export default function BooksTable({
                           gap: '4px',
                         }}
                       >
-                        {book.moderation_status === 'draft' ? <><Megaphone size={12} /> {t.admin.books.submitForModeration}</> :
-                         book.moderation_status === 'pending' ? <><Clock size={12} /> {t.admin.books.awaiting}</> :
-                         book.moderation_status === 'approved' ? <><BookOpen size={12} /> {t.admin.books.publish}</> :
-                         book.moderation_status === 'published' ? <><Package size={12} /> {t.admin.books.archive}</> :
-                         <><Megaphone size={12} /> {t.admin.books.publish}</>}
-                      </button>
+                        {book.is_published
+                          ? <><EyeOff size={12} /> {t.admin.workspace.hidden}</>
+                          : <><BookOpen size={12} /> {t.admin.books.publish}</>}
+                      </button> : (
+                        <span style={{ padding: '4px 10px', color: 'var(--text-muted)', fontSize: '11px', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                          <Clock size={12} /> {book.moderation_status === 'pending' ? t.admin.books.awaiting : t.admin.moderation.rejected}
+                        </span>
+                      )}
                       <button
                         onClick={() => onEdit(book)}
                         title={t.admin.common.edit}

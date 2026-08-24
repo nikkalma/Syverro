@@ -31,9 +31,6 @@ export default function StudioAuthorsLayout() {
         <NavLink to={studioPath('authors/list')} style={tabStyle} end>
           {t.admin.authors.title}
         </NavLink>
-        <NavLink to={studioPath('authors/new')} style={tabStyle}>
-          {t.admin.authors.newAuthor}
-        </NavLink>
       </div>
       <Outlet />
     </div>

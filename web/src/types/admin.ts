@@ -262,6 +262,25 @@ export interface AdminAuthor {
   updated_at: string;
 }
 
+export interface AuthorEditorialSummary {
+  book_count: number;
+  publications_count: number;
+  metadata_status: string;
+  verified_source_count: number;
+  pending_source_candidate_count: number;
+  rejected_source_candidate_count: number;
+  corpus_ready: boolean;
+  pending_proposal_count: number;
+  accepted_unapplied_proposal_count: number;
+  applied_proposal_count: number;
+  last_syvai_run_at?: string | null;
+  last_syvai_run_status?: string | null;
+  last_syvai_run_domain?: string | null;
+  last_syvai_run_reason?: string | null;
+  publication_ready: boolean;
+  missing_required_fields: string[];
+}
+
 export function getAuthorDisplayName(author: {
   display_name?: string | null;
   name?: string | null;

@@ -126,6 +126,8 @@ export default function MetadataStatusControl() {
     ? 'rgba(76,175,80,0.1)'
     : 'rgba(220,38,38,0.08)';
   const isPromoteTargetGolden = nextStatus === 'golden';
+  const requiredFields = ['Sort name', 'Nationality', 'Birth date or birth year', 'Languages', 'Occupations', 'Biography'];
+  const missingRequired = new Set(readiness?.missing_required_fields || []);
 
   return (
     <div style={{
@@ -169,6 +171,14 @@ export default function MetadataStatusControl() {
           </div>
           {readiness && (
             <>
+              <div style={{ color: 'var(--text-secondary)' }}>
+                <div style={{ fontWeight: 600, marginBottom: '4px' }}>Required</div>
+                {requiredFields.map((field) => (
+                  <div key={field} style={{ color: missingRequired.has(field) ? 'var(--error)' : 'var(--success)' }}>
+                    {missingRequired.has(field) ? '✗' : '✓'} {field}
+                  </div>
+                ))}
+              </div>
               {readiness.missing_required_fields.length > 0 && (
                 <div>
                   <span style={{ fontWeight: 500 }}>{copy.missingRequired}: </span>
@@ -234,6 +244,7 @@ export default function MetadataStatusControl() {
           background: 'rgba(220,38,38,0.08)', border: '1px solid rgba(220,38,38,0.2)',
           borderRadius: '8px', color: 'var(--error)',
         }}>
+          <div style={{ fontWeight: 600 }}>Stage guidance</div>
           {validationErrors.map((e, i) => (
             <div key={i}>{e}</div>
           ))}

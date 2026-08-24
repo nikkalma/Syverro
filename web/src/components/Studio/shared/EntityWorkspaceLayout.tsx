@@ -22,6 +22,8 @@ interface Props {
   sections: EntityWorkspaceSection[];
   basePath: string;
   preview?: React.ReactNode;
+  navigation?: React.ReactNode;
+  workflowSummary?: React.ReactNode;
   loading?: boolean;
   error?: string | null;
   notFoundLabel?: string;
@@ -41,6 +43,8 @@ export default function EntityWorkspaceLayout({
   sections,
   basePath,
   preview,
+  navigation,
+  workflowSummary,
   loading,
   error,
   notFoundLabel,
@@ -81,7 +85,8 @@ export default function EntityWorkspaceLayout({
         sapphireStatus={sapphireStatus}
         explorerVisible={explorerVisible}
       />
-      <EditorSectionNav sections={sections} basePath={basePath} />
+      {workflowSummary}
+      {navigation || <EditorSectionNav sections={sections} basePath={basePath} />}
       <div style={{ flex: 1, display: 'flex', gap: '24px', padding: '24px 28px' }}>
         <div style={{
           flex: 1, minWidth: 0,

@@ -20,6 +20,7 @@ from app.services.author_publication import (
     author_golden_readiness,
     promote_author_to_golden,
 )
+from app.services.author_editorial_summary import author_editorial_summaries
 from app.services.security_audit import add_security_event
 from app.schemas.author_quote import AuthorQuoteCreate, AuthorQuoteUpdate, AuthorQuoteResponse
 from app.schemas.author_citizenship import AuthorCitizenshipCreate, AuthorCitizenshipUpdate, AuthorCitizenshipResponse
@@ -62,6 +63,19 @@ async def _publications_count(db: AsyncSession, author_id) -> int:
 # ============================================================
 # AUTHOR PUBLICATION (explicit editorial publish, draft -> golden)
 # ============================================================
+
+
+@router.get("/{author_id}/editorial-summary", response_model=dict)
+async def get_author_editorial_summary(
+    author_id: str,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Return PR C's authoritative workflow projection for one Author."""
+    await check_admin(current_user)
+    author = await get_author_or_404(db, author_id)
+    summaries = await author_editorial_summaries(db, [author])
+    return summaries[str(author.id)]
 
 
 @router.get("/{author_id}/publication-readiness", response_model=dict)

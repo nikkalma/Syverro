@@ -1,7 +1,8 @@
 import { useNavigate } from 'react-router-dom';
-import { Users, BookOpen, PenLine, Bookmark, Landmark, Folder, ShieldAlert, FileText, ScrollText, Settings } from 'lucide-react';
+import { Users, BookOpen, PenLine, ShieldAlert, ScrollText, Settings } from 'lucide-react';
 import type { LocaleData } from '../../../locales';
 import { studioPath } from '../../../shared/utils/studioRoutes';
+import { ACTIVE_STUDIO_LAUNCHER_MODULES } from '../../../components/Studio/studioNavigation';
 
 interface ModuleCard {
   path: string;
@@ -10,18 +11,23 @@ interface ModuleCard {
   description: string;
 }
 
-const modules = (t: LocaleData): ModuleCard[] => [
-  { path: studioPath('users'), icon: <Users size={20} />, label: t.admin.nav.users, description: t.admin.dashboard.modules.users.description },
-  { path: studioPath('books'), icon: <BookOpen size={20} />, label: t.admin.nav.books, description: t.admin.dashboard.modules.books.description },
-  { path: studioPath('authors'), icon: <PenLine size={20} />, label: t.admin.nav.authors, description: t.admin.dashboard.modules.authors.description },
-  { path: studioPath('genres'), icon: <Bookmark size={20} />, label: t.admin.nav.genres, description: t.admin.dashboard.modules.genres.description },
-  { path: studioPath('taxonomy'), icon: <Landmark size={20} />, label: t.admin.nav.taxonomy, description: t.admin.dashboard.modules.taxonomy.description },
-  { path: studioPath('entities'), icon: <Folder size={20} />, label: t.admin.nav.entities, description: t.admin.dashboard.modules.entities.description },
-  { path: studioPath('moderation'), icon: <ShieldAlert size={20} />, label: t.admin.nav.moderation, description: t.admin.dashboard.modules.moderation.description },
-  { path: studioPath('metadata'), icon: <FileText size={20} />, label: t.admin.nav.metadata, description: t.admin.dashboard.modules.metadata.description },
-  { path: studioPath('logs'), icon: <ScrollText size={20} />, label: t.admin.nav.logs, description: t.admin.dashboard.modules.logs.description },
-  { path: studioPath('settings'), icon: <Settings size={20} />, label: t.admin.nav.settings, description: t.admin.dashboard.modules.settings.description },
-];
+const MODULE_ICONS = {
+  users: <Users size={20} />,
+  books: <BookOpen size={20} />,
+  authors: <PenLine size={20} />,
+  moderation: <ShieldAlert size={20} />,
+  logs: <ScrollText size={20} />,
+  settings: <Settings size={20} />,
+};
+
+export const getDashboardModules = (t: LocaleData): ModuleCard[] =>
+  ACTIVE_STUDIO_LAUNCHER_MODULES
+    .map((key) => ({
+      path: studioPath(key),
+      icon: MODULE_ICONS[key],
+      label: t.admin.nav[key],
+      description: t.admin.dashboard.modules[key].description,
+    }));
 
 interface Props {
   t: LocaleData;
@@ -29,7 +35,7 @@ interface Props {
 
 export default function DashboardModuleCards({ t }: Props) {
   const navigate = useNavigate();
-  const items = modules(t);
+  const items = getDashboardModules(t);
 
   return (
     <div style={{

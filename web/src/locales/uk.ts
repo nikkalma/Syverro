@@ -866,7 +866,7 @@ export const uk: LocaleData = {
           sources: 'Sources',
           seo: 'SEO',
           publications: 'Bibliography',
-          ai: 'AI',
+          ai: 'Пропозиції автора',
           discovery: 'Source Discovery',
         },
         publications: {
@@ -1249,7 +1249,7 @@ export const uk: LocaleData = {
       createdDate: 'Created',
       aiReview: {
         booksTab: 'Книги',
-        aiTab: 'AI-пропозиції',
+        aiTab: 'Автори',
         queueTab: 'Черга перевірки',
         historyTab: 'Історія',
         queueEmpty: 'Немає пропозицій, що потребують рішення редактора',

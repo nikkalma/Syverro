@@ -70,19 +70,14 @@ export default function AdminBooks() {
   };
 
   // ===== ПУБЛИКАЦИЯ / СМЕНА СТАТУСА =====
-  const handleTogglePublish = async (id: string) => {
+  const handleTogglePublish = async (id: string, isPublished: boolean) => {
     try {
       const book = books.find((b) => b.id === id);
       if (!book) return;
 
-      let nextStatus = 'draft';
-      if (book.moderation_status === 'draft') nextStatus = 'pending';
-      else if (book.moderation_status === 'pending') nextStatus = 'pending';
-      else if (book.moderation_status === 'approved') nextStatus = 'published';
-      else if (book.moderation_status === 'published') nextStatus = 'archived';
-      else nextStatus = 'draft';
+      if (book.moderation_status !== 'approved') return;
 
-      await apiClient.put(`/admin/books/${id}/publish`, { moderation_status: nextStatus });
+      await apiClient.put(`/admin/books/${id}/publish`, { is_published: !isPublished });
       await fetchBooks();
     } catch (err: any) {
       setError(err.response?.data?.detail || err.message || t.admin.books.errorStatus);

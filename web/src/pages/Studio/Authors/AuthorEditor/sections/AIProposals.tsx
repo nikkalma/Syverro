@@ -211,7 +211,7 @@ export default function AIProposals() {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-      <EditorSectionCard title={copy.aiTitle}>
+      <EditorSectionCard title={t.admin.authors.editor.sections.ai}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
           <p style={{ fontSize: '13px', color: 'var(--text-muted)', margin: 0, lineHeight: 1.5 }}>
             {copy.aiDescription}
@@ -338,7 +338,7 @@ export default function AIProposals() {
                   background: p.source_type === 'ai' ? 'rgba(91,134,161,0.15)' : 'rgba(76,175,80,0.15)',
                   color: p.source_type === 'ai' ? '#5B86A1' : '#4CAF50',
                 }}>
-                  {p.source_type === 'ai' ? copy.aiTitle : p.source_type}
+                  {p.source_type === 'ai' ? 'SyvAI' : p.source_type}
                 </span>
                 <span style={{
                   padding: '2px 8px', borderRadius: '4px', fontSize: '10px',

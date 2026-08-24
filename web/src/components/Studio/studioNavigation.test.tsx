@@ -63,4 +63,17 @@ describe('Studio navigation cleanup', () => {
     expect(authorIdentity).toContain('<TaxonomyPicker');
     expect(bookContext).toContain('`/admin/metadata/books/${id}`');
   });
+
+  it('keeps repaired browser navigation hostname-aware without changing API paths', () => {
+    const src = resolve(process.cwd(), 'src');
+    const metadata = readFileSync(resolve(src, 'pages/Studio/Metadata/MetadataPage.tsx'), 'utf8');
+    const enrichment = readFileSync(resolve(src, 'pages/Studio/Metadata/BookEnrichmentPage.tsx'), 'utf8');
+    const authorReview = readFileSync(resolve(src, 'pages/Studio/Moderation/AIReview.tsx'), 'utf8');
+
+    expect(metadata).toContain('studioPath(`books/${book.id}/enrichment`)');
+    expect(enrichment).toContain('studioPath(`books/${id}/workspace`)');
+    expect(authorReview).toContain('studioPath(`authors/${proposal.entity_id}/edit/ai`)');
+    expect(`${metadata}\n${enrichment}`).not.toMatch(/navigate\((?:`|'|")\/admin/);
+    expect(authorReview).toContain("apiClient.get('/admin/moderation/review-queue'");
+  });
 });

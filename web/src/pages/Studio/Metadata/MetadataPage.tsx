@@ -6,6 +6,7 @@ import { METADATA_STATUS_LABELS, METADATA_STATUS_COLORS } from '../../../types/a
 import { RefreshCw, BookOpen, ArrowRight, Search, ScanSearch, ChevronLeft, ChevronRight } from 'lucide-react';
 import { getLocaleData, getBrowserLocale } from '../../../locales';
 import { apiClient } from '../../../shared/api/client';
+import { studioPath } from '../../../shared/utils/studioRoutes';
 
 type TabFilter = 'all' | 'incomplete' | 'review_ready' | 'complete';
 
@@ -197,7 +198,7 @@ export default function MetadataPage() {
                     </td>
                     <td>
                       <button
-                        onClick={() => navigate(`/admin/books/${book.id}/enrichment`)}
+                        onClick={() => navigate(studioPath(`books/${book.id}/enrichment`))}
                         style={{
                           padding: '6px 14px', background: 'var(--primary-soft)',
                           border: '1px solid var(--primary)', borderRadius: '6px',

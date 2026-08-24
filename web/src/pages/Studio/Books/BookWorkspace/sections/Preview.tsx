@@ -14,8 +14,7 @@ export default function Preview() {
   const { book, publicDetail, saving, saveError, saveBook } = useBookWorkspace();
   const [isPublished, setIsPublished] = useState(false);
   const [metadataStatus, setMetadataStatus] = useState<AdminBook['metadata_status']>('draft');
-  const [moderationStatus, setModerationStatus] = useState<AdminBook['moderation_status']>('draft');
-  useEffect(() => { if (book) { setIsPublished(book.is_published); setMetadataStatus(book.metadata_status); setModerationStatus(book.moderation_status); } }, [book]);
+  useEffect(() => { if (book) { setIsPublished(book.is_published); setMetadataStatus(book.metadata_status); } }, [book]);
   if (!book) return null;
 
   const authors = publicDetail?.authors.map((author) => author.displayName || author.name) || (book.authors || []).map((author) => author.name);
@@ -30,7 +29,7 @@ export default function Preview() {
     [t.bookPage.metadata.series, publicDetail?.seriesName ?? book.series_name],
     [t.bookPage.metadata.seriesPosition, publicDetail?.seriesPosition ?? book.series_position],
   ].filter(([, value]) => value !== null && value !== undefined && value !== '');
-  const dirty = isPublished !== book.is_published || metadataStatus !== book.metadata_status || moderationStatus !== book.moderation_status;
+  const dirty = isPublished !== book.is_published || metadataStatus !== book.metadata_status;
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
@@ -47,13 +46,13 @@ export default function Preview() {
 
       <EditorSectionCard title={t.admin.workspace.status}>
         <DetailGrid columns={2}>
-          <div><div style={labelStyle}>{t.admin.workspace.moderation}</div><select value={moderationStatus} onChange={(e) => setModerationStatus(e.target.value as AdminBook['moderation_status'])} style={inputStyle}>{Object.entries(t.admin.workspace.moderationStatuses).map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select></div>
+          <div><div style={labelStyle}>{t.admin.workspace.moderation}</div><div style={{ ...inputStyle, background: 'var(--surface-hover)' }}>{t.admin.moderation[book.moderation_status]}</div></div>
           <div><div style={labelStyle}>{t.admin.workspace.metadata}</div><select value={metadataStatus} onChange={(e) => setMetadataStatus(e.target.value as AdminBook['metadata_status'])} style={inputStyle}><option value="draft">{t.admin.workspace.metadataStatuses.draft}</option><option value="incomplete">{t.admin.workspace.metadataStatuses.incomplete}</option><option value="review_ready">{t.admin.workspace.metadataStatuses.reviewReady}</option><option value="complete">{t.admin.workspace.metadataStatuses.complete}</option></select></div>
         </DetailGrid>
-        <label style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '16px', color: 'var(--text-secondary)' }}><input type="checkbox" checked={isPublished} onChange={(e) => setIsPublished(e.target.checked)} />{t.admin.books.publishBook}</label>
+        <label style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '16px', color: 'var(--text-secondary)' }}><input type="checkbox" checked={isPublished} disabled={book.moderation_status !== 'approved'} onChange={(e) => setIsPublished(e.target.checked)} />{t.admin.books.publishBook}</label>
       </EditorSectionCard>
       {saveError && <div style={{ color: 'var(--error)' }}>{saveError}</div>}
-      <ActionBar onSave={() => saveBook({ is_published: isPublished, metadata_status: metadataStatus, moderation_status: moderationStatus })} onCancel={() => { setIsPublished(book.is_published); setMetadataStatus(book.metadata_status); setModerationStatus(book.moderation_status); }} saving={saving} dirty={dirty} saveLabel={t.admin.common.save} savingLabel={t.admin.common.saving} cancelLabel={t.admin.common.cancel} />
+      <ActionBar onSave={() => saveBook({ is_published: isPublished, metadata_status: metadataStatus })} onCancel={() => { setIsPublished(book.is_published); setMetadataStatus(book.metadata_status); }} saving={saving} dirty={dirty} saveLabel={t.admin.common.save} savingLabel={t.admin.common.saving} cancelLabel={t.admin.common.cancel} />
     </div>
   );
 }

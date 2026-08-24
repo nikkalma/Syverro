@@ -866,7 +866,7 @@ export const sr: LocaleData = {
           sources: 'Sources',
           seo: 'SEO',
           publications: 'Bibliography',
-          ai: 'AI',
+          ai: 'Predlozi autora',
           discovery: 'Source Discovery',
         },
         publications: {
@@ -1249,7 +1249,7 @@ export const sr: LocaleData = {
       createdDate: 'Created',
       aiReview: {
         booksTab: 'Knjige',
-        aiTab: 'AI predlozi',
+        aiTab: 'Autori',
         queueTab: 'Red za pregled',
         historyTab: 'Istorija',
         queueEmpty: 'Nema predloga koji čekaju ljudsku odluku',

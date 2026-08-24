@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import { evidencePresentation } from './AIReview';
+import { getLocaleData } from '../../../locales';
 
 describe('moderation evidence state presentation', () => {
   it.each([
@@ -14,5 +15,10 @@ describe('moderation evidence state presentation', () => {
 
   it('never styles an unknown state as grounded', () => {
     expect(evidencePresentation('legacy').label).toBe('UNVERIFIED');
+  });
+
+  it('presents the global proposal queue as Author moderation', () => {
+    expect(getLocaleData('en').admin.moderation.aiReview.aiTab).toBe('Authors');
+    expect(getLocaleData('en').admin.authors.editor.sections.ai).toBe('Author proposals');
   });
 });

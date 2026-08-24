@@ -1,11 +1,12 @@
 import { Link, useNavigate } from 'react-router-dom';
 import { useMemo, useRef, useState } from 'react';
 import {
-  Search, Sun, Moon, CornerDownLeft, Home, Users, BookOpen, PenLine, Tags, Landmark, Folder, ShieldAlert, FileText, ScrollText, Settings, ExternalLink,
+  Search, Sun, Moon, CornerDownLeft, Home, Users, BookOpen, PenLine, ShieldAlert, ScrollText, Settings, ExternalLink,
 } from 'lucide-react';
 import { getLocaleData, getBrowserLocale } from '../../../locales';
 import type { LocaleData } from '../../../locales';
 import { studioPath } from '../../../shared/utils/studioRoutes';
+import { ACTIVE_STUDIO_MODULES } from '../studioNavigation';
 
 interface StudioHeaderProps {
   moduleName: string;
@@ -13,19 +14,22 @@ interface StudioHeaderProps {
   onToggleTheme?: () => void;
 }
 
-const getQuickModules = (t: LocaleData): { path: string; icon: React.ReactNode; label: string }[] => [
-  { path: studioPath(), icon: <Home size={14} />, label: t.admin.nav.dashboard },
-  { path: studioPath('users'), icon: <Users size={14} />, label: t.admin.nav.users },
-  { path: studioPath('books'), icon: <BookOpen size={14} />, label: t.admin.nav.books },
-  { path: studioPath('authors'), icon: <PenLine size={14} />, label: t.admin.nav.authors },
-  { path: studioPath('genres'), icon: <Tags size={14} />, label: t.admin.nav.genres },
-  { path: studioPath('taxonomy'), icon: <Landmark size={14} />, label: t.admin.nav.taxonomy },
-  { path: studioPath('entities'), icon: <Folder size={14} />, label: t.admin.nav.entities },
-  { path: studioPath('moderation'), icon: <ShieldAlert size={14} />, label: t.admin.nav.moderation },
-  { path: studioPath('metadata'), icon: <FileText size={14} />, label: t.admin.nav.metadata },
-  { path: studioPath('logs'), icon: <ScrollText size={14} />, label: t.admin.nav.logs },
-  { path: studioPath('settings'), icon: <Settings size={14} />, label: t.admin.nav.settings },
-];
+const MODULE_ICONS: Record<(typeof ACTIVE_STUDIO_MODULES)[number], React.ReactNode> = {
+  dashboard: <Home size={14} />,
+  users: <Users size={14} />,
+  books: <BookOpen size={14} />,
+  authors: <PenLine size={14} />,
+  moderation: <ShieldAlert size={14} />,
+  logs: <ScrollText size={14} />,
+  settings: <Settings size={14} />,
+};
+
+export const getQuickModules = (t: LocaleData): { path: string; icon: React.ReactNode; label: string }[] =>
+  ACTIVE_STUDIO_MODULES.map((key) => ({
+    path: key === 'dashboard' ? studioPath() : studioPath(key),
+    icon: MODULE_ICONS[key],
+    label: t.admin.nav[key],
+  }));
 
 export default function StudioHeader({ moduleName, theme, onToggleTheme }: StudioHeaderProps) {
   const [searchQuery, setSearchQuery] = useState('');

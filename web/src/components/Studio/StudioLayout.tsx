@@ -10,24 +10,16 @@ import { getLocaleData, getBrowserLocale } from '../../locales';
 import type { LocaleData } from '../../locales';
 import StudioHeader from './shared/StudioHeader';
 import { studioPath } from '../../shared/utils/studioRoutes';
+import { ACTIVE_STUDIO_LAUNCHER_MODULES } from './studioNavigation';
 import './StudioLayout.css';
 
 interface AdminLayoutProps {
   children: ReactNode;
 }
 
-const MODULE_ROUTES: { prefix: string; key: keyof LocaleData['admin']['nav'] }[] = [
-  { prefix: studioPath('users'), key: 'users' },
-  { prefix: studioPath('books'), key: 'books' },
-  { prefix: studioPath('authors'), key: 'authors' },
-  { prefix: studioPath('genres'), key: 'genres' },
-  { prefix: studioPath('taxonomy'), key: 'taxonomy' },
-  { prefix: studioPath('entities'), key: 'entities' },
-  { prefix: studioPath('moderation'), key: 'moderation' },
-  { prefix: studioPath('metadata'), key: 'metadata' },
-  { prefix: studioPath('logs'), key: 'logs' },
-  { prefix: studioPath('settings'), key: 'settings' },
-];
+const MODULE_ROUTES: { prefix: string; key: keyof LocaleData['admin']['nav'] }[] =
+  ACTIVE_STUDIO_LAUNCHER_MODULES
+    .map((key) => ({ prefix: studioPath(key), key }));
 
 export default function StudioLayout({ children }: AdminLayoutProps) {
   const location = useLocation();

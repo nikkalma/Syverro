@@ -48,17 +48,14 @@ import {
   AIProposals,
   SourceDiscovery,
 } from "./pages/Studio/Authors/AuthorEditor";
-import StudioGenres from "./pages/Studio/Genres";
-import StudioTaxonomy from "./pages/Studio/Taxonomy";
-import StudioEntities from "./pages/Studio/Entities";
 import EntityWorkspace from "./pages/Studio/Entities/EntityWorkspace";
 import EntityOverview from "./pages/Studio/Entities/sections/Overview";
 import EntityIdentity from "./pages/Studio/Entities/sections/Identity";
 import ActivityLog from "./pages/Studio/Logs";
 import StudioSettings from "./pages/Studio/Settings";
 import ModerationQueue from "./pages/Studio/Moderation/ModerationPage";
-import MetadataWorkspace from "./pages/Studio/Metadata/MetadataPage";
 import BookEnrichmentPage from "./pages/Studio/Metadata/BookEnrichmentPage";
+import ParkedSection from "./components/Studio/shared/ParkedSection";
 import { isStudioHostname, normalizeStudioPath, studioUrl } from './shared/utils/studioRoutes';
 
 
@@ -121,9 +118,9 @@ export default function App() {
             <Route path="preview" element={<BookPreview />} />
             <Route path="*" element={<Navigate to="overview" replace />} />
           </Route>
-          <Route path="genres" element={<StudioGenres />} />
-          <Route path="taxonomy" element={<StudioTaxonomy />} />
-          <Route path="entities" element={<StudioEntities />} />
+          <Route path="genres" element={<ParkedSection />} />
+          <Route path="taxonomy" element={<ParkedSection />} />
+          <Route path="entities" element={<ParkedSection />} />
           <Route path="entities/new" element={<EntityWorkspace />}>
             <Route index element={<Navigate to="overview" replace />} />
             <Route path="overview" element={<EntityOverview />} />
@@ -135,7 +132,7 @@ export default function App() {
             <Route path="*" element={<Navigate to="overview" replace />} />
           </Route>
           <Route path="moderation" element={<ModerationQueue />} />
-          <Route path="metadata" element={<MetadataWorkspace />} />
+          <Route path="metadata" element={<ParkedSection />} />
           <Route path="logs" element={<ActivityLog />} />
           <Route path="settings" element={<StudioSettings />} />
           <Route path="books/:id/enrichment" element={<BookEnrichmentPage />} />

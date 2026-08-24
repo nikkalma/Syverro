@@ -454,6 +454,24 @@ studioCleanup: {
       birthDateFuture: string;
       invalidDeathDate: string;
       deathBeforeBirth: string;
+      metadataStatus: string;
+      attention: string;
+      readinessLabel: string;
+      activity: string;
+      allMetadataStatuses: string;
+      sourcesNeeded: string;
+      sourcesToReview: string;
+      corpusReady: string;
+      proposalsToReview: string;
+      changesReadyToApply: string;
+      changesApplied: string;
+      noSyvaiActivity: string;
+      researchBlocked: string;
+      publicationReady: string;
+      missing: string;
+      missingCount: string;
+      lastSyvai: string;
+      publicPreview: string;
       editor: {
         sections: {
             overview: string;

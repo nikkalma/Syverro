@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { X } from 'lucide-react';
 import { useAdminStore } from '../../../store/adminStore';
 import { getLocaleData, getBrowserLocale } from '../../../locales';
+import { AUTHOR_METADATA_STATUSES, formatMetadataStatus } from './authorEditorialStatus';
 
 interface AuthorsFiltersProps {
   onFilterChange: () => void;
@@ -15,10 +16,12 @@ export default function AuthorsFilters({ onFilterChange }: AuthorsFiltersProps) 
   
   const [localSearch, setLocalSearch] = useState(searchQuery);
   const [countryFilter, setCountryFilter] = useState<string>(filters.country || '');
+  const [metadataStatus, setMetadataStatus] = useState<string>(filters.metadata_status || '');
 
   const applyFilters = () => {
     const newFilters: Record<string, any> = {};
     if (countryFilter) newFilters.country = countryFilter;
+    if (metadataStatus) newFilters.metadata_status = metadataStatus;
     setFilters(newFilters);
     setSearchQuery(localSearch);
     onFilterChange();
@@ -27,6 +30,7 @@ export default function AuthorsFilters({ onFilterChange }: AuthorsFiltersProps) 
   const handleClear = () => {
     setLocalSearch('');
     setCountryFilter('');
+    setMetadataStatus('');
     clearFilters();
     onFilterChange();
   };
@@ -42,7 +46,7 @@ export default function AuthorsFilters({ onFilterChange }: AuthorsFiltersProps) 
 
   useEffect(() => {
     applyFilters();
-  }, [countryFilter]);
+  }, [countryFilter, metadataStatus]);
 
   return (
     <div style={{
@@ -96,6 +100,14 @@ export default function AuthorsFilters({ onFilterChange }: AuthorsFiltersProps) 
         />
       </div>
 
+      <select value={metadataStatus} onChange={(e) => setMetadataStatus(e.target.value)} style={{
+        minWidth: '180px', padding: '8px 14px', background: 'var(--chip)', border: '1px solid var(--border)',
+        borderRadius: '8px', color: 'var(--text-primary)', fontSize: '14px', fontFamily: 'Inter, sans-serif', outline: 'none',
+      }}>
+        <option value="">{t.admin.authors.allMetadataStatuses}</option>
+        {AUTHOR_METADATA_STATUSES.map((status) => <option key={status} value={status}>{formatMetadataStatus(status)}</option>)}
+      </select>
+
       <button
         onClick={handleClear}
         style={{
@@ -116,7 +128,7 @@ export default function AuthorsFilters({ onFilterChange }: AuthorsFiltersProps) 
       </button>
 
       <div style={{ color: 'var(--primary)', fontSize: '13px', marginLeft: 'auto' }}>
-        {countryFilter || localSearch ? t.admin.common.filtersActive : t.admin.authors.allAuthors}
+        {countryFilter || localSearch || metadataStatus ? t.admin.common.filtersActive : t.admin.authors.allAuthors}
       </div>
     </div>
   );

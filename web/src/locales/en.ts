@@ -870,7 +870,7 @@ export const en: LocaleData = {
           seo: 'SEO',
           publications: 'Bibliography',
           ai: 'Author proposals',
-          discovery: 'Source Discovery',
+          discovery: 'Find & review sources',
         },
         publications: {
           title: 'Title',
@@ -1109,6 +1109,10 @@ export const en: LocaleData = {
           wikipedia: 'Wikipedia',
         },
         sources: {
+          corpusTitle: 'Verified research corpus',
+          corpusDescription: 'These sources are already admitted to or associated with this Author’s research corpus. Review uncertain discoveries in Find & review sources. SyvAI Fill uses only verified sources with eligible capabilities.',
+          pendingReview: (count) => `${count} discovered source${count === 1 ? '' : 's'} need${count === 1 ? 's' : ''} your decision.`,
+          reviewSources: 'Review sources',
           title: 'Sources',
           sourceType: 'Source Type',
           url: 'URL',

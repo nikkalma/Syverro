@@ -1,9 +1,11 @@
 import { useState, useEffect, useCallback } from 'react';
+import { Link } from 'react-router-dom';
 import { useAuthorEditor } from '../AuthorEditorContext';
 import EditorSectionCard from '../../../../../components/Studio/shared/EditorSectionCard';
 import { apiClient } from '../../../../../shared/api/client';
 import { getLocaleData, getBrowserLocale } from '../../../../../locales';
 import type { ResearchCorpusSummary, Source, SourceCreate } from '../../../../../types/admin';
+import { studioPath } from '../../../../../shared/utils/studioRoutes';
 
 function emptySource(): SourceCreate {
   return { title: '', source_type: 'website', url: null, citation: null, notes: null };
@@ -126,15 +128,19 @@ export default function Sources() {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-      {corpus && <EditorSectionCard title="Verified research corpus" description="Identity trust and inspected content capability are separate. Only these verified, current capabilities can enable Fill.">
-        {corpus.verified_sources.map((source) => <div key={source.id} style={{ padding: 12, border: '1px solid var(--border-soft)', borderRadius: 8, marginBottom: 8 }}>
+      <EditorSectionCard title={st.corpusTitle} description={st.corpusDescription}>
+        {corpus && corpus.needs_review_count > 0 ? <div role="status" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap', padding: 12, marginBottom: 12, borderRadius: 8, background: 'rgba(255,167,38,0.1)', border: '1px solid rgba(255,167,38,0.35)' }}>
+          <strong style={{ fontSize: 13, color: 'var(--text-primary)' }}>{st.pendingReview(corpus.needs_review_count)}</strong>
+          <Link to={studioPath(`authors/${author.id}/edit/discovery`)} style={{ padding: '7px 12px', borderRadius: 6, background: 'var(--accent)', color: '#fff', textDecoration: 'none', fontSize: 12 }}>{st.reviewSources}</Link>
+        </div> : null}
+        {corpus?.verified_sources.map((source) => <div key={source.id} style={{ padding: 12, border: '1px solid var(--border-soft)', borderRadius: 8, marginBottom: 8 }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', gap: 8 }}><strong style={{ fontSize: 13 }}>{source.title}</strong><span style={{ fontSize: 10, color: '#4CAF50' }}>{source.trust_state.replace(/_/g, ' ')}</span></div>
           {source.url && <a href={source.url} target="_blank" rel="noopener noreferrer" style={{ fontSize: 11, color: 'var(--accent)' }}>{source.url}</a>}
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginTop: 8 }}><div style={{ padding: 8, background: 'var(--surface-hover)', borderRadius: 6, fontSize: 11 }}><strong>Identity trust</strong><br />{source.trust_state.replace(/_/g, ' ')}</div><div style={{ padding: 8, background: 'var(--surface-hover)', borderRadius: 6, fontSize: 11 }}><strong>Content capabilities</strong><br />{source.stored_content_capabilities.length ? source.stored_content_capabilities.join(' · ') : 'None'}</div></div>
           {source.reinspection_required && <div style={{ marginTop: 8, padding: 8, background: 'rgba(255,167,38,.1)', borderRadius: 6, fontSize: 11 }}>Content inspection is outdated; this source cannot enable Fill until explicitly reinspected. <button type="button" disabled={reinspecting === source.id} onClick={() => reinspect(source.id)} style={{ marginLeft: 8 }}>{reinspecting === source.id ? 'Re-inspecting…' : 'Re-inspect content'}</button></div>}
         </div>)}
-        {!corpus.verified_sources.length && <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>No verified sources. Review source candidates before using Fill.</div>}
-      </EditorSectionCard>}
+        {corpus && !corpus.verified_sources.length ? <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>{st.noSources}</div> : null}
+      </EditorSectionCard>
       {loading && (
         <div style={{ padding: '20px', textAlign: 'center', color: 'var(--text-muted)' }}>
           {t.admin.common.loading}

@@ -24,7 +24,7 @@ describe('Author Editor D1 workflow orientation', () => {
     expect(screen.getByText('Author data')).toBeInTheDocument();
     expect(screen.getByText('Research & SyvAI')).toBeInTheDocument();
     expect(screen.getByText('Readiness')).toBeInTheDocument();
-    expect(screen.getByText('Find sources')).toHaveAttribute('href', '/studio/authors/author-1/edit/discovery');
+    expect(screen.getByText('Find & review sources')).toHaveAttribute('href', '/studio/authors/author-1/edit/discovery');
     expect(screen.getByText('Fill')).toHaveAttribute('href', '/studio/authors/author-1/edit/fill');
     expect(screen.getByText('Proposals & history')).toHaveAttribute('href', '/studio/authors/author-1/edit/proposals');
   });

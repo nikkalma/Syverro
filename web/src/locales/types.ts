@@ -725,6 +725,10 @@ studioCleanup: {
           wikipedia: string;
         };
         sources: {
+          corpusTitle: string;
+          corpusDescription: string;
+          pendingReview: (count: number) => string;
+          reviewSources: string;
           title: string;
           sourceType: string;
           url: string;

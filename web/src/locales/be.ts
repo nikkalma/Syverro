@@ -868,7 +868,7 @@ export const be: LocaleData = {
           seo: 'SEO',
           publications: 'Bibliography',
           ai: 'Прапановы аўтара',
-          discovery: 'Source Discovery',
+          discovery: 'Пошук і праверка крыніц',
         },
         publications: {
           title: 'Title',
@@ -1107,6 +1107,10 @@ export const be: LocaleData = {
           wikipedia: 'Wikipedia',
         },
         sources: {
+          corpusTitle: 'Правераны даследчы корпус',
+          corpusDescription: 'Гэтыя крыніцы ўжо прыняты ў даследчы корпус аўтара або звязаны з ім. Нявызначаныя знаходкі правяраюцца ў раздзеле «Пошук і праверка крыніц». SyvAI выкарыстоўвае для запаўнення толькі правераныя крыніцы з прыдатнымі магчымасцямі.',
+          pendingReview: (count) => `${count} знойдзеных крыніц патрабуюць вашага рашэння.`,
+          reviewSources: 'Праверыць крыніцы',
           title: 'Sources',
           sourceType: 'Source Type',
           url: 'URL',

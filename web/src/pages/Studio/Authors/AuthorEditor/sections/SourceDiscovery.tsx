@@ -44,7 +44,7 @@ function corpusGroup(candidate: SourceCandidate): string {
 }
 
 export default function SourceDiscovery() {
-  const { author } = useAuthorEditor();
+  const { author, refreshSummary } = useAuthorEditor();
   const t = getLocaleData(getBrowserLocale());
   const copy = t.admin.authors.editor.discovery;
 
@@ -98,6 +98,7 @@ export default function SourceDiscovery() {
       const res = await apiClient.post<DiscoveryRunResponse>(`/admin/authors/${author.id}/discovery/run`);
       setRuns((prev) => [res.data.run, ...prev]);
       await fetchAll();
+      refreshSummary();
     } catch (e: any) {
       setError(e?.response?.data?.detail || e.message || copy.errorRun);
     } finally {
@@ -111,6 +112,7 @@ export default function SourceDiscovery() {
     try {
       await apiClient.post(`/admin/authors/${author.id}/discovery/candidates/${candidateId}/${action}`);
       await fetchAll();
+      refreshSummary();
     } catch (e: any) {
       setError(e?.response?.data?.detail || e.message || copy.errorReview);
     }
@@ -123,6 +125,7 @@ export default function SourceDiscovery() {
     try {
       await apiClient.post(`/admin/authors/${author.id}/sources/${sourceId}/reinspect`);
       await fetchAll();
+      refreshSummary();
     } catch (e: any) {
       setError(e?.response?.data?.detail || e.message || 'Source content reinspection failed');
     } finally {
@@ -345,11 +348,17 @@ export default function SourceDiscovery() {
               </div>
             )}
 
-            {c.identity_verification && (
-              <div style={{ fontSize: '11px', color: 'var(--text-secondary)', marginBottom: '8px' }}>
-                Identity: {String(c.identity_verification.method || 'unresolved')} — {String(c.identity_verification.reason || '')}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(230px, 1fr))', gap: 8, marginBottom: 8 }}>
+              <div style={{ padding: 9, border: '1px solid var(--border-soft)', borderRadius: 6, background: 'var(--surface)' }}>
+                <div style={{ fontSize: 10, fontWeight: 600, textTransform: 'uppercase', color: 'var(--text-muted)', marginBottom: 4 }}>Identity trust</div>
+                <div style={{ fontSize: 11, color: 'var(--text-secondary)' }}>{c.corpus_state.replace(/_/g, ' ')} · {String(c.identity_verification?.method || 'unresolved')}</div>
+                {c.identity_verification?.reason && <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 3 }}>{String(c.identity_verification.reason)}</div>}
               </div>
-            )}
+              <div style={{ padding: 9, border: '1px solid var(--border-soft)', borderRadius: 6, background: 'var(--surface)' }}>
+                <div style={{ fontSize: 10, fontWeight: 600, textTransform: 'uppercase', color: 'var(--text-muted)', marginBottom: 4 }}>Content capabilities</div>
+                <div style={{ fontSize: 11, color: capabilities.length ? 'var(--text-secondary)' : 'var(--text-muted)' }}>{capabilities.length ? capabilities.join(' · ') : 'No inspected usable content'}</div>
+              </div>
+            </div>
 
             {stale && c.source_id && (
               <div style={{

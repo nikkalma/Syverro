@@ -559,7 +559,10 @@ async def get_author_proposals(
 ):
     await check_admin(current_user)
 
-    query = select(AIProposal).where(AIProposal.entity_id == author_id)
+    query = select(AIProposal).where(
+        AIProposal.entity_type == "author",
+        AIProposal.entity_id == author_id,
+    )
     if status_filter:
         query = query.where(AIProposal.status == status_filter)
     if band_filter:
@@ -646,7 +649,11 @@ async def update_author_proposal(
     await check_admin(current_user)
 
     result = await db.execute(
-        select(AIProposal).where(AIProposal.id == proposal_id, AIProposal.entity_id == author_id)
+        select(AIProposal).where(
+            AIProposal.id == proposal_id,
+            AIProposal.entity_type == "author",
+            AIProposal.entity_id == author_id,
+        )
     )
     proposal = result.scalar_one_or_none()
     if not proposal:

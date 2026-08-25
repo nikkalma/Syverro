@@ -3,7 +3,7 @@ import { useAuthorEditor } from '../AuthorEditorContext';
 import EditorSectionCard from '../../../../../components/Studio/shared/EditorSectionCard';
 import { apiClient } from '../../../../../shared/api/client';
 import { getLocaleData, getBrowserLocale } from '../../../../../locales';
-import type { Source, SourceCreate } from '../../../../../types/admin';
+import type { ResearchCorpusSummary, Source, SourceCreate } from '../../../../../types/admin';
 
 function emptySource(): SourceCreate {
   return { title: '', source_type: 'website', url: null, citation: null, notes: null };
@@ -32,7 +32,7 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
 }
 
 export default function Sources() {
-  const { author } = useAuthorEditor();
+  const { author, refreshSummary } = useAuthorEditor();
   const t = getLocaleData(getBrowserLocale());
   const [sources, setSources] = useState<Source[]>([]);
   const [loading, setLoading] = useState(true);
@@ -40,13 +40,18 @@ export default function Sources() {
   const [draft, setDraft] = useState<SourceCreate>(emptySource());
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [corpus, setCorpus] = useState<ResearchCorpusSummary | null>(null);
+  const [reinspecting, setReinspecting] = useState<string | null>(null);
 
   const fetchSources = useCallback(async () => {
     if (!author) return;
     setLoading(true);
     try {
-      const res = await apiClient.get(`/admin/authors/${author.id}/sources`);
-      setSources(res.data?.data || []);
+      const [res, corpusRes] = await Promise.all([
+        apiClient.get(`/admin/authors/${author.id}/sources`),
+        apiClient.get<ResearchCorpusSummary>(`/admin/authors/${author.id}/research-corpus`),
+      ]);
+      setSources(res.data?.data || []); setCorpus(corpusRes.data);
     } catch {
       setSources([]);
     } finally {
@@ -110,8 +115,26 @@ export default function Sources() {
     }
   };
 
+  const reinspect = async (sourceId: string) => {
+    setReinspecting(sourceId); setError(null);
+    try {
+      await apiClient.post(`/admin/authors/${author.id}/sources/${sourceId}/reinspect`);
+      await fetchSources(); refreshSummary();
+    } catch (e: any) { setError(e?.response?.data?.detail || e.message || 'Source content reinspection failed'); }
+    finally { setReinspecting(null); }
+  };
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+      {corpus && <EditorSectionCard title="Verified research corpus" description="Identity trust and inspected content capability are separate. Only these verified, current capabilities can enable Fill.">
+        {corpus.verified_sources.map((source) => <div key={source.id} style={{ padding: 12, border: '1px solid var(--border-soft)', borderRadius: 8, marginBottom: 8 }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', gap: 8 }}><strong style={{ fontSize: 13 }}>{source.title}</strong><span style={{ fontSize: 10, color: '#4CAF50' }}>{source.trust_state.replace(/_/g, ' ')}</span></div>
+          {source.url && <a href={source.url} target="_blank" rel="noopener noreferrer" style={{ fontSize: 11, color: 'var(--accent)' }}>{source.url}</a>}
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginTop: 8 }}><div style={{ padding: 8, background: 'var(--surface-hover)', borderRadius: 6, fontSize: 11 }}><strong>Identity trust</strong><br />{source.trust_state.replace(/_/g, ' ')}</div><div style={{ padding: 8, background: 'var(--surface-hover)', borderRadius: 6, fontSize: 11 }}><strong>Content capabilities</strong><br />{source.stored_content_capabilities.length ? source.stored_content_capabilities.join(' · ') : 'None'}</div></div>
+          {source.reinspection_required && <div style={{ marginTop: 8, padding: 8, background: 'rgba(255,167,38,.1)', borderRadius: 6, fontSize: 11 }}>Content inspection is outdated; this source cannot enable Fill until explicitly reinspected. <button type="button" disabled={reinspecting === source.id} onClick={() => reinspect(source.id)} style={{ marginLeft: 8 }}>{reinspecting === source.id ? 'Re-inspecting…' : 'Re-inspect content'}</button></div>}
+        </div>)}
+        {!corpus.verified_sources.length && <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>No verified sources. Review source candidates before using Fill.</div>}
+      </EditorSectionCard>}
       {loading && (
         <div style={{ padding: '20px', textAlign: 'center', color: 'var(--text-muted)' }}>
           {t.admin.common.loading}

@@ -4,6 +4,7 @@ import EditorSectionCard from '../../../../../components/Studio/shared/EditorSec
 import { apiClient } from '../../../../../shared/api/client';
 import type { ResearchCorpusSummary } from '../../../../../types/admin';
 import { useAuthorEditor } from '../AuthorEditorContext';
+import { corpusReasonMessage } from '../corpusReason';
 
 export default function ResearchOverview() {
   const { author, summary } = useAuthorEditor();
@@ -39,7 +40,8 @@ export default function ResearchOverview() {
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(190px, 1fr))', gap: 8, marginBottom: 16 }}>
           {Object.entries(corpus.domains).filter(([d]) => d !== 'bibliography').map(([domain, state]) => <div key={domain} style={{ border: '1px solid var(--border-soft)', borderRadius: 8, padding: 10 }}>
             <strong style={{ fontSize: 12 }}>{domain.replace('_', ' ')}</strong>
-            <div style={{ fontSize: 11, marginTop: 4, color: state.available ? '#4CAF50' : 'var(--text-muted)' }}>{state.available ? 'Available' : state.reason || 'No verified capable source'}</div>
+            <div style={{ fontSize: 11, marginTop: 4, color: state.available ? '#4CAF50' : 'var(--text-muted)' }}>{state.available ? 'Available' : corpusReasonMessage(state.reason)}</div>
+            {!state.available && state.reason ? <details style={{ color: 'var(--text-muted)', fontSize: 10, marginTop: 4 }}><summary>Technical details</summary><div>Reason code: {state.reason}</div></details> : null}
           </div>)}
         </div>
         {corpus.legacy_auto_unverified_count > 0 && <div style={{ padding: 10, border: '1px solid rgba(255,167,38,.35)', borderRadius: 8, color: 'var(--text-secondary)', fontSize: 12, marginBottom: 16 }}>Legacy or stale sources are excluded until explicitly reviewed or reinspected. They do not make a domain available.</div>}

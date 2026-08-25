@@ -73,6 +73,20 @@ const EVIDENCE_STATE_COLORS: Record<string, string> = {
   ungrounded: '#EF5350',
 };
 
+const APPLYABLE_FIELDS = new Set([
+  'native_name', 'birth_name', 'pen_names', 'pseudonyms', 'nationality', 'languages', 'gender',
+  'occupations', 'active_years', 'bio', 'citizenship', 'residence', 'literary_movements', 'genres',
+  'themes', 'motifs', 'concepts', 'atmospheres', 'writing_languages', 'timeline_event',
+]);
+
+function destinationFor(field: string): { label: string; section: string } | null {
+  if (field === 'timeline_event') return { label: 'Timeline', section: 'timeline' };
+  if (['bio', 'active_years'].includes(field)) return { label: 'Biography', section: 'biography' };
+  if (['occupations', 'citizenship', 'residence'].includes(field)) return { label: 'Biography', section: 'biography' };
+  if (['native_name', 'birth_name', 'pen_names', 'pseudonyms', 'nationality', 'languages', 'gender'].includes(field)) return { label: 'Identity', section: 'identity' };
+  return null;
+}
+
 function evidenceStateLabel(state: string): string {
   return state.replace(/_/g, ' ').toUpperCase();
 }
@@ -96,7 +110,7 @@ function summaryLines(value?: string | null): string[] {
 }
 
 export default function AIProposals() {
-  const { author } = useAuthorEditor();
+  const { author, refresh, refreshSummary } = useAuthorEditor();
   const t = getLocaleData(getBrowserLocale());
   const copy = t.admin.studioCleanup;
   const proposalStatusLabels: Record<string, string> = {
@@ -107,7 +121,6 @@ export default function AIProposals() {
   const [proposals, setProposals] = useState<AIProposal[]>([]);
   const [runs, setRuns] = useState<SyvaiRun[]>([]);
   const [loading, setLoading] = useState(true);
-  const [running, setRunning] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [filter, setFilter] = useState<string | undefined>(undefined);
   const [bandFilter, setBandFilter] = useState<string | undefined>(undefined);
@@ -143,28 +156,13 @@ export default function AIProposals() {
     }
   }, [author, fetchProposals, fetchRuns]);
 
-  const updateStatus = async (proposalId: string, status: string) => {
+  const updateStatus = async (proposalId: string, status: 'accepted' | 'rejected') => {
     if (!author) return;
     try {
-      await apiClient.put(`/admin/authors/${author.id}/proposals/${proposalId}`, { status });
-      await fetchProposals();
+      await apiClient.post(`/admin/moderation/review-queue/${proposalId}/action`, { action: status === 'accepted' ? 'approve' : 'reject' });
+      await Promise.all([fetchProposals(), Promise.resolve(refreshSummary())]);
     } catch (e: any) {
       setError(e?.response?.data?.detail || e.message || copy.failedUpdate);
-    }
-  };
-
-  const runResearch = async () => {
-    if (!author || running) return;
-    setRunning(true);
-    setError(null);
-    try {
-      await apiClient.post(`/admin/authors/${author.id}/ai/timeline`);
-      await fetchProposals();
-      await fetchRuns();
-    } catch (e: any) {
-      setError(e?.response?.data?.detail || e.message || copy.failedUpdate);
-    } finally {
-      setRunning(false);
     }
   };
 
@@ -172,8 +170,7 @@ export default function AIProposals() {
     if (!author) return;
     try {
       await apiClient.post(`/admin/authors/${author.id}/proposals/${proposalId}/apply`);
-      await fetchProposals();
-      await fetchRuns();
+      await Promise.all([fetchProposals(), fetchRuns(), Promise.resolve(refresh()), Promise.resolve(refreshSummary())]);
     } catch (e: any) {
       setError(e?.response?.data?.detail || e.message || copy.failedUpdate);
     }
@@ -209,21 +206,22 @@ export default function AIProposals() {
     running: '#5B86A1',
   };
 
+  const canApply = (proposal: AIProposal) => {
+    if (proposal.applied_at || proposal.status === 'rejected') return false;
+    if (!APPLYABLE_FIELDS.has(proposal.field_name)) return false;
+    if (proposal.validation_state === 'invalid' || proposal.validation_state === 'conflict') return false;
+    if (proposal.conflict_state && !['new'].includes(proposal.conflict_state)) return false;
+    if (proposal.field_name === 'timeline_event') return proposal.status === 'accepted';
+    return proposal.status === 'accepted' || proposal.review_band === 'auto_approved';
+  };
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-      <EditorSectionCard title={t.admin.authors.editor.sections.ai}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
+      <EditorSectionCard title="Proposals & history">
+        <div style={{ marginBottom: '16px' }}>
           <p style={{ fontSize: '13px', color: 'var(--text-muted)', margin: 0, lineHeight: 1.5 }}>
             {copy.aiDescription}
           </p>
-          <button type="button" onClick={runResearch} disabled={running}
-            style={{
-              padding: '6px 14px', borderRadius: '6px', fontSize: '12px', cursor: 'pointer',
-              background: 'var(--accent)', border: 'none', color: '#fff',
-              opacity: running ? 0.6 : 1, whiteSpace: 'nowrap', marginLeft: '12px',
-            }}>
-            {running ? copy.runningResearch : 'Fill with SyvAI'}
-          </button>
         </div>
 
         {runs.length > 0 && (
@@ -324,6 +322,7 @@ export default function AIProposals() {
           const suggested = summaryLines(p.suggested_value);
           const validationKey = p.validation_state ? VALIDATION_LABELS[p.validation_state] : null;
           const conflictKey = p.conflict_state ? CONFLICT_LABELS[p.conflict_state] : null;
+          const destination = destinationFor(p.field_name);
           return (
             <div key={p.id} style={{
               padding: '12px 16px', marginBottom: '8px',
@@ -402,6 +401,7 @@ export default function AIProposals() {
                   </span>
                 )}
               </div>
+              {destination && <div style={{ fontSize: 11, marginBottom: 8 }}><a href={`/authors/${author.id}/edit/${destination.section}`} style={{ color: 'var(--accent)' }}>Canonical destination: {destination.label}</a></div>}
 
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', marginBottom: '8px' }}>
                 <div style={{
@@ -475,7 +475,7 @@ export default function AIProposals() {
                 </div>
               )}
 
-              {p.status === 'proposed' && (
+              {p.status === 'proposed' && ['quality_review', 'policy_review'].includes(p.review_band || '') && (
                 <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
                   <button type="button" onClick={() => updateStatus(p.id, 'rejected')}
                     style={{
@@ -495,7 +495,7 @@ export default function AIProposals() {
                 </div>
               )}
 
-              {p.status === 'accepted' && p.field_name === 'timeline_event' && !p.applied_at && (
+              {canApply(p) && (
                 <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
                   <button type="button" onClick={() => applyProposal(p.id)}
                     style={{

@@ -5,12 +5,13 @@ type Group = { key: string; label: string; sections: readonly string[] };
 
 const GROUPS: Group[] = [
   { key: 'author-data', label: 'Author data', sections: ['overview', 'identity', 'biography', 'timeline', 'works', 'publications', 'quotes', 'media', 'seo'] },
-  { key: 'research', label: 'Research & SyvAI', sections: ['discovery', 'sources', 'ai'] },
+  { key: 'research', label: 'Research & SyvAI', sections: ['research', 'discovery', 'sources', 'fill', 'proposals'] },
   { key: 'readiness', label: 'Readiness', sections: ['readiness'] },
 ];
 
 const OPERATOR_LABELS: Record<string, string> = {
-  works: 'Linked books', seo: 'Links & SEO', ai: 'Fill & proposals', discovery: 'Find sources', readiness: 'Publication status',
+  works: 'Linked books', seo: 'Links & SEO', research: 'Overview', discovery: 'Find sources',
+  sources: 'Sources', fill: 'Fill', proposals: 'Proposals & history', readiness: 'Publication status',
 };
 
 const navLink = ({ isActive }: { isActive: boolean }): React.CSSProperties => ({
@@ -25,7 +26,8 @@ export default function AuthorEditorNavigation({ basePath }: { basePath: string 
   const location = useLocation();
   const t = getLocaleData(getBrowserLocale());
   const current = location.pathname.split('/').filter(Boolean).at(-1) || 'overview';
-  const activeGroup = GROUPS.find((group) => group.sections.includes(current)) || GROUPS[0];
+  const normalizedCurrent = current === 'ai' ? 'proposals' : current;
+  const activeGroup = GROUPS.find((group) => group.sections.includes(normalizedCurrent)) || GROUPS[0];
   const labels = t.admin.authors.editor.sections as Record<string, string>;
 
   return (

@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import AIProposals from './AIProposals';
 import { apiClient } from '../../../../../shared/api/client';
@@ -6,7 +6,7 @@ import { apiClient } from '../../../../../shared/api/client';
 const author = { id: '2c623b15-6138-449e-8741-3a10fb163b03', name: 'Джейн Остин' };
 
 vi.mock('../AuthorEditorContext', () => ({
-  useAuthorEditor: () => ({ author, loading: false }),
+  useAuthorEditor: () => ({ author, loading: false, refresh: vi.fn(), refreshSummary: vi.fn() }),
 }));
 
 vi.mock('../../../../../shared/api/client', () => ({
@@ -46,12 +46,16 @@ describe('Author proposal epistemic explanation', () => {
 
     render(<AIProposals />);
 
-    expect(await screen.findByText('Author proposals')).toBeInTheDocument();
+    expect(await screen.findByText('Proposals & history')).toBeInTheDocument();
     expect(await screen.findByText('PARTIAL')).toBeInTheDocument();
     expect(screen.getByText(/Supported source span:/)).toBeInTheDocument();
     expect(screen.getByText(/Unsupported components:/)).toBeInTheDocument();
     expect(screen.getByText(/place detail: england, highbury, surrey/)).toBeInTheDocument();
     expect(screen.getByText(/Provenance: source span · Synthetic: no/)).toBeInTheDocument();
     expect(screen.queryByText(/^ungrounded$/i)).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Accept' }));
+    await waitFor(() => expect(apiClient.post).toHaveBeenCalledWith(
+      '/admin/moderation/review-queue/proposal-1/action', { action: 'approve' },
+    ));
   });
 });

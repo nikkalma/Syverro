@@ -635,6 +635,9 @@ export interface SourceCandidate {
   reviewed_at?: string | null;
   reviewed_by?: string | null;
   created_at?: string | null;
+  content_inspector_version?: string | null;
+  current_inspector_version?: string;
+  reinspection_required?: boolean;
 }
 
 export interface ResearchCorpusSummary {

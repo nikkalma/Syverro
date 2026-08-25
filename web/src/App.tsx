@@ -49,6 +49,8 @@ import {
   AIProposals,
   SourceDiscovery,
   Readiness,
+  ResearchOverview,
+  Fill,
 } from "./pages/Studio/Authors/AuthorEditor";
 import EntityWorkspace from "./pages/Studio/Entities/EntityWorkspace";
 import EntityOverview from "./pages/Studio/Entities/sections/Overview";
@@ -155,6 +157,9 @@ export default function App() {
               <Route path="sources" element={<Sources />} />
               <Route path="publications" element={<Publications />} />
               <Route path="ai" element={<AIProposals />} />
+              <Route path="research" element={<ResearchOverview />} />
+              <Route path="fill" element={<Fill />} />
+              <Route path="proposals" element={<AIProposals />} />
               <Route path="discovery" element={<SourceDiscovery />} />
               <Route path="readiness" element={<Readiness />} />
             </Route>

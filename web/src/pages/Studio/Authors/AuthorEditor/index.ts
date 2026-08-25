@@ -13,3 +13,5 @@ export { default as AIProposals } from './sections/AIProposals';
 export { default as Publications } from './sections/Publications';
 export { default as SourceDiscovery } from './sections/SourceDiscovery';
 export { default as Readiness } from './sections/Readiness';
+export { default as ResearchOverview } from './sections/ResearchOverview';
+export { default as Fill } from './sections/Fill';

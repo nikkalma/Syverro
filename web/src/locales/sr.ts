@@ -868,7 +868,7 @@ export const sr: LocaleData = {
           seo: 'SEO',
           publications: 'Bibliography',
           ai: 'Predlozi autora',
-          discovery: 'Source Discovery',
+          discovery: 'Пронађи и прегледај изворе',
         },
         publications: {
           title: 'Title',
@@ -1107,6 +1107,10 @@ export const sr: LocaleData = {
           wikipedia: 'Wikipedia',
         },
         sources: {
+          corpusTitle: 'Проверени истраживачки корпус',
+          corpusDescription: 'Ови извори су већ примљени у истраживачки корпус аутора или повезани с њим. Неизвесне налазе прегледајте у одељку „Пронађи и прегледај изворе“. SyvAI за попуњавање користи само проверене изворе са одговарајућим могућностима.',
+          pendingReview: (count) => `${count} пронађених извора захтева вашу одлуку.`,
+          reviewSources: 'Прегледај изворе',
           title: 'Sources',
           sourceType: 'Source Type',
           url: 'URL',

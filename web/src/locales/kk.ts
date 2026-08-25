@@ -868,7 +868,7 @@ export const kk: LocaleData = {
           seo: 'SEO',
           publications: 'Bibliography',
           ai: 'Автор ұсыныстары',
-          discovery: 'Source Discovery',
+          discovery: 'Дереккөздерді іздеу және тексеру',
         },
         publications: {
           title: 'Title',
@@ -1107,6 +1107,10 @@ export const kk: LocaleData = {
           wikipedia: 'Wikipedia',
         },
         sources: {
+          corpusTitle: 'Тексерілген зерттеу корпусы',
+          corpusDescription: 'Бұл дереккөздер Автордың зерттеу корпусына қабылданған немесе онымен байланыстырылған. Күмәнді табылымдарды «Дереккөздерді іздеу және тексеру» бөлімінде тексеріңіз. SyvAI толтыру үшін тек жарамды мүмкіндіктері бар тексерілген дереккөздерді пайдаланады.',
+          pendingReview: (count) => `${count} табылған дереккөз бойынша сіздің шешіміңіз қажет.`,
+          reviewSources: 'Дереккөздерді тексеру',
           title: 'Sources',
           sourceType: 'Source Type',
           url: 'URL',

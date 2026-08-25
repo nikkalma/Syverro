@@ -868,7 +868,7 @@ export const uk: LocaleData = {
           seo: 'SEO',
           publications: 'Bibliography',
           ai: 'Пропозиції автора',
-          discovery: 'Source Discovery',
+          discovery: 'Пошук і перевірка джерел',
         },
         publications: {
           title: 'Title',
@@ -1107,6 +1107,10 @@ export const uk: LocaleData = {
           wikipedia: 'Wikipedia',
         },
         sources: {
+          corpusTitle: 'Перевірений дослідницький корпус',
+          corpusDescription: 'Ці джерела вже прийняті до дослідницького корпусу автора або пов’язані з ним. Невизначені знахідки перевіряються в розділі «Пошук і перевірка джерел». SyvAI використовує для заповнення лише перевірені джерела з придатними можливостями.',
+          pendingReview: (count) => `${count} знайдених джерел потребують вашого рішення.`,
+          reviewSources: 'Перевірити джерела',
           title: 'Sources',
           sourceType: 'Source Type',
           url: 'URL',

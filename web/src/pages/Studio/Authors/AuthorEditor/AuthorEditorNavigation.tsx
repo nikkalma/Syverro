@@ -10,7 +10,7 @@ const GROUPS: Group[] = [
 ];
 
 const OPERATOR_LABELS: Record<string, string> = {
-  works: 'Linked books', seo: 'Links & SEO', research: 'Overview', discovery: 'Find sources',
+  works: 'Linked books', seo: 'Links & SEO', research: 'Overview',
   sources: 'Sources', fill: 'Fill', proposals: 'Proposals & history', readiness: 'Publication status',
 };
 

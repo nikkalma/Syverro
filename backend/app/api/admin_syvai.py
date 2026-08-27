@@ -28,6 +28,7 @@ from app.models.source import Source
 from app.models.syvai_run import SyvaiRun
 from app.models.user import User
 from app.syvai.core_fill import run_domain_research
+from app.syvai.bootstrap_author import run_author_bootstrap
 from app.syvai.errors import ConfigurationError
 from app.syvai.pipeline import run_timeline_research
 from app.syvai.provider import OpenAICompatibleProvider, ProviderConfig
@@ -40,6 +41,40 @@ class FillRequest(BaseModel):
     domain: str = Field(
         description="One of the 0.4B fill domains: identity, biography, literary_context"
     )
+
+
+@router.post("/{author_id}/bootstrap")
+async def bootstrap_author_catalog_evidence(
+    author_id: str,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Explicit B2 canonical evidence acquisition; never approves or applies."""
+    await check_admin(current_user)
+    author = await get_author_or_404(db, author_id)
+    outcome = await run_author_bootstrap(db, author)
+    await db.commit()
+    if outcome.error:
+        raise HTTPException(status_code=422, detail={
+            "run_id": str(outcome.run.id), "status": outcome.run.status,
+            "reason": outcome.error,
+        })
+    return {
+        "run_id": str(outcome.run.id),
+        "status": outcome.run.status,
+        "resolved_identity": outcome.identity.provenance() if outcome.identity else None,
+        "wikidata_structured_facts_acquired": len(outcome.proposals),
+        "wikipedia_source": {
+            "id": str(outcome.wikipedia_source.id),
+            "title": outcome.wikipedia_source.title,
+            "url": outcome.wikipedia_source.url,
+        } if outcome.wikipedia_source else None,
+        "proposals_created": len(outcome.proposals),
+        "proposal_ids": [str(proposal.id) for proposal in outcome.proposals],
+        "fields_skipped": outcome.fields_skipped,
+        "automatic_approval": False,
+        "automatic_apply": False,
+    }
 
 
 async def check_admin(user: User) -> User:

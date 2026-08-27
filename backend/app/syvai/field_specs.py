@@ -15,6 +15,7 @@ preserved (no model migration in 0.4B).
 from __future__ import annotations
 
 from dataclasses import dataclass
+from enum import StrEnum
 
 # Lite-version fill domains (lowercase, mirrors pipeline.DOMAIN convention).
 DOMAIN_IDENTITY = "identity"
@@ -66,6 +67,23 @@ EXPLICIT_STATEMENT_FIELDS = frozenset(
         "birth_name",
         "pen_names",
         "pseudonyms",
+        "writing_languages",
+    }
+)
+
+# B0 safety gate: these Author properties do not yet have deterministic
+# subject + relation + value entailment. Lexical value occurrence may support
+# a proposal for human review, but must never authorize auto-approval.
+SEMANTIC_REVIEW_REQUIRED_FIELDS = frozenset(
+    {
+        "native_name",
+        "birth_name",
+        "pen_names",
+        "pseudonyms",
+        "nationality",
+        "languages",
+        "gender",
+        "occupations",
         "writing_languages",
     }
 )
@@ -183,3 +201,101 @@ def specs_for_domain(domain: str) -> tuple[FieldSpec, ...]:
 def spec_for_field(field_name: str) -> FieldSpec | None:
     """Resolve a target field to its spec, or None when unsupported."""
     return FIELD_SPECS.get(field_name)
+
+
+class BootstrapPolicy(StrEnum):
+    PRESERVE_EXISTING = "preserve_existing"
+    DETERMINISTIC = "deterministic"
+    DIRECT_RELATION_REVIEW_REQUIRED = "direct_relation_review_required"
+    SYNTHESIZED_REVIEW_REQUIRED = "synthesized_review_required"
+    TIMELINE_ENTAILMENT = "timeline_entailment_v1"
+    DEFERRED = "deferred"
+
+
+class EvidenceRelation(StrEnum):
+    AUTHOR_CANONICAL_NAME = "AUTHOR_CANONICAL_NAME"
+    AUTHOR_NATIVE_NAME = "AUTHOR_NATIVE_NAME"
+    AUTHOR_BIRTH_NAME = "AUTHOR_BIRTH_NAME"
+    AUTHOR_PEN_NAME = "AUTHOR_PEN_NAME"
+    AUTHOR_PSEUDONYM = "AUTHOR_PSEUDONYM"
+    AUTHOR_NATIONALITY = "AUTHOR_NATIONALITY"
+    AUTHOR_CITIZENSHIP = "AUTHOR_CITIZENSHIP"
+    AUTHOR_SPOKE_OR_USED_LANGUAGE = "AUTHOR_SPOKE_OR_USED_LANGUAGE"
+    AUTHOR_WROTE_ORIGINAL_WORK_IN_LANGUAGE = "AUTHOR_WROTE_ORIGINAL_WORK_IN_LANGUAGE"
+    AUTHOR_GENDER = "AUTHOR_GENDER"
+    AUTHOR_OCCUPATION = "AUTHOR_OCCUPATION"
+    AUTHOR_BORN_ON = "AUTHOR_BORN_ON"
+    AUTHOR_DIED_ON = "AUTHOR_DIED_ON"
+    AUTHOR_BORN_IN = "AUTHOR_BORN_IN"
+    AUTHOR_DIED_IN = "AUTHOR_DIED_IN"
+    AUTHOR_RESIDED_IN = "AUTHOR_RESIDED_IN"
+    AUTHOR_ACTIVE_DURING = "AUTHOR_ACTIVE_DURING"
+    VERIFIED_AUTHOR_FACT_SET = "VERIFIED_AUTHOR_FACT_SET"
+    TIMELINE_EVENT = "TIMELINE_EVENT"
+
+
+class VerificationPolicy(StrEnum):
+    DETERMINISTIC = "deterministic"
+    AUTHOR_FIELD_ENTAILMENT_V1 = "author_field_entailment_v1_required"
+    SYNTHESIZED_FACT_SET = "verified_fact_set_review_required"
+    TIMELINE_ENTAILMENT_V1 = "timeline_entailment_v1"
+    DEFERRED = "deferred"
+
+
+@dataclass(frozen=True)
+class AuthorFieldPolicy:
+    name: str
+    definition: str
+    storage: str
+    value_type: str
+    bootstrap_policy: BootstrapPolicy
+    allowed_relations: tuple[EvidenceRelation, ...] = ()
+    verification: VerificationPolicy = VerificationPolicy.DEFERRED
+    apply_destination: str = "deferred"
+    human_review_required: bool = False
+    deterministic: bool = False
+    synthesis_allowed: bool = False
+    forbidden_relations: tuple[str, ...] = ()
+
+    @property
+    def deferred(self) -> bool:
+        return self.bootstrap_policy == BootstrapPolicy.DEFERRED
+
+
+def _policy(name, definition, storage, value_type, policy, relations=(), verification=VerificationPolicy.AUTHOR_FIELD_ENTAILMENT_V1, apply="deferred", review=False, deterministic=False, synthesis=False, forbidden=()):
+    return AuthorFieldPolicy(name, definition, storage, value_type, policy, relations, verification, apply, review, deterministic, synthesis, forbidden)
+
+
+# Authoritative, machine-readable Bootstrap contract. Existing Research Fill
+# specs above remain runtime-compatible views for their three current domains.
+AUTHOR_FIELD_REGISTRY: dict[str, AuthorFieldPolicy] = {
+    "name": _policy("name", "Stable catalog-facing canonical Author name; not necessarily native-script.", "Author.name", VALUE_TYPE_SCALAR, BootstrapPolicy.PRESERVE_EXISTING, (EvidenceRelation.AUTHOR_CANONICAL_NAME,), apply="Author.name", review=True, forbidden=("localized label", "related-person name")),
+    "native_name": _policy("native_name", "Explicitly established original/native-script name.", "Author.native_name", VALUE_TYPE_SCALAR, BootstrapPolicy.DIRECT_RELATION_REVIEW_REQUIRED, (EvidenceRelation.AUTHOR_NATIVE_NAME,), apply="Author.native_name", review=True, forbidden=("localized label", "birth name", "legal name", "pseudonym")),
+    "birth_name": _policy("birth_name", "Name explicitly documented as assigned at birth or legal birth name.", "Author.birth_name", VALUE_TYPE_SCALAR, BootstrapPolicy.DIRECT_RELATION_REVIEW_REQUIRED, (EvidenceRelation.AUTHOR_BIRTH_NAME,), apply="Author.birth_name", review=True, forbidden=("native name", "pen name")),
+    "pen_names": _policy("pen_names", "Names deliberately used by the Author for authorship.", "Author.pen_names", VALUE_TYPE_LIST, BootstrapPolicy.DIRECT_RELATION_REVIEW_REQUIRED, (EvidenceRelation.AUTHOR_PEN_NAME,), apply="Author.pen_names merge", review=True),
+    "pseudonyms": _policy("pseudonyms", "Non-primary assumed names; ambiguous pen-name relationships require review or omission.", "Author.pseudonyms", VALUE_TYPE_LIST, BootstrapPolicy.DIRECT_RELATION_REVIEW_REQUIRED, (EvidenceRelation.AUTHOR_PSEUDONYM,), apply="Author.pseudonyms merge", review=True),
+    "sort_name": _policy("sort_name", "Deterministic catalog sorting key.", "Author.sort_name", VALUE_TYPE_SCALAR, BootstrapPolicy.DETERMINISTIC, verification=VerificationPolicy.DETERMINISTIC, apply="Author.sort_name if empty", deterministic=True),
+    "slug": _policy("slug", "Stable URL identifier derived from canonical catalog identity.", "Author.slug", VALUE_TYPE_SCALAR, BootstrapPolicy.DETERMINISTIC, verification=VerificationPolicy.DETERMINISTIC, apply="Author.slug if empty", deterministic=True),
+    "nationality": _policy("nationality", "Explicit national identity associated with the Author.", "Author.nationality", VALUE_TYPE_SCALAR, BootstrapPolicy.DIRECT_RELATION_REVIEW_REQUIRED, (EvidenceRelation.AUTHOR_NATIONALITY,), apply="Author.nationality", review=True, forbidden=("birthplace", "residence", "publication country", "document country", "language", "citizenship unless explicitly equated")),
+    "citizenship": _policy("citizenship", "Explicit legal citizenship/state membership, optionally time-bounded.", "AuthorCitizenship", VALUE_TYPE_ENTITY, BootstrapPolicy.DIRECT_RELATION_REVIEW_REQUIRED, (EvidenceRelation.AUTHOR_CITIZENSHIP,), apply="AuthorCitizenship", review=True, forbidden=("nationality", "birthplace", "publication country")),
+    "languages": _policy("languages", "Languages explicitly spoken or personally used by the Author.", "Author.languages", VALUE_TYPE_LIST, BootstrapPolicy.DIRECT_RELATION_REVIEW_REQUIRED, (EvidenceRelation.AUTHOR_SPOKE_OR_USED_LANGUAGE,), apply="Author.languages merge", review=True, forbidden=("document language", "edition language", "translation language", "narration language", "UI language", "localized title language")),
+    "writing_languages": _policy("writing_languages", "Languages in which the Author explicitly authored original work.", "Author.writing_languages", VALUE_TYPE_LIST, BootstrapPolicy.DIRECT_RELATION_REVIEW_REQUIRED, (EvidenceRelation.AUTHOR_WROTE_ORIGINAL_WORK_IN_LANGUAGE,), apply="Author.writing_languages merge", review=True, forbidden=("document language", "edition language", "translation language")),
+    "gender": _policy("gender", "Explicitly stated gender classification.", "Author.gender", VALUE_TYPE_SCALAR, BootstrapPolicy.DIRECT_RELATION_REVIEW_REQUIRED, (EvidenceRelation.AUTHOR_GENDER,), apply="Author.gender", review=True, forbidden=("name", "pronouns alone", "title", "grammatical gender", "image")),
+    "occupations": _policy("occupations", "Occupations or professional roles explicitly held by the target Author.", "Author.occupations", VALUE_TYPE_LIST, BootstrapPolicy.DIRECT_RELATION_REVIEW_REQUIRED, (EvidenceRelation.AUTHOR_OCCUPATION,), apply="Author.occupations merge", review=True, forbidden=("narrator", "translator", "editor", "publisher", "related-person occupation")),
+    "birth_date": _policy("birth_date", "Actual Author birth date retaining source precision.", "Author.birth_date/birth_year/birth_date_precision", VALUE_TYPE_ENTITY, BootstrapPolicy.DIRECT_RELATION_REVIEW_REQUIRED, (EvidenceRelation.AUTHOR_BORN_ON,), apply="Author birth date fields", review=True, forbidden=("publication date", "January 1 normalization")),
+    "death_date": _policy("death_date", "Actual Author death date retaining source precision.", "Author.death_date/death_year/death_date_precision", VALUE_TYPE_ENTITY, BootstrapPolicy.DIRECT_RELATION_REVIEW_REQUIRED, (EvidenceRelation.AUTHOR_DIED_ON,), apply="Author death date fields", review=True, forbidden=("publication date", "January 1 normalization")),
+    "birth_place": _policy("birth_place", "Actual place of Author birth.", "Author.birth_place/birth_place_id", VALUE_TYPE_ENTITY, BootstrapPolicy.DIRECT_RELATION_REVIEW_REQUIRED, (EvidenceRelation.AUTHOR_BORN_IN,), apply="Author birth place fields", review=True, forbidden=("residence", "work setting", "publication place", "document location")),
+    "death_place": _policy("death_place", "Actual place of Author death.", "Author.death_place/death_place_id", VALUE_TYPE_ENTITY, BootstrapPolicy.DIRECT_RELATION_REVIEW_REQUIRED, (EvidenceRelation.AUTHOR_DIED_IN,), apply="Author death place fields", review=True, forbidden=("residence", "work setting", "publication place", "document location")),
+    "residence": _policy("residence", "Place where the Author explicitly lived or resided.", "AuthorResidence", VALUE_TYPE_ENTITY, BootstrapPolicy.DIRECT_RELATION_REVIEW_REQUIRED, (EvidenceRelation.AUTHOR_RESIDED_IN,), apply="AuthorResidence", review=True, forbidden=("birth", "death", "travel", "work setting", "publication place", "nationality")),
+    "active_years": _policy("active_years", "Explicitly documented period of professional activity.", "Author.active_from_year/active_to_year", VALUE_TYPE_ENTITY, BootstrapPolicy.DEFERRED, (EvidenceRelation.AUTHOR_ACTIVE_DURING,), apply="deferred", review=True, forbidden=("lifespan", "first/last publication", "arbitrary timeline dates")),
+    "bio": _policy("bio", "Bounded human-facing summary composed only from verified Author facts.", "Author.bio", VALUE_TYPE_TEXT, BootstrapPolicy.SYNTHESIZED_REVIEW_REQUIRED, (EvidenceRelation.VERIFIED_AUTHOR_FACT_SET,), VerificationPolicy.SYNTHESIZED_FACT_SET, "Author.bio", True, synthesis=True),
+    "timeline_event": _policy("timeline_event", "Structured Author/work event governed by timeline_entailment_v1.", "TimelineEvent", VALUE_TYPE_ENTITY, BootstrapPolicy.TIMELINE_ENTAILMENT, (EvidenceRelation.TIMELINE_EVENT,), VerificationPolicy.TIMELINE_ENTAILMENT_V1, "TimelineEvent", True),
+    "publications": _policy("publications", "Canonical bibliography of works/publications; separate from editions.", "AuthorPublication", VALUE_TYPE_ENTITY, BootstrapPolicy.DEFERRED, verification=VerificationPolicy.DEFERRED, apply="deferred"),
+}
+
+for _field in ("literary_movements", "genres", "themes", "motifs", "concepts", "atmospheres", "notable_works"):
+    AUTHOR_FIELD_REGISTRY[_field] = _policy(_field, "Current Author literary/taxonomy storage; broad Bootstrap population is deferred.", f"Author.{_field}", VALUE_TYPE_LIST, BootstrapPolicy.DEFERRED)
+
+
+def author_field_policy(field_name: str) -> AuthorFieldPolicy | None:
+    return AUTHOR_FIELD_REGISTRY.get(field_name)

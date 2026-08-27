@@ -10,8 +10,10 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -33,16 +35,22 @@ class ReadingViewModel @Inject constructor(
 
     fun refresh() {
         viewModelScope.launch {
-            val activeSession = sessionRepository.getActive()
-            val activeBook = activeSession?.let { personalBookRepository.getById(it.personalBookId) }
-                ?: personalBookRepository.getByStatus(ReadingStatus.READING).firstOrNull()
+            val activeSession = withContext(Dispatchers.IO) { sessionRepository.getActive() }
+            val activeBook = activeSession?.let { id ->
+                withContext(Dispatchers.IO) { personalBookRepository.getById(id.personalBookId) }
+            } ?: withContext(Dispatchers.IO) {
+                personalBookRepository.getByStatus(ReadingStatus.READING).firstOrNull()
+            }
 
-            val document = activeBook?.let { localDocumentRepository.getByBook(it.id) }
+            val document = activeBook?.let { book ->
+                withContext(Dispatchers.IO) { localDocumentRepository.getByBook(book.id) }
+            }
             val documentAvailable = activeBook != null && document?.isAvailable == true
 
-            val readingBooks = personalBookRepository.getByStatus(ReadingStatus.READING)
-            val allBooks = personalBookRepository.getAll()
-            val finishedSessions = sessionRepository.getAll().filter { it.status.name == "FINISHED" }
+            val readingBooks = withContext(Dispatchers.IO) { personalBookRepository.getByStatus(ReadingStatus.READING) }
+            val allBooks = withContext(Dispatchers.IO) { personalBookRepository.getAll() }
+            val finishedSessions = withContext(Dispatchers.IO) { sessionRepository.getAll() }
+                .filter { it.status.name == "FINISHED" }
             val recent = finishedSessions.sortedByDescending { it.startTime }.take(3)
 
             var lastDate = ""

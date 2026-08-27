@@ -9,11 +9,13 @@ import com.syverro.domain.model.ReadingStatus
 import com.syverro.domain.repository.LocalDocumentRepository
 import com.syverro.domain.repository.PersonalBookRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
 @HiltViewModel
@@ -55,16 +57,19 @@ class LibraryViewModel @Inject constructor(
 
     private fun loadBooks(filter: ReadingStatus? = null) {
         viewModelScope.launch {
-            val books = if (filter == null) {
-                personalBookRepository.getAll()
-            } else {
-                personalBookRepository.getByStatus(filter)
+            val books = withContext(Dispatchers.IO) {
+                if (filter == null) {
+                    personalBookRepository.getAll()
+                } else {
+                    personalBookRepository.getByStatus(filter)
+                }
             }
+            val availableBookIds = withContext(Dispatchers.IO) { localDocumentRepository.getAvailableBookIds() }
             _uiState.update {
                 it.copy(
                     books = books,
                     filter = filter,
-                    availableBookIds = localDocumentRepository.getAvailableBookIds(),
+                    availableBookIds = availableBookIds,
                 )
             }
         }

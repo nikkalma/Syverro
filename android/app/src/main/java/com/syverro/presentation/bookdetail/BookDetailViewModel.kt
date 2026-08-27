@@ -10,11 +10,13 @@ import com.syverro.domain.repository.LocalDocumentRepository
 import com.syverro.domain.repository.PersonalBookRepository
 import com.syverro.domain.repository.SessionRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
 @HiltViewModel
@@ -30,10 +32,11 @@ class BookDetailViewModel @Inject constructor(
 
     fun loadBook(bookId: String) {
         viewModelScope.launch {
-            val book = personalBookRepository.getById(bookId)
-            val hasActive = sessionRepository.getActive()?.personalBookId == bookId
-            val documentAvailable = book != null &&
-                localDocumentRepository.getByBook(bookId)?.isAvailable == true
+            val book = withContext(Dispatchers.IO) { personalBookRepository.getById(bookId) }
+            val activeSession = withContext(Dispatchers.IO) { sessionRepository.getActive() }
+            val hasActive = activeSession?.personalBookId == bookId
+            val document = book?.let { withContext(Dispatchers.IO) { localDocumentRepository.getByBook(bookId) } }
+            val documentAvailable = book != null && document?.isAvailable == true
             _uiState.update {
                 it.copy(
                     book = book,
@@ -46,8 +49,10 @@ class BookDetailViewModel @Inject constructor(
 
     fun startReading() {
         val book = _uiState.value.book ?: return
-        personalBookRepository.updateStatus(book.id, ReadingStatus.READING)
-        _uiState.update { it.copy(hasActiveSession = true) }
+        viewModelScope.launch {
+            withContext(Dispatchers.IO) { personalBookRepository.updateStatus(book.id, ReadingStatus.READING) }
+            _uiState.update { it.copy(hasActiveSession = true) }
+        }
     }
 
     /** Re-attaches an EPUB to this book (import into the existing personal book). */
@@ -74,11 +79,15 @@ class BookDetailViewModel @Inject constructor(
 
     fun markFinished() {
         val book = _uiState.value.book ?: return
-        personalBookRepository.updateStatus(book.id, ReadingStatus.FINISHED)
-        val activeSession = sessionRepository.getActive()
-        if (activeSession?.personalBookId == book.id) {
-            sessionRepository.update(activeSession.copy(status = com.syverro.domain.model.SessionStatus.FINISHED))
+        viewModelScope.launch {
+            withContext(Dispatchers.IO) { personalBookRepository.updateStatus(book.id, ReadingStatus.FINISHED) }
+            val activeSession = withContext(Dispatchers.IO) { sessionRepository.getActive() }
+            if (activeSession?.personalBookId == book.id) {
+                withContext(Dispatchers.IO) {
+                    sessionRepository.update(activeSession.copy(status = com.syverro.domain.model.SessionStatus.FINISHED))
+                }
+            }
+            _uiState.update { it.copy(hasActiveSession = false, showFinishConfirm = false) }
         }
-        _uiState.update { it.copy(hasActiveSession = false, showFinishConfirm = false) }
     }
 }

@@ -25,6 +25,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -99,7 +100,7 @@ fun ReadingScreen(
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
                         Text(
-                            text = stringResource(R.plurals.books_in_progress, state.booksInProgress, state.booksInProgress),
+                            text = pluralStringResource(R.plurals.books_in_progress, state.booksInProgress, state.booksInProgress),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
@@ -113,7 +114,7 @@ fun ReadingScreen(
             }
         } else {
             Text(
-                text = stringResource(R.plurals.books_in_library, state.totalBooks, state.totalBooks),
+                text = pluralStringResource(R.plurals.books_in_library, state.totalBooks, state.totalBooks),
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )

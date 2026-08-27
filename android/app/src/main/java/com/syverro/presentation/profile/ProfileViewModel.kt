@@ -8,11 +8,13 @@ import com.syverro.domain.repository.PersonalBookRepository
 import com.syverro.domain.repository.ProfileRepository
 import com.syverro.domain.repository.SessionRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
 @HiltViewModel
@@ -38,14 +40,15 @@ class ProfileViewModel @Inject constructor(
 
     fun refresh() {
         viewModelScope.launch {
-            val profile = profileRepository.getProfile()
-            val finished = personalBookRepository.getByStatus(ReadingStatus.FINISHED)
-            val reading = personalBookRepository.getByStatus(ReadingStatus.READING)
-            val allSessions = sessionRepository.getAll()
-            val allBooks = personalBookRepository.getAll()
+            val profile = withContext(Dispatchers.IO) { profileRepository.getProfile() }
+            val finished = withContext(Dispatchers.IO) { personalBookRepository.getByStatus(ReadingStatus.FINISHED) }
+            val reading = withContext(Dispatchers.IO) { personalBookRepository.getByStatus(ReadingStatus.READING) }
+            val allSessions = withContext(Dispatchers.IO) { sessionRepository.getAll() }
+            val allBooks = withContext(Dispatchers.IO) { personalBookRepository.getAll() }
+            val planned = withContext(Dispatchers.IO) { personalBookRepository.getByStatus(ReadingStatus.PLANNED) }
             val readingBooks = reading.size
             val finishedBooks = finished.size
-            val booksRead = allBooks.size - personalBookRepository.getByStatus(ReadingStatus.PLANNED).size
+            val booksRead = allBooks.size - planned.size
             val totalReadingTimeSeconds = allSessions.sumOf { it.durationSeconds }
 
             val insight = generateInsight(booksRead, finishedBooks, totalReadingTimeSeconds)
@@ -75,7 +78,9 @@ class ProfileViewModel @Inject constructor(
     }
 
     private fun updateName(name: String) {
-        profileRepository.updateName(name)
-        _uiState.update { it.copy(displayName = name) }
+        viewModelScope.launch {
+            withContext(Dispatchers.IO) { profileRepository.updateName(name) }
+            _uiState.update { it.copy(displayName = name) }
+        }
     }
 }

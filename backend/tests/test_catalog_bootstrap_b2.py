@@ -289,15 +289,32 @@ class AddOnlySession:
     def add(self, value):
         self.added.append(value)
 
+    async def execute(self, _query):
+        return EmptyResult()
+
     async def flush(self):
         for value in self.added:
             if getattr(value, "id", None) is None:
                 value.id = uuid4()
 
 
+class EmptyResult:
+    def scalar_one_or_none(self):
+        return None
+
+    def scalars(self):
+        return self
+
+    def all(self):
+        return []
+
+
 @pytest.mark.asyncio
 async def test_persisted_claim_keeps_subject_relation_provenance_and_never_auto_approves():
-    author = Author(id=uuid4(), name="Ray Bradbury", metadata_status="draft")
+    author = Author(
+        id=uuid4(), name="Ray Bradbury", metadata_status="draft",
+        birth_date="1919-01-01", birth_date_precision="day",
+    )
     run = SyvaiRun(id=uuid4(), author_id=author.id, domain=DOMAIN)
     source = Source(id=uuid4(), title="Wikidata Q310732", source_type="wikidata")
     identity = CanonicalIdentity(
@@ -319,12 +336,40 @@ async def test_persisted_claim_keeps_subject_relation_provenance_and_never_auto_
     assert payload["subject"]["wikidata_qid"] == "Q310732"
     assert payload["relation"] == "AUTHOR_BORN_ON"
     assert payload["source"]["property_id"] == "P569"
-    assert payload["verifier_status"] == "DETERMINISTIC_PROPERTY_RETRIEVED"
+    assert payload["verifier_status"] == "DIRECT_GROUNDED"
+    assert payload["verification"]["verifier_version"] == "author_field_entailment_v1"
     assert payload["human_review_required"] is True
     assert payload["auto_apply"] is False
     assert proposal.status == "proposed"
     assert proposal.review_band == "quality_review"
-    assert proposal.validation_state == "unverified_semantically"
+    assert proposal.validation_state == "direct_grounded"
+    assert proposal.conflict_state == "existing_value"
+    assert json.loads(proposal.current_value)["value"] == "1919-01-01"
+    assert author.birth_date == "1919-01-01"
     assert author.metadata_status == "draft"
     assert any(isinstance(value, AIProposalSource) for value in session.added)
     assert sum(isinstance(value, AIProposal) for value in session.added) == 1
+
+
+@pytest.mark.asyncio
+async def test_structurally_mismatched_bootstrap_fact_is_rejected_before_persistence():
+    author = Author(id=uuid4(), name="Ray Bradbury", metadata_status="draft")
+    run = SyvaiRun(id=uuid4(), author_id=author.id, domain=DOMAIN)
+    source = Source(id=uuid4(), title="Wikidata", source_type="wikidata")
+    identity = CanonicalIdentity(
+        qid="Q310732", query_variant="Ray Bradbury", resolved_title="Ray Bradbury",
+        resolved_page_id=1, resolved_site="en", canonical_title="Ray Bradbury",
+        canonical_url="https://en.wikipedia.org/wiki/Ray_Bradbury", canonical_site="en",
+    )
+    rule = next(rule for rule in PROPERTY_RULES if rule.property_id == "P569")
+    fact = AcquiredFact(
+        rule=rule, value={"value": "1920-01-01", "precision": "day", "wikidata_precision": 11},
+        statement_id="Q310732$birth", rank="normal", qualifiers={},
+        raw_datavalue={"time": "+1920-00-00T00:00:00Z", "precision": 9},
+    )
+    session = AddOnlySession()
+    with pytest.raises(ValueError, match="BOOTSTRAP_CLAIM_REJECTED:structured_value_mismatch"):
+        await _persist_fact(
+            session, author=author, run=run, fact=fact, identity=identity, source=source,
+        )
+    assert not any(isinstance(value, AIProposal) for value in session.added)

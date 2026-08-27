@@ -28,6 +28,13 @@ from app.models.syvai_run import SyvaiRun
 from app.syvai.discovery.fetcher import FetcherConfig, SafeFetcher
 from app.syvai.discovery.query_terms import search_variants
 from app.syvai.discovery.urls import normalize_url
+from app.syvai.author_entailment import (
+    VERIFIER_VERSION,
+    WIKIDATA_PROPERTY_RULES,
+    logical_claim_value,
+    normalize_wikidata_time,
+    verify_wikidata_claim,
+)
 from app.syvai.field_specs import (
     AUTHOR_FIELD_REGISTRY,
     BootstrapPolicy,
@@ -71,16 +78,16 @@ class PropertyRule:
 # generic Wikidata "pseudonym" property and therefore never silently becomes
 # the narrower Syverro ``pen_names`` relation.
 PROPERTY_RULES: tuple[PropertyRule, ...] = (
-    PropertyRule("P569", EvidenceRelation.AUTHOR_BORN_ON, "birth_date", "time"),
-    PropertyRule("P570", EvidenceRelation.AUTHOR_DIED_ON, "death_date", "time"),
-    PropertyRule("P19", EvidenceRelation.AUTHOR_BORN_IN, "birth_place", "entity"),
-    PropertyRule("P20", EvidenceRelation.AUTHOR_DIED_IN, "death_place", "entity"),
-    PropertyRule("P106", EvidenceRelation.AUTHOR_OCCUPATION, "occupations", "entity", True),
-    PropertyRule("P27", EvidenceRelation.AUTHOR_CITIZENSHIP, "citizenship", "entity", True),
-    PropertyRule("P1477", EvidenceRelation.AUTHOR_BIRTH_NAME, "birth_name", "monolingual"),
-    PropertyRule("P1559", EvidenceRelation.AUTHOR_NATIVE_NAME, "native_name", "monolingual"),
-    PropertyRule("P742", EvidenceRelation.AUTHOR_PSEUDONYM, "pseudonyms", "monolingual", True),
-    PropertyRule("P21", EvidenceRelation.AUTHOR_GENDER, "gender", "entity"),
+    *(
+        PropertyRule(
+            semantic.property_id,
+            semantic.relation,
+            semantic.field_name,
+            semantic.value_kind,
+            semantic.field_name in {"occupations", "citizenship", "pseudonyms"},
+        )
+        for semantic in WIKIDATA_PROPERTY_RULES.values()
+    ),
 )
 
 
@@ -258,22 +265,7 @@ def _ranked_statements(statements: list[dict]) -> tuple[list[dict], str | None]:
 
 
 def _time_value(raw: dict) -> dict | None:
-    time_text = raw.get("time")
-    precision = int(raw.get("precision") or 0)
-    if not isinstance(time_text, str) or precision not in {9, 10, 11}:
-        return None
-    sign = "-" if time_text.startswith("-") else ""
-    digits = time_text.lstrip("+-").split("T", 1)[0].split("-")
-    if len(digits) < 3:
-        return None
-    year, month, day = digits[:3]
-    if precision == 9:
-        normalized, label = f"{sign}{int(year)}", "year"
-    elif precision == 10:
-        normalized, label = f"{sign}{int(year):04d}-{int(month):02d}", "month"
-    else:
-        normalized, label = f"{sign}{int(year):04d}-{int(month):02d}-{int(day):02d}", "day"
-    return {"value": normalized, "precision": label, "wikidata_precision": precision}
+    return normalize_wikidata_time(raw)
 
 
 def _entity_label(entity_id: str, entities: dict[str, dict]) -> str | None:
@@ -413,6 +405,76 @@ def _current_value(author: Author, field_name: str) -> Any:
     return getattr(author, field_name, None)
 
 
+def _proposal_claim(proposal: AIProposal) -> dict | None:
+    try:
+        payload = json.loads(proposal.suggested_value)
+    except (TypeError, json.JSONDecodeError):
+        return None
+    return payload if isinstance(payload, dict) else None
+
+
+async def _pending_logical_duplicate(
+    db: AsyncSession, *, author: Author, field_name: str, value: Any,
+) -> AIProposal | None:
+    result = await db.execute(select(AIProposal).where(
+        AIProposal.entity_type == "author",
+        AIProposal.entity_id == str(author.id),
+        AIProposal.field_name == field_name,
+        AIProposal.source_type == "catalog_bootstrap",
+        AIProposal.status == "proposed",
+    ))
+    key = logical_claim_value(value)
+    for proposal in result.scalars().all():
+        payload = _proposal_claim(proposal)
+        if payload and logical_claim_value(payload.get("value")) == key:
+            return proposal
+    return None
+
+
+async def _attach_verified_source(
+    db: AsyncSession, *, proposal: AIProposal, source: Source,
+    fact: AcquiredFact, verification,
+) -> None:
+    result = await db.execute(select(AIProposalSource).where(
+        AIProposalSource.proposal_id == proposal.id,
+        AIProposalSource.source_id == source.id,
+    ))
+    if result.scalar_one_or_none() is not None:
+        return
+    db.add(AIProposalSource(
+        proposal_id=proposal.id, source_id=source.id,
+        snippet=verification.source_span,
+        reliability_tier="high", verification_state=verification.verification_state.value,
+        verification_reason=f"{VERIFIER_VERSION}: {verification.reason}",
+        provenance_type="wikidata_structured", synthesis_involved=False,
+    ))
+
+
+def _merge_statement_provenance(proposal: AIProposal, fact: AcquiredFact) -> None:
+    claim = _proposal_claim(proposal)
+    if not claim:
+        return
+    evidence = claim.setdefault("evidence", {})
+    primary_id = evidence.get("statement_id")
+    statement = {
+        "statement_id": fact.statement_id,
+        "rank": fact.rank,
+        "qualifiers": fact.qualifiers,
+        "retrieved_datavalue": fact.raw_datavalue,
+        "resolved_entity_label": (
+            fact.value.get("value")
+            if fact.rule.value_kind == "entity" and isinstance(fact.value, dict)
+            else None
+        ),
+    }
+    if not fact.statement_id or fact.statement_id == primary_id:
+        return
+    additional = evidence.setdefault("additional_statements", [])
+    if fact.statement_id not in {item.get("statement_id") for item in additional}:
+        additional.append(statement)
+        proposal.suggested_value = json.dumps(claim, ensure_ascii=False)
+
+
 async def _persist_fact(
     db: AsyncSession, *, author: Author, run: SyvaiRun, fact: AcquiredFact,
     identity: CanonicalIdentity, source: Source,
@@ -429,6 +491,11 @@ async def _persist_fact(
         "evidence": {
             "statement_id": fact.statement_id, "rank": fact.rank,
             "qualifiers": fact.qualifiers, "retrieved_datavalue": fact.raw_datavalue,
+            "resolved_entity_label": (
+                fact.value.get("value")
+                if fact.rule.value_kind == "entity" and isinstance(fact.value, dict)
+                else None
+            ),
         },
         "acquisition_method": AcquisitionMethod.WIKIDATA_STRUCTURED.value,
         "acquisition_version": ACQUISITION_VERSION,
@@ -436,26 +503,46 @@ async def _persist_fact(
         "human_review_required": True,
         "auto_apply": False,
     }
+    verification = verify_wikidata_claim(
+        claim, target_author_id=str(author.id), target_qid=identity.qid,
+    )
+    # Structurally impossible or semantically mismatched B2 envelopes never
+    # reach proposal persistence. Acquisition records the skipped field.
+    if not verification.direct_grounded:
+        raise ValueError(f"BOOTSTRAP_CLAIM_REJECTED:{verification.reason}")
+
+    existing = await _pending_logical_duplicate(
+        db, author=author, field_name=fact.rule.field_name, value=fact.value,
+    )
+    if existing is not None:
+        _merge_statement_provenance(existing, fact)
+        await _attach_verified_source(
+            db, proposal=existing, source=source, fact=fact, verification=verification,
+        )
+        return existing
+
+    claim["verifier_status"] = "DIRECT_GROUNDED"
+    claim["verification"] = {
+        "verifier_version": VERIFIER_VERSION,
+        "state": verification.verification_state.value,
+        "reason": verification.reason,
+    }
     current = _current_value(author, fact.rule.field_name)
     proposal = AIProposal(
         entity_type="author", entity_id=str(author.id), field_name=fact.rule.field_name,
         current_value=(json.dumps({"field": fact.rule.field_name, "value": current}, ensure_ascii=False) if current not in (None, "", [], {}) else None),
         suggested_value=json.dumps(claim, ensure_ascii=False), source_type="catalog_bootstrap",
-        confidence=1.0, status="proposed", validation_state="unverified_semantically",
+        confidence=1.0, status="proposed", validation_state="direct_grounded",
         conflict_state="existing_value" if current not in (None, "", [], {}) else "new",
-        review_band="quality_review", review_reason="bootstrap_semantic_verification_pending",
+        review_band="quality_review", review_reason="bootstrap_semantic_verified_human_review_required",
         run_id=run.id,
     )
     assert policy.human_review_required
     db.add(proposal)
     await db.flush()
-    db.add(AIProposalSource(
-        proposal_id=proposal.id, source_id=source.id,
-        snippet=f"{fact.rule.property_id} statement {fact.statement_id or 'without statement id'}",
-        reliability_tier="high", verification_state="unverified_semantically",
-        verification_reason="Wikidata property retrieved deterministically; B3 entailment not performed",
-        provenance_type="wikidata_structured", synthesis_involved=False,
-    ))
+    await _attach_verified_source(
+        db, proposal=proposal, source=source, fact=fact, verification=verification,
+    )
     return proposal
 
 
@@ -503,9 +590,11 @@ async def run_author_bootstrap(
         )
         outcome.wikipedia_source, outcome.wikidata_source = wikipedia_source, wikidata_source
         for fact in facts:
-            outcome.proposals.append(await _persist_fact(
+            proposal = await _persist_fact(
                 db, author=author, run=run, fact=fact, identity=identity, source=wikidata_source,
-            ))
+            )
+            if proposal.id not in {item.id for item in outcome.proposals}:
+                outcome.proposals.append(proposal)
         # Explicit B2 deferrals are present in telemetry even though no claim
         # generation path exists for them.
         for name, policy in AUTHOR_FIELD_REGISTRY.items():
@@ -522,6 +611,7 @@ async def run_author_bootstrap(
         run.routing_reason = "canonical_wikimedia_identity"
         run.corpus_manifest = {
             "acquisition_version": ACQUISITION_VERSION, "claim_schema_version": CLAIM_SCHEMA_VERSION,
+            "verifier_version": VERIFIER_VERSION,
             "provider_called": False, "openai_called": False, "identity": identity.provenance(),
             "wikipedia_source_id": str(wikipedia_source.id), "wikidata_source_id": str(wikidata_source.id),
             "proposal_count": len(outcome.proposals), "fields_skipped": outcome.fields_skipped,
@@ -533,6 +623,7 @@ async def run_author_bootstrap(
         run.routing_reason = "canonical_identity_or_acquisition_failed"
         run.corpus_manifest = {
             "acquisition_version": ACQUISITION_VERSION, "provider_called": False,
+            "verifier_version": VERIFIER_VERSION,
             "openai_called": False, "error": outcome.error,
         }
     run.duration_ms = int((time.monotonic() - started) * 1000)

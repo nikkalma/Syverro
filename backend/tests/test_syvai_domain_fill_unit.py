@@ -9,9 +9,11 @@ from app.models.genre import Genre
 from app.models.place import Place
 from app.models.source import Source
 from app.models.author_citizenship import AuthorCitizenship
+from app.models.ai_proposal import AIProposal
 from app.models.ai_proposal_source import AIProposalSource
 from app.syvai.core_fill import run_domain_research
 from app.syvai.field_validators import match_taxonomy, normalize_list_items, validate_field_claim
+from app.syvai.field_validators import is_field_template_value
 from app.syvai.field_specs import (
     DOMAIN_BIOGRAPHY,
     DOMAIN_IDENTITY,
@@ -178,10 +180,11 @@ async def test_identity_native_name_is_grounded():
         }
     ]
     outcome, session, _ = await run_fill(DOMAIN_IDENTITY, claims, sources=[source])
-    assert outcome.run.status == "completed"
+    assert outcome.run.status == "review_needed"
     assert len(outcome.proposals) == 1
     assert outcome.proposals[0].field_name == "native_name"
-    assert outcome.proposals[0].review_band == "auto_approved"
+    assert outcome.proposals[0].review_band == "quality_review"
+    assert outcome.proposals[0].review_reason == "field_semantics_unverified"
     assert session.committed is True
 
 
@@ -251,7 +254,8 @@ async def test_biography_grounded_occupation():
         }
     ]
     outcome, _, _ = await run_fill(DOMAIN_BIOGRAPHY, claims, sources=[source])
-    assert outcome.proposals[0].review_band == "auto_approved"
+    assert outcome.proposals[0].review_band == "quality_review"
+    assert outcome.proposals[0].review_reason == "field_semantics_unverified"
 
 
 @pytest.mark.asyncio
@@ -382,8 +386,8 @@ async def test_list_items_split_and_grounded_item_isolated():
     ]
     outcome, _, _ = await run_fill(DOMAIN_BIOGRAPHY, claims, sources=[source])
     bands = [p.review_band for p in outcome.proposals]
-    assert bands.count("auto_approved") == 1
-    assert bands.count("quality_review") == 1
+    assert bands.count("auto_approved") == 0
+    assert bands.count("quality_review") == 2
 
 
 @pytest.mark.asyncio
@@ -403,7 +407,8 @@ async def test_same_family_duplicate_sources_do_not_inflate_corroboration():
     ]
     outcome, _, _ = await run_fill(DOMAIN_BIOGRAPHY, claims, sources=[source1, source2])
     proposal = outcome.proposals[0]
-    assert proposal.review_band == "auto_approved"
+    assert proposal.review_band == "quality_review"
+    assert proposal.review_reason == "field_semantics_unverified"
     assert proposal.corroboration["independent_grounded_source_count"] == 1
 
 
@@ -469,7 +474,8 @@ async def test_conflicting_trusted_sources_do_not_inflate_corroboration():
         DOMAIN_BIOGRAPHY, claims, sources=[supports, contradicts]
     )
     proposal = outcome.proposals[0]
-    assert proposal.review_band == "auto_approved"
+    assert proposal.review_band == "quality_review"
+    assert proposal.review_reason == "field_semantics_unverified"
     assert proposal.corroboration["independent_grounded_source_count"] == 1
 
 
@@ -647,3 +653,181 @@ def test_taxonomy_match_resolves_deterministic_variants():
     assert match_taxonomy("nonfiction", {"Non-Fiction"}) == "non-fiction"
     assert match_taxonomy("invented movement", {"Science Fiction"}) is None
     assert match_taxonomy("sci-fi", {"Fantasy"}) is None  # no canonical target exists
+
+
+# ============================================================
+# Catalog Bootstrap B0 — unsafe lexical auto-approval freeze
+# ============================================================
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    "domain,field,value,citation,evidence",
+    [
+        (
+            DOMAIN_IDENTITY,
+            "languages",
+            "Russian",
+            "Creator: Ray Bradbury. Language: Russian.",
+            "Language: Russian.",
+        ),
+        (
+            DOMAIN_IDENTITY,
+            "nationality",
+            "American",
+            "Ray Bradbury was an American writer and screenwriter.",
+            "Ray Bradbury was an American writer and screenwriter.",
+        ),
+        (
+            DOMAIN_BIOGRAPHY,
+            "occupations",
+            "writer",
+            "Ray Bradbury was an American writer and screenwriter.",
+            "Ray Bradbury was an American writer and screenwriter.",
+        ),
+        (
+            DOMAIN_BIOGRAPHY,
+            "occupations",
+            "screenwriter",
+            "Ray Bradbury was an American writer and screenwriter.",
+            "Ray Bradbury was an American writer and screenwriter.",
+        ),
+        (
+            DOMAIN_IDENTITY,
+            "native_name",
+            "Рэй Брэдбери",
+            "Localized label: Рэй Брэдбери.",
+            "Localized label: Рэй Брэдбери.",
+        ),
+        (
+            DOMAIN_BIOGRAPHY,
+            "occupations",
+            "narrator",
+            "Narrated by John Smith. Occupation: narrator.",
+            "Occupation: narrator.",
+        ),
+        (
+            DOMAIN_BIOGRAPHY,
+            "occupations",
+            "translator",
+            "Translated by Jane Smith. Occupation: translator.",
+            "Occupation: translator.",
+        ),
+        (
+            DOMAIN_BIOGRAPHY,
+            "occupations",
+            "editor",
+            "Edited by John Smith. Occupation: editor.",
+            "Occupation: editor.",
+        ),
+    ],
+)
+async def test_lexically_grounded_author_fields_require_semantic_human_review(
+    domain, field, value, citation, evidence
+):
+    source = make_source(title="Ray Bradbury record", citation=citation)
+    claims = [{
+        "field_name": field,
+        "value": value,
+        "label": value,
+        "sources": [{
+            "title": "Ray Bradbury record",
+            "source_type": "record",
+            "evidence": evidence,
+        }],
+    }]
+    outcome, _, _ = await run_fill(domain, claims, sources=[source])
+    assert len(outcome.proposals) == 1
+    proposal = outcome.proposals[0]
+    assert proposal.validation_state == "validated"
+    assert proposal.status == "proposed"
+    assert proposal.review_band == "quality_review"
+    assert proposal.review_reason == "field_semantics_unverified"
+
+
+@pytest.mark.asyncio
+async def test_publication_country_cannot_auto_approve_author_nationality():
+    source = make_source(
+        title="Fahrenheit 451 publication record",
+        citation="Published in the United States in 1953. Nationality: American.",
+    )
+    claims = [{
+        "field_name": "nationality",
+        "value": "American",
+        "label": "American",
+        "sources": [{
+            "title": "Fahrenheit 451 publication record",
+            "source_type": "record",
+            "evidence": "Nationality: American.",
+        }],
+    }]
+    outcome, _, _ = await run_fill(DOMAIN_IDENTITY, claims, sources=[source])
+    assert outcome.proposals[0].review_band == "quality_review"
+    assert outcome.proposals[0].review_reason == "field_semantics_unverified"
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    "field,value",
+    [
+        ("gender", "The author's gender"),
+        ("nationality", "The author's nationality"),
+        ("occupations", "Author's occupation"),
+        ("languages", "unknown language"),
+        ("native_name", "<native_name>"),
+    ],
+)
+async def test_field_template_garbage_is_dropped_before_proposal_persistence(field, value):
+    domain = DOMAIN_BIOGRAPHY if field == "occupations" else DOMAIN_IDENTITY
+    source = make_source(title="Record", citation=f"Schema example: {value}.")
+    claims = [{
+        "field_name": field,
+        "value": value,
+        "label": value,
+        "sources": [{"title": "Record", "source_type": "record", "evidence": f"Schema example: {value}."}],
+    }]
+    outcome, session, _ = await run_fill(domain, claims, sources=[source])
+    assert outcome.proposals == []
+    assert not any(isinstance(item, AIProposal) for item in session.added)
+
+
+@pytest.mark.parametrize(
+    "field,value",
+    [
+        ("gender", "female"),
+        ("nationality", "American"),
+        ("occupations", "unknown-language specialist"),
+        ("languages", "English"),
+    ],
+)
+def test_bounded_template_validator_preserves_concrete_values(field, value):
+    assert is_field_template_value(field, value) is False
+
+
+@pytest.mark.parametrize(
+    "field,value",
+    [
+        ("native_name", "레이 브래드버리"),
+        ("birth_name", "Ray Douglas Bradbury"),
+        ("pen_names", "A Pen Name"),
+        ("pseudonyms", "A Pseudonym"),
+        ("nationality", "American"),
+        ("languages", "English"),
+        ("gender", "male"),
+        ("occupations", "writer"),
+        ("writing_languages", "English"),
+    ],
+)
+def test_every_b0_field_is_ineligible_for_lexical_auto_approval(field, value):
+    result = validate_field_claim(
+        spec=FIELD_SPECS[field],
+        value=value,
+        label=value,
+        description=None,
+        existing_value=[] if FIELD_SPECS[field].value_type == "list_text" else None,
+        source_count=1,
+        grounded_source_count=1,
+    )
+    assert result.validation.validation_state == "validated"
+    assert result.validation.review_band == "quality_review"
+    assert result.validation.review_reason == "field_semantics_unverified"

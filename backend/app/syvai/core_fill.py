@@ -72,7 +72,11 @@ from app.syvai.field_specs import (
     VALUE_TYPE_LIST,
     specs_for_domain,
 )
-from app.syvai.field_validators import normalize_list_items, validate_field_claim
+from app.syvai.field_validators import (
+    is_field_template_value,
+    normalize_list_items,
+    validate_field_claim,
+)
 from app.syvai.pipeline import (
     RunOutcome,
     _match_source,
@@ -449,6 +453,11 @@ async def _persist_field_proposals(
             continue
         seen = seen_run_items.setdefault(spec.name, set())
         for item in items:
+            if is_field_template_value(spec.name, item.value):
+                # Provider schema/example wording is not an editorial proposal.
+                # Drop it before AIProposal persistence rather than asking a
+                # moderator to review deterministic template garbage.
+                continue
             if spec.value_type == VALUE_TYPE_LIST and _norm(str(item.value)) in seen:
                 continue  # deterministic dedupe within one run
             seen.add(_norm(str(item.value)))

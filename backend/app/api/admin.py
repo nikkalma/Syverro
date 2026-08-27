@@ -1309,16 +1309,6 @@ def validate_author_slug(slug: Optional[str]) -> None:
             raise HTTPException(status_code=422, detail="Slug must be lowercase, URL-safe, and non-empty")
 
 
-def _make_slug(name: str, native_name: Optional[str] = None) -> str:
-    import re as _re
-    from unidecode import unidecode
-    source = (native_name or name)
-    latin = unidecode(source)
-    slug = _re.sub(r'[^\w\s-]', '', latin.lower())
-    slug = _re.sub(r'[-\s]+', '-', slug).strip('-')
-    return slug or 'unknown'
-
-
 def validate_author_dates(
     birth_date: Optional[str],
     death_date: Optional[str],
@@ -1362,20 +1352,18 @@ async def create_author(
     if existing.scalar_one_or_none():
         raise HTTPException(status_code=400, detail="Author already exists")
 
-    # Slug: auto-generate if not provided
+    from app.services.author_slug import generate_author_slug
+    from uuid import uuid4
+    author_id = uuid4()
+
+    # Slug: canonical Author.name only; native/localized labels never drive URLs.
     if not data.slug:
-        base_slug = _make_slug(data.name, data.native_name)
-        slug = base_slug
-        counter = 1
-        while True:
-            existing_slug = await db.execute(
-                select(Author).where(Author.slug == slug)
+        try:
+            data.slug = await generate_author_slug(
+                db, canonical_name=data.name, author_id=author_id, birth_year=data.birth_year
             )
-            if not existing_slug.scalar_one_or_none():
-                break
-            slug = f"{base_slug}-{counter}"
-            counter += 1
-        data.slug = slug
+        except ValueError as exc:
+            raise HTTPException(status_code=422, detail=str(exc)) from exc
     else:
         validate_author_slug(data.slug)
         existing_slug = await db.execute(
@@ -1391,7 +1379,7 @@ async def create_author(
     else:
         data.sort_name = data.display_name or data.name
 
-    author = Author(**data.model_dump(exclude={"awards"}))
+    author = Author(id=author_id, **data.model_dump(exclude={"awards"}))
     for id_field, label_field in (
         ("birth_place_id", "birth_place"),
         ("death_place_id", "death_place"),

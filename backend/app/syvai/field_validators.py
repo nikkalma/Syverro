@@ -29,6 +29,7 @@ from app.syvai.field_specs import (
     VALUE_TYPE_LIST,
     VALUE_TYPE_TEXT,
     FieldSpec,
+    SEMANTIC_REVIEW_REQUIRED_FIELDS,
 )
 from app.syvai.validators import (
     REVIEW_BAND_AUTO_APPROVED,
@@ -51,6 +52,46 @@ _HARD_BLOCKERS = {
     "invalid structured value",
     "invalid date",
 }
+
+REVIEW_REASON_FIELD_SEMANTICS_UNVERIFIED = "field_semantics_unverified"
+
+_FIELD_TEMPLATE_TERMS: dict[str, frozenset[str]] = {
+    "native_name": frozenset({"native name", "original name"}),
+    "birth_name": frozenset({"birth name", "legal name"}),
+    "pen_names": frozenset({"pen name", "pen names"}),
+    "pseudonyms": frozenset({"pseudonym", "pseudonyms"}),
+    "nationality": frozenset({"nationality"}),
+    "languages": frozenset({"language", "languages"}),
+    "gender": frozenset({"gender"}),
+    "occupations": frozenset({"occupation", "occupations"}),
+    "writing_languages": frozenset({"writing language", "writing languages"}),
+}
+
+
+def is_field_template_value(field_name: str, value: Any) -> bool:
+    """Reject bounded schema/template placeholders for exposed Author fields.
+
+    This deliberately recognizes only exact field-aware forms. It is not a
+    general natural-language blacklist and cannot reject a concrete value just
+    because it contains words such as "author" or "unknown" in context.
+    """
+    if not isinstance(value, str):
+        return False
+    terms = _FIELD_TEMPLATE_TERMS.get(field_name)
+    if not terms:
+        return False
+    normalized = value.strip().casefold().replace("’", "'")
+    normalized = re.sub(r"[<>\[\]{}_:]+", " ", normalized)
+    normalized = re.sub(r"\s+", " ", normalized).strip(" .?!\"'")
+    generic_prefixes = (
+        "author ", "author's ", "the author ", "the author's ",
+        "unknown ", "example ", "placeholder ", "schema ",
+    )
+    generic_suffixes = (" value", " example", " placeholder", " unknown")
+    candidates = set(terms)
+    candidates.update(prefix + term for prefix in generic_prefixes for term in terms)
+    candidates.update(term + suffix for suffix in generic_suffixes for term in terms)
+    return normalized in candidates or normalized in {"string", "a string"}
 
 
 @dataclass
@@ -302,6 +343,13 @@ def validate_field_claim(
         taxonomy_match=taxonomy_match,
         taxonomy_applies=spec.domain == DOMAIN_LITERARY_CONTEXT and spec.name in TAXONOMY_FIELDS,
     )
+
+    if (
+        spec.name in SEMANTIC_REVIEW_REQUIRED_FIELDS
+        and result.review_band == REVIEW_BAND_AUTO_APPROVED
+    ):
+        result.review_band = REVIEW_BAND_QUALITY
+        result.review_reason = REVIEW_REASON_FIELD_SEMANTICS_UNVERIFIED
 
     return FieldValidation(
         validation=result,

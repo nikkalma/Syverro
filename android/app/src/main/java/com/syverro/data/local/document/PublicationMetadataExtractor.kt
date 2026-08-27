@@ -10,6 +10,7 @@ data class ExtractedMetadata(
     val title: String,
     val author: String? = null,
     val language: String? = null,
+    val opened: Boolean = true,
 )
 
 interface PublicationMetadataExtractor {
@@ -25,9 +26,9 @@ class ReadiumPublicationMetadataExtractor(
         return try {
             withContext(Dispatchers.IO) {
                 val asset = assetRetriever.retrieve(file).getOrNull()
-                    ?: return@withContext ExtractedMetadata(fallbackTitle)
+                    ?: return@withContext ExtractedMetadata(fallbackTitle, opened = false)
                 val publication = publicationOpener.open(asset, allowUserInteraction = false).getOrNull()
-                    ?: return@withContext ExtractedMetadata(fallbackTitle)
+                    ?: return@withContext ExtractedMetadata(fallbackTitle, opened = false)
                 val metadata = publication.metadata
                 ExtractedMetadata(
                     title = metadata.title?.trim()?.takeIf { it.isNotEmpty() } ?: fallbackTitle,
@@ -35,10 +36,11 @@ class ReadiumPublicationMetadataExtractor(
                         .mapNotNull { it.name?.trim()?.takeIf(String::isNotEmpty) }
                         .firstOrNull(),
                     language = metadata.languages.firstOrNull(),
+                    opened = true,
                 )
             }
         } catch (_: Exception) {
-            ExtractedMetadata(fallbackTitle)
+            ExtractedMetadata(fallbackTitle, opened = false)
         }
     }
 }

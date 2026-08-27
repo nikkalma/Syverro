@@ -35,6 +35,8 @@ import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import java.io.File
 import java.io.IOException
+import java.nio.file.Files
+import java.nio.file.StandardCopyOption
 import java.util.UUID
 
 @RunWith(RobolectricTestRunner::class)
@@ -223,7 +225,7 @@ class AttachmentImporterTest {
     fun localDocumentAvailability_marksUnavailableThenRelocates() {
         val result = import(importer(), Uri.parse("content://provider/a.epub"), fileName = "a.epub")
         val bookId = (result as ImportResult.Success).bookId
-        val repository = RoomLocalDocumentRepository(documentDao)
+        val repository = RoomLocalDocumentRepository(documentDao, bookDao)
 
         assertTrue(repository.getByBook(bookId)!!.isAvailable)
 
@@ -266,6 +268,80 @@ class AttachmentImporterTest {
         assertTrue(bookDao.getById(bookId)!!.hasLocalDocument)
     }
 
+    @Test
+    fun importEpub_invalidPublicationAfterCopy_isRejectedWithoutAttachment() {
+        val bookId = "book-invalid"
+        bookDao.insert(
+            PersonalBookEntity(
+                id = bookId,
+                title = "Existing",
+                authorDisplay = "Existing Author",
+                readingStatus = "READING",
+                createdAt = 1000L,
+                updatedAt = 1000L,
+            ),
+        )
+        val unreadable = FakeMetadataExtractor(opened = false)
+        val result = import(importer(extractor = unreadable), Uri.parse("content://provider/corrupt.epub"), fileName = "Corrupt.epub", bookId = bookId)
+
+        assertTrue(result is ImportResult.Error)
+        assertEquals(ImportError.VALIDATION_FAILED, (result as ImportResult.Error).reason)
+        assertNull("no attachment may be committed for an invalid EPUB", documentDao.getByBook(bookId))
+        val book = bookDao.getById(bookId)!!
+        assertFalse("book must not be marked as having a document", book.hasLocalDocument)
+        assertFalse("no destination file may be left behind", storage.exists(storage.destinationFor(bookId).absolutePath))
+    }
+
+    @Test
+    fun importEpub_failedReplacement_preservesPreviousAttachmentAndDbState() {
+        val first = import(importer(), Uri.parse("content://provider/one.epub"), fileName = "First.epub")
+        val bookId = (first as ImportResult.Success).bookId
+        val destination = storage.destinationFor(bookId)
+        assertTrue(destination.exists())
+
+        val result = import(importer(extractor = FakeMetadataExtractor(opened = false)), Uri.parse("content://provider/bad.epub"), fileName = "Bad.epub", bookId = bookId)
+        assertTrue(result is ImportResult.Error)
+        assertEquals(ImportError.VALIDATION_FAILED, (result as ImportResult.Error).reason)
+
+        assertTrue("previous attachment file must remain intact", destination.exists())
+        val doc = documentDao.getByBook(bookId)!!
+        assertEquals("First.epub", doc.fileName)
+        assertTrue(doc.isAvailable)
+        assertTrue(bookDao.getById(bookId)!!.hasLocalDocument)
+        val staged = File(destination.parentFile, "${destination.name}.staging")
+        assertFalse("staged file must be cleaned up", staged.exists())
+    }
+
+    @Test
+    fun detach_removesDocumentRowAndClearsHasLocalDocument() {
+        val result = import(importer(), Uri.parse("content://provider/a.epub"), fileName = "a.epub")
+        val bookId = (result as ImportResult.Success).bookId
+        val repository = RoomLocalDocumentRepository(documentDao, bookDao)
+
+        repository.remove(bookId)
+
+        assertNull("local_documents row must be removed on detach", documentDao.getByBook(bookId))
+        val book = bookDao.getById(bookId)!!
+        assertFalse("has_local_document must be cleared on detach", book.hasLocalDocument)
+        assertTrue("personal book itself must be kept", bookDao.getById(bookId) != null)
+    }
+
+    @Test
+    fun getByBook_marksUnavailable_whenUnderlyingFileIsMissing() {
+        val result = import(importer(), Uri.parse("content://provider/a.epub"), fileName = "a.epub")
+        val bookId = (result as ImportResult.Success).bookId
+        val repository = RoomLocalDocumentRepository(documentDao, bookDao)
+
+        assertTrue(repository.getByBook(bookId)!!.isAvailable)
+
+        val doc = documentDao.getByBook(bookId)!!
+        assertTrue("fixture requires a real file for the availability check", File(doc.localPath).delete())
+
+        val after = repository.getByBook(bookId)!!
+        assertFalse("availability must reflect a missing file, not only the DB flag", after.isAvailable)
+        assertFalse(documentDao.getByBook(bookId)!!.isAvailable)
+    }
+
     private class FakeDocumentStorage(
         val failOnCopy: Boolean = false,
     ) : DocumentStorage {
@@ -279,6 +355,16 @@ class AttachmentImporterTest {
             destination.writeBytes("fake-epub-bytes-${uri.toString()}".toByteArray())
         }
 
+        override fun promote(staged: File, destination: File): Boolean {
+            val atomic = runCatching {
+                Files.move(staged.toPath(), destination.toPath(), StandardCopyOption.ATOMIC_MOVE, StandardCopyOption.REPLACE_EXISTING)
+            }
+            if (atomic.isSuccess) return true
+            return runCatching {
+                Files.move(staged.toPath(), destination.toPath(), StandardCopyOption.REPLACE_EXISTING)
+            }.isSuccess
+        }
+
         override fun delete(path: String): Boolean = File(path).delete()
 
         override fun exists(path: String): Boolean = File(path).exists()
@@ -288,9 +374,14 @@ class AttachmentImporterTest {
         private val title: String = "Extracted Title",
         private val author: String? = "Extracted Author",
         private val fail: Boolean = false,
+        private val opened: Boolean = true,
     ) : PublicationMetadataExtractor {
         override suspend fun extract(file: File, fallbackTitle: String): ExtractedMetadata {
-            return if (fail) ExtractedMetadata(fallbackTitle) else ExtractedMetadata(title = title, author = author, language = "en")
+            return if (fail) {
+                ExtractedMetadata(fallbackTitle, opened = opened)
+            } else {
+                ExtractedMetadata(title = title, author = author, language = "en", opened = opened)
+            }
         }
     }
 }

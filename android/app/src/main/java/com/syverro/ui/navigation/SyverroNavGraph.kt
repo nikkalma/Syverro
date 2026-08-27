@@ -1,15 +1,16 @@
 package com.syverro.ui.navigation
 
+import androidx.annotation.StringRes
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.AutoStories
+import androidx.compose.material.icons.outlined.EditNote
 import androidx.compose.material.icons.outlined.LibraryBooks
 import androidx.compose.material.icons.outlined.Person
-import androidx.compose.material.icons.outlined.Timer
 import androidx.compose.material.icons.rounded.AutoStories
+import androidx.compose.material.icons.rounded.EditNote
 import androidx.compose.material.icons.rounded.LibraryBooks
 import androidx.compose.material.icons.rounded.Person
-import androidx.compose.material.icons.rounded.Timer
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
@@ -21,6 +22,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavType
@@ -29,25 +32,27 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import com.syverro.R
 import com.syverro.presentation.bookdetail.BookDetailScreen
-import com.syverro.presentation.home.HomeScreen
 import com.syverro.presentation.library.LibraryScreen
+import com.syverro.presentation.notes.NotesScreen
 import com.syverro.presentation.profile.ProfileScreen
-import com.syverro.presentation.session.SessionScreen
+import com.syverro.presentation.reader.ReaderActivity
+import com.syverro.presentation.reading.ReadingScreen
 import com.syverro.presentation.settings.SettingsScreen
 
 private data class Tab(
     val route: String,
-    val label: String,
+    @StringRes val labelRes: Int,
     val icon: ImageVector,
     val selectedIcon: ImageVector,
 )
 
 private val tabs = listOf(
-    Tab("home", "Home", Icons.Outlined.AutoStories, Icons.Rounded.AutoStories),
-    Tab("library", "Library", Icons.Outlined.LibraryBooks, Icons.Rounded.LibraryBooks),
-    Tab("session", "Session", Icons.Outlined.Timer, Icons.Rounded.Timer),
-    Tab("profile", "Profile", Icons.Outlined.Person, Icons.Rounded.Person),
+    Tab("reading", R.string.reading, Icons.Outlined.AutoStories, Icons.Rounded.AutoStories),
+    Tab("library", R.string.library, Icons.Outlined.LibraryBooks, Icons.Rounded.LibraryBooks),
+    Tab("notes", R.string.notes, Icons.Outlined.EditNote, Icons.Rounded.EditNote),
+    Tab("me", R.string.me, Icons.Outlined.Person, Icons.Rounded.Person),
 )
 
 private val tabRoutes = tabs.map { it.route }.toSet()
@@ -55,6 +60,7 @@ private val tabRoutes = tabs.map { it.route }.toSet()
 @Composable
 fun SyverroNavGraph() {
     val navController = rememberNavController()
+    val context = LocalContext.current
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentDestination = navBackStackEntry?.destination
 
@@ -82,12 +88,12 @@ fun SyverroNavGraph() {
                             icon = {
                                 Icon(
                                     imageVector = if (selected) tab.selectedIcon else tab.icon,
-                                    contentDescription = tab.label,
+                                    contentDescription = stringResource(tab.labelRes),
                                 )
                             },
                             label = {
                                 Text(
-                                    text = tab.label,
+                                    text = stringResource(tab.labelRes),
                                     style = MaterialTheme.typography.labelMedium,
                                 )
                             },
@@ -106,24 +112,29 @@ fun SyverroNavGraph() {
     ) { innerPadding ->
         NavHost(
             navController = navController,
-            startDestination = "home",
+            startDestination = "reading",
             modifier = Modifier.padding(innerPadding),
         ) {
-            composable("home") {
-                HomeScreen(
-                    onNavigateToSession = { navController.navigate("session") },
+            composable("reading") {
+                ReadingScreen(
+                    onOpenReader = { bookId ->
+                        context.startActivity(ReaderActivity.intent(context, bookId))
+                    },
                     onNavigateToLibrary = { navController.navigate("library") },
                 )
             }
             composable("library") {
                 LibraryScreen(
-                    onBookSelected = { bookId -> navController.navigate("book/$bookId") },
+                    onOpenReader = { bookId ->
+                        context.startActivity(ReaderActivity.intent(context, bookId))
+                    },
+                    onOpenDetail = { bookId -> navController.navigate("book/$bookId") },
                 )
             }
-            composable("session") {
-                SessionScreen()
+            composable("notes") {
+                NotesScreen()
             }
-            composable("profile") {
+            composable("me") {
                 ProfileScreen(
                     onOpenSettings = { navController.navigate("settings") },
                 )
@@ -135,7 +146,9 @@ fun SyverroNavGraph() {
                 val bookId = backStackEntry.arguments?.getString("bookId") ?: return@composable
                 BookDetailScreen(
                     bookId = bookId,
-                    onNavigateToSession = { navController.navigate("session") },
+                    onOpenReader = { id ->
+                        context.startActivity(ReaderActivity.intent(context, id))
+                    },
                     onBack = { navController.popBackStack() },
                 )
             }

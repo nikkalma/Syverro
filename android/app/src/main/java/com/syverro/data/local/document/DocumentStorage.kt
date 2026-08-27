@@ -4,6 +4,8 @@ import android.content.Context
 import android.net.Uri
 import java.io.File
 import java.io.IOException
+import java.nio.file.Files
+import java.nio.file.StandardCopyOption
 
 interface DocumentStorage {
 
@@ -11,9 +13,21 @@ interface DocumentStorage {
 
     fun copy(uri: Uri, destination: File)
 
+    fun promote(staged: File, destination: File): Boolean
+
     fun delete(path: String): Boolean
 
     fun exists(path: String): Boolean
+}
+
+fun atomicReplace(staged: File, destination: File): Boolean {
+    val atomic = runCatching {
+        Files.move(staged.toPath(), destination.toPath(), StandardCopyOption.ATOMIC_MOVE, StandardCopyOption.REPLACE_EXISTING)
+    }
+    if (atomic.isSuccess) return true
+    return runCatching {
+        Files.move(staged.toPath(), destination.toPath(), StandardCopyOption.REPLACE_EXISTING)
+    }.isSuccess
 }
 
 class AppDocumentStorage(private val context: Context) : DocumentStorage {
@@ -30,6 +44,8 @@ class AppDocumentStorage(private val context: Context) : DocumentStorage {
             destination.outputStream().use { target -> source.copyTo(target) }
         }
     }
+
+    override fun promote(staged: File, destination: File): Boolean = atomicReplace(staged, destination)
 
     override fun delete(path: String): Boolean = runCatching { File(path).delete() }.getOrDefault(false)
 

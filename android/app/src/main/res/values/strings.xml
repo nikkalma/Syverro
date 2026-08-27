@@ -15,6 +15,28 @@
     <string name="profile">Профиль</string>
     <string name="settings">Настройки</string>
 
+    <string name="reading">Чтение</string>
+    <string name="reading_title">Чтение</string>
+    <string name="reading_progress_percent">Прочитано %1$d%%</string>
+    <string name="reading_file_unavailable">Файл книги недоступен — прикрепите EPUB в библиотеке.</string>
+    <string name="read_book">Читать</string>
+
+    <string name="notes">Заметки</string>
+    <string name="notes_title">Заметки</string>
+    <string name="notes_empty">Заметки появятся здесь — создавайте их прямо во время чтения.</string>
+    <string name="notes_coming_soon">Создание заметок, цитат и голосовых заметок появится в следующем обновлении.</string>
+
+    <string name="me">Я</string>
+
+    <string name="reader_title">Чтение</string>
+    <string name="reader_error_title">Не удалось открыть книгу</string>
+    <string name="reader_error_book_not_found">Книга не найдена.</string>
+    <string name="reader_error_no_document">К книге не прикреплён файл. Импортируйте EPUB в библиотеке.</string>
+    <string name="reader_error_unavailable">Файл книги недоступен. Прикрепите EPUB заново.</string>
+    <string name="reader_error_file_missing">Файл книги удалён с устройства. Прикрепите EPUB заново.</string>
+    <string name="reader_error_unsupported">Формат файла не поддерживается читалкой.</string>
+    <string name="reader_error_open_failed">Не удалось открыть файл. Попробуйте прикрепить EPUB заново.</string>
+
     <string name="home_title">Главная</string>
     <string name="continue_reading">Продолжить чтение</string>
     <string name="continue_reading_label">Продолжить чтение</string>

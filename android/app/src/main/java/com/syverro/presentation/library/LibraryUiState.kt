@@ -8,4 +8,6 @@ data class LibraryUiState(
     val filter: ReadingStatus? = null,
     val isImporting: Boolean = false,
     val importError: Boolean = false,
+    /** Ids of books with an available local EPUB; these open the reader directly. */
+    val availableBookIds: Set<String> = emptySet(),
 )

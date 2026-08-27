@@ -13,6 +13,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -30,18 +31,22 @@ import com.syverro.ui.theme.Spacing
 @Composable
 fun LibraryScreen(
     viewModel: LibraryViewModel = hiltViewModel(),
-    onBookSelected: (String) -> Unit,
+    onOpenReader: (String) -> Unit,
+    onOpenDetail: (String) -> Unit,
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     val context = LocalContext.current
+    val uriPermissionTaker = remember {
+        UriPermissionTaker { uri ->
+            context.contentResolver.takePersistableUriPermission(uri, Intent.FLAG_GRANT_READ_URI_PERMISSION)
+        }
+    }
 
     val importLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.OpenDocument(),
     ) { uri ->
         if (uri != null) {
-            runCatching {
-                context.contentResolver.takePersistableUriPermission(uri, Intent.FLAG_GRANT_READ_URI_PERMISSION)
-            }
+            uriPermissionTaker.takePersistableReadPermission(uri)
             viewModel.onEvent(LibraryEvent.ImportEpub(uri))
         }
     }
@@ -174,7 +179,16 @@ fun LibraryScreen(
                 modifier = Modifier.fillMaxWidth().weight(1f),
             ) {
                 items(books, key = { it.id }) { book ->
-                    BookCard(book = book, onClick = { onBookSelected(book.id) })
+                    BookCard(
+                        book = book,
+                        onClick = {
+                            if (book.id in state.availableBookIds) {
+                                onOpenReader(book.id)
+                            } else {
+                                onOpenDetail(book.id)
+                            }
+                        },
+                    )
                 }
             }
         }

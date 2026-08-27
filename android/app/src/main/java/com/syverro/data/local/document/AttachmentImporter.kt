@@ -14,6 +14,8 @@ import java.io.IOException
 import java.util.UUID
 import javax.inject.Inject
 import javax.inject.Singleton
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 
 sealed interface ImportResult {
     data class Success(val bookId: String, val isNewBook: Boolean) : ImportResult
@@ -22,6 +24,7 @@ sealed interface ImportResult {
 
 enum class ImportError {
     COPY_FAILED,
+    VALIDATION_FAILED,
     UNKNOWN,
 }
 
@@ -48,65 +51,78 @@ class DefaultAttachmentImporter @Inject constructor(
         fileName: String?,
         mimeType: String?,
         bookId: String?,
-    ): ImportResult {
-        var copied: File? = null
-        return try {
+    ): ImportResult = withContext(Dispatchers.IO) {
+        var staged: File? = null
+        try {
             val existing = bookId?.let { bookDao.getById(it) }
             val targetBookId = existing?.id ?: UUID.randomUUID().toString()
+
             val destination = storage.destinationFor(targetBookId)
-            storage.copy(uri, destination)
-            copied = destination
+            val stagedFile = File(destination.parentFile, "${destination.name}.staging")
+            storage.copy(uri, stagedFile)
+            staged = stagedFile
 
             val resolvedFileName = (fileName ?: queryDisplayName(uri))
                 ?.trim()
                 ?.takeIf { it.isNotEmpty() }
                 ?: "imported.epub"
             val fallbackTitle = resolvedFileName.substringBeforeLast('.').ifBlank { "Imported book" }
-            val metadata = metadataExtractor.extract(destination, fallbackTitle)
-            val resolvedMimeType = mimeType?.takeIf { it.isNotBlank() }
-                ?: runCatching { context.contentResolver.getType(uri) }.getOrNull()
-            val now = System.currentTimeMillis()
+            val metadata = metadataExtractor.extract(stagedFile, fallbackTitle)
+            if (!metadata.opened) {
+                stagedFile.delete()
+                staged = null
+                ImportResult.Error(ImportError.VALIDATION_FAILED)
+            } else if (!storage.promote(stagedFile, destination)) {
+                stagedFile.delete()
+                staged = null
+                ImportResult.Error(ImportError.COPY_FAILED)
+            } else {
+                staged = null
 
-            val book = existing ?: PersonalBookEntity(
-                id = targetBookId,
-                canonicalBookId = null,
-                title = metadata.title,
-                authorDisplay = metadata.author,
-                readingStatus = "PLANNED",
-                provenance = Provenance.MANUAL_TRACKED.storageValue,
-                hasLocalDocument = true,
-                createdAt = now,
-                updatedAt = now,
-            ).also { bookDao.insert(it) }
+                val resolvedMimeType = mimeType?.takeIf { it.isNotBlank() }
+                    ?: runCatching { context.contentResolver.getType(uri) }.getOrNull()
+                val now = System.currentTimeMillis()
 
-            if (existing != null) {
-                bookDao.update(existing.copy(hasLocalDocument = true, updatedAt = now))
-            }
-
-            documentDao.upsert(
-                LocalDocumentEntity(
-                    bookId = book.id,
-                    format = "EPUB",
-                    fileName = resolvedFileName,
-                    localPath = destination.absolutePath,
-                    sourceUri = uri.toString(),
-                    fileSize = destination.length().takeIf { it > 0 },
-                    mimeType = resolvedMimeType,
-                    isAvailable = true,
+                val book = existing ?: PersonalBookEntity(
+                    id = targetBookId,
+                    canonicalBookId = null,
+                    title = metadata.title,
+                    authorDisplay = metadata.author,
+                    readingStatus = "PLANNED",
+                    provenance = Provenance.MANUAL_TRACKED.storageValue,
+                    hasLocalDocument = true,
                     createdAt = now,
-                ),
-            )
+                    updatedAt = now,
+                ).also { bookDao.insert(it) }
 
-            ImportResult.Success(book.id, isNewBook = existing == null)
+                if (existing != null) {
+                    bookDao.update(existing.copy(hasLocalDocument = true, updatedAt = now))
+                }
+
+                documentDao.upsert(
+                    LocalDocumentEntity(
+                        bookId = book.id,
+                        format = "EPUB",
+                        fileName = resolvedFileName,
+                        localPath = destination.absolutePath,
+                        sourceUri = uri.toString(),
+                        fileSize = destination.length().takeIf { it > 0 },
+                        mimeType = resolvedMimeType,
+                        isAvailable = true,
+                        createdAt = now,
+                    ),
+                )
+
+                ImportResult.Success(book.id, isNewBook = existing == null)
+            }
         } catch (e: IOException) {
-            copied?.delete()
+            staged?.delete()
             ImportResult.Error(ImportError.COPY_FAILED)
         } catch (e: Exception) {
-            copied?.delete()
+            staged?.delete()
             ImportResult.Error(ImportError.UNKNOWN)
         }
     }
-
     private fun queryDisplayName(uri: Uri): String? = runCatching {
         context.contentResolver.query(uri, arrayOf(OpenableColumns.DISPLAY_NAME), null, null, null)?.use { cursor ->
             if (cursor.moveToFirst() && !cursor.isNull(0)) cursor.getString(0) else null

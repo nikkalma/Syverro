@@ -22,6 +22,7 @@ sealed interface ImportResult {
 
 enum class ImportError {
     COPY_FAILED,
+    VALIDATION_FAILED,
     UNKNOWN,
 }
 
@@ -49,20 +50,34 @@ class DefaultAttachmentImporter @Inject constructor(
         mimeType: String?,
         bookId: String?,
     ): ImportResult {
-        var copied: File? = null
+        var staged: File? = null
         return try {
             val existing = bookId?.let { bookDao.getById(it) }
             val targetBookId = existing?.id ?: UUID.randomUUID().toString()
+
             val destination = storage.destinationFor(targetBookId)
-            storage.copy(uri, destination)
-            copied = destination
+            val stagedFile = File(destination.parentFile, "${destination.name}.staging")
+            storage.copy(uri, stagedFile)
+            staged = stagedFile
 
             val resolvedFileName = (fileName ?: queryDisplayName(uri))
                 ?.trim()
                 ?.takeIf { it.isNotEmpty() }
                 ?: "imported.epub"
             val fallbackTitle = resolvedFileName.substringBeforeLast('.').ifBlank { "Imported book" }
-            val metadata = metadataExtractor.extract(destination, fallbackTitle)
+            val metadata = metadataExtractor.extract(stagedFile, fallbackTitle)
+            if (!metadata.opened) {
+                stagedFile.delete()
+                staged = null
+                return ImportResult.Error(ImportError.VALIDATION_FAILED)
+            }
+            if (!storage.promote(stagedFile, destination)) {
+                stagedFile.delete()
+                staged = null
+                return ImportResult.Error(ImportError.COPY_FAILED)
+            }
+            staged = null
+
             val resolvedMimeType = mimeType?.takeIf { it.isNotBlank() }
                 ?: runCatching { context.contentResolver.getType(uri) }.getOrNull()
             val now = System.currentTimeMillis()
@@ -99,14 +114,13 @@ class DefaultAttachmentImporter @Inject constructor(
 
             ImportResult.Success(book.id, isNewBook = existing == null)
         } catch (e: IOException) {
-            copied?.delete()
+            staged?.delete()
             ImportResult.Error(ImportError.COPY_FAILED)
         } catch (e: Exception) {
-            copied?.delete()
+            staged?.delete()
             ImportResult.Error(ImportError.UNKNOWN)
         }
     }
-
     private fun queryDisplayName(uri: Uri): String? = runCatching {
         context.contentResolver.query(uri, arrayOf(OpenableColumns.DISPLAY_NAME), null, null, null)?.use { cursor ->
             if (cursor.moveToFirst() && !cursor.isNull(0)) cursor.getString(0) else null

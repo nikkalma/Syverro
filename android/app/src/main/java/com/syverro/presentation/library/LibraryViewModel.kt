@@ -6,6 +6,7 @@ import androidx.lifecycle.viewModelScope
 import com.syverro.data.local.document.AttachmentImporter
 import com.syverro.data.local.document.ImportResult
 import com.syverro.domain.model.ReadingStatus
+import com.syverro.domain.repository.LocalDocumentRepository
 import com.syverro.domain.repository.PersonalBookRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -18,6 +19,7 @@ import javax.inject.Inject
 @HiltViewModel
 class LibraryViewModel @Inject constructor(
     private val personalBookRepository: PersonalBookRepository,
+    private val localDocumentRepository: LocalDocumentRepository,
     private val attachmentImporter: AttachmentImporter,
 ) : ViewModel() {
 
@@ -58,7 +60,13 @@ class LibraryViewModel @Inject constructor(
             } else {
                 personalBookRepository.getByStatus(filter)
             }
-            _uiState.update { it.copy(books = books, filter = filter) }
+            _uiState.update {
+                it.copy(
+                    books = books,
+                    filter = filter,
+                    availableBookIds = localDocumentRepository.getAvailableBookIds(),
+                )
+            }
         }
     }
 }

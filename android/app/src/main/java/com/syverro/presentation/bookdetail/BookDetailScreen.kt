@@ -1,18 +1,25 @@
 package com.syverro.presentation.bookdetail
 
+import android.content.Intent
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.syverro.R
+import com.syverro.domain.model.ReadingStatus
+import com.syverro.presentation.library.UriPermissionTaker
 import com.syverro.ui.theme.Spacing
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -20,10 +27,26 @@ import com.syverro.ui.theme.Spacing
 fun BookDetailScreen(
     bookId: String,
     viewModel: BookDetailViewModel = hiltViewModel(),
-    onNavigateToSession: () -> Unit,
+    onOpenReader: (String) -> Unit,
     onBack: () -> Unit,
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
+    val context = LocalContext.current
+
+    val uriPermissionTaker = remember {
+        UriPermissionTaker { uri ->
+            context.contentResolver.takePersistableUriPermission(uri, Intent.FLAG_GRANT_READ_URI_PERMISSION)
+        }
+    }
+
+    val importLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.OpenDocument(),
+    ) { uri ->
+        if (uri != null) {
+            uriPermissionTaker.takePersistableReadPermission(uri)
+            viewModel.importEpub(uri)
+        }
+    }
 
     LaunchedEffect(bookId) {
         viewModel.loadBook(bookId)
@@ -108,12 +131,12 @@ fun BookDetailScreen(
                         Spacer(modifier = Modifier.height(Spacing.sm.dp))
 
                         val statusLabel = when (book.readingStatus) {
-                            com.syverro.domain.model.ReadingStatus.READING -> stringResource(R.string.filter_reading)
-                            com.syverro.domain.model.ReadingStatus.FINISHED -> stringResource(R.string.filter_finished)
-                            com.syverro.domain.model.ReadingStatus.PLANNED -> stringResource(R.string.filter_planned)
-                            com.syverro.domain.model.ReadingStatus.REREADING -> stringResource(R.string.filter_rereading)
-                            com.syverro.domain.model.ReadingStatus.POSTPONED -> stringResource(R.string.filter_postponed)
-                            com.syverro.domain.model.ReadingStatus.ABANDONED -> stringResource(R.string.filter_abandoned)
+                            ReadingStatus.READING -> stringResource(R.string.filter_reading)
+                            ReadingStatus.FINISHED -> stringResource(R.string.filter_finished)
+                            ReadingStatus.PLANNED -> stringResource(R.string.filter_planned)
+                            ReadingStatus.REREADING -> stringResource(R.string.filter_rereading)
+                            ReadingStatus.POSTPONED -> stringResource(R.string.filter_postponed)
+                            ReadingStatus.ABANDONED -> stringResource(R.string.filter_abandoned)
                         }
                         Text(
                             text = statusLabel,
@@ -125,33 +148,59 @@ fun BookDetailScreen(
 
                 Spacer(modifier = Modifier.height(Spacing.xxl.dp))
 
-                if (state.hasActiveSession) {
+                if (state.documentAvailable) {
                     Button(
-                        onClick = onNavigateToSession,
+                        onClick = {
+                            if (!state.hasActiveSession) viewModel.startReading()
+                            onOpenReader(book.id)
+                        },
+                        enabled = !state.isImporting,
                         colors = ButtonDefaults.buttonColors(
                             containerColor = MaterialTheme.colorScheme.primary,
                         ),
                         modifier = Modifier.fillMaxWidth(),
                         shape = MaterialTheme.shapes.small,
                     ) {
-                        Text("Continue reading")
+                        Text(stringResource(R.string.read_book))
                     }
                 } else {
+                    Text(
+                        text = stringResource(R.string.reading_file_unavailable),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.error,
+                    )
+                    Spacer(modifier = Modifier.height(Spacing.sm.dp))
                     Button(
-                        onClick = { viewModel.startReading() },
+                        onClick = {
+                            importLauncher.launch(arrayOf("application/epub+zip", "application/octet-stream"))
+                        },
+                        enabled = !state.isImporting,
                         colors = ButtonDefaults.buttonColors(
                             containerColor = MaterialTheme.colorScheme.primary,
                         ),
                         modifier = Modifier.fillMaxWidth(),
                         shape = MaterialTheme.shapes.small,
                     ) {
-                        Text("Start reading")
+                        Text(
+                            text = stringResource(
+                                if (state.isImporting) R.string.importing else R.string.import_epub,
+                            ),
+                        )
                     }
+                }
+
+                if (state.importError) {
+                    Spacer(modifier = Modifier.height(Spacing.sm.dp))
+                    Text(
+                        text = stringResource(R.string.import_failed),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.error,
+                    )
                 }
 
                 Spacer(modifier = Modifier.height(Spacing.sm.dp))
 
-                if (book.readingStatus == com.syverro.domain.model.ReadingStatus.READING) {
+                if (book.readingStatus == ReadingStatus.READING) {
                     OutlinedButton(
                         onClick = { viewModel.startFinishConfirm() },
                         modifier = Modifier.fillMaxWidth(),

@@ -1,8 +1,9 @@
-package com.syverro.presentation.home
+package com.syverro.presentation.reading
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.syverro.domain.model.ReadingStatus
+import com.syverro.domain.repository.LocalDocumentRepository
 import com.syverro.domain.repository.PersonalBookRepository
 import com.syverro.domain.repository.SessionRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -17,13 +18,14 @@ import java.util.Locale
 import javax.inject.Inject
 
 @HiltViewModel
-class HomeViewModel @Inject constructor(
+class ReadingViewModel @Inject constructor(
     private val personalBookRepository: PersonalBookRepository,
     private val sessionRepository: SessionRepository,
+    private val localDocumentRepository: LocalDocumentRepository,
 ) : ViewModel() {
 
-    private val _uiState = MutableStateFlow(HomeUiState())
-    val uiState: StateFlow<HomeUiState> = _uiState.asStateFlow()
+    private val _uiState = MutableStateFlow(ReadingUiState())
+    val uiState: StateFlow<ReadingUiState> = _uiState.asStateFlow()
 
     init {
         refresh()
@@ -32,11 +34,15 @@ class HomeViewModel @Inject constructor(
     fun refresh() {
         viewModelScope.launch {
             val activeSession = sessionRepository.getActive()
-            val book = activeSession?.let { personalBookRepository.getById(it.personalBookId) }
+            val activeBook = activeSession?.let { personalBookRepository.getById(it.personalBookId) }
+                ?: personalBookRepository.getByStatus(ReadingStatus.READING).firstOrNull()
+
+            val document = activeBook?.let { localDocumentRepository.getByBook(it.id) }
+            val documentAvailable = activeBook != null && document?.isAvailable == true
+
             val readingBooks = personalBookRepository.getByStatus(ReadingStatus.READING)
             val allBooks = personalBookRepository.getAll()
-            val allSessions = sessionRepository.getAll()
-            val finishedSessions = allSessions.filter { it.status.name == "FINISHED" }
+            val finishedSessions = sessionRepository.getAll().filter { it.status.name == "FINISHED" }
             val recent = finishedSessions.sortedByDescending { it.startTime }.take(3)
 
             var lastDate = ""
@@ -50,18 +56,17 @@ class HomeViewModel @Inject constructor(
                 lastDuration = if (h > 0) "${h}h ${m}m" else "${m}m"
             }
 
-            val activeElapsed = activeSession?.durationSeconds ?: 0
-
             _uiState.update {
                 it.copy(
-                    activeBook = book,
+                    activeBook = activeBook,
                     activeSession = activeSession,
+                    documentAvailable = documentAvailable,
                     recentSessions = recent,
                     booksInProgress = readingBooks.size,
                     totalBooks = allBooks.size,
                     lastSessionDate = lastDate,
                     lastSessionDuration = lastDuration,
-                    activeSessionElapsed = activeElapsed,
+                    activeSessionElapsed = activeSession?.durationSeconds ?: 0,
                 )
             }
         }

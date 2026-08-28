@@ -343,12 +343,48 @@ async def test_persisted_claim_keeps_subject_relation_provenance_and_never_auto_
     assert proposal.status == "proposed"
     assert proposal.review_band == "quality_review"
     assert proposal.validation_state == "direct_grounded"
-    assert proposal.conflict_state == "existing_value"
-    assert json.loads(proposal.current_value)["value"] == "1919-01-01"
+    assert proposal.conflict_state == "canonical_conflict"
+    assert json.loads(proposal.current_value)["value"] == {
+        "date_value": "1919-01-01", "date_precision": "day",
+    }
+    assert payload["value"] == {
+        "date_value": "1920-08-22", "date_precision": "day", "wikidata_precision": 11,
+    }
     assert author.birth_date == "1919-01-01"
     assert author.metadata_status == "draft"
     assert any(isinstance(value, AIProposalSource) for value in session.added)
     assert sum(isinstance(value, AIProposal) for value in session.added) == 1
+
+
+@pytest.mark.asyncio
+async def test_exact_canonical_list_value_creates_no_actionable_proposal():
+    author = Author(
+        id=uuid4(), name="Ray Bradbury", metadata_status="draft",
+        occupations=["screenwriter"],
+    )
+    run = SyvaiRun(id=uuid4(), author_id=author.id, domain=DOMAIN)
+    source = Source(id=uuid4(), title="Wikidata Q310732", source_type="wikidata")
+    identity = CanonicalIdentity(
+        qid="Q310732", query_variant="Ray Bradbury", resolved_title="Ray Bradbury",
+        resolved_page_id=1, resolved_site="en", canonical_title="Ray Bradbury",
+        canonical_url="https://en.wikipedia.org/wiki/Ray_Bradbury", canonical_site="en",
+    )
+    rule = next(rule for rule in PROPERTY_RULES if rule.property_id == "P106")
+    fact = AcquiredFact(
+        rule=rule, value={"value": "screenwriter", "wikidata_qid": "Q28389"},
+        statement_id="Q310732$occupation", rank="normal", qualifiers={},
+        raw_datavalue={"id": "Q28389"},
+    )
+    session = AddOnlySession()
+
+    proposal = await _persist_fact(
+        session, author=author, run=run, fact=fact, identity=identity, source=source,
+    )
+
+    assert proposal is None
+    assert not any(isinstance(value, AIProposal) for value in session.added)
+    assert author.occupations == ["screenwriter"]
+    assert author.metadata_status == "draft"
 
 
 @pytest.mark.asyncio

@@ -8,6 +8,7 @@ from app.syvai.author_entailment import (
     VerificationState,
     controlled_subject_aliases,
     extract_evidence_spans,
+    normalize_bootstrap_value,
     normalize_wikidata_time,
     verify_wikidata_claim,
     verify_wikipedia_text_claim,
@@ -23,6 +24,10 @@ def structured_claim(
     field, value, relation, property_id, raw, *, qid=QID, rank="normal",
     statement_id="Q310732$statement", qualifiers=None,
 ):
+    if isinstance(value, dict):
+        resolved_label = value.get("value") or value.get("place") or value.get("state_name")
+    else:
+        resolved_label = value
     return {
         "schema_version": CLAIM_SCHEMA_VERSION,
         "target_author_id": AUTHOR_ID,
@@ -37,9 +42,7 @@ def structured_claim(
             "statement_id": statement_id, "rank": rank,
             "qualifiers": qualifiers or {}, "retrieved_datavalue": raw,
             "resolved_entity_label": (
-                value.get("value")
-                if isinstance(value, dict) and isinstance(raw, dict) and raw.get("id")
-                else None
+                resolved_label if isinstance(raw, dict) and raw.get("id") else None
             ),
         },
         "acquisition_method": "WIKIDATA_STRUCTURED",
@@ -83,12 +86,36 @@ def test_verifier_is_versioned_and_date_precision_exact():
     }
 
 
+def test_acquisition_values_normalize_to_moderation_apply_shapes():
+    assert normalize_bootstrap_value("birth_date", {
+        "value": "1920", "precision": "year", "wikidata_precision": 9,
+    }) == {"date_value": "1920", "date_precision": "year", "wikidata_precision": 9}
+    assert normalize_bootstrap_value("birth_place", {
+        "value": "Waukegan", "wikidata_qid": "Q486479",
+    }) == {"place": "Waukegan", "wikidata_qid": "Q486479"}
+    assert normalize_bootstrap_value("citizenship", {
+        "value": "United States", "wikidata_qid": "Q30",
+    }) == {
+        "state_name": "United States", "wikidata_qid": "Q30",
+        "from_date": None, "to_date": None,
+    }
+    assert normalize_bootstrap_value("occupations", {
+        "value": "screenwriter", "wikidata_qid": "Q28389",
+    }) == "screenwriter"
+    assert normalize_bootstrap_value("native_name", {
+        "value": "  한강  ", "language": "ko",
+    }) == "한강"
+    assert normalize_bootstrap_value("gender", {
+        "value": "unsupported localized label", "wikidata_qid": "Q1",
+    }) is None
+
+
 @pytest.mark.parametrize("property_id,field,relation,value,raw", [
-    ("P569", "birth_date", "AUTHOR_BORN_ON", {"value": "1920", "precision": "year", "wikidata_precision": 9}, {"time": "+1920-00-00T00:00:00Z", "precision": 9}),
-    ("P19", "birth_place", "AUTHOR_BORN_IN", {"value": "Waukegan", "wikidata_qid": "Q486479"}, {"id": "Q486479"}),
-    ("P106", "occupations", "AUTHOR_OCCUPATION", {"value": "screenwriter", "wikidata_qid": "Q28389"}, {"id": "Q28389"}),
-    ("P27", "citizenship", "AUTHOR_CITIZENSHIP", {"value": "United States", "wikidata_qid": "Q30"}, {"id": "Q30"}),
-    ("P1559", "native_name", "AUTHOR_NATIVE_NAME", {"value": "Рэй Брэдбери", "language": "ru"}, {"text": "Рэй Брэдбери", "language": "ru"}),
+    ("P569", "birth_date", "AUTHOR_BORN_ON", {"date_value": "1920", "date_precision": "year", "wikidata_precision": 9}, {"time": "+1920-00-00T00:00:00Z", "precision": 9}),
+    ("P19", "birth_place", "AUTHOR_BORN_IN", {"place": "Waukegan", "wikidata_qid": "Q486479"}, {"id": "Q486479"}),
+    ("P106", "occupations", "AUTHOR_OCCUPATION", "screenwriter", {"id": "Q28389"}),
+    ("P27", "citizenship", "AUTHOR_CITIZENSHIP", {"state_name": "United States", "wikidata_qid": "Q30", "from_date": None, "to_date": None}, {"id": "Q30"}),
+    ("P1559", "native_name", "AUTHOR_NATIVE_NAME", "Рэй Брэдбери", {"text": "Рэй Брэдбери", "language": "ru"}),
 ])
 def test_structured_subject_relation_value_positive(property_id, field, relation, value, raw):
     result = verify_wikidata_claim(
@@ -96,6 +123,13 @@ def test_structured_subject_relation_value_positive(property_id, field, relation
         target_author_id=AUTHOR_ID, target_qid=QID,
     )
     assert result.verification_state == VerificationState.DIRECT_GROUNDED
+    verdict = result.to_dict()
+    assert verdict["version"] == "author_field_entailment_v1"
+    assert verdict["subject"]["verified"] is True
+    assert verdict["relation"]["verified"] is True
+    assert verdict["value"]["verified"] is True
+    assert verdict["scope"]["verified"] is True
+    assert verdict["verdict"] == "verified"
 
 
 def test_p27_entails_citizenship_but_never_nationality():
@@ -126,7 +160,7 @@ def test_p742_cannot_narrow_to_pen_name_or_native_name():
 ])
 def test_structured_impossible_envelopes_fail_closed(mutation, reason):
     claim = structured_claim(
-        "birth_date", {"value": "1920", "precision": "year", "wikidata_precision": 9},
+        "birth_date", {"date_value": "1920", "date_precision": "year", "wikidata_precision": 9},
         "AUTHOR_BORN_ON", "P569", {"time": "+1920-00-00T00:00:00Z", "precision": 9},
     )
     mutation(claim)
@@ -138,13 +172,13 @@ def test_structured_impossible_envelopes_fail_closed(mutation, reason):
 def test_structured_entity_qid_and_time_precision_must_match_exactly():
     place = verify_wikidata_claim(
         structured_claim(
-            "birth_place", {"value": "Waukegan", "wikidata_qid": "Q999"},
+            "birth_place", {"place": "Waukegan", "wikidata_qid": "Q999"},
             "AUTHOR_BORN_IN", "P19", {"id": "Q486479"},
         ), target_author_id=AUTHOR_ID, target_qid=QID,
     )
     date = verify_wikidata_claim(
         structured_claim(
-            "birth_date", {"value": "1920-01-01", "precision": "day", "wikidata_precision": 11},
+            "birth_date", {"date_value": "1920-01-01", "date_precision": "day", "wikidata_precision": 11},
             "AUTHOR_BORN_ON", "P569", {"time": "+1920-00-00T00:00:00Z", "precision": 9},
         ), target_author_id=AUTHOR_ID, target_qid=QID,
     )
@@ -156,7 +190,7 @@ def test_contradictory_same_property_qualifier_fails_closed():
     qualifier = {"datavalue": {"value": {"id": "Q999"}}}
     result = verify_wikidata_claim(
         structured_claim(
-            "birth_place", {"value": "Waukegan", "wikidata_qid": "Q486479"},
+            "birth_place", {"place": "Waukegan", "wikidata_qid": "Q486479"},
             "AUTHOR_BORN_IN", "P19", {"id": "Q486479"}, qualifiers={"P19": [qualifier]},
         ), target_author_id=AUTHOR_ID, target_qid=QID,
     )
@@ -200,7 +234,7 @@ def test_document_language_label_cannot_support_author_languages():
 def test_birth_date_and_place_text_require_event_relation_and_preserve_precision():
     text = "Ray Bradbury was born on 22 August 1920 in Waukegan."
     date = verify_text(text_claim(
-        "birth_date", {"value": "1920-08-22", "precision": "day", "wikidata_precision": 11},
+        "birth_date", {"date_value": "1920-08-22", "date_precision": "day", "wikidata_precision": 11},
         "AUTHOR_BORN_ON", text,
     ), text)
     place = verify_text(text_claim("birth_place", "Waukegan", "AUTHOR_BORN_IN", text), text)

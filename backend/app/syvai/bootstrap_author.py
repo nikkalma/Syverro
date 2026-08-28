@@ -23,6 +23,7 @@ from app.config import settings
 from app.models.ai_proposal import AIProposal
 from app.models.ai_proposal_source import AIProposalSource
 from app.models.author import Author
+from app.models.author_citizenship import AuthorCitizenship
 from app.models.source import AuthorSourceLink, Source
 from app.models.syvai_run import SyvaiRun
 from app.syvai.discovery.fetcher import FetcherConfig, SafeFetcher
@@ -32,6 +33,7 @@ from app.syvai.author_entailment import (
     VERIFIER_VERSION,
     WIKIDATA_PROPERTY_RULES,
     logical_claim_value,
+    normalize_bootstrap_value,
     normalize_wikidata_time,
     verify_wikidata_claim,
 )
@@ -399,10 +401,49 @@ async def _fetch_article(identity: CanonicalIdentity, fetcher: SafeFetcher) -> t
     }
 
 
-def _current_value(author: Author, field_name: str) -> Any:
+async def _current_value(db: AsyncSession, author: Author, field_name: str) -> Any:
     if field_name == "citizenship":
-        return None
+        result = await db.execute(select(AuthorCitizenship.state_name).where(
+            AuthorCitizenship.author_id == author.id,
+        ))
+        return [name for (name,) in result.all()]
+    if field_name == "birth_date":
+        value = author.birth_date or (str(author.birth_year) if author.birth_year is not None else None)
+        precision = author.birth_date_precision if author.birth_date else ("year" if value else None)
+        return {"date_value": value, "date_precision": precision} if value else None
+    if field_name == "death_date":
+        value = author.death_date or (str(author.death_year) if author.death_year is not None else None)
+        precision = author.death_date_precision if author.death_date else ("year" if value else None)
+        return {"date_value": value, "date_precision": precision} if value else None
+    if field_name in {"birth_place", "death_place"}:
+        value = getattr(author, field_name, None)
+        return {"place": value} if value else None
     return getattr(author, field_name, None)
+
+
+def _same_text(left: Any, right: Any) -> bool:
+    return str(left or "").strip().casefold() == str(right or "").strip().casefold()
+
+
+def _canonical_comparison(field_name: str, current: Any, proposed: Any) -> tuple[bool, bool]:
+    """Return ``(already_present, conflicting_scalar)`` without mutation."""
+    if current in (None, "", [], {}):
+        return False, False
+    if field_name in {"occupations", "pseudonyms", "pen_names"}:
+        return any(_same_text(item, proposed) for item in (current or [])), False
+    if field_name == "citizenship":
+        state_name = proposed.get("state_name") if isinstance(proposed, dict) else None
+        return any(_same_text(item, state_name) for item in (current or [])), False
+    if field_name in {"birth_place", "death_place"}:
+        return _same_text(current.get("place"), proposed.get("place")), not _same_text(current.get("place"), proposed.get("place"))
+    if field_name in {"birth_date", "death_date"}:
+        same = (
+            _same_text(current.get("date_value"), proposed.get("date_value"))
+            and current.get("date_precision") == proposed.get("date_precision")
+        )
+        return same, not same
+    same = _same_text(current, proposed)
+    return same, not same
 
 
 def _proposal_claim(proposal: AIProposal) -> dict | None:
@@ -478,13 +519,16 @@ def _merge_statement_provenance(proposal: AIProposal, fact: AcquiredFact) -> Non
 async def _persist_fact(
     db: AsyncSession, *, author: Author, run: SyvaiRun, fact: AcquiredFact,
     identity: CanonicalIdentity, source: Source,
-) -> AIProposal:
+) -> AIProposal | None:
     policy = AUTHOR_FIELD_REGISTRY[fact.rule.field_name]
+    proposal_value = normalize_bootstrap_value(fact.rule.field_name, fact.value)
+    if proposal_value is None:
+        raise ValueError("BOOTSTRAP_CLAIM_REJECTED:value_not_safely_normalizable")
     claim = {
         "schema_version": CLAIM_SCHEMA_VERSION,
         "target_author_id": str(author.id),
         "field_name": fact.rule.field_name,
-        "value": fact.value,
+        "value": proposal_value,
         "subject": {"type": "Author", "author_id": str(author.id), "wikidata_qid": identity.qid},
         "relation": fact.rule.relation.value,
         "source": {"source_id": str(source.id), "wikidata_qid": identity.qid, "property_id": fact.rule.property_id},
@@ -512,8 +556,20 @@ async def _persist_fact(
         raise ValueError(f"BOOTSTRAP_CLAIM_REJECTED:{verification.reason}")
 
     existing = await _pending_logical_duplicate(
-        db, author=author, field_name=fact.rule.field_name, value=fact.value,
+        db, author=author, field_name=fact.rule.field_name, value=proposal_value,
     )
+    current = await _current_value(db, author, fact.rule.field_name)
+    already_present, canonical_conflict = _canonical_comparison(
+        fact.rule.field_name, current, proposal_value,
+    )
+    if already_present:
+        if existing is not None:
+            existing.status = "rejected"
+            existing.validation_state = "duplicate"
+            existing.conflict_state = "duplicate"
+            existing.review_band = "auto_rejected"
+            existing.review_reason = "already_present_in_canonical_author"
+        return None
     if existing is not None:
         _merge_statement_provenance(existing, fact)
         await _attach_verified_source(
@@ -522,18 +578,13 @@ async def _persist_fact(
         return existing
 
     claim["verifier_status"] = "DIRECT_GROUNDED"
-    claim["verification"] = {
-        "verifier_version": VERIFIER_VERSION,
-        "state": verification.verification_state.value,
-        "reason": verification.reason,
-    }
-    current = _current_value(author, fact.rule.field_name)
+    claim["verification"] = verification.to_dict()
     proposal = AIProposal(
         entity_type="author", entity_id=str(author.id), field_name=fact.rule.field_name,
         current_value=(json.dumps({"field": fact.rule.field_name, "value": current}, ensure_ascii=False) if current not in (None, "", [], {}) else None),
         suggested_value=json.dumps(claim, ensure_ascii=False), source_type="catalog_bootstrap",
         confidence=1.0, status="proposed", validation_state="direct_grounded",
-        conflict_state="existing_value" if current not in (None, "", [], {}) else "new",
+        conflict_state="canonical_conflict" if canonical_conflict else "new",
         review_band="quality_review", review_reason="bootstrap_semantic_verified_human_review_required",
         run_id=run.id,
     )
@@ -593,6 +644,12 @@ async def run_author_bootstrap(
             proposal = await _persist_fact(
                 db, author=author, run=run, fact=fact, identity=identity, source=wikidata_source,
             )
+            if proposal is None:
+                outcome.fields_skipped.append({
+                    "field": fact.rule.field_name,
+                    "reason": "already_present_in_canonical_author",
+                })
+                continue
             if proposal.id not in {item.id for item in outcome.proposals}:
                 outcome.proposals.append(proposal)
         # Explicit B2 deferrals are present in telemetry even though no claim

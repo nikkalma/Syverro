@@ -110,3 +110,53 @@ async def test_repeated_runs_and_statements_reuse_one_pending_logical_proposal(p
         "statement_id"
     ] == "Q310732$occupation-duplicate"
     assert author.metadata_status == "draft"
+
+
+@pytest.mark.asyncio
+async def test_canonical_value_retires_a_previously_pending_duplicate(pg_session):
+    author = Author(name="Ray Bradbury", metadata_status="draft", occupations=[])
+    source = Source(
+        title="Wikidata Q310732", source_type="wikidata",
+        url="https://www.wikidata.org/wiki/Q310732",
+        normalized_url="https://www.wikidata.org/wiki/Q310732",
+    )
+    pg_session.add_all([author, source])
+    await pg_session.flush()
+    run1 = SyvaiRun(author_id=author.id, domain=DOMAIN, status="running")
+    pg_session.add(run1)
+    await pg_session.flush()
+
+    identity = CanonicalIdentity(
+        qid="Q310732", query_variant="Ray Bradbury", resolved_title="Ray Bradbury",
+        resolved_page_id=1, resolved_site="en", canonical_title="Ray Bradbury",
+        canonical_url="https://en.wikipedia.org/wiki/Ray_Bradbury", canonical_site="en",
+    )
+    rule = next(rule for rule in PROPERTY_RULES if rule.property_id == "P106")
+    fact = AcquiredFact(
+        rule=rule, value={"value": "screenwriter", "wikidata_qid": "Q28389"},
+        statement_id="Q310732$occupation", rank="normal", qualifiers={},
+        raw_datavalue={"id": "Q28389"},
+    )
+    pending = await _persist_fact(
+        pg_session, author=author, run=run1, fact=fact, identity=identity, source=source,
+    )
+    await pg_session.flush()
+    assert pending.status == "proposed"
+
+    author.occupations = ["screenwriter"]
+    run2 = SyvaiRun(author_id=author.id, domain=DOMAIN, status="running")
+    pg_session.add(run2)
+    await pg_session.flush()
+    redundant = await _persist_fact(
+        pg_session, author=author, run=run2, fact=fact, identity=identity, source=source,
+    )
+    await pg_session.commit()
+
+    assert redundant is None
+    assert pending.status == "rejected"
+    assert pending.validation_state == "duplicate"
+    assert pending.conflict_state == "duplicate"
+    assert pending.review_band == "auto_rejected"
+    assert pending.review_reason == "already_present_in_canonical_author"
+    assert await pg_session.scalar(select(func.count()).select_from(AIProposal)) == 1
+    assert author.metadata_status == "draft"

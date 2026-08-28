@@ -497,6 +497,33 @@ export interface AIProposal {
   sources?: AIProposalSource[];
 }
 
+export interface BootstrapCategory {
+  field: string;
+  proposed_value?: unknown;
+  current_value?: unknown;
+  verification_status?: string;
+  reason?: string | null;
+  disposition?: 'created' | 'reused';
+  proposal_id?: string;
+  provenance?: { wikidata_qid?: string; property_id?: string; statement_id?: string };
+}
+
+export interface BootstrapResponse {
+  preview: boolean;
+  run_id: string | null;
+  status: string;
+  categories: {
+    verified: BootstrapCategory[];
+    conflicts: BootstrapCategory[];
+    already_present: BootstrapCategory[];
+    skipped: BootstrapCategory[];
+  };
+  counts: { created: number; reused: number; already_present: number; skipped: number };
+  proposal_ids: string[];
+  automatic_approval: false;
+  automatic_apply: false;
+}
+
 export interface ReviewQueueCounts {
   total: number;
   under_review: number;

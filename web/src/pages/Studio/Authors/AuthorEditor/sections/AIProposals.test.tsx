@@ -58,4 +58,26 @@ describe('Author proposal epistemic explanation', () => {
       '/admin/moderation/review-queue/proposal-1/action', { action: 'approve' },
     ));
   });
+
+  it('renders Bootstrap canonical values without exposing the raw claim JSON', async () => {
+    const rawClaim = JSON.stringify({
+      field_name: 'birth_date', value: { date_value: '1920-08-22', date_precision: 'day' },
+      verification: { verdict: 'verified' },
+    });
+    vi.mocked(apiClient.get).mockImplementation(async (url) => {
+      if (String(url).endsWith('/ai/runs')) return { data: { data: [] } };
+      return { data: { data: [{
+        id: 'bootstrap-1', entity_type: 'author', field_name: 'birth_date',
+        suggested_value: rawClaim, source_type: 'catalog_bootstrap', confidence: 1,
+        status: 'proposed', validation_state: 'direct_grounded', conflict_state: 'new',
+        review_band: 'quality_review', review_reason: 'bootstrap_semantic_verified_human_review_required',
+        sources: [],
+      }] } };
+    });
+
+    render(<AIProposals />);
+
+    expect(await screen.findByText('1920-08-22')).toBeInTheDocument();
+    expect(screen.queryByText(rawClaim)).not.toBeInTheDocument();
+  });
 });

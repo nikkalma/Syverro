@@ -12,6 +12,7 @@ canonical editorial data inside the existing Sapphire lifecycle (see
 ``app.syvai.apply_author`` for the single Apply boundary).
 """
 
+import json
 import logging
 from uuid import UUID
 
@@ -43,6 +44,115 @@ class FillRequest(BaseModel):
     )
 
 
+async def _pending_bootstrap_proposal_ids(db: AsyncSession, author_id: str) -> set[str]:
+    result = await db.execute(select(AIProposal.id).where(
+        AIProposal.entity_type == "author",
+        AIProposal.entity_id == author_id,
+        AIProposal.source_type == "catalog_bootstrap",
+        AIProposal.status == "proposed",
+    ))
+    return {str(proposal_id) for (proposal_id,) in result.all()}
+
+
+def _json_object(raw: str | None) -> dict:
+    try:
+        value = json.loads(raw or "")
+        return value if isinstance(value, dict) else {}
+    except (TypeError, ValueError):
+        return {}
+
+
+def _bootstrap_item(proposal: AIProposal, *, reused: bool) -> dict:
+    claim = _json_object(proposal.suggested_value)
+    current = _json_object(proposal.current_value).get("value")
+    source = claim.get("source") if isinstance(claim.get("source"), dict) else {}
+    evidence = claim.get("evidence") if isinstance(claim.get("evidence"), dict) else {}
+    verification = claim.get("verification") if isinstance(claim.get("verification"), dict) else {}
+    return {
+        "field": proposal.field_name,
+        "proposed_value": claim.get("value"),
+        "current_value": current,
+        "verification_status": verification.get("verdict", "verified"),
+        "reason": proposal.review_reason,
+        "disposition": "reused" if reused else "created",
+        "proposal_id": str(proposal.id),
+        "provenance": {
+            "wikidata_qid": source.get("wikidata_qid"),
+            "property_id": source.get("property_id"),
+            "statement_id": evidence.get("statement_id"),
+        },
+    }
+
+
+def _bootstrap_response(outcome, *, existing_ids: set[str], preview: bool) -> dict:
+    verified, conflicts = [], []
+    for proposal in outcome.proposals:
+        item = _bootstrap_item(proposal, reused=str(proposal.id) in existing_ids)
+        (conflicts if proposal.conflict_state == "canonical_conflict" else verified).append(item)
+
+    already_present, skipped = [], []
+    for entry in outcome.fields_skipped:
+        item = {
+            "field": entry.get("field"), "reason": entry.get("reason"),
+            "proposed_value": entry.get("proposed_value"),
+            "current_value": entry.get("current_value"),
+        }
+        if entry.get("reason") == "already_present_in_canonical_author":
+            already_present.append(item)
+        else:
+            skipped.append(item)
+
+    created = sum(item["disposition"] == "created" for item in verified + conflicts)
+    reused = sum(item["disposition"] == "reused" for item in verified + conflicts)
+    return {
+        "preview": preview,
+        "run_id": None if preview else str(outcome.run.id),
+        "status": outcome.run.status,
+        "resolved_identity": outcome.identity.provenance() if outcome.identity else None,
+        "categories": {
+            "verified": verified,
+            "conflicts": conflicts,
+            "already_present": already_present,
+            "skipped": skipped,
+        },
+        "counts": {
+            "created": created,
+            "reused": reused,
+            "already_present": len(already_present),
+            "skipped": len(skipped),
+        },
+        "proposal_ids": [item["proposal_id"] for item in verified + conflicts],
+        "automatic_approval": False,
+        "automatic_apply": False,
+    }
+
+
+@router.post("/{author_id}/bootstrap/preview")
+async def preview_author_catalog_evidence(
+    author_id: str,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Run the authoritative Bootstrap pipeline, then roll back every write."""
+    await check_admin(current_user)
+    author = await get_author_or_404(db, author_id)
+    existing_ids = await _pending_bootstrap_proposal_ids(db, author_id)
+    savepoint = await db.begin_nested()
+    outcome = None
+    error = None
+    try:
+        outcome = await run_author_bootstrap(db, author)
+        response = _bootstrap_response(outcome, existing_ids=existing_ids, preview=True)
+        error = outcome.error
+    finally:
+        await savepoint.rollback()
+    if error:
+        raise HTTPException(status_code=422, detail={
+            "status": "failed", "reason": error,
+        })
+    return response
+
+
 @router.post("/{author_id}/bootstrap")
 async def bootstrap_author_catalog_evidence(
     author_id: str,
@@ -52,6 +162,7 @@ async def bootstrap_author_catalog_evidence(
     """Explicit B2 canonical evidence acquisition; never approves or applies."""
     await check_admin(current_user)
     author = await get_author_or_404(db, author_id)
+    existing_ids = await _pending_bootstrap_proposal_ids(db, author_id)
     outcome = await run_author_bootstrap(db, author)
     await db.commit()
     if outcome.error:
@@ -59,22 +170,19 @@ async def bootstrap_author_catalog_evidence(
             "run_id": str(outcome.run.id), "status": outcome.run.status,
             "reason": outcome.error,
         })
-    return {
+    response = _bootstrap_response(outcome, existing_ids=existing_ids, preview=False)
+    response.update({
         "run_id": str(outcome.run.id),
-        "status": outcome.run.status,
-        "resolved_identity": outcome.identity.provenance() if outcome.identity else None,
         "wikidata_structured_facts_acquired": len(outcome.proposals),
         "wikipedia_source": {
             "id": str(outcome.wikipedia_source.id),
             "title": outcome.wikipedia_source.title,
             "url": outcome.wikipedia_source.url,
         } if outcome.wikipedia_source else None,
-        "proposals_created": len(outcome.proposals),
-        "proposal_ids": [str(proposal.id) for proposal in outcome.proposals],
+        "proposals_created": response["counts"]["created"],
         "fields_skipped": outcome.fields_skipped,
-        "automatic_approval": False,
-        "automatic_apply": False,
-    }
+    })
+    return response
 
 
 async def check_admin(user: User) -> User:

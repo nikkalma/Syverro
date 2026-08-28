@@ -141,7 +141,7 @@ class BootstrapOutcome:
     wikipedia_source: Source | None = None
     wikidata_source: Source | None = None
     proposals: list[AIProposal] = field(default_factory=list)
-    fields_skipped: list[dict[str, str]] = field(default_factory=list)
+    fields_skipped: list[dict[str, Any]] = field(default_factory=list)
     error: str | None = None
 
 
@@ -648,6 +648,8 @@ async def run_author_bootstrap(
                 outcome.fields_skipped.append({
                     "field": fact.rule.field_name,
                     "reason": "already_present_in_canonical_author",
+                    "proposed_value": normalize_bootstrap_value(fact.rule.field_name, fact.value),
+                    "current_value": await _current_value(db, author, fact.rule.field_name),
                 })
                 continue
             if proposal.id not in {item.id for item in outcome.proposals}:

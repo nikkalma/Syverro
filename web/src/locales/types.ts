@@ -241,6 +241,15 @@ studioCleanup: {
       mediaCaptionPlaceholder: string;
       addImageUrl: string;
       aiTitle: string;
+      bootstrapAuthor: {
+        action: string; title: string; safetyNotice: string; loading: string; previewFailed: string;
+        confirmFailed: string; retry: string; proposed: string; current: string; source: string;
+        reused: string; empty: string; noActionable: string; complete: string; created: string;
+        reusedCount: string; alreadyPresent: string; skipped: string; reviewNotice: string;
+        reviewProposals: string; cancel: string; confirming: string; confirm: string;
+        groups: Record<'verified' | 'conflicts' | 'already_present' | 'skipped', string>;
+        fields: Record<string, string>; reasons: Record<string, string>;
+      };
       aiDescription: string;
       proposed: string;
       accepted: string;

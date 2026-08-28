@@ -2,6 +2,7 @@
 
 import os
 import json
+from types import SimpleNamespace
 from uuid import uuid4
 
 import pytest
@@ -18,6 +19,7 @@ from app.models.syvai_run import SyvaiRun
 from app.syvai.bootstrap_author import (
     DOMAIN, AcquiredFact, CanonicalIdentity, PROPERTY_RULES, _persist_fact,
 )
+from app.api.admin_syvai import preview_author_catalog_evidence
 
 DATABASE_URL = os.environ.get(
     "TEST_DATABASE_URL",
@@ -160,3 +162,31 @@ async def test_canonical_value_retires_a_previously_pending_duplicate(pg_session
     assert pending.review_reason == "already_present_in_canonical_author"
     assert await pg_session.scalar(select(func.count()).select_from(AIProposal)) == 1
     assert author.metadata_status == "draft"
+
+
+@pytest.mark.asyncio
+async def test_b4_preview_savepoint_persists_no_run_or_proposal(pg_session, monkeypatch):
+    author = Author(name="Ray Bradbury", metadata_status="draft")
+    pg_session.add(author)
+    await pg_session.flush()
+
+    async def fake_pipeline(db, target_author):
+        run = SyvaiRun(
+            author_id=target_author.id, domain=DOMAIN, status="completed",
+            provider="wikimedia", model="catalog_bootstrap_acquisition_v1",
+        )
+        db.add(run)
+        await db.flush()
+        return SimpleNamespace(
+            run=run, identity=SimpleNamespace(provenance=lambda: {"qid": "Q310732"}),
+            wikipedia_source=None, proposals=[], fields_skipped=[], error=None,
+        )
+
+    monkeypatch.setattr("app.api.admin_syvai.run_author_bootstrap", fake_pipeline)
+    response = await preview_author_catalog_evidence(
+        author_id=str(author.id), current_user=SimpleNamespace(role="admin"), db=pg_session,
+    )
+
+    assert response["preview"] is True
+    assert await pg_session.scalar(select(func.count()).select_from(SyvaiRun)) == 0
+    assert await pg_session.scalar(select(func.count()).select_from(AIProposal)) == 0

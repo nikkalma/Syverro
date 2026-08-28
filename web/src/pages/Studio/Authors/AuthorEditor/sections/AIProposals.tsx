@@ -4,6 +4,7 @@ import EditorSectionCard from '../../../../../components/Studio/shared/EditorSec
 import { apiClient } from '../../../../../shared/api/client';
 import type { AIProposal, SyvaiRun } from '../../../../../types/admin';
 import { getLocaleData, getBrowserLocale } from '../../../../../locales';
+import BootstrapAuthorMetadata from './BootstrapAuthorMetadata';
 
 const VALIDATION_LABELS: Record<string, string> = {
   validated: 'validationValidated',
@@ -218,10 +219,15 @@ export default function AIProposals() {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
       <EditorSectionCard title="Proposals & history">
-        <div style={{ marginBottom: '16px' }}>
+        <div style={{ marginBottom: '16px', display: 'flex', justifyContent: 'space-between', gap: '12px', alignItems: 'flex-start' }}>
           <p style={{ fontSize: '13px', color: 'var(--text-muted)', margin: 0, lineHeight: 1.5 }}>
             {copy.aiDescription}
           </p>
+          <BootstrapAuthorMetadata
+            authorId={author.id}
+            copy={copy.bootstrapAuthor}
+            onConfirmed={() => Promise.all([fetchProposals(), fetchRuns()]).then(() => undefined)}
+          />
         </div>
 
         {runs.length > 0 && (

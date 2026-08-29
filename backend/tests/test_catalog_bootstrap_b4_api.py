@@ -60,6 +60,23 @@ def test_preview_contract_categorizes_conflicts_existing_and_skipped():
     assert response["automatic_apply"] is False
 
 
+def test_preview_and_persistence_serialize_the_same_structured_reference():
+    outcome = _outcome()
+
+    preview = _bootstrap_response(outcome, existing_ids=set(), preview=True)
+    persistence = _bootstrap_response(outcome, existing_ids=set(), preview=False)
+
+    preview_items = preview["categories"]["verified"] + preview["categories"]["conflicts"]
+    persisted_items = persistence["categories"]["verified"] + persistence["categories"]["conflicts"]
+    assert [item["provenance"] for item in preview_items] == [
+        item["provenance"] for item in persisted_items
+    ]
+    assert all(
+        item["provenance"]["statement_id"] == "Q310732$statement"
+        for item in preview_items
+    )
+
+
 class FakeSavepoint:
     def __init__(self):
         self.rolled_back = False

@@ -16,6 +16,7 @@ from app.syvai.bootstrap_author import (
     PROPERTY_RULES,
     AcquiredFact,
     CanonicalIdentity,
+    _canonical_statement_reference,
     _persist_fact,
     _time_value,
     acquire_structured_facts,
@@ -354,6 +355,82 @@ async def test_persisted_claim_keeps_subject_relation_provenance_and_never_auto_
     assert author.metadata_status == "draft"
     assert any(isinstance(value, AIProposalSource) for value in session.added)
     assert sum(isinstance(value, AIProposal) for value in session.added) == 1
+
+
+@pytest.mark.asyncio
+async def test_bradbury_lowercase_p569_statement_subject_is_canonicalized_and_verifies():
+    """Regression for production Q40640 P569 statement casing."""
+    author = Author(id=uuid4(), name="Ray Bradbury", metadata_status="draft")
+    run = SyvaiRun(id=uuid4(), author_id=author.id, domain=DOMAIN)
+    source = Source(id=uuid4(), title="Wikidata Q40640", source_type="wikidata")
+    identity = CanonicalIdentity(
+        qid="Q40640", query_variant="Ray Bradbury", resolved_title="Ray Bradbury",
+        resolved_page_id=1, resolved_site="en", canonical_title="Ray Bradbury",
+        canonical_url="https://en.wikipedia.org/wiki/Ray_Bradbury", canonical_site="en",
+    )
+    fact = AcquiredFact(
+        rule=next(rule for rule in PROPERTY_RULES if rule.property_id == "P569"),
+        value={"value": "1920-08-22", "precision": "day", "wikidata_precision": 11},
+        statement_id="q40640$278232C0-6EDD-46CE-8510-8C7160369202",
+        rank="normal", qualifiers={},
+        raw_datavalue={"time": "+1920-08-22T00:00:00Z", "precision": 11},
+    )
+
+    proposal = await _persist_fact(
+        AddOnlySession(), author=author, run=run, fact=fact, identity=identity, source=source,
+    )
+
+    claim = json.loads(proposal.suggested_value)
+    assert claim["field_name"] == "birth_date"
+    assert claim["source"] == {
+        "source_id": str(source.id), "wikidata_qid": "Q40640", "property_id": "P569",
+    }
+    assert claim["evidence"]["statement_id"] == (
+        "Q40640$278232C0-6EDD-46CE-8510-8C7160369202"
+    )
+    assert claim["evidence"]["retrieved_datavalue"] == fact.raw_datavalue
+    assert claim["verification"]["verdict"] == "verified"
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(("property_id", "value", "raw_value"), [
+    ("P19", {"value": "Waukegan", "wikidata_qid": "Q486479"}, {"id": "Q486479"}),
+    ("P20", {"value": "Los Angeles", "wikidata_qid": "Q65"}, {"id": "Q65"}),
+    ("P106", {"value": "writer", "wikidata_qid": "Q49757"}, {"id": "Q49757"}),
+])
+async def test_entity_claim_paths_preserve_canonical_bradbury_statement_reference(
+    property_id, value, raw_value,
+):
+    author = Author(id=uuid4(), name="Ray Bradbury", metadata_status="draft")
+    run = SyvaiRun(id=uuid4(), author_id=author.id, domain=DOMAIN)
+    source = Source(id=uuid4(), title="Wikidata Q40640", source_type="wikidata")
+    identity = CanonicalIdentity(
+        qid="Q40640", query_variant="Ray Bradbury", resolved_title="Ray Bradbury",
+        resolved_page_id=1, resolved_site="en", canonical_title="Ray Bradbury",
+        canonical_url="https://en.wikipedia.org/wiki/Ray_Bradbury", canonical_site="en",
+    )
+    fact = AcquiredFact(
+        rule=next(rule for rule in PROPERTY_RULES if rule.property_id == property_id),
+        value=value, statement_id=f"q40640${property_id.lower()}-identity",
+        rank="normal", qualifiers={}, raw_datavalue=raw_value,
+    )
+
+    proposal = await _persist_fact(
+        AddOnlySession(), author=author, run=run, fact=fact, identity=identity, source=source,
+    )
+
+    claim = json.loads(proposal.suggested_value)
+    assert claim["source"]["property_id"] == property_id
+    assert claim["evidence"]["statement_id"] == f"Q40640${property_id.lower()}-identity"
+    assert claim["evidence"]["retrieved_datavalue"] == raw_value
+    assert claim["verification"]["verdict"] == "verified"
+
+
+def test_statement_reference_normalization_does_not_fabricate_missing_or_wrong_subjects():
+    assert _canonical_statement_reference(None, "Q40640") is None
+    assert _canonical_statement_reference("", "Q40640") == ""
+    assert _canonical_statement_reference("Q999$statement", "Q40640") == "Q999$statement"
+    assert _canonical_statement_reference("q40640$statement", "Q40640") == "Q40640$statement"
 
 
 @pytest.mark.asyncio

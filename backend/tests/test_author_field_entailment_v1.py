@@ -155,6 +155,7 @@ def test_p742_cannot_narrow_to_pen_name_or_native_name():
 @pytest.mark.parametrize("mutation,reason", [
     (lambda c: c["subject"].update(wikidata_qid="Q999"), "target_qid_mismatch"),
     (lambda c: c["source"].update(wikidata_qid="Q999"), "invalid_source_identity"),
+    (lambda c: c["source"].update(property_id="P570"), "property_relation_mismatch"),
     (lambda c: c["evidence"].update(rank="deprecated"), "deprecated_statement"),
     (lambda c: c["evidence"].update(statement_id=None), "missing_structured_reference"),
 ])

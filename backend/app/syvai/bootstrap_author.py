@@ -491,14 +491,17 @@ async def _attach_verified_source(
     ))
 
 
-def _merge_statement_provenance(proposal: AIProposal, fact: AcquiredFact) -> None:
+def _merge_statement_provenance(
+    proposal: AIProposal, fact: AcquiredFact, *, target_qid: str,
+) -> None:
     claim = _proposal_claim(proposal)
     if not claim:
         return
     evidence = claim.setdefault("evidence", {})
     primary_id = evidence.get("statement_id")
+    statement_id = _canonical_statement_reference(fact.statement_id, target_qid)
     statement = {
-        "statement_id": fact.statement_id,
+        "statement_id": statement_id,
         "rank": fact.rank,
         "qualifiers": fact.qualifiers,
         "retrieved_datavalue": fact.raw_datavalue,
@@ -508,12 +511,29 @@ def _merge_statement_provenance(proposal: AIProposal, fact: AcquiredFact) -> Non
             else None
         ),
     }
-    if not fact.statement_id or fact.statement_id == primary_id:
+    if not statement_id or statement_id == primary_id:
         return
     additional = evidence.setdefault("additional_statements", [])
-    if fact.statement_id not in {item.get("statement_id") for item in additional}:
+    if statement_id not in {item.get("statement_id") for item in additional}:
         additional.append(statement)
         proposal.suggested_value = json.dumps(claim, ensure_ascii=False)
+
+
+def _canonical_statement_reference(statement_id: Any, target_qid: str) -> Any:
+    """Canonicalize only the subject casing of a bound Wikidata statement ID.
+
+    Wikidata statement GUIDs are case-insensitive for the entity prefix and the
+    API returns both ``q40640$...`` and ``Q40640$...`` for the same entity.  B3
+    intentionally requires the resolved target QID in the reference.  Preserve
+    the exact GUID suffix, and leave missing, malformed, or wrong-subject values
+    untouched so the verifier continues to reject them fail-closed.
+    """
+    if not isinstance(statement_id, str):
+        return statement_id
+    subject, separator, statement_identity = statement_id.partition("$")
+    if separator and statement_identity and subject.casefold() == target_qid.casefold():
+        return f"{target_qid}${statement_identity}"
+    return statement_id
 
 
 async def _persist_fact(
@@ -524,6 +544,7 @@ async def _persist_fact(
     proposal_value = normalize_bootstrap_value(fact.rule.field_name, fact.value)
     if proposal_value is None:
         raise ValueError("BOOTSTRAP_CLAIM_REJECTED:value_not_safely_normalizable")
+    statement_reference = _canonical_statement_reference(fact.statement_id, identity.qid)
     claim = {
         "schema_version": CLAIM_SCHEMA_VERSION,
         "target_author_id": str(author.id),
@@ -533,7 +554,7 @@ async def _persist_fact(
         "relation": fact.rule.relation.value,
         "source": {"source_id": str(source.id), "wikidata_qid": identity.qid, "property_id": fact.rule.property_id},
         "evidence": {
-            "statement_id": fact.statement_id, "rank": fact.rank,
+            "statement_id": statement_reference, "rank": fact.rank,
             "qualifiers": fact.qualifiers, "retrieved_datavalue": fact.raw_datavalue,
             "resolved_entity_label": (
                 fact.value.get("value")
@@ -571,7 +592,7 @@ async def _persist_fact(
             existing.review_reason = "already_present_in_canonical_author"
         return None
     if existing is not None:
-        _merge_statement_provenance(existing, fact)
+        _merge_statement_provenance(existing, fact, target_qid=identity.qid)
         await _attach_verified_source(
             db, proposal=existing, source=source, fact=fact, verification=verification,
         )

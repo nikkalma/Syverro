@@ -32,6 +32,16 @@ class AuthorPublicationUpdate(BaseModel):
     source_id: Optional[UUID] = None
 
 
+class WorkAuthorInput(BaseModel):
+    author_id: UUID
+    position: int
+    credited_name: Optional[str] = None
+
+
+class WorkAuthorshipReplace(BaseModel):
+    authors: List[WorkAuthorInput]
+
+
 class AuthorPublicationResponse(AuthorPublicationBase):
     id: UUID
     author_id: UUID

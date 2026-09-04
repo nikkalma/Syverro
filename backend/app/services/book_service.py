@@ -12,6 +12,7 @@ from app.models.book_genre import book_genres
 from app.models.book_knowledge_relation import BookKnowledgeRelation
 from app.models.knowledge_node import KnowledgeNode
 from app.models.author_publication import AuthorPublication
+from app.models.author_publication_author import AuthorPublicationAuthor
 from app.graph.serializer import serialize_knowledge_node
 
 
@@ -124,11 +125,33 @@ async def compose_public_book_detail(db: AsyncSession, book: Book) -> dict:
 
 
 async def get_primary_author(db: AsyncSession, book: Book) -> Optional[Author]:
-    """Return the first linked author from the M:N relation."""
+    """Return a deterministic compatibility author from the M:N relation."""
+    if book.publication_id:
+        result = await db.execute(
+            select(Author)
+            .join(
+                AuthorPublicationAuthor,
+                AuthorPublicationAuthor.author_id == Author.id,
+            )
+            .join(
+                book_authors,
+                (book_authors.c.author_id == Author.id)
+                & (book_authors.c.book_id == book.id),
+            )
+            .where(
+                AuthorPublicationAuthor.publication_id == book.publication_id,
+                AuthorPublicationAuthor.position == 1,
+            )
+        )
+        primary = result.scalar_one_or_none()
+        if primary is not None:
+            return primary
+
     result = await db.execute(
         select(Author)
         .join(book_authors, book_authors.c.author_id == Author.id)
         .where(book_authors.c.book_id == book.id)
+        .order_by(Author.id)
         .limit(1)
     )
     return result.scalar_one_or_none()

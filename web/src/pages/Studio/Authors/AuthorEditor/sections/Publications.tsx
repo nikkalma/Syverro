@@ -137,11 +137,30 @@ export default function Publications() {
 
       {!loading && publications.map((p, i) => (
         <EditorSectionCard key={p.id} title={p.title}>
+          <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginBottom: '8px', fontFamily: 'monospace' }}>
+            Canonical Work · {p.id}
+          </div>
           <div style={{ display: 'flex', gap: '12px', fontSize: '13px', color: 'var(--text-secondary)', marginBottom: '6px', flexWrap: 'wrap' }}>
             {p.original_title && <span>{p.original_title}</span>}
             <span>{p.publication_year}</span>
             <span style={{ color: 'var(--text-muted)' }}>{st[p.publication_type] || p.publication_type}</span>
             {p.pen_name && <span style={{ color: 'var(--accent)' }}>as {p.pen_name}</span>}
+          </div>
+          <div style={{ fontSize: '12px', color: 'var(--text-secondary)', marginBottom: '8px' }}>
+            <strong>Ordered authorship:</strong>{' '}
+            {p.authors.map((credit) => (
+              <span key={credit.author_id}>
+                {credit.position}. {credit.credited_name || credit.canonical_name}
+                {credit.credited_name && credit.credited_name !== credit.canonical_name ? ` (${credit.canonical_name})` : ''}
+                {credit.position < p.authors.length ? '; ' : ''}
+              </span>
+            ))}
+          </div>
+          <div style={{ fontSize: '12px', color: p.linked_book_count ? 'var(--text-secondary)' : 'var(--warning)', marginBottom: '8px' }}>
+            <strong>Book representations:</strong>{' '}
+            {p.linked_book_count
+              ? p.linked_books.map((book) => book.title).join(', ')
+              : 'Unlinked — no catalog representation'}
           </div>
           {p.description && (
             <div style={{ fontSize: '13px', color: 'var(--text-muted)', marginBottom: '8px', lineHeight: 1.5 }}>{p.description}</div>

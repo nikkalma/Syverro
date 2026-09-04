@@ -27,6 +27,7 @@ from app.models.author import Author
 from app.models.place import Place
 from app.models.author_award import AuthorAward
 from app.models.author_publication import AuthorPublication
+from app.models.author_publication_author import AuthorPublicationAuthor
 from app.models.genre import Genre
 from app.models.book_genre import book_genres
 from app.models.book_author import book_authors
@@ -1229,7 +1230,13 @@ async def get_author_detail(
     
     book_count = await get_author_book_count(db, author.id)
     publications_count = await db.scalar(
-        select(func.count()).select_from(AuthorPublication).where(AuthorPublication.author_id == author.id)
+        select(func.count())
+        .select_from(AuthorPublication)
+        .join(
+            AuthorPublicationAuthor,
+            AuthorPublicationAuthor.publication_id == AuthorPublication.id,
+        )
+        .where(AuthorPublicationAuthor.author_id == author.id)
     ) or 0
     awards_result = await db.execute(
         select(AuthorAward).where(AuthorAward.author_id == author.id).order_by(AuthorAward.year)

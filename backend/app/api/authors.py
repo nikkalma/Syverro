@@ -13,6 +13,7 @@ from app.models.author_award import AuthorAward
 from app.models.timeline_event import TimelineEvent
 from app.models.author_quote import AuthorQuote
 from app.models.author_publication import AuthorPublication
+from app.models.author_publication_author import AuthorPublicationAuthor
 from app.models.author_citizenship import AuthorCitizenship
 from app.models.author_knowledge_relation import AuthorKnowledgeRelation
 from app.models.source import Source
@@ -247,7 +248,13 @@ async def get_author(
 
     # --- Publications (canonical bibliography) ---
     pub_rows = await db.execute(
-        select(AuthorPublication).where(AuthorPublication.author_id == aid).order_by(AuthorPublication.publication_year)
+        select(AuthorPublication)
+        .join(
+            AuthorPublicationAuthor,
+            AuthorPublicationAuthor.publication_id == AuthorPublication.id,
+        )
+        .where(AuthorPublicationAuthor.author_id == aid)
+        .order_by(AuthorPublication.publication_year, AuthorPublication.id)
     )
     publications = [AuthorPublicationPublic(
         id=p.id, title=p.title, original_title=p.original_title,

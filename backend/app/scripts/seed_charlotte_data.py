@@ -5,6 +5,8 @@ from datetime import date
 from app.database import AsyncSessionLocal
 from app.models.author import Author
 from app.models.author_publication import AuthorPublication
+from app.models.author_publication_author import AuthorPublicationAuthor
+from app.services.work_authorship import sync_primary_credited_name
 from app.models.place import Place
 from app.models.timeline_event import TimelineEvent
 from app.models.knowledge_node import KnowledgeNode
@@ -336,12 +338,14 @@ async def main():
         # === 4. Update publications with pen_name, wikipedia_url, source ===
         print("\n--- Publications ---")
         pubs_result = await session.execute(
-            select(AuthorPublication).where(AuthorPublication.author_id == author.id)
+            select(AuthorPublication)
+            .join(AuthorPublicationAuthor)
+            .where(AuthorPublicationAuthor.author_id == author.id)
         )
         for pub in pubs_result.scalars().all():
             update = PUBLICATION_UPDATES.get(pub.title)
             if update:
-                pub.pen_name = update.get("pen_name")
+                await sync_primary_credited_name(session, pub, update.get("pen_name"))
                 pub.wikipedia_url = update.get("wikipedia_url")
                 if "source_title" in update:
                     src = await get_or_create_source(session, update["source_title"])
@@ -378,7 +382,9 @@ async def main():
         print(f"  Taxonomy relations: {tax_counts}")
 
         pub_count = await session.execute(
-            select(AuthorPublication).where(AuthorPublication.author_id == author.id)
+            select(AuthorPublication)
+            .join(AuthorPublicationAuthor)
+            .where(AuthorPublicationAuthor.author_id == author.id)
         )
         pubs = pub_count.scalars().all()
         print(f"  Publications: {len(pubs)}")

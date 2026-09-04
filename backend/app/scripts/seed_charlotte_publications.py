@@ -2,6 +2,7 @@
 import asyncio
 from app.database import AsyncSessionLocal
 from app.models.author_publication import AuthorPublication
+from app.models.author_publication_author import AuthorPublicationAuthor
 from app.models.author import Author
 from sqlalchemy import select
 from sqlalchemy.orm import selectinload
@@ -53,9 +54,9 @@ async def main():
         print(f"Found: {author.display_name} (slug={author.slug}, id={author.id})")
 
         result = await session.execute(
-            select(AuthorPublication).where(
-                AuthorPublication.author_id == author.id
-            )
+            select(AuthorPublication)
+            .join(AuthorPublicationAuthor)
+            .where(AuthorPublicationAuthor.author_id == author.id)
         )
         pubs = result.scalars().all()
         print(f"Found {len(pubs)} publications for {author.display_name}")

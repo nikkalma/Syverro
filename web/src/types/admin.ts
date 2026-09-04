@@ -844,6 +844,21 @@ export interface AuthorPublication {
   source_id?: string | null;
   created_at: string;
   updated_at: string;
+  authors: WorkAuthorCredit[];
+  linked_books: WorkBookRepresentation[];
+  linked_book_count: number;
+}
+
+export interface WorkAuthorCredit {
+  author_id: string;
+  position: number;
+  credited_name?: string | null;
+  canonical_name: string;
+}
+
+export interface WorkBookRepresentation {
+  id: string;
+  title: string;
 }
 
 export interface AuthorPublicationCreate {

@@ -11,6 +11,7 @@ from app.models.author import Author
 from app.models.author_citizenship import AuthorCitizenship
 from app.models.author_knowledge_relation import AuthorKnowledgeRelation
 from app.models.author_publication import AuthorPublication
+from app.models.author_publication_author import AuthorPublicationAuthor
 from app.models.author_quote import AuthorQuote
 from app.models.author_residence import AuthorResidence
 from app.models.book_author import book_authors
@@ -58,9 +59,9 @@ async def author_editorial_summaries(db, authors: list[Author]) -> dict[str, dic
         .subquery()
     )
     publication_counts = (
-        select(AuthorPublication.author_id.label("author_id"), func.count().label("count"))
-        .where(AuthorPublication.author_id.in_(author_ids))
-        .group_by(AuthorPublication.author_id)
+        select(AuthorPublicationAuthor.author_id.label("author_id"), func.count().label("count"))
+        .where(AuthorPublicationAuthor.author_id.in_(author_ids))
+        .group_by(AuthorPublicationAuthor.author_id)
         .subquery()
     )
     count_rows = await db.execute(
@@ -105,7 +106,11 @@ async def author_editorial_summaries(db, authors: list[Author]) -> dict[str, dic
         select(AuthorCitizenship.author_id, AuthorCitizenship.source_id),
         select(AuthorResidence.author_id, AuthorResidence.source_id),
         select(AuthorKnowledgeRelation.author_id, AuthorKnowledgeRelation.source_id),
-        select(AuthorPublication.author_id, AuthorPublication.source_id),
+        select(AuthorPublicationAuthor.author_id, AuthorPublication.source_id)
+        .join(
+            AuthorPublication,
+            AuthorPublication.id == AuthorPublicationAuthor.publication_id,
+        ),
     ).subquery()
     legacy_rows = await db.execute(
         select(legacy_refs.c.author_id, Source)

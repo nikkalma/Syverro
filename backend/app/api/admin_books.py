@@ -7,7 +7,8 @@ from app.models.book import Book
 from app.models.author import Author
 from app.models.author_publication import AuthorPublication
 from app.models.book_author import book_authors
-from app.services.book_service import link_author, unlink_author
+from app.services.book_service import link_author, sync_author_cache, unlink_author
+from app.services.work_authorship import validate_book_work_authorship
 from app.services.metadata_service import recalculate_metadata_status
 from app.schemas.author import AuthorResponse
 from typing import List, Optional
@@ -75,6 +76,20 @@ async def link_author_to_book(
     if not author:
         raise HTTPException(status_code=404, detail="Author not found")
 
+    if book.publication_id:
+        current_ids = set(
+            (
+                await db.execute(
+                    select(book_authors.c.author_id).where(book_authors.c.book_id == book.id)
+                )
+            ).scalars().all()
+        )
+        await validate_book_work_authorship(
+            db,
+            book.id,
+            book.publication_id,
+            current_ids | {author.id},
+        )
     await link_author(db, book, author)
     await recalculate_metadata_status(db, book)
     await db.commit()
@@ -105,6 +120,20 @@ async def unlink_author_from_book(
     if not existing.fetchone():
         raise HTTPException(status_code=404, detail="Author not linked to this book")
 
+    if book.publication_id:
+        current_ids = set(
+            (
+                await db.execute(
+                    select(book_authors.c.author_id).where(book_authors.c.book_id == book.id)
+                )
+            ).scalars().all()
+        )
+        await validate_book_work_authorship(
+            db,
+            book.id,
+            book.publication_id,
+            current_ids - {author_id},
+        )
     await unlink_author(db, book, author_id)
     await recalculate_metadata_status(db, book)
     await db.commit()
@@ -138,7 +167,9 @@ async def link_publication_to_book(
     if not publication:
         raise HTTPException(status_code=404, detail="Publication not found")
 
+    await validate_book_work_authorship(db, book.id, publication.id)
     book.publication_id = publication_id
+    await sync_author_cache(db, book)
     await db.commit()
     logger.info(f"Book {book_id} linked to publication {publication_id} by {current_user.email}")
     return {"message": "Publication linked to book", "publication_id": str(publication_id)}

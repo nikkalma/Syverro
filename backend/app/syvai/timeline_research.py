@@ -15,6 +15,7 @@ from app.models.author import Author
 from app.models.author_citizenship import AuthorCitizenship
 from app.models.author_knowledge_relation import AuthorKnowledgeRelation
 from app.models.author_publication import AuthorPublication
+from app.models.author_publication_author import AuthorPublicationAuthor
 from app.models.author_quote import AuthorQuote
 from app.models.author_residence import AuthorResidence
 from app.models.source import Source
@@ -48,7 +49,12 @@ async def collect_author_source_ids(db: AsyncSession, author_id: str) -> set[str
         select(AuthorCitizenship.source_id).where(AuthorCitizenship.author_id == author_id),
         select(AuthorResidence.source_id).where(AuthorResidence.author_id == author_id),
         select(AuthorKnowledgeRelation.source_id).where(AuthorKnowledgeRelation.author_id == author_id),
-        select(AuthorPublication.source_id).where(AuthorPublication.author_id == author_id),
+        select(AuthorPublication.source_id)
+        .join(
+            AuthorPublicationAuthor,
+            AuthorPublicationAuthor.publication_id == AuthorPublication.id,
+        )
+        .where(AuthorPublicationAuthor.author_id == author_id),
     ]
     for query in queries:
         result = await db.execute(query)

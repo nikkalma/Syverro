@@ -131,19 +131,22 @@ async def test_atomic_set_failure_rolls_back_author_and_proposal_lifecycle(pg_se
     bad = _proposal(author, "birth_date", {"date_value": "1920-99-99", "date_precision": "day"})
     pg_session.add_all([first, bad])
     await pg_session.commit()
+    author_id = author.id
+    first_id = first.id
+    bad_id = bad.id
     request, user = _request_context()
     with patch("app.syvai.apply_author.add_security_event", new=Mock()):
         response = await bulk_apply_proposals(
-            BulkApplyRequest(proposal_ids=[str(first.id), str(bad.id)]), request, user, db=pg_session
+            BulkApplyRequest(proposal_ids=[str(first_id), str(bad_id)]), request, user, db=pg_session
         )
     assert response["succeeded"] == 0 and response["failed"] == 2
     values = (await pg_session.execute(
         select(Author.native_name, Author.birth_date, Author.nationality, Author.languages)
-        .where(Author.id == author.id)
+        .where(Author.id == author_id)
     )).one()
     assert values == (None, None, "American", ["Русский"])
     applied = (await pg_session.execute(
-        select(AIProposal.applied_at).where(AIProposal.id.in_([first.id, bad.id]))
+        select(AIProposal.applied_at).where(AIProposal.id.in_([first_id, bad_id]))
     )).scalars().all()
     assert applied == [None, None]
     assert (await pg_session.execute(select(Place))).scalars().all() == []

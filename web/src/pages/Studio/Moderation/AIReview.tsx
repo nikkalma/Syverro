@@ -21,6 +21,10 @@ export function evidencePresentation(state: string) {
   return { label, color };
 }
 
+export function isHistoryApplyEligible(proposal: Pick<AIProposal, 'status' | 'applied_at'>): boolean {
+  return proposal.status === 'accepted' && !proposal.applied_at;
+}
+
 const BAND_COLORS: Record<string, string> = {
   auto_approved: '#4CAF50',
   auto_rejected: '#97A6BA',
@@ -151,7 +155,15 @@ export default function AIReview() {
     setError(null);
     try {
       const res = await apiClient.get('/admin/moderation/history', { params: { page: String(page), limit: String(limit) } });
-      setProposals(res.data.data || []);
+      const pageProposals: AIProposal[] = res.data.data || [];
+      setProposals(pageProposals);
+      setSelected((previous) => {
+        const next = new Set(previous);
+        pageProposals.forEach((proposal) => {
+          if (!isHistoryApplyEligible(proposal)) next.delete(proposal.id);
+        });
+        return next;
+      });
       setTotal(res.data.total || 0);
     } catch (err: any) {
       setError(err?.response?.data?.detail || err.message);
@@ -161,9 +173,7 @@ export default function AIReview() {
   }, [page, limit]);
 
   const refresh = useCallback(() => {
-    setSelected(new Set());
     setBulkResult(null);
-    setBulkApplyResult(null);
     if (view === 'queue') {
       fetchQueue();
       fetchCounts();
@@ -173,6 +183,11 @@ export default function AIReview() {
   }, [view, fetchQueue, fetchCounts, fetchHistory]);
 
   useEffect(() => {
+    // Paging preserves stable proposal-id selection. A view/filter change is
+    // a new logical dataset and clears hidden selection scope.
+    setSelected(new Set());
+    setBulkResult(null);
+    setBulkApplyResult(null);
     setPage(1);
   }, [view, bandFilter, entityFilter]);
 
@@ -181,6 +196,8 @@ export default function AIReview() {
   }, [refresh, page]);
 
   const toggleSelect = (id: string) => {
+    const proposal = proposals.find((item) => item.id === id);
+    if (!proposal || (view === 'history' && !isHistoryApplyEligible(proposal))) return;
     setSelected((prev) => {
       const next = new Set(prev);
       if (next.has(id)) next.delete(id); else next.add(id);
@@ -189,10 +206,16 @@ export default function AIReview() {
   };
 
   const toggleSelectAll = () => {
+    const selectable = view === 'history'
+      ? proposals.filter(isHistoryApplyEligible)
+      : proposals;
     setSelected((prev) => {
-      if (proposals.every((p) => prev.has(p.id))) return new Set();
       const next = new Set(prev);
-      proposals.forEach((p) => next.add(p.id));
+      if (selectable.length > 0 && selectable.every((p) => prev.has(p.id))) {
+        selectable.forEach((p) => next.delete(p.id));
+        return next;
+      }
+      selectable.forEach((p) => next.add(p.id));
       return next;
     });
   };
@@ -245,8 +268,11 @@ export default function AIReview() {
       const res = await apiClient.post('/admin/moderation/bulk-apply', {
         proposal_ids: Array.from(selected),
       });
-      refresh();
       setBulkApplyResult(res.data);
+      if (res.data.failed === 0) {
+        setSelected(new Set());
+        refresh();
+      }
     } catch (err: any) {
       setError(err?.response?.data?.detail || err.message);
     }
@@ -296,7 +322,7 @@ export default function AIReview() {
           <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', alignItems: 'center' }}>
             <span style={{ marginLeft: 'auto', display: 'inline-flex', gap: '8px', alignItems: 'center' }}>
               <label style={{ fontSize: '12px', color: 'var(--text-secondary)', display: 'inline-flex', alignItems: 'center', gap: '4px', cursor: 'pointer' }}>
-                <input type="checkbox" checked={proposals.length > 0 && proposals.every((p) => selected.has(p.id))}
+                <input type="checkbox" checked={proposals.some(isHistoryApplyEligible) && proposals.filter(isHistoryApplyEligible).every((p) => selected.has(p.id))}
                   onChange={toggleSelectAll} />
                 {ai.selectAll}
               </label>
@@ -437,7 +463,12 @@ export default function AIReview() {
                 opacity: view === 'history' && p.status === 'rejected' ? 0.6 : 1,
               }}>
                 <div style={{ display: 'flex', gap: '8px', alignItems: 'flex-start', flexWrap: 'wrap' }}>
-                  <input type="checkbox" checked={selected.has(p.id)} onChange={() => toggleSelect(p.id)} />
+                  <input
+                    type="checkbox"
+                    checked={selected.has(p.id)}
+                    disabled={view === 'history' && !isHistoryApplyEligible(p)}
+                    onChange={() => toggleSelect(p.id)}
+                  />
                   <div style={{ fontSize: '13px', fontWeight: 500, color: 'var(--text-primary)' }}>
                     {p.entity_name || p.entity_id || '—'}
                     {p.entity_name && <span style={{ color: 'var(--text-muted)', fontWeight: 400 }}> ({p.entity_id})</span>}

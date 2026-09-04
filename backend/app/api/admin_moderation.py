@@ -502,19 +502,20 @@ async def bulk_apply_proposals(
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
-    """Apply many eligible proposals with per-item failure reporting.
+    """Apply a submitted proposal set in one all-or-nothing transaction.
 
     Only non-conflicting auto-approved or human-accepted proposals are written;
     field conflicts, unresolved taxonomy, rejected, invalid or still-pending
-    items fail individually and never block the rest. No auto-publish: applying
-    writes canonical editorial data only, with a full audit trail.
+    items roll back the complete submitted set. No auto-publish: applying writes
+    canonical editorial data only, with a full audit trail.
     """
     await check_admin(current_user)
 
     results = []
-    for proposal_id in body.proposal_ids:
-        ok, error, applied, field = False, None, False, None
-        try:
+    failed_id = None
+    failed_error = None
+    try:
+        for proposal_id in body.proposal_ids:
             proposal = await _load_proposal_passthrough(db, proposal_id)
             if proposal.field_name == "timeline_event":
                 await apply_timeline_proposal(
@@ -535,27 +536,30 @@ async def bulk_apply_proposals(
                     endpoint="/admin/moderation/bulk-apply",
                     request=request,
                 )
-            await db.commit()
-            ok, field = True, proposal.field_name
-        except ApplyError as exc:
-            await db.rollback()
-            error = str(exc)
-        except HTTPException as exc:
-            await db.rollback()
-            error = exc.detail
-        except Exception as exc:  # noqa: BLE001
-            logger.warning("bulk apply failed for %s: %s", proposal_id, exc)
-            await db.rollback()
-            error = "failed to apply proposal"
+            results.append({"id": proposal_id, "ok": True, "field": proposal.field_name, "error": None})
+        await db.commit()
+    except ApplyError as exc:
+        failed_id, failed_error = proposal_id, str(exc)
+        await db.rollback()
+    except HTTPException as exc:
+        failed_id, failed_error = proposal_id, exc.detail
+        await db.rollback()
+    except Exception as exc:  # noqa: BLE001
+        logger.warning("bulk apply failed for %s: %s", proposal_id, exc)
+        failed_id, failed_error = proposal_id, "failed to apply proposal"
+        await db.rollback()
 
-        results.append(
+    if failed_id is not None:
+        rollback_error = "bulk apply rolled back because another proposal failed"
+        results = [
             {
-                "id": proposal_id,
-                "ok": ok,
-                "field": field,
-                "error": error,
+                "id": requested_id,
+                "ok": False,
+                "field": None,
+                "error": failed_error if requested_id == failed_id else rollback_error,
             }
-        )
+            for requested_id in body.proposal_ids
+        ]
 
     return {
         "results": results,

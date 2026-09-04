@@ -122,6 +122,16 @@ def _author(**overrides):
         nationality=None,
         gender=None,
         bio=None,
+        birth_date=None,
+        birth_date_precision=None,
+        birth_year=None,
+        death_date=None,
+        death_date_precision=None,
+        death_year=None,
+        birth_place=None,
+        birth_place_id=None,
+        death_place=None,
+        death_place_id=None,
         active_from_year=None,
         active_to_year=None,
         pen_names=[],
@@ -185,6 +195,86 @@ async def test_accepted_human_review_is_applyable():
     assert result["applied"] is True
     assert author.nationality == "British"
     assert proposal.applied_at is not None
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    ("field", "date_value", "proposal_precision", "canonical_precision", "year"),
+    [
+        ("birth_date", "1920-08-22", "day", "full", 1920),
+        ("death_date", "2012-06-05", "day", "full", 2012),
+        ("birth_date", "1920-08", "month", "month", 1920),
+        ("birth_date", "1920", "year", "year", 1920),
+    ],
+)
+async def test_author_date_apply_preserves_available_precision(
+    field, date_value, proposal_precision, canonical_precision, year
+):
+    author = _author()
+    proposal = _proposal(
+        field,
+        {"date_value": date_value, "date_precision": proposal_precision, "wikidata_precision": 11},
+        status="accepted",
+        review_band="quality_review",
+    )
+    await _apply(FakeEntityDB(), proposal, author)
+    assert getattr(author, field) == date_value
+    assert getattr(author, f"{field}_precision") == canonical_precision
+    assert getattr(author, field.replace("_date", "_year")) == year
+
+
+@pytest.mark.asyncio
+async def test_author_date_apply_fails_closed_for_malformed_value():
+    author = _author()
+    proposal = _proposal(
+        "birth_date", {"date_value": "1920-99-99", "date_precision": "day"},
+        status="accepted", review_band="quality_review",
+    )
+    with pytest.raises(ApplyError, match="malformed date_value"):
+        await _apply(FakeEntityDB(), proposal, author)
+    assert author.birth_date is None and author.birth_year is None
+
+
+@pytest.mark.asyncio
+async def test_author_date_apply_rejects_impossible_life_order():
+    author = _author(birth_date="1920-08-22", birth_date_precision="full", birth_year=1920)
+    proposal = _proposal(
+        "death_date", {"date_value": "1919-01-01", "date_precision": "day"},
+        status="accepted", review_band="quality_review",
+    )
+    with pytest.raises(ApplyError, match="cannot be before"):
+        await _apply(FakeEntityDB(), proposal, author)
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    ("field", "name", "qid"),
+    [("birth_place", "Waukegan", "Q578289"), ("death_place", "Los Angeles", "Q65")],
+)
+async def test_author_place_apply_preserves_canonical_qid(field, name, qid):
+    author = _author()
+    db = FakeEntityDB()
+    proposal = _proposal(
+        field, {"place": name, "wikidata_qid": qid},
+        status="accepted", review_band="quality_review",
+    )
+    await _apply(db, proposal, author)
+    place = next(obj for obj in db.added if isinstance(obj, Place))
+    assert place.name == name and place.wikidata_id == qid
+    assert getattr(author, field) == name
+    assert getattr(author, f"{field}_id") == place.id
+
+
+@pytest.mark.asyncio
+async def test_author_place_apply_fails_closed_without_qid():
+    author = _author()
+    proposal = _proposal(
+        "birth_place", {"place": "Waukegan"},
+        status="accepted", review_band="quality_review",
+    )
+    with pytest.raises(ApplyError, match="valid wikidata_qid"):
+        await _apply(FakeEntityDB(), proposal, author)
+    assert author.birth_place is None and author.birth_place_id is None
 
 
 # ============================================================

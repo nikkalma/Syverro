@@ -444,7 +444,7 @@ class FakeApplySession:
         self.rollbacks += 1
 
 
-async def _bulk_apply(proposal_ids, *, fail_on_entity=None, fail_error=None):
+async def _bulk_apply(proposal_ids, *, fail_on_entity=None, fail_error=None, session=None):
     """Run bulk_apply with patched loaders + apply service."""
     import types as _types
 
@@ -467,6 +467,7 @@ async def _bulk_apply(proposal_ids, *, fail_on_entity=None, fail_error=None):
     body = SimpleNamespace(proposal_ids=list(proposal_ids))
     request = SimpleNamespace(state=SimpleNamespace(request_id="req-bulk"))
     current_user = SimpleNamespace(id=uuid4(), role="admin")
+    session = session or FakeApplySession()
     with patch(
         "app.api.admin_moderation._load_proposal_passthrough", new=AsyncMock(side_effect=fake_load)
     ), patch(
@@ -474,7 +475,7 @@ async def _bulk_apply(proposal_ids, *, fail_on_entity=None, fail_error=None):
     ), patch(
         "app.api.admin_moderation.apply_author_field_proposal", new=AsyncMock(side_effect=fake_apply)
     ), patch("app.api.admin_moderation.add_security_event", new=Mock()):
-        return await bulk_apply_proposals(body, request, current_user, db=FakeApplySession())
+        return await bulk_apply_proposals(body, request, current_user, db=session)
 
 
 @pytest.mark.asyncio
@@ -487,13 +488,18 @@ async def test_bulk_apply_applies_all_eligible_items():
 
 
 @pytest.mark.asyncio
-async def test_bulk_apply_isolates_one_bad_item_and_reports_error():
-    response = await _bulk_apply(["ok-1", "bad-1", "ok-2"], fail_on_entity="bad-1")
-    assert response["succeeded"] == 2
-    assert response["failed"] == 1
+async def test_bulk_apply_rolls_back_complete_set_when_one_item_fails():
+    session = FakeApplySession()
+    response = await _bulk_apply(
+        ["ok-1", "bad-1", "ok-2"], fail_on_entity="bad-1", session=session
+    )
+    assert response["succeeded"] == 0
+    assert response["failed"] == 3
+    assert session.commits == 0
+    assert session.rollbacks == 1
     failed = [r for r in response["results"] if not r["ok"]]
-    assert failed[0]["id"] == "bad-1"
-    assert failed[0]["error"] == "Rejected proposals cannot be applied"
+    assert next(r for r in failed if r["id"] == "bad-1")["error"] == "Rejected proposals cannot be applied"
+    assert next(r for r in failed if r["id"] == "ok-1")["error"].startswith("bulk apply rolled back")
 
 
 @pytest.mark.asyncio

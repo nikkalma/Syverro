@@ -25,7 +25,8 @@ Contract
   auto-created);
 * provenance/audit is preserved via ``add_security_event`` and the proposal
   ``applied_at`` stamp; applying twice is idempotent;
-* the caller commits; partial batch failures surface per-proposal (bulk apply).
+* the caller commits; bulk Apply commits the complete submitted set once or
+  rolls the complete set back.
 
 No BIBLIOGRAPHY / AWARDS targets exist here.
 """
@@ -34,6 +35,7 @@ from __future__ import annotations
 
 import json
 import logging
+import re
 from datetime import datetime, timezone
 
 from sqlalchemy import func, select
@@ -77,6 +79,8 @@ _LIST_FIELDS = {
 }
 _ENTITY_FIELDS = {"active_years", "citizenship", "residence"}
 _SCALAR_FIELDS = {"native_name", "birth_name", "nationality", "gender", "bio"}
+_AUTHOR_DATE_FIELDS = {"birth_date", "death_date"}
+_AUTHOR_PLACE_FIELDS = {"birth_place", "death_place"}
 
 
 class ApplyError(Exception):
@@ -234,6 +238,81 @@ async def _canonical_place(db: AsyncSession, name: str) -> Place:
     return place
 
 
+async def _canonical_verified_place(db: AsyncSession, name: str, wikidata_qid: str) -> Place:
+    """Resolve an authoritative place without discarding its external identity."""
+    cleaned_name = str(name or "").strip()
+    cleaned_qid = str(wikidata_qid or "").strip()
+    if not cleaned_name:
+        raise ApplyError("place proposal is missing place")
+    if not re.fullmatch(r"Q\d+", cleaned_qid):
+        raise ApplyError("place proposal is missing a valid wikidata_qid")
+
+    result = await db.execute(select(Place).where(Place.wikidata_id == cleaned_qid))
+    place = result.scalars().first()
+    if place:
+        return place
+
+    result = await db.execute(select(Place).where(func.lower(Place.name) == _norm(cleaned_name)))
+    for candidate in result.scalars().all():
+        if candidate.wikidata_id in (None, "", cleaned_qid):
+            candidate.wikidata_id = cleaned_qid
+            return candidate
+
+    place = Place(name=cleaned_name, wikidata_id=cleaned_qid)
+    db.add(place)
+    await db.flush()
+    return place
+
+
+async def _apply_author_date(author: Author, field: str, value: dict, proposal) -> None:
+    raw_date = str(value.get("date_value") or "").strip()
+    parsed = parse_date(raw_date)
+    if parsed is None:
+        raise ApplyError(f"{field} proposal has a malformed date_value")
+
+    precision = align_date_precision(raw_date, value.get("date_precision"))
+    normalized = normalize_date_value(raw_date)
+    current = getattr(author, field, None)
+    current_precision = getattr(author, f"{field}_precision", None)
+    if proposal.review_band == REVIEW_BAND_AUTO_APPROVED and current not in (None, ""):
+        if (normalize_date_value(str(current)), current_precision) != (normalized, precision):
+            raise ApplyError(
+                f"Would silently overwrite populated field '{field}' "
+                f"(existing={current!r}); edit and explicitly approve before applying"
+            )
+
+    setattr(author, field, normalized)
+    setattr(author, f"{field}_precision", precision)
+    setattr(author, field.replace("_date", "_year"), parsed.year)
+
+    birth = parse_date(str(author.birth_date)) if author.birth_date else None
+    death = parse_date(str(author.death_date)) if author.death_date else None
+    if birth and death:
+        birth_key = (birth.year, birth.month or 0, birth.day or 0)
+        death_key = (death.year, death.month or 0, death.day or 0)
+        if death_key < birth_key:
+            raise ApplyError("death_date cannot be before birth_date")
+
+
+async def _apply_author_place(
+    db: AsyncSession, author: Author, field: str, value: dict, proposal
+) -> None:
+    place = await _canonical_verified_place(
+        db,
+        str(value.get("place") or ""),
+        str(value.get("wikidata_qid") or ""),
+    )
+    id_field = f"{field}_id"
+    current_id = getattr(author, id_field, None)
+    if proposal.review_band == REVIEW_BAND_AUTO_APPROVED and current_id not in (None, place.id):
+        raise ApplyError(
+            f"Would silently overwrite populated field '{field}' "
+            f"(existing place id={current_id}); edit and explicitly approve before applying"
+        )
+    setattr(author, id_field, place.id)
+    setattr(author, field, place.name)
+
+
 async def _apply_residence(db: AsyncSession, author: Author, value: dict) -> None:
     place_name = str(value.get("place") or "").strip()
     if not place_name:
@@ -284,7 +363,9 @@ async def apply_author_field_proposal(
 
     _require_applyable(proposal)
     spec = spec_for_field(proposal.field_name)
-    if spec is None:
+    is_author_date = proposal.field_name in _AUTHOR_DATE_FIELDS
+    is_author_place = proposal.field_name in _AUTHOR_PLACE_FIELDS
+    if spec is None and not (is_author_date or is_author_place):
         raise ApplyError(
             f"Apply is not supported for field {proposal.field_name!r} "
             "(supported: IDENTITY, BIOGRAPHY, LITERARY_CONTEXT fields, timeline_event)"
@@ -297,7 +378,17 @@ async def apply_author_field_proposal(
     if value in (None, "", [], {}):
         raise ApplyError(f"Proposal for field '{proposal.field_name}' has no value to apply")
 
-    if spec.value_type == VALUE_TYPE_LIST:
+    if is_author_date:
+        if not isinstance(value, dict):
+            raise ApplyError(f"Entity proposal for '{proposal.field_name}' must be an object")
+        await _apply_author_date(author, proposal.field_name, value, proposal)
+        detail = f"written to {proposal.field_name} fields"
+    elif is_author_place:
+        if not isinstance(value, dict):
+            raise ApplyError(f"Entity proposal for '{proposal.field_name}' must be an object")
+        await _apply_author_place(db, author, proposal.field_name, value, proposal)
+        detail = f"written to {proposal.field_name} fields"
+    elif spec.value_type == VALUE_TYPE_LIST:
         await _taxonomy_guard(db, proposal.field_name, str(value), payload)
         _apply_list(author, proposal.field_name, str(value))
         detail = f"merged into {proposal.field_name}"

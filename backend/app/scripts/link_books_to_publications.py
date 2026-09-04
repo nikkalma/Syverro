@@ -26,6 +26,11 @@ from app.database import get_db
 from app.models.author import Author
 from app.models.book import Book
 from app.models.author_publication import AuthorPublication
+from app.models.author_publication_author import AuthorPublicationAuthor
+from app.services.work_authorship import (
+    create_primary_work_authorship,
+    validate_book_work_authorship,
+)
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -65,7 +70,10 @@ async def backfill_publications_from_notable_works(session) -> int:
     created_total = 0
     for author in authors:
         has_any = await session.execute(
-            select(AuthorPublication.id).where(AuthorPublication.author_id == author.id).limit(1)
+            select(AuthorPublication.id)
+            .join(AuthorPublicationAuthor)
+            .where(AuthorPublicationAuthor.author_id == author.id)
+            .limit(1)
         )
         if has_any.first():
             continue
@@ -73,7 +81,10 @@ async def backfill_publications_from_notable_works(session) -> int:
             parsed = parse_notable_work(entry)
             if not parsed:
                 continue
-            session.add(AuthorPublication(author_id=author.id, **parsed))
+            publication = AuthorPublication(author_id=author.id, **parsed)
+            session.add(publication)
+            await session.flush()
+            await create_primary_work_authorship(session, publication, author.id)
             created_total += 1
     await session.commit()
     return created_total
@@ -88,7 +99,9 @@ async def link_books_to_publications(session) -> dict:
             continue
 
         pubs = (await session.execute(
-            select(AuthorPublication).where(AuthorPublication.author_id == book.author_id)
+            select(AuthorPublication)
+            .join(AuthorPublicationAuthor)
+            .where(AuthorPublicationAuthor.author_id == book.author_id)
         )).scalars().all()
         if not pubs:
             stats["no_publications"] += 1
@@ -106,6 +119,7 @@ async def link_books_to_publications(session) -> dict:
             stats["no_match"].append(f"{book.title} ({book.author})")
             continue
 
+        await validate_book_work_authorship(session, book.id, matched.id)
         book.publication_id = matched.id
         moved = False
         if matched.original_title is None and book.original_title:

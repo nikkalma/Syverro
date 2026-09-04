@@ -27,6 +27,7 @@ from app.models.ai_proposal import AIProposal
 from app.models.ai_proposal_source import AIProposalSource
 from app.models.syvai_run import SyvaiRun
 from app.models.author_publication import AuthorPublication
+from app.models.author_publication_author import AuthorPublicationAuthor
 from app.models.source_candidate import SourceCandidate
 
 __all__ = [
@@ -57,5 +58,6 @@ __all__ = [
     "AIProposalSource",
     "SyvaiRun",
     "AuthorPublication",
+    "AuthorPublicationAuthor",
     "SourceCandidate",
 ]

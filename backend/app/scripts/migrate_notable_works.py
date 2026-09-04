@@ -22,6 +22,8 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from app.database import get_db
 from app.models.author import Author
 from app.models.author_publication import AuthorPublication
+from app.models.author_publication_author import AuthorPublicationAuthor
+from app.services.work_authorship import create_primary_work_authorship
 from sqlalchemy import select
 
 
@@ -52,7 +54,10 @@ async def migrate_author(author: Author) -> int:
         return 0
 
     result = await db_session.execute(
-        select(AuthorPublication).where(AuthorPublication.author_id == author.id).limit(1)
+        select(AuthorPublication)
+        .join(AuthorPublicationAuthor)
+        .where(AuthorPublicationAuthor.author_id == author.id)
+        .limit(1)
     )
     existing = result.scalar_one_or_none()
     if existing:
@@ -67,6 +72,8 @@ async def migrate_author(author: Author) -> int:
             continue
         pub = AuthorPublication(author_id=author.id, **parsed)
         db_session.add(pub)
+        await db_session.flush()
+        await create_primary_work_authorship(db_session, pub, author.id)
         created += 1
 
     if created:

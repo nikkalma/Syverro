@@ -14,6 +14,7 @@ from app.models.ai_proposal_source import AIProposalSource
 from app.models.timeline_event import TimelineEvent
 from app.models.author_knowledge_relation import AuthorKnowledgeRelation
 from app.models.author_publication import AuthorPublication
+from app.models.author_publication_author import AuthorPublicationAuthor
 from app.models.source_candidate import SourceCandidate
 from app.services.author_publication import (
     AuthorPublicationBlocked,
@@ -26,7 +27,18 @@ from app.schemas.author_quote import AuthorQuoteCreate, AuthorQuoteUpdate, Autho
 from app.schemas.author_citizenship import AuthorCitizenshipCreate, AuthorCitizenshipUpdate, AuthorCitizenshipResponse
 from app.schemas.author_residence import AuthorResidenceCreate, AuthorResidenceUpdate, AuthorResidenceResponse
 from app.schemas.ai_proposal import AIProposalCreate, AIProposalUpdate, AIProposalResponse
-from app.schemas.author_publication import AuthorPublicationCreate, AuthorPublicationUpdate, AuthorPublicationResponse
+from app.schemas.author_publication import (
+    AuthorPublicationCreate,
+    AuthorPublicationUpdate,
+    AuthorPublicationResponse,
+    WorkAuthorshipReplace,
+)
+from app.services.work_authorship import (
+    create_primary_work_authorship,
+    replace_work_authorships,
+    serialize_authored_works,
+    sync_primary_credited_name,
+)
 import logging
 from typing import Optional
 from uuid import UUID
@@ -55,7 +67,11 @@ async def _publications_count(db: AsyncSession, author_id) -> int:
     return (
         await db.scalar(
             select(func.count()).select_from(AuthorPublication)
-            .where(AuthorPublication.author_id == author_id)
+            .join(
+                AuthorPublicationAuthor,
+                AuthorPublicationAuthor.publication_id == AuthorPublication.id,
+            )
+            .where(AuthorPublicationAuthor.author_id == author_id)
         )
     ) or 0
 
@@ -442,7 +458,12 @@ async def get_author_sources(
     source_ids.update(row[0] for row in kr_result if row[0])
 
     pub_result = await db.execute(
-        select(AuthorPublication.source_id).where(AuthorPublication.author_id == author.id)
+        select(AuthorPublication.source_id)
+        .join(
+            AuthorPublicationAuthor,
+            AuthorPublicationAuthor.publication_id == AuthorPublication.id,
+        )
+        .where(AuthorPublicationAuthor.author_id == author.id)
     )
     source_ids.update(row[0] for row in pub_result if row[0])
 
@@ -756,27 +777,7 @@ async def get_author_publications(
     await check_admin(current_user)
     author = await get_author_or_404(db, author_id)
 
-    result = await db.execute(
-        select(AuthorPublication).where(AuthorPublication.author_id == author.id).order_by(AuthorPublication.publication_year)
-    )
-    pubs = result.scalars().all()
-    return {
-        "data": [{
-            "id": str(p.id),
-            "author_id": str(p.author_id),
-            "title": p.title,
-            "original_title": p.original_title,
-            "publication_year": p.publication_year,
-            "publication_date": p.publication_date.isoformat() if p.publication_date else None,
-            "publication_type": p.publication_type,
-            "description": p.description,
-            "pen_name": p.pen_name,
-            "wikipedia_url": p.wikipedia_url,
-            "source_id": str(p.source_id) if p.source_id else None,
-            "created_at": p.created_at.isoformat() if p.created_at else None,
-            "updated_at": p.updated_at.isoformat() if p.updated_at else None,
-        } for p in pubs],
-    }
+    return {"data": await serialize_authored_works(db, author.id)}
 
 
 @router.post("/{author_id}/publications", status_code=201)
@@ -791,6 +792,8 @@ async def create_author_publication(
 
     pub = AuthorPublication(author_id=author.id, **data.model_dump())
     db.add(pub)
+    await db.flush()
+    await create_primary_work_authorship(db, pub, author.id, pub.pen_name)
     await db.commit()
     await db.refresh(pub)
     return {
@@ -811,9 +814,14 @@ async def update_author_publication(
     await get_author_or_404(db, author_id)
 
     result = await db.execute(
-        select(AuthorPublication).where(
+        select(AuthorPublication)
+        .join(
+            AuthorPublicationAuthor,
+            AuthorPublicationAuthor.publication_id == AuthorPublication.id,
+        )
+        .where(
             AuthorPublication.id == publication_id,
-            AuthorPublication.author_id == author_id
+            AuthorPublicationAuthor.author_id == author_id,
         )
     )
     pub = result.scalar_one_or_none()
@@ -821,8 +829,11 @@ async def update_author_publication(
         raise HTTPException(status_code=404, detail="Publication not found")
 
     update_data = data.model_dump(exclude_unset=True)
+    pen_name_supplied = "pen_name" in update_data
     for key, value in update_data.items():
         setattr(pub, key, value)
+    if pen_name_supplied:
+        await sync_primary_credited_name(db, pub, update_data["pen_name"])
     await db.commit()
     await db.refresh(pub)
     return {
@@ -842,9 +853,14 @@ async def delete_author_publication(
     await get_author_or_404(db, author_id)
 
     result = await db.execute(
-        select(AuthorPublication).where(
+        select(AuthorPublication)
+        .join(
+            AuthorPublicationAuthor,
+            AuthorPublicationAuthor.publication_id == AuthorPublication.id,
+        )
+        .where(
             AuthorPublication.id == publication_id,
-            AuthorPublication.author_id == author_id
+            AuthorPublicationAuthor.author_id == author_id,
         )
     )
     pub = result.scalar_one_or_none()
@@ -854,3 +870,47 @@ async def delete_author_publication(
     await db.delete(pub)
     await db.commit()
     return None
+
+
+@router.put("/{author_id}/publications/{publication_id}/authors")
+async def replace_author_publication_authors(
+    author_id: str,
+    publication_id: str,
+    data: WorkAuthorshipReplace,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Replace canonical ordered Work authorship; legacy owner fields are caches."""
+    await check_admin(current_user)
+    author = await get_author_or_404(db, author_id)
+    publication = await db.scalar(
+        select(AuthorPublication)
+        .join(
+            AuthorPublicationAuthor,
+            AuthorPublicationAuthor.publication_id == AuthorPublication.id,
+        )
+        .where(
+            AuthorPublication.id == publication_id,
+            AuthorPublicationAuthor.author_id == author.id,
+        )
+    )
+    if publication is None:
+        raise HTTPException(status_code=404, detail="Publication not found")
+    if author.id not in {credit.author_id for credit in data.authors}:
+        raise HTTPException(
+            status_code=422,
+            detail="The scoped Author must remain a canonical Work author",
+        )
+
+    await replace_work_authorships(db, publication, data.authors)
+    await db.commit()
+    work = next(
+        item
+        for item in await serialize_authored_works(db, author.id)
+        if item["id"] == str(publication.id)
+    )
+    return {
+        "id": str(publication.id),
+        "authors": work["authors"],
+        "message": "Canonical Work authorship updated",
+    }

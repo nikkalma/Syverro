@@ -26,3 +26,9 @@ class AuthorPublication(Base):
     author = relationship("Author", backref="author_publications")
     source = relationship("Source", backref="author_publications")
     books = relationship("Book", back_populates="publication")
+    authorships = relationship(
+        "AuthorPublicationAuthor",
+        back_populates="publication",
+        cascade="all, delete-orphan",
+        order_by="AuthorPublicationAuthor.position",
+    )

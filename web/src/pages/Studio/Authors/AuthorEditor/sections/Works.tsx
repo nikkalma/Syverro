@@ -130,6 +130,9 @@ export default function Works() {
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ fontSize: '14px', color: 'var(--text-primary)' }}>{book.title}</div>
                     <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>{authorNames}</div>
+                    <div style={{ fontSize: '11px', color: book.publication_id ? 'var(--success)' : 'var(--warning)', marginTop: '2px' }}>
+                      {book.publication_id ? `Canonical Work: ${book.publication_id}` : 'Unlinked from a canonical Work'}
+                    </div>
                   </div>
                   <button type="button" onClick={() => handleUnlink(book.id)}
                     style={{ padding: '4px 10px', fontSize: '11px', borderRadius: '6px', border: 'none', cursor: 'pointer', background: 'rgba(220,38,38,0.1)', color: 'var(--error)' }}>

@@ -6,6 +6,7 @@ import os
 from pathlib import Path
 import subprocess
 import sys
+from uuid import uuid4
 
 import pytest
 from alembic.migration import MigrationContext
@@ -62,10 +63,10 @@ async def migration_engine():
         await engine.dispose()
 
 
-def test_expected_head_is_curated_corpus_revision():
+def test_expected_head_is_canonical_work_authorship_revision():
     from app.migrations import expected_head
 
-    assert expected_head() == "0026_curated_corpus"
+    assert expected_head() == "0027_work_authorship"
 
 
 @pytest.mark.asyncio
@@ -111,7 +112,7 @@ async def test_empty_database_bootstraps_to_head(migration_engine):
             }
         )
 
-    assert revision == "0026_curated_corpus"
+    assert revision == "0027_work_authorship"
     assert {
         "email_verified",
         "email_verification_token_hash",
@@ -121,6 +122,7 @@ async def test_empty_database_bootstraps_to_head(migration_engine):
     assert "security_audit_logs" in table_names
     assert "syvai_runs" in table_names
     assert "ai_proposal_sources" in table_names
+    assert "author_publication_authors" in table_names
     assert {
         "validation_state",
         "conflict_state",
@@ -189,6 +191,7 @@ async def test_revision_0017_is_upgraded_before_backend_start(migration_engine):
     assert initial.returncode == 0, initial.stdout + initial.stderr
 
     async with migration_engine.begin() as conn:
+        await conn.execute(text("DROP TABLE author_publication_authors"))
         await conn.execute(text("DROP TABLE author_source_links"))
         await conn.execute(text("DROP TABLE security_audit_logs"))
         await conn.execute(text("DROP TABLE refresh_sessions"))
@@ -247,8 +250,55 @@ async def test_revision_0017_is_upgraded_before_backend_start(migration_engine):
             }
         )
 
-    assert revision == "0026_curated_corpus"
+    assert revision == "0027_work_authorship"
     assert "email_verified" in columns
+
+
+@pytest.mark.asyncio
+async def test_existing_publications_are_backfilled_once(migration_engine):
+    initial = _run_migration_command("upgrade")
+    assert initial.returncode == 0, initial.stdout + initial.stderr
+
+    author_id = uuid4()
+    publication_id = uuid4()
+    async with migration_engine.begin() as conn:
+        await conn.execute(
+            text(
+                "INSERT INTO authors (id, name, creation_type, metadata_status) "
+                "VALUES (:id, 'Backfill Author', 'individual_author', 'draft')"
+            ),
+            {"id": author_id},
+        )
+        await conn.execute(
+            text(
+                "INSERT INTO author_publications "
+                "(id, author_id, title, publication_year, publication_type, pen_name) "
+                "VALUES (:id, :author_id, 'Backfill Work', 1900, 'novel', 'Credited Name')"
+            ),
+            {"id": publication_id, "author_id": author_id},
+        )
+        backfill = text(
+            "INSERT INTO author_publication_authors "
+            "(publication_id, author_id, position, credited_name) "
+            "SELECT id, author_id, 1, NULLIF(BTRIM(pen_name), '') "
+            "FROM author_publications "
+            "ON CONFLICT (publication_id, author_id) DO NOTHING"
+        )
+        await conn.execute(backfill)
+        await conn.execute(backfill)
+
+    async with migration_engine.connect() as conn:
+        rows = (
+            await conn.execute(
+                text(
+                    "SELECT author_id, position, credited_name "
+                    "FROM author_publication_authors WHERE publication_id = :id"
+                ),
+                {"id": publication_id},
+            )
+        ).all()
+
+    assert rows == [(author_id, 1, "Credited Name")]
 
 
 @pytest.mark.asyncio
